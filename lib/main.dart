@@ -21,11 +21,14 @@ class TradePilotApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProxyProvider<AuthProvider, AnalysisProvider>(
           create: (context) => AnalysisProvider(context.read<AuthProvider>()),
-          update: (context, auth, previous) => previous ?? AnalysisProvider(auth),
+          update: (context, auth, previous) =>
+              previous ?? AnalysisProvider(auth),
         ),
         ChangeNotifierProxyProvider<AuthProvider, NotificationsProvider>(
-          create: (context) => NotificationsProvider(context.read<AuthProvider>()),
-          update: (context, auth, previous) => previous ?? NotificationsProvider(auth),
+          create: (context) =>
+              NotificationsProvider(context.read<AuthProvider>()),
+          update: (context, auth, previous) =>
+              previous ?? NotificationsProvider(auth),
         ),
       ],
       child: MaterialApp(

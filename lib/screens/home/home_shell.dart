@@ -5,35 +5,25 @@ import 'package:provider/provider.dart';
 
 import '../../providers/analysis_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/market_provider.dart';
 import 'tabs/analyze_tab.dart';
 import 'tabs/dashboard_tab.dart';
 import 'tabs/history_tab.dart';
 import 'tabs/profile_tab.dart';
 
-/// Shell utama aplikasi.
-///
-/// IndexedStack tetap dipakai agar state masing-masing tab tidak hilang.
-///
-/// Karena IndexedStack mempertahankan child, initState pada setiap tab hanya
-/// dipanggil sekali. Karena itu sinkronisasi server dikelola dari HomeShell.
 class HomeShell extends StatefulWidget {
-  const HomeShell({
-    super.key,
-  });
+  const HomeShell({super.key});
 
   @override
-  State<HomeShell> createState() =>
-      _HomeShellState();
+  State<HomeShell> createState() => _HomeShellState();
 }
 
-class _HomeShellState extends State<HomeShell>
-    with WidgetsBindingObserver {
-  static const Duration _pollInterval =
-      Duration(seconds: 15);
+class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
+  static const Duration _analysisPollInterval = Duration(seconds: 15);
 
   int _index = 0;
 
-  Timer? _syncTimer;
+  Timer? _analysisSyncTimer;
 
   final _tabs = const [
     DashboardTab(),
@@ -42,207 +32,197 @@ class _HomeShellState extends State<HomeShell>
     ProfileTab(),
   ];
 
+  // ===========================================================================
+  // LIFECYCLE
+  // ===========================================================================
+
   @override
   void initState() {
     super.initState();
 
     WidgetsBinding.instance.addObserver(this);
 
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) {
-        if (!mounted) {
-          return;
-        }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
 
-        _startPolling();
-      },
-    );
+      // Initial load langsung.
+      _syncCurrentTab(showLoading: true);
+
+      _startAnalysisPolling();
+    });
   }
 
   @override
   void dispose() {
-    _stopPolling();
+    _stopAnalysisPolling();
 
     WidgetsBinding.instance.removeObserver(this);
 
     super.dispose();
   }
 
-  // ---------------------------------------------------------------------------
-  // APP LIFECYCLE
-  // ---------------------------------------------------------------------------
-
   @override
-  void didChangeAppLifecycleState(
-    AppLifecycleState state,
-  ) {
+  void didChangeAppLifecycleState(AppLifecycleState state) {
     switch (state) {
       case AppLifecycleState.resumed:
-        // Begitu user balik ke aplikasi, ambil data terbaru.
         _syncCurrentTab();
 
-        _startPolling();
+        _startAnalysisPolling();
+
         break;
 
       case AppLifecycleState.inactive:
       case AppLifecycleState.paused:
       case AppLifecycleState.detached:
       case AppLifecycleState.hidden:
-        // Jangan polling saat app berada di background.
-        _stopPolling();
+        _stopAnalysisPolling();
+
+        if (mounted) {
+          context.read<MarketProvider>().setQuotePollingEnabled(false);
+        }
+
         break;
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // POLLING
-  // ---------------------------------------------------------------------------
+  // ===========================================================================
+  // ANALYSIS POLLING
+  // ===========================================================================
 
-  void _startPolling() {
-    _syncTimer?.cancel();
+  void _startAnalysisPolling() {
+    _analysisSyncTimer?.cancel();
 
-    _syncTimer = Timer.periodic(
-      _pollInterval,
-      (_) {
-        _syncCurrentTab();
-      },
-    );
+    _analysisSyncTimer = Timer.periodic(_analysisPollInterval, (_) {
+      _syncCurrentTab();
+    });
   }
 
-  void _stopPolling() {
-    _syncTimer?.cancel();
-    _syncTimer = null;
+  void _stopAnalysisPolling() {
+    _analysisSyncTimer?.cancel();
+
+    _analysisSyncTimer = null;
   }
 
-  // ---------------------------------------------------------------------------
+  // ===========================================================================
   // SYNC
-  // ---------------------------------------------------------------------------
+  // ===========================================================================
 
-  void _syncCurrentTab({
-    bool showLoading = false,
-  }) {
-    _syncTab(
-      _index,
-      showLoading: showLoading,
-    );
+  void _syncCurrentTab({bool showLoading = false}) {
+    _syncTab(_index, showLoading: showLoading);
   }
 
-  void _syncTab(
-    int index, {
-    bool showLoading = false,
-  }) {
+  void _syncTab(int index, {bool showLoading = false}) {
     if (!mounted) {
       return;
     }
 
-    final authProvider =
-        context.read<AuthProvider>();
+    final authProvider = context.read<AuthProvider>();
 
-    if (authProvider.status !=
-        AuthStatus.authenticated) {
+    if (authProvider.status != AuthStatus.authenticated) {
+      context.read<MarketProvider>().setQuotePollingEnabled(false);
+
       return;
     }
 
-    final analysisProvider =
-        context.read<AnalysisProvider>();
+    final analysisProvider = context.read<AnalysisProvider>();
+
+    final marketProvider = context.read<MarketProvider>();
+
+    // Live quote hanya diperlukan di:
+    //
+    // 0 = Dashboard
+    // 1 = Analyze
+    //
+    // Jangan terus polling saat History / Profile.
+    final needsLiveQuotes = index == 0 || index == 1;
+
+    marketProvider.setQuotePollingEnabled(needsLiveQuotes);
 
     switch (index) {
-      // Dashboard membutuhkan:
-      //
-      // - history/recent analyses
-      // - summary
-      // - quota
+      // -----------------------------------------------------------------------
+      // DASHBOARD
+      // -----------------------------------------------------------------------
+
       case 0:
-        unawaited(
-          analysisProvider.refreshCoreData(
-            silent: !showLoading,
-          ),
-        );
+        unawaited(analysisProvider.refreshCoreData(silent: !showLoading));
+
+        unawaited(marketProvider.loadWatchlist());
+
         break;
 
-      // Analyze cukup menjaga quota fresh.
+      // -----------------------------------------------------------------------
+      // ANALYZE
+      // -----------------------------------------------------------------------
+
       case 1:
-        unawaited(
-          analysisProvider.loadQuota(),
-        );
+        unawaited(analysisProvider.loadQuota());
+
+        unawaited(marketProvider.loadWatchlist());
+
         break;
 
-      // History hanya membutuhkan list analyses.
+      // -----------------------------------------------------------------------
+      // HISTORY
+      // -----------------------------------------------------------------------
+
       case 2:
         unawaited(
-          analysisProvider.loadHistory(
-            refresh: true,
-            silent: !showLoading,
-          ),
+          analysisProvider.loadHistory(refresh: true, silent: !showLoading),
         );
+
         break;
 
-      // Profile tidak membutuhkan polling analysis.
+      // -----------------------------------------------------------------------
+      // PROFILE
+      // -----------------------------------------------------------------------
+
       case 3:
         break;
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // TAB NAVIGATION
-  // ---------------------------------------------------------------------------
+  // ===========================================================================
+  // NAVIGATION
+  // ===========================================================================
 
-  void _onTabSelected(
-    int index,
-  ) {
+  void _onTabSelected(int index) {
     if (_index != index) {
-      setState(
-        () {
-          _index = index;
-        },
-      );
+      setState(() {
+        _index = index;
+      });
     }
 
-    // Selalu revalidate tab yang dipilih.
-    //
-    // Bahkan kalau user menekan tab aktif lagi,
-    // state akan disinkronkan.
     _syncTab(index);
   }
 
-  // ---------------------------------------------------------------------------
+  // ===========================================================================
   // BUILD
-  // ---------------------------------------------------------------------------
+  // ===========================================================================
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _index,
-        children: _tabs,
-      ),
-      bottomNavigationBar:
-          BottomNavigationBar(
+      body: IndexedStack(index: _index, children: _tabs),
+      bottomNavigationBar: BottomNavigationBar(
         currentIndex: _index,
         onTap: _onTabSelected,
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(
-              Icons.space_dashboard_rounded,
-            ),
+            icon: Icon(Icons.space_dashboard_rounded),
             label: 'Dashboard',
           ),
           BottomNavigationBarItem(
-            icon: Icon(
-              Icons.auto_awesome_rounded,
-            ),
+            icon: Icon(Icons.auto_awesome_rounded),
             label: 'Analisis',
           ),
           BottomNavigationBarItem(
-            icon: Icon(
-              Icons.history_rounded,
-            ),
+            icon: Icon(Icons.history_rounded),
             label: 'Riwayat',
           ),
           BottomNavigationBarItem(
-            icon: Icon(
-              Icons.person_rounded,
-            ),
+            icon: Icon(Icons.person_rounded),
             label: 'Profil',
           ),
         ],
