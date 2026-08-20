@@ -147,8 +147,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         break;
 
       case 2:
-        // History
-        unawaited(analysis.loadHistory(refresh: true, silent: true));
+        unawaited(analysis.refreshVisibleHistory(silent: true));
 
         break;
 
@@ -208,9 +207,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
 
       // History
       case 2:
-        unawaited(
-          analysisProvider.loadHistory(refresh: true, silent: !showLoading),
-        );
+        unawaited(analysisProvider.refreshVisibleHistory(silent: !showLoading));
 
         break;
 
