@@ -344,32 +344,86 @@ class MarketProvider extends ChangeNotifier {
     final timeframe = selectedTimeframe;
 
     isLoadingSelectedMarket = true;
-
     marketError = null;
 
     notifyListeners();
 
+    var candles = const <MarketCandle>[];
+
+    BeginnerTechnicalSnapshot? technical;
+
+    var calendar = const <EconomicCalendarEvent>[];
+
+    var candlesLoaded = false;
+    var technicalLoaded = false;
+    var calendarLoaded = false;
+
+    Object? firstError;
+
     try {
-      final results = await Future.wait<dynamic>([
-        getCandlesFor(instrument, timeframe, force: force),
-        getTechnicalFor(instrument, timeframe, force: force),
-        getRelevantCalendarFor(instrument, force: force),
+      await Future.wait<void>([
+        () async {
+          try {
+            candles = await getCandlesFor(instrument, timeframe, force: force);
+
+            candlesLoaded = true;
+          } catch (error) {
+            firstError ??= error;
+          }
+        }(),
+
+        () async {
+          try {
+            technical = await getTechnicalFor(
+              instrument,
+              timeframe,
+              force: force,
+            );
+
+            technicalLoaded = true;
+          } catch (error) {
+            firstError ??= error;
+          }
+        }(),
+
+        () async {
+          try {
+            calendar = await getRelevantCalendarFor(instrument, force: force);
+
+            calendarLoaded = true;
+          } catch (error) {
+            firstError ??= error;
+          }
+        }(),
       ]);
 
+      // User keburu ganti instrument/timeframe.
+      // Jangan timpa selection terbaru dengan response lama.
       if (generation != _selectionGeneration ||
           instrument != selectedInstrument ||
           timeframe != selectedTimeframe) {
         return;
       }
 
-      selectedCandles = results[0] as List<MarketCandle>;
+      if (candlesLoaded) {
+        selectedCandles = candles;
+      }
 
-      selectedTechnical = results[1] as BeginnerTechnicalSnapshot?;
+      if (technicalLoaded) {
+        selectedTechnical = technical;
+      }
 
-      selectedCalendar = results[2] as List<EconomicCalendarEvent>;
-    } catch (e) {
-      if (generation == _selectionGeneration) {
-        marketError = _friendlyError(e, fallback: 'Gagal memuat data pasar.');
+      if (calendarLoaded) {
+        selectedCalendar = calendar;
+      }
+
+      if (firstError != null) {
+        marketError = _friendlyError(
+          firstError!,
+          fallback: 'Sebagian data pasar belum tersedia.',
+        );
+      } else {
+        marketError = null;
       }
     } finally {
       if (generation == _selectionGeneration) {

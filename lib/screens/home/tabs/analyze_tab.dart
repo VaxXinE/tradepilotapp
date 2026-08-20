@@ -1185,24 +1185,7 @@ class _EconomicCalendarCard extends StatelessWidget {
         ? AppColors.darkMutedForeground
         : AppColors.lightMutedForeground;
 
-    final upcoming = events
-        .where((event) {
-          if (event.actual.trim().isNotEmpty) {
-            return false;
-          }
-
-          final date = event.eventDateTime;
-
-          if (date == null) {
-            return true;
-          }
-
-          return date.isAfter(
-            DateTime.now().subtract(const Duration(minutes: 1)),
-          );
-        })
-        .take(3)
-        .toList();
+    final visibleEvents = events.take(6).toList();
 
     return Card(
       child: Padding(
@@ -1243,15 +1226,15 @@ class _EconomicCalendarCard extends StatelessWidget {
                   child: CircularProgressIndicator(),
                 ),
               )
-            else if (upcoming.isEmpty)
+            else if (visibleEvents.isEmpty)
               Text(
                 'Tidak ada event ekonomi relevan yang akan datang.',
                 style: TextStyle(color: muted, fontSize: 12),
               )
             else
-              for (var i = 0; i < upcoming.length; i++) ...[
-                _CalendarEventRow(event: upcoming[i]),
-                if (i != upcoming.length - 1) const Divider(height: 22),
+              for (var i = 0; i < visibleEvents.length; i++) ...[
+                _CalendarEventRow(event: visibleEvents[i]),
+                if (i != visibleEvents.length - 1) const Divider(height: 22),
               ],
           ],
         ),
@@ -1320,6 +1303,29 @@ class _CalendarEventRow extends StatelessWidget {
                 '${event.currency} • $timeLabel',
                 style: TextStyle(color: muted, fontSize: 10.5),
               ),
+              if (event.actual.trim().isNotEmpty ||
+                  event.forecast.trim().isNotEmpty ||
+                  event.previous.trim().isNotEmpty) ...[
+                const SizedBox(height: 7),
+
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    if (event.actual.trim().isNotEmpty)
+                      _CalendarMetric(label: 'Aktual', value: event.actual),
+
+                    if (event.forecast.trim().isNotEmpty)
+                      _CalendarMetric(label: 'Forecast', value: event.forecast),
+
+                    if (event.previous.trim().isNotEmpty)
+                      _CalendarMetric(
+                        label: 'Sebelumnya',
+                        value: event.previous,
+                      ),
+                  ],
+                ),
+              ],
               if (event.whyTraderCare.trim().isNotEmpty) ...[
                 const SizedBox(height: 5),
                 Text(
@@ -1454,6 +1460,36 @@ class _SectionTitle extends StatelessWidget {
         const SizedBox(height: 3),
         Text(subtitle, style: TextStyle(color: muted, fontSize: 11.5)),
       ],
+    );
+  }
+}
+
+class _CalendarMetric extends StatelessWidget {
+  const _CalendarMetric({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final muted = Theme.of(context).colorScheme.onSurfaceVariant;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+      decoration: BoxDecoration(
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(7),
+      ),
+      child: Text(
+        '$label: $value',
+        style: TextStyle(
+          color: muted,
+          fontSize: 9.5,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }

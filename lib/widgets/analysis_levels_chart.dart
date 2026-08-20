@@ -147,6 +147,24 @@ class AnalysisLevelsChart extends StatelessWidget {
                       color: level.color,
                       strokeWidth: 1.5,
                       dashArray: level.dashed ? [6, 4] : null,
+
+                      // Sama seperti axisLabelVisible di web.
+                      label: HorizontalLineLabel(
+                        show: true,
+                        alignment: Alignment.topRight,
+                        padding: const EdgeInsets.only(right: 6, bottom: 3),
+                        style: TextStyle(
+                          color: level.color,
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w800,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.surface.withValues(alpha: 0.88),
+                        ),
+                        labelResolver: (_) {
+                          return '${level.label} ${_formatPrice(level.price)}';
+                        },
+                      ),
                     ),
                 ],
                 verticalLines: [
@@ -178,24 +196,32 @@ class AnalysisLevelsChart extends StatelessWidget {
 
         const SizedBox(height: 10),
 
-        Wrap(
-          spacing: 12,
-          runSpacing: 8,
-          children: [
-            if (cutoffIndex != null)
-              _LegendItem(
-                color: muted,
-                label: 'AI membuat analisis',
-                dashed: true,
-              ),
-            for (final level in levels)
-              _LegendItem(
-                color: level.color,
-                label: level.label,
-                dashed: level.dashed,
-              ),
-          ],
-        ),
+        if (cutoffIndex != null)
+          _LegendItem(color: muted, label: 'AI membuat analisis', dashed: true),
+
+        if (levels.isNotEmpty) ...[
+          const SizedBox(height: 12),
+
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Theme.of(
+                context,
+              ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              children: [
+                for (var i = 0; i < levels.length; i++) ...[
+                  _LevelValueRow(level: levels[i]),
+
+                  if (i != levels.length - 1) const Divider(height: 16),
+                ],
+              ],
+            ),
+          ),
+        ],
 
         if (tradePlan?.preferredSide == TradePlanPreferredSideEnum.wait) ...[
           const SizedBox(height: 10),
@@ -244,7 +270,7 @@ class AnalysisLevelsChart extends StatelessWidget {
 
     final entry = _parsePriceLevel(side.entryZone);
 
-    final sl = _parsePriceLevel(side.stopLoss);
+    final stopLoss = _parsePriceLevel(side.stopLoss);
 
     final tp1 = _parsePriceLevel(side.takeProfit1);
 
@@ -255,37 +281,46 @@ class AnalysisLevelsChart extends StatelessWidget {
         _PriceLevel(
           label: '${isBuy ? 'BUY' : 'SELL'} Entry',
           price: entry,
+          displayValue: side.entryZone,
           color: primary,
           dashed: true,
         ),
       );
     }
 
-    if (sl != null) {
+    if (stopLoss != null) {
       result.add(
-        _PriceLevel(label: 'Stop Loss', price: sl, color: error, dashed: false),
+        _PriceLevel(
+          label: 'Stop Loss',
+          price: stopLoss,
+          displayValue: side.stopLoss,
+          color: error,
+          dashed: false,
+        ),
       );
     }
 
     if (tp1 != null) {
       result.add(
-        const _PriceLevel(
+        _PriceLevel(
           label: 'TP1',
-          price: 0,
+          price: tp1,
+          displayValue: side.takeProfit1,
           color: takeProfit,
           dashed: false,
-        ).copyWith(price: tp1),
+        ),
       );
     }
 
     if (tp2 != null) {
       result.add(
-        const _PriceLevel(
+        _PriceLevel(
           label: 'TP2',
-          price: 0,
+          price: tp2,
+          displayValue: side.takeProfit2,
           color: takeProfit,
           dashed: false,
-        ).copyWith(price: tp2),
+        ),
       );
     }
 
@@ -293,19 +328,21 @@ class AnalysisLevelsChart extends StatelessWidget {
   }
 
   double? _parsePriceLevel(String raw) {
-    final matches = RegExp(r'\d+(?:[.,]\d+)?').allMatches(raw).toList();
-
-    if (matches.isEmpty) {
-      return null;
-    }
+    final matches = RegExp(r'\d[\d.,]*').allMatches(raw);
 
     final values = <double>[];
 
     for (final match in matches) {
-      final value = double.tryParse(match.group(0)!.replaceAll(',', '.'));
+      final rawNumber = match.group(0);
 
-      if (value != null && value.isFinite && value > 0) {
-        values.add(value);
+      if (rawNumber == null) {
+        continue;
+      }
+
+      final parsed = _parseFlexibleNumber(rawNumber);
+
+      if (parsed != null && parsed.isFinite && parsed > 0) {
+        values.add(parsed);
       }
     }
 
@@ -317,7 +354,50 @@ class AnalysisLevelsChart extends StatelessWidget {
       return values.first;
     }
 
+    // Entry/SL berupa range:
+    //
+    // 3341.25 - 3345.00
+    //
+    // garis divisualisasikan pada midpoint.
     return (values[0] + values[1]) / 2;
+  }
+
+  double? _parseFlexibleNumber(String raw) {
+    var value = raw
+        .trim()
+        .replaceAll(RegExp(r'\s'), '')
+        .replaceAll(RegExp(r'[.,]+$'), '');
+
+    final lastComma = value.lastIndexOf(',');
+
+    final lastDot = value.lastIndexOf('.');
+
+    // Contoh:
+    // 3,341.25
+    // 3.341,25
+    if (lastComma >= 0 && lastDot >= 0) {
+      if (lastDot > lastComma) {
+        // 3,341.25
+        value = value.replaceAll(',', '');
+      } else {
+        // 3.341,25
+        value = value.replaceAll('.', '');
+
+        value = value.replaceAll(',', '.');
+      }
+    } else if (lastComma >= 0) {
+      final digitsAfter = value.length - lastComma - 1;
+
+      if (digitsAfter == 3 && lastComma <= 3) {
+        // 3,341 → 3341
+        value = value.replaceAll(',', '');
+      } else {
+        // 1,0857 → 1.0857
+        value = value.replaceAll(',', '.');
+      }
+    }
+
+    return double.tryParse(value);
   }
 
   String _formatPrice(double value) {
@@ -341,12 +421,14 @@ class _PriceLevel {
   const _PriceLevel({
     required this.label,
     required this.price,
+    required this.displayValue,
     required this.color,
     required this.dashed,
   });
 
   final String label;
   final double price;
+  final String displayValue;
   final Color color;
   final bool dashed;
 
@@ -354,6 +436,7 @@ class _PriceLevel {
     return _PriceLevel(
       label: label,
       price: price ?? this.price,
+      displayValue: displayValue,
       color: color,
       dashed: dashed,
     );
@@ -390,6 +473,53 @@ class _LegendItem extends StatelessWidget {
           style: TextStyle(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
             fontSize: 10,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _LevelValueRow extends StatelessWidget {
+  const _LevelValueRow({required this.level});
+
+  final _PriceLevel level;
+
+  @override
+  Widget build(BuildContext context) {
+    final muted = Theme.of(context).colorScheme.onSurfaceVariant;
+
+    return Row(
+      children: [
+        Container(
+          width: 18,
+          height: 3,
+          decoration: BoxDecoration(
+            color: level.color,
+            borderRadius: BorderRadius.circular(999),
+          ),
+        ),
+
+        const SizedBox(width: 8),
+
+        Expanded(
+          child: Text(
+            level.label,
+            style: TextStyle(
+              color: muted,
+              fontSize: 11.5,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+
+        const SizedBox(width: 10),
+
+        Flexible(
+          child: Text(
+            level.displayValue,
+            textAlign: TextAlign.right,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
           ),
         ),
       ],
