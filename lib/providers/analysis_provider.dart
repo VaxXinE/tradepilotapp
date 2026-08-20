@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
@@ -58,7 +60,24 @@ class AnalysisProvider extends ChangeNotifier {
       return response.data;
     } catch (e) {
       isSubmitting = false;
-      errorMessage = _friendlyError(e);
+      final isTimeout = e is DioException &&
+          (e.type == DioExceptionType.receiveTimeout ||
+              e.type == DioExceptionType.sendTimeout ||
+              e.type == DioExceptionType.connectionTimeout);
+      if (isTimeout) {
+        // The request may well have succeeded server-side (the row gets
+        // inserted before the response is sent) even though the client
+        // gave up waiting for the response body. Refresh history/quota
+        // in the background so it shows up without the user needing to
+        // manually pull-to-refresh, and say so honestly instead of
+        // claiming outright failure.
+        errorMessage =
+            'Koneksi ke AI lama meresponsnya. Analisis mungkin tetap berhasil dibuat — cek tab Riwayat sebentar lagi.';
+        unawaited(loadHistory(refresh: true));
+        unawaited(loadQuota());
+      } else {
+        errorMessage = _friendlyError(e);
+      }
       notifyListeners();
       return null;
     }
@@ -139,11 +158,20 @@ class AnalysisProvider extends ChangeNotifier {
   String _friendlyError(Object e) {
     if (e is DioException) {
       final data = e.response?.data;
-      if (data is Map && data['message'] is String) {
-        return data['message'] as String;
+      if (data is Map) {
+        final msg = data['error'] ?? data['message'];
+        if (msg is String && msg.isNotEmpty) return msg;
       }
       if (e.response?.statusCode == 429) {
         return 'Batas kuota analisis tercapai. Coba lagi nanti.';
+      }
+      if (e.type == DioExceptionType.receiveTimeout ||
+          e.type == DioExceptionType.sendTimeout ||
+          e.type == DioExceptionType.connectionTimeout) {
+        return 'AI butuh waktu lebih lama dari biasanya untuk menganalisis. Silakan coba lagi.';
+      }
+      if (e.type == DioExceptionType.connectionError) {
+        return 'Tidak bisa terhubung ke server. Periksa koneksi internet kamu.';
       }
     }
     return 'Analisis gagal. Silakan coba lagi.';

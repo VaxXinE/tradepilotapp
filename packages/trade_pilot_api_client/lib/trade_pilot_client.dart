@@ -60,6 +60,17 @@ class TradePilotClient {
     AuthTokenGetter? getToken,
     Dio? dio,
   }) : _client = TradePilotApiClient(dio: dio, basePathOverride: baseUrl) {
+    // Default generated timeouts (connect 5s / receive 3s) are far too
+    // short for AI-generation endpoints like POST /analyses, which calls
+    // GPT-4o server-side *plus* fetches news/economic-calendar/indicator
+    // data first — worst case can run well past a minute. Give it a
+    // generous ceiling; the backend has already inserted the row and
+    // would have returned successfully given enough time, so a timeout
+    // that's too short just makes a real success look like a failure.
+    _client.dio.options.connectTimeout = const Duration(seconds: 20);
+    _client.dio.options.sendTimeout = const Duration(seconds: 20);
+    _client.dio.options.receiveTimeout = const Duration(seconds: 150);
+
     if (getToken != null) {
       _client.dio.interceptors.add(_AuthTokenInterceptor(getToken));
     }
