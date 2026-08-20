@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
 import 'providers/analysis_provider.dart';
 import 'providers/auth_provider.dart';
+import 'providers/market_provider.dart';
 import 'providers/notifications_provider.dart';
 import 'screens/splash_screen.dart';
 
@@ -18,25 +19,55 @@ class TradePilotApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        // =====================================================================
+        // AUTH
+        // =====================================================================
+        ChangeNotifierProvider<AuthProvider>(create: (_) => AuthProvider()),
+
+        // =====================================================================
+        // ANALYSIS
+        // =====================================================================
         ChangeNotifierProxyProvider<AuthProvider, AnalysisProvider>(
-          create: (context) => AnalysisProvider(context.read<AuthProvider>()),
-          update: (context, auth, previous) =>
-              previous ?? AnalysisProvider(auth),
+          create: (context) {
+            return AnalysisProvider(context.read<AuthProvider>());
+          },
+          update: (context, auth, previous) {
+            return previous ?? AnalysisProvider(auth);
+          },
         ),
+
+        // =====================================================================
+        // MARKET
+        // =====================================================================
+        ChangeNotifierProxyProvider<AuthProvider, MarketProvider>(
+          create: (context) {
+            return MarketProvider(context.read<AuthProvider>());
+          },
+          update: (context, auth, previous) {
+            return previous ?? MarketProvider(auth);
+          },
+        ),
+
+        // =====================================================================
+        // NOTIFICATIONS
+        // =====================================================================
         ChangeNotifierProxyProvider<AuthProvider, NotificationsProvider>(
-          create: (context) =>
-              NotificationsProvider(context.read<AuthProvider>()),
-          update: (context, auth, previous) =>
-              previous ?? NotificationsProvider(auth),
+          create: (context) {
+            return NotificationsProvider(context.read<AuthProvider>());
+          },
+          update: (context, auth, previous) {
+            return previous ?? NotificationsProvider(auth);
+          },
         ),
       ],
       child: MaterialApp(
         title: 'Trade Pilot',
         debugShowCheckedModeBanner: false,
+
         theme: AppTheme.light,
         darkTheme: AppTheme.dark,
         themeMode: ThemeMode.system,
+
         home: const SplashScreen(),
       ),
     );
