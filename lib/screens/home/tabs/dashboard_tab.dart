@@ -30,55 +30,28 @@ class DashboardTab extends StatefulWidget {
 }
 
 class _DashboardTabState extends State<DashboardTab> {
-  bool _initializing = true;
+  Future<void> _openWatchlistManager() async {
+    final market = context.read<MarketProvider>();
 
-  @override
-  void initState() {
-    super.initState();
+    await market.loadWatchlist();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadInitialData();
-    });
+    if (!mounted) {
+      return;
+    }
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) {
+        return const _WatchlistManagerSheet();
+      },
+    );
   }
 
   // ===========================================================================
   // LOAD
   // ===========================================================================
-
-  Future<void> _loadInitialData() async {
-    if (!mounted) {
-      return;
-    }
-
-    final analysis = context.read<AnalysisProvider>();
-
-    final market = context.read<MarketProvider>();
-
-    final notifications = context.read<NotificationsProvider>();
-
-    final requests = <Future<void>>[
-      market.loadWatchlist(),
-      market.loadQuotes(),
-    ];
-
-    if (analysis.summary == null || analysis.history.isEmpty) {
-      requests.add(analysis.refreshCoreData(silent: false));
-    }
-
-    if (notifications.items.isEmpty) {
-      requests.add(notifications.load(silent: true));
-    }
-
-    await Future.wait(requests);
-
-    if (!mounted) {
-      return;
-    }
-
-    setState(() {
-      _initializing = false;
-    });
-  }
 
   Future<void> _refresh() async {
     final analysis = context.read<AnalysisProvider>();
@@ -201,11 +174,15 @@ class _DashboardTabState extends State<DashboardTab> {
               market: market,
               onOpenInstrument: widget.onOpenAnalyze,
               onCreateAlert: _openAlert,
+              onManageWatchlist: _openWatchlistManager,
             ),
 
             const SizedBox(height: 20),
 
-            if (_initializing && summary == null)
+            if ((analysisProvider.isLoadingSummary ||
+                    analysisProvider.isLoadingHistory) &&
+                summary == null &&
+                analysisProvider.history.isEmpty)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 28),
                 child: Center(child: CircularProgressIndicator()),
@@ -401,9 +378,12 @@ class _WatchlistMarketCard extends StatelessWidget {
     required this.market,
     required this.onOpenInstrument,
     required this.onCreateAlert,
+    required this.onManageWatchlist,
   });
 
   final MarketProvider market;
+
+  final VoidCallback onManageWatchlist;
 
   final void Function(String? instrument) onOpenInstrument;
 
@@ -431,6 +411,11 @@ class _WatchlistMarketCard extends StatelessWidget {
                     'Watchlist Pasar',
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
                   ),
+                ),
+                IconButton(
+                  tooltip: 'Kelola watchlist',
+                  onPressed: onManageWatchlist,
+                  icon: const Icon(Icons.add_rounded, size: 20),
                 ),
 
                 if (market.isLoadingWatchlist || market.isLoadingQuotes)
@@ -954,4 +939,145 @@ String _formatPrice(String instrument, double value) {
   }
 
   return value.toStringAsFixed(6);
+}
+
+class _WatchlistManagerSheet extends StatelessWidget {
+  const _WatchlistManagerSheet();
+
+  @override
+  Widget build(BuildContext context) {
+    final market = context.watch<MarketProvider>();
+
+    final muted = Theme.of(context).colorScheme.onSurfaceVariant;
+
+    return SafeArea(
+      child: SizedBox(
+        height: MediaQuery.sizeOf(context).height * 0.82,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 12, 12),
+              child: Row(
+                children: [
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Kelola Watchlist',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        SizedBox(height: 3),
+                        Text(
+                          'Pilih market yang ingin dipantau di Dashboard.',
+                          style: TextStyle(fontSize: 11.5),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Tutup',
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+            ),
+
+            if (market.isUpdatingWatchlist)
+              const LinearProgressIndicator(minHeight: 2),
+
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                children: [
+                  for (final group
+                      in MarketProvider.instrumentGroups.entries) ...[
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(4, 14, 4, 6),
+                      child: Text(
+                        group.key,
+                        style: TextStyle(
+                          color: muted,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+
+                    for (final instrument in group.value)
+                      _WatchlistManagerRow(instrument: instrument),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _WatchlistManagerRow extends StatelessWidget {
+  const _WatchlistManagerRow({required this.instrument});
+
+  final String instrument;
+
+  @override
+  Widget build(BuildContext context) {
+    final market = context.watch<MarketProvider>();
+
+    final selected = market.isWatchlisted(instrument);
+
+    final quote = market.quoteFor(instrument);
+
+    final muted = Theme.of(context).colorScheme.onSurfaceVariant;
+
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+      title: Text(
+        instrument,
+        style: const TextStyle(fontWeight: FontWeight.w800),
+      ),
+      subtitle: quote == null
+          ? Text(
+              'Harga live belum tersedia',
+              style: TextStyle(color: muted, fontSize: 10.5),
+            )
+          : Text(
+              _formatPrice(instrument, quote.price),
+              style: TextStyle(color: muted, fontSize: 11),
+            ),
+      trailing: IconButton(
+        tooltip: selected ? 'Hapus dari watchlist' : 'Tambahkan ke watchlist',
+        onPressed: market.isUpdatingWatchlist
+            ? null
+            : () async {
+                final ok = await context.read<MarketProvider>().toggleWatchlist(
+                  instrument,
+                );
+
+                if (!context.mounted) {
+                  return;
+                }
+
+                if (!ok) {
+                  final error = context.read<MarketProvider>().watchlistError;
+
+                  if (error != null) {
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(error)));
+                  }
+                }
+              },
+        icon: Icon(selected ? Icons.star_rounded : Icons.star_border_rounded),
+      ),
+    );
+  }
 }

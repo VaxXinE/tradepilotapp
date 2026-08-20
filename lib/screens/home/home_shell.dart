@@ -99,14 +99,65 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     _analysisSyncTimer?.cancel();
 
     _analysisSyncTimer = Timer.periodic(_analysisPollInterval, (_) {
-      _syncCurrentTab();
+      _backgroundSyncTick();
     });
   }
 
   void _stopAnalysisPolling() {
     _analysisSyncTimer?.cancel();
-
     _analysisSyncTimer = null;
+  }
+
+  void _backgroundSyncTick() {
+    if (!mounted) {
+      return;
+    }
+
+    final route = ModalRoute.of(context);
+
+    // Home sedang tertutup AnalysisDetail /
+    // Notifications / route lain.
+    //
+    // Jangan terus melakukan polling di belakang layar.
+    if (route != null && !route.isCurrent) {
+      context.read<MarketProvider>().setQuotePollingEnabled(false);
+
+      return;
+    }
+
+    final auth = context.read<AuthProvider>();
+
+    if (auth.status != AuthStatus.authenticated) {
+      return;
+    }
+
+    final analysis = context.read<AnalysisProvider>();
+
+    final market = context.read<MarketProvider>();
+
+    market.setQuotePollingEnabled(_index == 0 || _index == 1);
+
+    switch (_index) {
+      case 0:
+        // Dashboard:
+        // outcome/recent analysis saja yang perlu
+        // background refresh 15 detik.
+        unawaited(analysis.loadHistory(refresh: true, silent: true));
+
+        break;
+
+      case 2:
+        // History
+        unawaited(analysis.loadHistory(refresh: true, silent: true));
+
+        break;
+
+      // Analyze punya quote polling sendiri
+      // melalui MarketProvider.
+      case 1:
+      case 3:
+        break;
+    }
   }
 
   // ===========================================================================

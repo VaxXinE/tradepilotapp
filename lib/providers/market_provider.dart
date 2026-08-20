@@ -10,7 +10,7 @@ import 'auth_provider.dart';
 
 class MarketProvider extends ChangeNotifier {
   MarketProvider(this._authProvider) {
-    _activeUserKey = _currentUserKey;
+    _activeUserId = _currentUserId;
 
     _authProvider.addListener(_handleAuthChanged);
   }
@@ -149,34 +149,62 @@ class MarketProvider extends ChangeNotifier {
 
   int _selectionGeneration = 0;
 
-  String? _activeUserKey;
+  int? _activeUserId;
+
+  int _sessionEpoch = 0;
+
+  int _watchlistRequestId = 0;
+
+  int _watchlistMutationRequestId = 0;
+
+  bool isUpdatingWatchlist = false;
 
   // ===========================================================================
-  // AUTH
+  // AUTH / USER-SCOPED STATE
   // ===========================================================================
 
-  String? get _currentUserKey {
+  int? get _currentUserId {
     if (_authProvider.status != AuthStatus.authenticated) {
       return null;
     }
 
-    return _authProvider.user?.email.trim().toLowerCase();
+    return _authProvider.user?.id;
+  }
+
+  bool _isCurrentUserSession({required int epoch, required int userId}) {
+    return epoch == _sessionEpoch &&
+        _authProvider.status == AuthStatus.authenticated &&
+        _currentUserId == userId;
   }
 
   void _handleAuthChanged() {
-    final next = _currentUserKey;
+    final nextUserId = _currentUserId;
 
-    if (next == _activeUserKey) {
+    if (nextUserId == _activeUserId) {
       return;
     }
 
-    _activeUserKey = next;
+    _activeUserId = nextUserId;
+
+    // Invalidasi semua response user-scoped
+    // dari session sebelumnya.
+    _sessionEpoch++;
+
+    _watchlistRequestId++;
+    _watchlistMutationRequestId++;
+
+    _watchlistRequestInFlight = false;
+
+    isUpdatingWatchlist = false;
 
     watchlist = {};
+
+    isLoadingWatchlist = false;
+
     watchlistError = null;
     alertError = null;
 
-    if (next == null) {
+    if (nextUserId == null) {
       setQuotePollingEnabled(false);
     } else {
       unawaited(loadWatchlist());
@@ -695,7 +723,9 @@ class MarketProvider extends ChangeNotifier {
   }
 
   Future<void> loadWatchlist() async {
-    if (_authProvider.status != AuthStatus.authenticated) {
+    final userId = _currentUserId;
+
+    if (userId == null) {
       return;
     }
 
@@ -703,12 +733,23 @@ class MarketProvider extends ChangeNotifier {
       return;
     }
 
+    final epoch = _sessionEpoch;
+
+    final requestId = ++_watchlistRequestId;
+
     _watchlistRequestInFlight = true;
 
     isLoadingWatchlist = true;
 
+    notifyListeners();
+
     try {
       final response = await _client.watchlist.getWatchlist();
+
+      if (!_isCurrentUserSession(epoch: epoch, userId: userId) ||
+          requestId != _watchlistRequestId) {
+        return;
+      }
 
       final items = response.data?.items;
 
@@ -718,22 +759,37 @@ class MarketProvider extends ChangeNotifier {
       };
 
       watchlistError = null;
-    } catch (e) {
-      watchlistError = _friendlyError(e, fallback: 'Gagal memuat watchlist.');
+    } catch (error) {
+      if (!_isCurrentUserSession(epoch: epoch, userId: userId) ||
+          requestId != _watchlistRequestId) {
+        return;
+      }
+
+      watchlistError = _friendlyError(
+        error,
+        fallback: 'Gagal memuat watchlist.',
+      );
     } finally {
-      _watchlistRequestInFlight = false;
+      if (requestId == _watchlistRequestId) {
+        _watchlistRequestInFlight = false;
 
-      isLoadingWatchlist = false;
+        if (_isCurrentUserSession(epoch: epoch, userId: userId)) {
+          isLoadingWatchlist = false;
 
-      notifyListeners();
+          notifyListeners();
+        }
+      }
     }
   }
 
   Future<bool> toggleWatchlist(String instrument) async {
-    if (_authProvider.status != AuthStatus.authenticated) {
+    final userId = _currentUserId;
+
+    if (userId == null) {
       watchlistError = 'Silakan login kembali.';
 
       notifyListeners();
+
       return false;
     }
 
@@ -743,12 +799,24 @@ class MarketProvider extends ChangeNotifier {
       watchlistError = 'Instrumen tidak didukung.';
 
       notifyListeners();
+
       return false;
     }
 
+    // Hindari double-tap / request race.
+    if (isUpdatingWatchlist) {
+      return false;
+    }
+
+    final epoch = _sessionEpoch;
+
+    final requestId = ++_watchlistMutationRequestId;
+
     final wasWatchlisted = watchlist.contains(normalized);
 
-    // Optimistic update.
+    isUpdatingWatchlist = true;
+
+    // Optimistic UI.
     if (wasWatchlisted) {
       watchlist.remove(normalized);
     } else {
@@ -764,14 +832,24 @@ class MarketProvider extends ChangeNotifier {
         await _client.watchlist.removeWatchlistItem(instrument: normalized);
       } else {
         await _client.watchlist.addWatchlistItem(
-          addWatchlistBody: AddWatchlistBody(
-            (builder) => builder..instrument = normalized,
-          ),
+          addWatchlistBody: AddWatchlistBody((builder) {
+            builder.instrument = normalized;
+          }),
         );
       }
 
+      if (!_isCurrentUserSession(epoch: epoch, userId: userId) ||
+          requestId != _watchlistMutationRequestId) {
+        return false;
+      }
+
       return true;
-    } catch (e) {
+    } catch (error) {
+      if (!_isCurrentUserSession(epoch: epoch, userId: userId) ||
+          requestId != _watchlistMutationRequestId) {
+        return false;
+      }
+
       // Rollback optimistic update.
       if (wasWatchlisted) {
         watchlist.add(normalized);
@@ -780,13 +858,20 @@ class MarketProvider extends ChangeNotifier {
       }
 
       watchlistError = _friendlyError(
-        e,
+        error,
         fallback: 'Gagal memperbarui watchlist.',
       );
 
       notifyListeners();
 
       return false;
+    } finally {
+      if (requestId == _watchlistMutationRequestId &&
+          _isCurrentUserSession(epoch: epoch, userId: userId)) {
+        isUpdatingWatchlist = false;
+
+        notifyListeners();
+      }
     }
   }
 
@@ -808,6 +893,18 @@ class MarketProvider extends ChangeNotifier {
       notifyListeners();
       return false;
     }
+
+    final userId = _currentUserId;
+
+    if (userId == null) {
+      alertError = 'Sesi login sudah berakhir.';
+
+      notifyListeners();
+
+      return false;
+    }
+
+    final epoch = _sessionEpoch;
 
     final normalized = _normalizeInstrument(instrument);
 
@@ -847,6 +944,9 @@ class MarketProvider extends ChangeNotifier {
             ..lang = CreateUserPriceAlertBodyLangEnum.id,
         ),
       );
+      if (!_isCurrentUserSession(epoch: epoch, userId: userId)) {
+        return false;
+      }
 
       alertError = null;
 
@@ -854,7 +954,11 @@ class MarketProvider extends ChangeNotifier {
 
       return true;
     } catch (e) {
-      alertError = _friendlyError(e, fallback: 'Gagal membuat price alert.');
+      if (!_isCurrentUserSession(epoch: epoch, userId: userId)) {
+        return false;
+      }
+
+      alertError = _friendlyError(e, fallback: 'Gagal membuat alert harga.');
 
       notifyListeners();
 
