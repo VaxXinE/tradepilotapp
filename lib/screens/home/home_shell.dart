@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../providers/analysis_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/market_provider.dart';
+import '../../providers/notifications_provider.dart';
 import 'tabs/analyze_tab.dart';
 import 'tabs/dashboard_tab.dart';
 import 'tabs/history_tab.dart';
@@ -52,8 +53,17 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         return;
       }
 
+      // -------------------------------------------------------------------
+      // P2-B:
+      // Aktifkan realtime notification ketika HomeShell aktif.
+      // -------------------------------------------------------------------
+
+      context.read<NotificationsProvider>().setRealtimeEnabled(true);
+
+      // Initial sync tab.
       _syncCurrentTab(showLoading: true);
 
+      // Background analysis polling.
       _startAnalysisPolling();
     });
   }
@@ -67,15 +77,36 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     super.dispose();
   }
 
+  // ===========================================================================
+  // APP LIFECYCLE
+  // ===========================================================================
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     switch (state) {
+      // ---------------------------------------------------------------------
+      // APP KEMBALI FOREGROUND
+      // ---------------------------------------------------------------------
+
       case AppLifecycleState.resumed:
+        if (!mounted) {
+          return;
+        }
+
+        // Aktifkan kembali notification SSE.
+        context.read<NotificationsProvider>().setRealtimeEnabled(true);
+
+        // Refresh tab yang sedang aktif.
         _syncCurrentTab();
 
+        // Restart analysis polling.
         _startAnalysisPolling();
 
         break;
+
+      // ---------------------------------------------------------------------
+      // APP MENINGGALKAN FOREGROUND
+      // ---------------------------------------------------------------------
 
       case AppLifecycleState.inactive:
       case AppLifecycleState.paused:
@@ -83,16 +114,29 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       case AppLifecycleState.hidden:
         _stopAnalysisPolling();
 
-        if (mounted) {
-          context.read<MarketProvider>().setQuotePollingEnabled(false);
+        if (!mounted) {
+          return;
         }
+
+        // Stop live quote polling.
+        context.read<MarketProvider>().setQuotePollingEnabled(false);
+
+        // -------------------------------------------------------------------
+        // P2-B:
+        // Jangan mempertahankan SSE ketika app background.
+        //
+        // Native push nantinya yang bertugas memberi notification ketika
+        // aplikasi berada di background / terminated.
+        // -------------------------------------------------------------------
+
+        context.read<NotificationsProvider>().setRealtimeEnabled(false);
 
         break;
     }
   }
 
   // ===========================================================================
-  // POLLING
+  // ANALYSIS POLLING
   // ===========================================================================
 
   void _startAnalysisPolling() {
@@ -105,6 +149,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
 
   void _stopAnalysisPolling() {
     _analysisSyncTimer?.cancel();
+
     _analysisSyncTimer = null;
   }
 
@@ -115,10 +160,16 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
 
     final route = ModalRoute.of(context);
 
-    // Home sedang tertutup AnalysisDetail /
-    // Notifications / route lain.
+    // -----------------------------------------------------------------------
+    // Kalau HomeShell sedang tertutup route lain:
     //
-    // Jangan terus melakukan polling di belakang layar.
+    // Dashboard
+    //    ↓
+    // AnalysisDetail
+    //
+    // jangan terus melakukan polling HomeShell di belakang layar.
+    // -----------------------------------------------------------------------
+
     if (route != null && !route.isCurrent) {
       context.read<MarketProvider>().setQuotePollingEnabled(false);
 
@@ -135,32 +186,70 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
 
     final market = context.read<MarketProvider>();
 
+    // -----------------------------------------------------------------------
+    // Live quote hanya diperlukan Dashboard + Analyze.
+    // -----------------------------------------------------------------------
+
     market.setQuotePollingEnabled(_index == 0 || _index == 1);
 
     switch (_index) {
+      // ---------------------------------------------------------------------
+      // DASHBOARD
+      // ---------------------------------------------------------------------
+
       case 0:
-        // Dashboard:
-        // outcome/recent analysis saja yang perlu
-        // background refresh 15 detik.
+        // Hanya refresh history/outcome.
+        //
+        // Jangan refresh:
+        // - summary
+        // - quota
+        // - watchlist
+        //
+        // setiap 15 detik.
         unawaited(analysis.loadHistory(refresh: true, silent: true));
 
         break;
 
+      // ---------------------------------------------------------------------
+      // ANALYZE
+      // ---------------------------------------------------------------------
+
+      case 1:
+        // Analyze market polling ditangani MarketProvider.
+        break;
+
+      // ---------------------------------------------------------------------
+      // HISTORY
+      // ---------------------------------------------------------------------
+
       case 2:
+        // P2-A:
+        //
+        // Kalau History sedang memakai:
+        //
+        // search
+        // instrument filter
+        // timeframe
+        // mode
+        // date range
+        //
+        // refresh query yang sedang terlihat,
+        // bukan base history.
         unawaited(analysis.refreshVisibleHistory(silent: true));
 
         break;
 
-      // Analyze punya quote polling sendiri
-      // melalui MarketProvider.
-      case 1:
+      // ---------------------------------------------------------------------
+      // PROFILE
+      // ---------------------------------------------------------------------
+
       case 3:
         break;
     }
   }
 
   // ===========================================================================
-  // SYNC
+  // CURRENT TAB SYNC
   // ===========================================================================
 
   void _syncCurrentTab({bool showLoading = false}) {
@@ -184,12 +273,19 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
 
     final marketProvider = context.read<MarketProvider>();
 
+    // -----------------------------------------------------------------------
+    // Quote polling
+    // -----------------------------------------------------------------------
+
     final needsLiveQuotes = index == 0 || index == 1;
 
     marketProvider.setQuotePollingEnabled(needsLiveQuotes);
 
     switch (index) {
-      // Dashboard
+      // ---------------------------------------------------------------------
+      // DASHBOARD
+      // ---------------------------------------------------------------------
+
       case 0:
         unawaited(analysisProvider.refreshCoreData(silent: !showLoading));
 
@@ -197,7 +293,10 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
 
         break;
 
-      // Analyze
+      // ---------------------------------------------------------------------
+      // ANALYZE
+      // ---------------------------------------------------------------------
+
       case 1:
         unawaited(analysisProvider.loadQuota());
 
@@ -205,13 +304,21 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
 
         break;
 
-      // History
+      // ---------------------------------------------------------------------
+      // HISTORY
+      // ---------------------------------------------------------------------
+
       case 2:
+        // P2-A:
+        // menghormati search/filter aktif.
         unawaited(analysisProvider.refreshVisibleHistory(silent: !showLoading));
 
         break;
 
-      // Profile
+      // ---------------------------------------------------------------------
+      // PROFILE
+      // ---------------------------------------------------------------------
+
       case 3:
         break;
     }
@@ -249,6 +356,13 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         _index = index;
       });
     }
+
+    // -----------------------------------------------------------------------
+    // Langsung sync ketika tab dipilih.
+    //
+    // IndexedStack mempertahankan state semua tab,
+    // sehingga kita tidak recreate Dashboard/History setiap pindah tab.
+    // -----------------------------------------------------------------------
 
     _syncTab(index);
   }
