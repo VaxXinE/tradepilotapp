@@ -175,7 +175,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<T?> _runValue<T>(Future<T> Function() action) async {
+  Future<T?> _runValue<T>(Future<T?> Function() action) async {
     isBusy = true;
     errorMessage = null;
     notifyListeners();

@@ -187,7 +187,7 @@ class _$User extends User {
   @override
   final bool onboardingCompleted;
   @override
-  final DateTime createdAt;
+  final DateTime? createdAt;
 
   factory _$User([void Function(UserBuilder)? updates]) =>
       (UserBuilder()..update(updates))._build();
@@ -202,7 +202,7 @@ class _$User extends User {
       required this.themePreference,
       this.securityQuestion,
       required this.onboardingCompleted,
-      required this.createdAt})
+      this.createdAt})
       : super._();
   @override
   User rebuild(void Function(UserBuilder) updates) =>
@@ -359,8 +359,7 @@ class UserBuilder implements Builder<User, UserBuilder> {
           securityQuestion: securityQuestion,
           onboardingCompleted: BuiltValueNullFieldError.checkNotNull(
               onboardingCompleted, r'User', 'onboardingCompleted'),
-          createdAt: BuiltValueNullFieldError.checkNotNull(
-              createdAt, r'User', 'createdAt'),
+          createdAt: createdAt,
         );
     replace(_$result);
     return _$result;

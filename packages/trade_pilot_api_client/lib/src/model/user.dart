@@ -56,7 +56,7 @@ abstract class User implements Built<User, UserBuilder> {
   bool get onboardingCompleted;
 
   @BuiltValueField(wireName: r'createdAt')
-  DateTime get createdAt;
+  DateTime? get createdAt;
 
   User._();
 
@@ -130,11 +130,13 @@ class _$UserSerializer implements PrimitiveSerializer<User> {
       object.onboardingCompleted,
       specifiedType: const FullType(bool),
     );
-    yield r'createdAt';
-    yield serializers.serialize(
-      object.createdAt,
-      specifiedType: const FullType(DateTime),
-    );
+    if (object.createdAt != null) {
+      yield r'createdAt';
+      yield serializers.serialize(
+        object.createdAt,
+        specifiedType: const FullType(DateTime),
+      );
+    }
   }
 
   @override
@@ -226,8 +228,9 @@ class _$UserSerializer implements PrimitiveSerializer<User> {
         case r'createdAt':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(DateTime),
-          ) as DateTime;
+            specifiedType: const FullType.nullable(DateTime),
+          ) as DateTime?;
+          if (valueDes == null) continue;
           result.createdAt = valueDes;
           break;
         default:
@@ -305,4 +308,3 @@ class UserThemePreferenceEnum extends EnumClass {
   static BuiltSet<UserThemePreferenceEnum> get values => _$userThemePreferenceEnumValues;
   static UserThemePreferenceEnum valueOf(String name) => _$userThemePreferenceEnumValueOf(name);
 }
-
