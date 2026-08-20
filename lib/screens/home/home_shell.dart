@@ -25,12 +25,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
 
   Timer? _analysisSyncTimer;
 
-  final _tabs = const [
-    DashboardTab(),
-    AnalyzeTab(),
-    HistoryTab(),
-    ProfileTab(),
-  ];
+  late final List<Widget> _tabs;
 
   // ===========================================================================
   // LIFECYCLE
@@ -40,6 +35,16 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   void initState() {
     super.initState();
 
+    _tabs = [
+      DashboardTab(
+        onOpenAnalyze: _openAnalyzeFromDashboard,
+        onOpenHistory: _openHistoryFromDashboard,
+      ),
+      const AnalyzeTab(),
+      const HistoryTab(),
+      const ProfileTab(),
+    ];
+
     WidgetsBinding.instance.addObserver(this);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -47,7 +52,6 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         return;
       }
 
-      // Initial load langsung.
       _syncCurrentTab(showLoading: true);
 
       _startAnalysisPolling();
@@ -88,7 +92,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   }
 
   // ===========================================================================
-  // ANALYSIS POLLING
+  // POLLING
   // ===========================================================================
 
   void _startAnalysisPolling() {
@@ -130,21 +134,12 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
 
     final marketProvider = context.read<MarketProvider>();
 
-    // Live quote hanya diperlukan di:
-    //
-    // 0 = Dashboard
-    // 1 = Analyze
-    //
-    // Jangan terus polling saat History / Profile.
     final needsLiveQuotes = index == 0 || index == 1;
 
     marketProvider.setQuotePollingEnabled(needsLiveQuotes);
 
     switch (index) {
-      // -----------------------------------------------------------------------
-      // DASHBOARD
-      // -----------------------------------------------------------------------
-
+      // Dashboard
       case 0:
         unawaited(analysisProvider.refreshCoreData(silent: !showLoading));
 
@@ -152,10 +147,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
 
         break;
 
-      // -----------------------------------------------------------------------
-      // ANALYZE
-      // -----------------------------------------------------------------------
-
+      // Analyze
       case 1:
         unawaited(analysisProvider.loadQuota());
 
@@ -163,10 +155,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
 
         break;
 
-      // -----------------------------------------------------------------------
-      // HISTORY
-      // -----------------------------------------------------------------------
-
+      // History
       case 2:
         unawaited(
           analysisProvider.loadHistory(refresh: true, silent: !showLoading),
@@ -174,17 +163,36 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
 
         break;
 
-      // -----------------------------------------------------------------------
-      // PROFILE
-      // -----------------------------------------------------------------------
-
+      // Profile
       case 3:
         break;
     }
   }
 
   // ===========================================================================
-  // NAVIGATION
+  // DASHBOARD NAVIGATION
+  // ===========================================================================
+
+  void _openAnalyzeFromDashboard(String? instrument) {
+    if (!mounted) {
+      return;
+    }
+
+    if (instrument != null) {
+      final market = context.read<MarketProvider>();
+
+      unawaited(market.selectInstrument(instrument));
+    }
+
+    _onTabSelected(1);
+  }
+
+  void _openHistoryFromDashboard() {
+    _onTabSelected(2);
+  }
+
+  // ===========================================================================
+  // TAB NAVIGATION
   // ===========================================================================
 
   void _onTabSelected(int index) {

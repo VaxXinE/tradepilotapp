@@ -1,255 +1,651 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../models/market_models.dart';
 import '../../../providers/analysis_provider.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../providers/market_provider.dart';
+import '../../../providers/notifications_provider.dart';
 import '../../../widgets/analysis_card.dart';
+import '../../../widgets/price_alert_sheet.dart';
 import '../../analysis/analysis_detail_screen.dart';
 import '../../notifications/notifications_screen.dart';
 
-class DashboardTab
-    extends StatefulWidget {
+class DashboardTab extends StatefulWidget {
   const DashboardTab({
     super.key,
+    required this.onOpenAnalyze,
+    required this.onOpenHistory,
   });
 
+  final void Function(String? instrument) onOpenAnalyze;
+
+  final VoidCallback onOpenHistory;
+
   @override
-  State<DashboardTab> createState() =>
-      _DashboardTabState();
+  State<DashboardTab> createState() => _DashboardTabState();
 }
 
-class _DashboardTabState
-    extends State<DashboardTab> {
+class _DashboardTabState extends State<DashboardTab> {
   bool _initializing = true;
 
   @override
   void initState() {
     super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) {
-        _loadInitialData();
-      },
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadInitialData();
+    });
   }
+
+  // ===========================================================================
+  // LOAD
+  // ===========================================================================
 
   Future<void> _loadInitialData() async {
     if (!mounted) {
       return;
     }
 
-    final provider =
-        context.read<AnalysisProvider>();
+    final analysis = context.read<AnalysisProvider>();
 
-    // Jangan request ulang kalau provider sudah punya cache.
-    if (provider.summary == null ||
-        provider.history.isEmpty) {
-      await provider.refreshCoreData(
-        silent: false,
-      );
+    final market = context.read<MarketProvider>();
+
+    final notifications = context.read<NotificationsProvider>();
+
+    final requests = <Future<void>>[
+      market.loadWatchlist(),
+      market.loadQuotes(),
+    ];
+
+    if (analysis.summary == null || analysis.history.isEmpty) {
+      requests.add(analysis.refreshCoreData(silent: false));
     }
+
+    if (notifications.items.isEmpty) {
+      requests.add(notifications.load(silent: true));
+    }
+
+    await Future.wait(requests);
 
     if (!mounted) {
       return;
     }
 
-    setState(
-      () {
-        _initializing = false;
-      },
-    );
+    setState(() {
+      _initializing = false;
+    });
   }
 
-  Future<void> _refresh() {
-    return context
-        .read<AnalysisProvider>()
-        .refreshCoreData(
-          silent: false,
-        );
+  Future<void> _refresh() async {
+    final analysis = context.read<AnalysisProvider>();
+
+    final market = context.read<MarketProvider>();
+
+    final notifications = context.read<NotificationsProvider>();
+
+    await Future.wait([
+      analysis.refreshCoreData(silent: false),
+      market.loadWatchlist(),
+      market.loadQuotes(force: true),
+      notifications.load(silent: true),
+    ]);
   }
+
+  // ===========================================================================
+  // PRICE ALERT
+  // ===========================================================================
+
+  Future<void> _openAlert(String instrument, LiveMarketQuote quote) async {
+    final created = await showPriceAlertSheet(
+      context: context,
+      instrument: instrument,
+      currentPrice: quote.price,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    if (created == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Price alert $instrument berhasil dibuat.')),
+      );
+    }
+  }
+
+  // ===========================================================================
+  // BUILD
+  // ===========================================================================
 
   @override
   Widget build(BuildContext context) {
-    final isDark =
-        Theme.of(context).brightness ==
-            Brightness.dark;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final muted = isDark
         ? AppColors.darkMutedForeground
         : AppColors.lightMutedForeground;
 
-    final auth =
-        context.watch<AuthProvider>();
+    final auth = context.watch<AuthProvider>();
 
-    final analysisProvider =
-        context.watch<AnalysisProvider>();
+    final analysisProvider = context.watch<AnalysisProvider>();
+
+    final market = context.watch<MarketProvider>();
+
+    final notifications = context.watch<NotificationsProvider>();
 
     final user = auth.user;
 
-    // Summary sekarang menjadi shared reactive state.
-    final summary =
-        analysisProvider.summary;
+    final summary = analysisProvider.summary;
 
-    // Jangan gunakan summary.recentAnalyses.
-    //
-    // Recent analyses menggunakan source-of-truth yang sama
-    // dengan History.
-    final recentAnalyses =
-        analysisProvider.history
-            .take(5)
-            .toList();
+    final recentAnalyses = analysisProvider.history.take(5).toList();
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Dashboard',
-        ),
+        title: const Text('Dashboard'),
         actions: [
           IconButton(
-            icon: const Icon(
-              Icons.notifications_outlined,
-            ),
+            tooltip: 'Notifikasi',
             onPressed: () {
               Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) =>
-                      const NotificationsScreen(),
-                ),
+                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
               );
             },
+            icon: _NotificationIcon(unreadCount: notifications.unreadCount),
           ),
         ],
       ),
       body: RefreshIndicator(
         onRefresh: _refresh,
         child: ListView(
-          physics:
-              const AlwaysScrollableScrollPhysics(),
-          padding:
-              const EdgeInsets.all(16),
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
           children: [
+            // ---------------------------------------------------------------
+            // GREETING
+            // ---------------------------------------------------------------
             Text(
               'Halo, ${user?.displayName ?? ''} 👋',
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight:
-                    FontWeight.w800,
-              ),
+              style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
             ),
 
-            const SizedBox(
-              height: 4,
-            ),
+            const SizedBox(height: 4),
 
             Text(
-              user?.selectedMode ==
-                      UserSelectedModeEnum.pro
+              user?.selectedMode == UserSelectedModeEnum.pro
                   ? 'Mode Pro'
                   : 'Mode Pemula',
-              style: TextStyle(
-                color: muted,
-              ),
+              style: TextStyle(color: muted, fontSize: 12.5),
             ),
 
-            const SizedBox(
-              height: 20,
+            const SizedBox(height: 18),
+
+            // ---------------------------------------------------------------
+            // BEGINNER HERO
+            // ---------------------------------------------------------------
+            _BeginnerHeroCard(
+              onAnalyze: () {
+                widget.onOpenAnalyze(null);
+              },
             ),
 
-            if (_initializing &&
-                summary == null)
+            const SizedBox(height: 16),
+
+            // ---------------------------------------------------------------
+            // WATCHLIST / LIVE MARKET
+            // ---------------------------------------------------------------
+            _WatchlistMarketCard(
+              market: market,
+              onOpenInstrument: widget.onOpenAnalyze,
+              onCreateAlert: _openAlert,
+            ),
+
+            const SizedBox(height: 20),
+
+            if (_initializing && summary == null)
               const Padding(
-                padding:
-                    EdgeInsets.symmetric(
-                  vertical: 40,
-                ),
-                child: Center(
-                  child:
-                      CircularProgressIndicator(),
-                ),
+                padding: EdgeInsets.symmetric(vertical: 28),
+                child: Center(child: CircularProgressIndicator()),
               )
             else ...[
               // -------------------------------------------------------------
-              // STATS
+              // BEGINNER STATS
               // -------------------------------------------------------------
+              _StatsRow(summary: summary),
 
-              _StatsRow(
-                summary: summary,
-              ),
-
-              const SizedBox(
-                height: 16,
-              ),
+              const SizedBox(height: 14),
 
               // -------------------------------------------------------------
               // QUOTA
               // -------------------------------------------------------------
+              if (analysisProvider.quota != null)
+                _QuotaCard(quota: analysisProvider.quota!),
 
-              if (analysisProvider.quota !=
-                  null)
-                _QuotaCard(
-                  quota:
-                      analysisProvider.quota!,
-                ),
-
-              const SizedBox(
-                height: 24,
-              ),
+              const SizedBox(height: 22),
 
               // -------------------------------------------------------------
-              // RECENT ANALYSES
+              // RECENT ANALYSIS HEADER
               // -------------------------------------------------------------
-
-              const Text(
-                'Analisis Terbaru',
-                style: TextStyle(
-                  fontWeight:
-                      FontWeight.w700,
-                  fontSize: 16,
-                ),
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Analisis Terbaru',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: widget.onOpenHistory,
+                    child: const Text('Lihat semua'),
+                  ),
+                ],
               ),
 
-              const SizedBox(
-                height: 12,
-              ),
+              const SizedBox(height: 8),
 
               if (recentAnalyses.isEmpty)
                 _EmptyRecent(
                   muted: muted,
+                  onAnalyze: () {
+                    widget.onOpenAnalyze(null);
+                  },
                 )
               else
-                ...recentAnalyses.map(
-                  (analysis) {
-                    return Padding(
-                      padding:
-                          const EdgeInsets.only(
-                        bottom: 10,
-                      ),
-                      child: AnalysisCard(
-                        analysis:
-                            analysis,
-                        onTap: () {
-                          Navigator.of(context)
-                              .push(
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  AnalysisDetailScreen(
-                                analysisId:
-                                    analysis.id,
-                                preloaded:
-                                    analysis,
-                              ),
+                ...recentAnalyses.map((analysis) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: AnalysisCard(
+                      analysis: analysis,
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => AnalysisDetailScreen(
+                              analysisId: analysis.id,
+                              preloaded: analysis,
                             ),
-                          );
-                        },
-                      ),
-                    );
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                }),
+            ],
+
+            const SizedBox(height: 20),
+
+            Text(
+              'Trade Pilot membantu membaca kondisi pasar, '
+              'tetapi keputusan dan manajemen risiko tetap berada di tangan kamu.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: muted, fontSize: 10.5, height: 1.4),
+            ),
+
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// NOTIFICATION ICON
+// =============================================================================
+
+class _NotificationIcon extends StatelessWidget {
+  const _NotificationIcon({required this.unreadCount});
+
+  final int unreadCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        const Icon(Icons.notifications_outlined),
+
+        if (unreadCount > 0)
+          Positioned(
+            right: -7,
+            top: -7,
+            child: Container(
+              constraints: const BoxConstraints(minWidth: 17, minHeight: 17),
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.error,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                unreadCount > 99 ? '99+' : '$unreadCount',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 8.5,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+// =============================================================================
+// BEGINNER HERO
+// =============================================================================
+
+class _BeginnerHeroCard extends StatelessWidget {
+  const _BeginnerHeroCard({required this.onAnalyze});
+
+  final VoidCallback onAnalyze;
+
+  @override
+  Widget build(BuildContext context) {
+    final muted = Theme.of(context).colorScheme.onSurfaceVariant;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.auto_awesome_rounded, size: 20),
+                SizedBox(width: 8),
+                Text(
+                  'Mau analisis market?',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 7),
+
+            Text(
+              'Mulai dari harga, sesi market, chart, indikator, '
+              'dan event ekonomi sebelum meminta analisis AI.',
+              style: TextStyle(color: muted, fontSize: 12, height: 1.4),
+            ),
+
+            const SizedBox(height: 14),
+
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: onAnalyze,
+                icon: const Icon(Icons.insights_rounded),
+                label: const Text('Mulai Analisis'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// WATCHLIST
+// =============================================================================
+
+class _WatchlistMarketCard extends StatelessWidget {
+  const _WatchlistMarketCard({
+    required this.market,
+    required this.onOpenInstrument,
+    required this.onCreateAlert,
+  });
+
+  final MarketProvider market;
+
+  final void Function(String? instrument) onOpenInstrument;
+
+  final Future<void> Function(String instrument, LiveMarketQuote quote)
+  onCreateAlert;
+
+  @override
+  Widget build(BuildContext context) {
+    final muted = Theme.of(context).colorScheme.onSurfaceVariant;
+
+    final instruments = market.watchlist.toList()..sort();
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.star_rounded, size: 19),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'Watchlist Pasar',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+                  ),
+                ),
+
+                if (market.isLoadingWatchlist || market.isLoadingQuotes)
+                  const SizedBox(
+                    width: 15,
+                    height: 15,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+              ],
+            ),
+
+            const SizedBox(height: 5),
+
+            Text(
+              'Pantau market favorit tanpa membuka halaman lain.',
+              style: TextStyle(color: muted, fontSize: 11),
+            ),
+
+            const SizedBox(height: 14),
+
+            if (instruments.isEmpty)
+              _EmptyWatchlist(
+                onOpenAnalyze: () {
+                  onOpenInstrument(null);
+                },
+              )
+            else ...[
+              for (var i = 0; i < instruments.length; i++) ...[
+                _WatchlistRow(
+                  instrument: instruments[i],
+                  quote: market.quoteFor(instruments[i]),
+                  onOpen: () {
+                    onOpenInstrument(instruments[i]);
+                  },
+                  onAlert: (quote) {
+                    onCreateAlert(instruments[i], quote);
                   },
                 ),
+                if (i != instruments.length - 1) const Divider(height: 18),
+              ],
+            ],
+
+            if (market.quotesUpdatedAt != null) ...[
+              const SizedBox(height: 10),
+              Text(
+                'Harga diperbarui ${DateFormat('HH:mm:ss').format(market.quotesUpdatedAt!.toLocal())}',
+                style: TextStyle(color: muted, fontSize: 9.5),
+              ),
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _WatchlistRow extends StatelessWidget {
+  const _WatchlistRow({
+    required this.instrument,
+    required this.quote,
+    required this.onOpen,
+    required this.onAlert,
+  });
+
+  final String instrument;
+
+  final LiveMarketQuote? quote;
+
+  final VoidCallback onOpen;
+
+  final void Function(LiveMarketQuote quote) onAlert;
+
+  @override
+  Widget build(BuildContext context) {
+    final muted = Theme.of(context).colorScheme.onSurfaceVariant;
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final bullish = isDark ? AppColors.bullishDark : AppColors.bullishLight;
+
+    final bearish = isDark ? AppColors.bearishDark : AppColors.bearishLight;
+
+    final changeColor = (quote?.changePercent ?? 0) >= 0 ? bullish : bearish;
+
+    return Row(
+      children: [
+        Expanded(
+          child: InkWell(
+            onTap: onOpen,
+            borderRadius: BorderRadius.circular(10),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 3),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          instrument,
+                          style: const TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+
+                        const SizedBox(height: 3),
+
+                        if (quote != null)
+                          Text(
+                            _formatPrice(instrument, quote!.price),
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          )
+                        else
+                          Text(
+                            'Live price belum tersedia',
+                            style: TextStyle(color: muted, fontSize: 10.5),
+                          ),
+                      ],
+                    ),
+                  ),
+
+                  if (quote != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: changeColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        '${quote!.changePercent >= 0 ? '+' : ''}'
+                        '${quote!.changePercent.toStringAsFixed(2)}%',
+                        style: TextStyle(
+                          color: changeColor,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(width: 6),
+
+        IconButton(
+          tooltip: quote == null
+              ? 'Harga live belum tersedia'
+              : 'Buat price alert',
+          onPressed: quote == null
+              ? null
+              : () {
+                  onAlert(quote!);
+                },
+          icon: const Icon(Icons.notifications_active_outlined, size: 19),
+        ),
+
+        IconButton(
+          tooltip: 'Buka analisis',
+          onPressed: onOpen,
+          icon: const Icon(Icons.chevron_right_rounded),
+        ),
+      ],
+    );
+  }
+}
+
+class _EmptyWatchlist extends StatelessWidget {
+  const _EmptyWatchlist({required this.onOpenAnalyze});
+
+  final VoidCallback onOpenAnalyze;
+
+  @override
+  Widget build(BuildContext context) {
+    final muted = Theme.of(context).colorScheme.onSurfaceVariant;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.star_border_rounded, color: muted, size: 26),
+
+          const SizedBox(height: 7),
+
+          Text(
+            'Watchlist masih kosong',
+            style: TextStyle(
+              color: muted,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          TextButton(
+            onPressed: onOpenAnalyze,
+            child: const Text('Pilih market favorit'),
+          ),
+        ],
       ),
     );
   }
@@ -260,22 +656,29 @@ class _DashboardTabState
 // =============================================================================
 
 class _StatsRow extends StatelessWidget {
-  const _StatsRow({
-    required this.summary,
-  });
+  const _StatsRow({required this.summary});
 
   final AnalysesSummary? summary;
 
   @override
   Widget build(BuildContext context) {
-    final total =
-        summary?.totalAnalyses ?? 0;
+    final total = summary?.totalAnalyses ?? 0;
 
-    final beginner =
-        summary?.beginnerCount ?? 0;
+    final beginner = summary?.beginnerCount ?? 0;
 
-    final pro =
-        summary?.proCount ?? 0;
+    final minConfidence = summary?.avgConfidenceMin?.toDouble();
+
+    final maxConfidence = summary?.avgConfidenceMax?.toDouble();
+
+    String confidence = '--';
+
+    if (minConfidence != null && maxConfidence != null) {
+      confidence =
+          '${minConfidence.round()}–'
+          '${maxConfidence.round()}%';
+    } else if (maxConfidence != null) {
+      confidence = '${maxConfidence.round()}%';
+    }
 
     return Row(
       children: [
@@ -283,30 +686,27 @@ class _StatsRow extends StatelessWidget {
           child: _StatCard(
             label: 'Total Analisis',
             value: '$total',
-            icon: Icons
-                .insert_chart_outlined_rounded,
+            icon: Icons.insert_chart_outlined_rounded,
           ),
         ),
-        const SizedBox(
-          width: 10,
-        ),
+
+        const SizedBox(width: 8),
+
         Expanded(
           child: _StatCard(
-            label: 'Pemula',
+            label: 'Mode Pemula',
             value: '$beginner',
-            icon:
-                Icons.school_outlined,
+            icon: Icons.school_outlined,
           ),
         ),
-        const SizedBox(
-          width: 10,
-        ),
+
+        const SizedBox(width: 8),
+
         Expanded(
           child: _StatCard(
-            label: 'Pro',
-            value: '$pro',
-            icon: Icons
-                .workspace_premium_outlined,
+            label: 'Keyakinan AI',
+            value: confidence,
+            icon: Icons.speed_rounded,
           ),
         ),
       ],
@@ -327,13 +727,9 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark =
-        Theme.of(context).brightness ==
-            Brightness.dark;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final primary = isDark
-        ? AppColors.darkPrimary
-        : AppColors.lightPrimary;
+    final primary = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
 
     final muted = isDark
         ? AppColors.darkMutedForeground
@@ -341,41 +737,26 @@ class _StatCard extends StatelessWidget {
 
     return Card(
       child: Padding(
-        padding:
-            const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(12),
         child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              icon,
-              color: primary,
-              size: 20,
-            ),
+            Icon(icon, color: primary, size: 19),
 
-            const SizedBox(
-              height: 10,
-            ),
+            const SizedBox(height: 9),
 
             Text(
               value,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight:
-                    FontWeight.w800,
-              ),
+              maxLines: 1,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
             ),
 
-            const SizedBox(
-              height: 2,
-            ),
+            const SizedBox(height: 3),
 
             Text(
               label,
-              style: TextStyle(
-                fontSize: 11.5,
-                color: muted,
-              ),
+              maxLines: 2,
+              style: TextStyle(fontSize: 10, color: muted),
             ),
           ],
         ),
@@ -389,21 +770,15 @@ class _StatCard extends StatelessWidget {
 // =============================================================================
 
 class _QuotaCard extends StatelessWidget {
-  const _QuotaCard({
-    required this.quota,
-  });
+  const _QuotaCard({required this.quota});
 
   final AnalysisQuota quota;
 
   @override
   Widget build(BuildContext context) {
-    final isDark =
-        Theme.of(context).brightness ==
-            Brightness.dark;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final primary = isDark
-        ? AppColors.darkPrimary
-        : AppColors.lightPrimary;
+    final primary = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
 
     final muted = isDark
         ? AppColors.darkMutedForeground
@@ -412,24 +787,14 @@ class _QuotaCard extends StatelessWidget {
     if (quota.unlimited) {
       return Card(
         child: Padding(
-          padding:
-              const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(14),
           child: Row(
             children: [
-              Icon(
-                Icons
-                    .all_inclusive_rounded,
-                color: primary,
-              ),
-              const SizedBox(
-                width: 10,
-              ),
+              Icon(Icons.all_inclusive_rounded, color: primary),
+              const SizedBox(width: 10),
               const Text(
                 'Kuota analisis tidak terbatas',
-                style: TextStyle(
-                  fontWeight:
-                      FontWeight.w600,
-                ),
+                style: TextStyle(fontWeight: FontWeight.w600),
               ),
             ],
           ),
@@ -439,45 +804,31 @@ class _QuotaCard extends StatelessWidget {
 
     return Card(
       child: Padding(
-        padding:
-            const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(14),
         child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
               'Kuota Analisis',
-              style: TextStyle(
-                fontWeight:
-                    FontWeight.w700,
-                fontSize: 13,
-              ),
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
             ),
 
-            const SizedBox(
-              height: 10,
-            ),
+            const SizedBox(height: 10),
 
             _QuotaBar(
               label: 'Per jam',
-              used:
-                  quota.hourly.used,
-              limit:
-                  quota.hourly.limit,
+              used: quota.hourly.used,
+              limit: quota.hourly.limit,
               primary: primary,
               muted: muted,
             ),
 
-            const SizedBox(
-              height: 8,
-            ),
+            const SizedBox(height: 9),
 
             _QuotaBar(
               label: 'Per hari',
-              used:
-                  quota.daily.used,
-              limit:
-                  quota.daily.limit,
+              used: quota.daily.used,
+              limit: quota.daily.limit,
               primary: primary,
               muted: muted,
             ),
@@ -500,61 +851,36 @@ class _QuotaBar extends StatelessWidget {
   final String label;
   final int used;
   final int limit;
+
   final Color primary;
   final Color muted;
 
   @override
   Widget build(BuildContext context) {
-    final ratio = limit == 0
-        ? 0.0
-        : (used / limit)
-            .clamp(0, 1)
-            .toDouble();
+    final ratio = limit == 0 ? 0.0 : (used / limit).clamp(0, 1).toDouble();
 
     return Column(
-      crossAxisAlignment:
-          CrossAxisAlignment.start,
       children: [
         Row(
-          mainAxisAlignment:
-              MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                color: muted,
-              ),
-            ),
+            Text(label, style: TextStyle(fontSize: 11.5, color: muted)),
             Text(
               '$used / $limit',
-              style: TextStyle(
-                fontSize: 12,
-                color: muted,
-              ),
+              style: TextStyle(fontSize: 11.5, color: muted),
             ),
           ],
         ),
 
-        const SizedBox(
-          height: 4,
-        ),
+        const SizedBox(height: 5),
 
         ClipRRect(
-          borderRadius:
-              BorderRadius.circular(999),
-          child:
-              LinearProgressIndicator(
+          borderRadius: BorderRadius.circular(999),
+          child: LinearProgressIndicator(
             value: ratio,
             minHeight: 6,
-            backgroundColor:
-                muted.withValues(
-              alpha: 0.15,
-            ),
-            valueColor:
-                AlwaysStoppedAnimation(
-              primary,
-            ),
+            backgroundColor: muted.withValues(alpha: 0.15),
+            valueColor: AlwaysStoppedAnimation(primary),
           ),
         ),
       ],
@@ -563,44 +889,69 @@ class _QuotaBar extends StatelessWidget {
 }
 
 // =============================================================================
-// EMPTY STATE
+// EMPTY RECENT
 // =============================================================================
 
-class _EmptyRecent
-    extends StatelessWidget {
-  const _EmptyRecent({
-    required this.muted,
-  });
+class _EmptyRecent extends StatelessWidget {
+  const _EmptyRecent({required this.muted, required this.onAnalyze});
 
   final Color muted;
+
+  final VoidCallback onAnalyze;
 
   @override
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
-        padding:
-            const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(22),
         child: Column(
           children: [
-            Icon(
-              Icons.insights_outlined,
-              size: 32,
-              color: muted,
-            ),
+            Icon(Icons.insights_outlined, size: 30, color: muted),
 
-            const SizedBox(
-              height: 8,
-            ),
+            const SizedBox(height: 8),
 
             Text(
               'Belum ada analisis',
-              style: TextStyle(
-                color: muted,
-              ),
+              style: TextStyle(color: muted, fontWeight: FontWeight.w600),
+            ),
+
+            const SizedBox(height: 8),
+
+            TextButton(
+              onPressed: onAnalyze,
+              child: const Text('Buat analisis pertama'),
             ),
           ],
         ),
       ),
     );
   }
+}
+
+// =============================================================================
+// FORMAT
+// =============================================================================
+
+String _formatPrice(String instrument, double value) {
+  if (instrument == 'USD/IDR') {
+    return NumberFormat('#,##0').format(value);
+  }
+
+  if (instrument == 'USD/JPY') {
+    return value.toStringAsFixed(2);
+  }
+
+  if (value >= 1000) {
+    return NumberFormat('#,##0.00').format(value);
+  }
+
+  if (value >= 100) {
+    return value.toStringAsFixed(2);
+  }
+
+  if (value >= 1) {
+    return value.toStringAsFixed(4);
+  }
+
+  return value.toStringAsFixed(6);
 }
