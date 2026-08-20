@@ -14,12 +14,17 @@ flutter pub get
 
 ### Konfigurasi Base URL API
 
-Aplikasi ini butuh URL backend `api-server` (lihat "Production Routing" di
-`replit.md` Trade-Pilot). Default di `lib/core/api/api_config.dart` cuma
-placeholder — override lewat `--dart-define` saat run/build:
+Default base URL sudah diarahkan ke domain production Trade-Pilot:
+**`https://tradepilot.id/api`** (dikonfirmasi dari dashboard Replit →
+Deployments → "AI Trading Assistant"). Sesuai "Production Routing" di
+`replit.md`: `ai-trading` di-serve statis di `/`, `api-server` di-serve di
+`/api/*` — satu domain yang sama.
+
+Kalau butuh arahkan ke environment lain (dev/staging/lokal), override lewat
+`--dart-define` saat run/build:
 
 ```bash
-flutter run --dart-define=API_BASE_URL=https://<domain-api-server-kamu>/api
+flutter run --dart-define=API_BASE_URL=https://<domain-lain>/api
 ```
 
 Kalau testing ke backend lokal via HTTP (bukan HTTPS), tambahkan exception

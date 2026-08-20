@@ -8,9 +8,10 @@ class ApiConfig {
 
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    // TODO: ganti default ini dengan URL production api-server kamu
-    // (lihat "Production Routing" di replit.md Trade-Pilot: api-server
-    // di-deploy sebagai Cloud Run service yang serve /api/*).
-    defaultValue: 'https://tradepilot.example.com/api',
+    // Domain production Trade-Pilot (dashboard Replit → Deployments →
+    // "AI Trading Assistant" → tradepilot.id). Sesuai "Production Routing"
+    // di replit.md: ai-trading di-serve statis di "/", api-server di-serve
+    // di "/api/*" — jadi satu domain yang sama untuk web app dan API.
+    defaultValue: 'https://tradepilot.id/api',
   );
 }
