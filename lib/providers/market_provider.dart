@@ -828,9 +828,11 @@ class MarketProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      if (wasWatchlisted) {
-        await _client.watchlist.removeWatchlistItem(instrument: normalized);
-      } else {
+if (wasWatchlisted) {
+  await _removeWatchlistItem(
+    normalized,
+  );
+} else {
         await _client.watchlist.addWatchlistItem(
           addWatchlistBody: AddWatchlistBody((builder) {
             builder.instrument = normalized;
@@ -874,6 +876,57 @@ class MarketProvider extends ChangeNotifier {
       }
     }
   }
+
+  Future<void> _removeWatchlistItem(
+  String instrument,
+) async {
+  final normalized =
+      _normalizeInstrument(
+    instrument,
+  );
+
+  _validateInstrument(
+    normalized,
+  );
+
+  final baseUri =
+      Uri.parse(
+    _client.dio.options.baseUrl,
+  );
+
+  // Gunakan pathSegments supaya karakter khusus,
+  // terutama "/" pada "XAU/USD", di-encode sebagai %2F.
+  //
+  // Contoh:
+  //
+  // XAU/USD
+  //
+  // menjadi:
+  //
+  // /watchlist/XAU%2FUSD
+  //
+  // Bukan:
+  //
+  // /watchlist/XAU/USD
+  final uri =
+      baseUri.replace(
+    pathSegments: [
+      ...baseUri.pathSegments
+          .where(
+            (
+              segment,
+            ) =>
+                segment.isNotEmpty,
+          ),
+      'watchlist',
+      normalized,
+    ],
+  );
+
+  await _client.dio.deleteUri(
+    uri,
+  );
+}
 
   // ===========================================================================
   // PRICE ALERT
