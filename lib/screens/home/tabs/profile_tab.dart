@@ -4,7 +4,6 @@ import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../providers/auth_provider.dart';
-import '../../auth/login_screen.dart';
 import '../../profile/change_password_screen.dart';
 
 class ProfileTab extends StatelessWidget {
@@ -31,32 +30,68 @@ class ProfileTab extends StatelessWidget {
     }
   }
 
-  Future<void> _confirmLogout(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Keluar'),
-        content: const Text('Yakin ingin keluar dari akun ini?'),
+Future<void> _confirmLogout(
+  BuildContext context,
+) async {
+  final confirmed =
+      await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) {
+      return AlertDialog(
+        title: const Text(
+          'Keluar',
+        ),
+        content: const Text(
+          'Yakin ingin keluar dari akun ini?',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
           TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text('Keluar', style: TextStyle(color: Theme.of(ctx).colorScheme.error)),
+            onPressed: () {
+              Navigator.pop(
+                dialogContext,
+                false,
+              );
+            },
+            child: const Text(
+              'Batal',
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(
+                dialogContext,
+                true,
+              );
+            },
+            child: Text(
+              'Keluar',
+              style: TextStyle(
+                color:
+                    Theme.of(
+                  dialogContext,
+                ).colorScheme.error,
+              ),
+            ),
           ),
         ],
-      ),
-    );
-    if (confirmed == true && context.mounted) {
-      await context.read<AuthProvider>().logout();
-      if (context.mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-          (route) => false,
-        );
-      }
-    }
+      );
+    },
+  );
+
+  if (confirmed != true ||
+      !context.mounted) {
+    return;
   }
 
+  // Jangan melakukan Navigator.push/pop di sini.
+  //
+  // AuthProvider.logout() mengubah AuthStatus menjadi unauthenticated.
+  // SplashScreen sebagai root auth-gate akan otomatis mengganti
+  // HomeShell menjadi LoginScreen.
+  await context
+      .read<AuthProvider>()
+      .logout();
+}
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
