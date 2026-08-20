@@ -62,7 +62,7 @@ class _HistoryTabState extends State<HistoryTab> {
                 controller: _scrollController,
                 padding: const EdgeInsets.all(16),
                 itemCount: analysisProvider.history.length + (analysisProvider.isLoadingHistory ? 1 : 0),
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                separatorBuilder: (_, _) => const SizedBox(height: 10),
                 itemBuilder: (context, index) {
                   if (index >= analysisProvider.history.length) {
                     return const Padding(

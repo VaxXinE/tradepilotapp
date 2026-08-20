@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
+import 'package:trade_pilot_api_client/trade_pilot_client.dart';
 
 import 'auth_provider.dart';
 

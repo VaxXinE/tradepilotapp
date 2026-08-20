@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
+import 'package:trade_pilot_api_client/trade_pilot_client.dart';
 
 import '../core/api/api_config.dart';
 import '../core/storage/token_storage.dart';
