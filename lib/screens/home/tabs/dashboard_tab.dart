@@ -11,6 +11,7 @@ import '../../../providers/analysis_provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/market_provider.dart';
 import '../../../providers/notifications_provider.dart';
+import '../../../providers/watchlist_provider.dart';
 import '../../../widgets/analysis_card.dart';
 import '../../../widgets/market/market_overview_card.dart';
 import '../../../widgets/market/market_session_card.dart';
@@ -35,9 +36,9 @@ class DashboardTab extends StatefulWidget {
 
 class _DashboardTabState extends State<DashboardTab> {
   Future<void> _openWatchlistManager() async {
-    final market = context.read<MarketProvider>();
+    final watchlist = context.read<WatchlistProvider>();
 
-    await market.loadWatchlist();
+    await watchlist.loadWatchlist();
 
     if (!mounted) {
       return;
@@ -62,11 +63,13 @@ class _DashboardTabState extends State<DashboardTab> {
 
     final market = context.read<MarketProvider>();
 
+    final watchlist = context.read<WatchlistProvider>();
+
     final notifications = context.read<NotificationsProvider>();
 
     await Future.wait([
       analysis.refreshCoreData(silent: false),
-      market.loadWatchlist(),
+      watchlist.loadWatchlist(),
       market.loadQuotes(force: true),
       notifications.load(silent: true),
     ]);
@@ -111,6 +114,8 @@ class _DashboardTabState extends State<DashboardTab> {
     final analysisProvider = context.watch<AnalysisProvider>();
 
     final market = context.watch<MarketProvider>();
+
+    final watchlist = context.watch<WatchlistProvider>();
 
     final notifications = context.watch<NotificationsProvider>();
 
@@ -195,6 +200,7 @@ class _DashboardTabState extends State<DashboardTab> {
             // ---------------------------------------------------------------
             _WatchlistMarketCard(
               market: market,
+              watchlist: watchlist,
               onOpenInstrument: widget.onOpenAnalyze,
               onCreateAlert: _openAlert,
               onManageWatchlist: _openWatchlistManager,
@@ -399,12 +405,15 @@ class _BeginnerHeroCard extends StatelessWidget {
 class _WatchlistMarketCard extends StatelessWidget {
   const _WatchlistMarketCard({
     required this.market,
+    required this.watchlist,
     required this.onOpenInstrument,
     required this.onCreateAlert,
     required this.onManageWatchlist,
   });
 
   final MarketProvider market;
+
+  final WatchlistProvider watchlist;
 
   final VoidCallback onManageWatchlist;
 
@@ -417,7 +426,12 @@ class _WatchlistMarketCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final muted = Theme.of(context).colorScheme.onSurfaceVariant;
 
-    final instruments = market.watchlist.toList()..sort();
+    final instruments =
+        watchlist.items
+            .map((item) => item.instrument.trim().toUpperCase())
+            .toSet()
+            .toList()
+          ..sort();
 
     return Card(
       child: Padding(
@@ -441,7 +455,7 @@ class _WatchlistMarketCard extends StatelessWidget {
                   icon: const Icon(Icons.add_rounded, size: 20),
                 ),
 
-                if (market.isLoadingWatchlist || market.isLoadingQuotes)
+                if (watchlist.isLoading || market.isLoadingQuotes)
                   const SizedBox(
                     width: 15,
                     height: 15,
@@ -969,7 +983,7 @@ class _WatchlistManagerSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final market = context.watch<MarketProvider>();
+    final watchlist = context.watch<WatchlistProvider>();
 
     final muted = Theme.of(context).colorScheme.onSurfaceVariant;
 
@@ -1012,7 +1026,7 @@ class _WatchlistManagerSheet extends StatelessWidget {
               ),
             ),
 
-            if (market.isUpdatingWatchlist)
+            if (watchlist.isUpdating)
               const LinearProgressIndicator(minHeight: 2),
 
             Expanded(
@@ -1055,7 +1069,9 @@ class _WatchlistManagerRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final market = context.watch<MarketProvider>();
 
-    final selected = market.isWatchlisted(instrument);
+    final watchlist = context.watch<WatchlistProvider>();
+
+    final selected = watchlist.isWatchlisted(instrument);
 
     final quote = market.quoteFor(instrument);
 
@@ -1078,19 +1094,18 @@ class _WatchlistManagerRow extends StatelessWidget {
             ),
       trailing: IconButton(
         tooltip: selected ? 'Hapus dari watchlist' : 'Tambahkan ke watchlist',
-        onPressed: market.isUpdatingWatchlist
+        onPressed: watchlist.isUpdating
             ? null
             : () async {
-                final ok = await context.read<MarketProvider>().toggleWatchlist(
-                  instrument,
-                );
+                final provider = context.read<WatchlistProvider>();
+                final ok = await provider.toggleInstrument(instrument);
 
                 if (!context.mounted) {
                   return;
                 }
 
                 if (!ok) {
-                  final error = context.read<MarketProvider>().watchlistError;
+                  final error = provider.error;
 
                   if (error != null) {
                     ScaffoldMessenger.of(

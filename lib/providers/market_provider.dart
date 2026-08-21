@@ -104,21 +104,10 @@ class MarketProvider extends ChangeNotifier {
   }
 
   // ===========================================================================
-  // WATCHLIST
-  // ===========================================================================
-
-  Set<String> watchlist = {};
-
-  bool isLoadingWatchlist = false;
-
-  bool _watchlistRequestInFlight = false;
-
-  // ===========================================================================
   // ERRORS
   // ===========================================================================
 
   String? marketError;
-  String? watchlistError;
   String? alertError;
 
   // ===========================================================================
@@ -155,12 +144,6 @@ class MarketProvider extends ChangeNotifier {
 
   int _sessionEpoch = 0;
 
-  int _watchlistRequestId = 0;
-
-  int _watchlistMutationRequestId = 0;
-
-  bool isUpdatingWatchlist = false;
-
   // ===========================================================================
   // AUTH / USER-SCOPED STATE
   // ===========================================================================
@@ -192,13 +175,6 @@ class MarketProvider extends ChangeNotifier {
     // dari session sebelumnya.
     _sessionEpoch++;
 
-    _watchlistRequestId++;
-    _watchlistMutationRequestId++;
-
-    _watchlistRequestInFlight = false;
-
-    isUpdatingWatchlist = false;
-
     _selectionGeneration++;
 
     selectedInstrument = 'XAU/USD';
@@ -220,17 +196,10 @@ class MarketProvider extends ChangeNotifier {
     _calendarCache.clear();
     _calendarFetchedAt.clear();
 
-    watchlist = {};
-
-    isLoadingWatchlist = false;
-
-    watchlistError = null;
     alertError = null;
 
     if (nextUserId == null) {
       setQuotePollingEnabled(false);
-    } else {
-      unawaited(loadWatchlist());
     }
 
     notifyListeners();
@@ -658,220 +627,6 @@ class MarketProvider extends ChangeNotifier {
       _calendarInFlight.remove(key);
     }
   }
-
-  // ===========================================================================
-  // WATCHLIST
-  // ===========================================================================
-
-  bool isWatchlisted(String instrument) {
-    return watchlist.contains(_normalizeInstrument(instrument));
-  }
-
-  Future<void> loadWatchlist() async {
-    final userId = _currentUserId;
-
-    if (userId == null) {
-      return;
-    }
-
-    if (_watchlistRequestInFlight) {
-      return;
-    }
-
-    final epoch = _sessionEpoch;
-
-    final requestId = ++_watchlistRequestId;
-
-    _watchlistRequestInFlight = true;
-
-    isLoadingWatchlist = true;
-
-    notifyListeners();
-
-    try {
-      final response = await _client.watchlist.getWatchlist();
-
-      if (!_isCurrentUserSession(epoch: epoch, userId: userId) ||
-          requestId != _watchlistRequestId) {
-        return;
-      }
-
-      final items = response.data?.items;
-
-      watchlist = {
-        if (items != null)
-          for (final item in items) _normalizeInstrument(item.instrument),
-      };
-
-      watchlistError = null;
-    } catch (error) {
-      if (!_isCurrentUserSession(epoch: epoch, userId: userId) ||
-          requestId != _watchlistRequestId) {
-        return;
-      }
-
-      watchlistError = _friendlyError(
-        error,
-        fallback: 'Gagal memuat watchlist.',
-      );
-    } finally {
-      if (requestId == _watchlistRequestId) {
-        _watchlistRequestInFlight = false;
-
-        if (_isCurrentUserSession(epoch: epoch, userId: userId)) {
-          isLoadingWatchlist = false;
-
-          notifyListeners();
-        }
-      }
-    }
-  }
-
-  Future<bool> toggleWatchlist(String instrument) async {
-    final userId = _currentUserId;
-
-    if (userId == null) {
-      watchlistError = 'Silakan login kembali.';
-
-      notifyListeners();
-
-      return false;
-    }
-
-    final normalized = _normalizeInstrument(instrument);
-
-    if (!supportedInstruments.contains(normalized)) {
-      watchlistError = 'Instrumen tidak didukung.';
-
-      notifyListeners();
-
-      return false;
-    }
-
-    // Hindari double-tap / request race.
-    if (isUpdatingWatchlist) {
-      return false;
-    }
-
-    final epoch = _sessionEpoch;
-
-    final requestId = ++_watchlistMutationRequestId;
-
-    final wasWatchlisted = watchlist.contains(normalized);
-
-    isUpdatingWatchlist = true;
-
-    // Optimistic UI.
-    if (wasWatchlisted) {
-      watchlist.remove(normalized);
-    } else {
-      watchlist.add(normalized);
-    }
-
-    watchlistError = null;
-
-    notifyListeners();
-
-    try {
-if (wasWatchlisted) {
-  await _removeWatchlistItem(
-    normalized,
-  );
-} else {
-        await _client.watchlist.addWatchlistItem(
-          addWatchlistBody: AddWatchlistBody((builder) {
-            builder.instrument = normalized;
-          }),
-        );
-      }
-
-      if (!_isCurrentUserSession(epoch: epoch, userId: userId) ||
-          requestId != _watchlistMutationRequestId) {
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      if (!_isCurrentUserSession(epoch: epoch, userId: userId) ||
-          requestId != _watchlistMutationRequestId) {
-        return false;
-      }
-
-      // Rollback optimistic update.
-      if (wasWatchlisted) {
-        watchlist.add(normalized);
-      } else {
-        watchlist.remove(normalized);
-      }
-
-      watchlistError = _friendlyError(
-        error,
-        fallback: 'Gagal memperbarui watchlist.',
-      );
-
-      notifyListeners();
-
-      return false;
-    } finally {
-      if (requestId == _watchlistMutationRequestId &&
-          _isCurrentUserSession(epoch: epoch, userId: userId)) {
-        isUpdatingWatchlist = false;
-
-        notifyListeners();
-      }
-    }
-  }
-
-  Future<void> _removeWatchlistItem(
-  String instrument,
-) async {
-  final normalized =
-      _normalizeInstrument(
-    instrument,
-  );
-
-  _validateInstrument(
-    normalized,
-  );
-
-  final baseUri =
-      Uri.parse(
-    _client.dio.options.baseUrl,
-  );
-
-  // Gunakan pathSegments supaya karakter khusus,
-  // terutama "/" pada "XAU/USD", di-encode sebagai %2F.
-  //
-  // Contoh:
-  //
-  // XAU/USD
-  //
-  // menjadi:
-  //
-  // /watchlist/XAU%2FUSD
-  //
-  // Bukan:
-  //
-  // /watchlist/XAU/USD
-  final uri =
-      baseUri.replace(
-    pathSegments: [
-      ...baseUri.pathSegments
-          .where(
-            (
-              segment,
-            ) =>
-                segment.isNotEmpty,
-          ),
-      'watchlist',
-      normalized,
-    ],
-  );
-
-  await _client.dio.deleteUri(
-    uri,
-  );
-}
 
   // ===========================================================================
   // PRICE ALERT

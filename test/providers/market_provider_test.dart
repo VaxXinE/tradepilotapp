@@ -42,8 +42,7 @@ void main() {
       ..selectedTimeframe = '4h'
       ..quotes = {'BTC/USD': _quote}
       ..quotesUpdatedAt = DateTime.utc(2026, 8, 21)
-      ..marketError = 'error lama'
-      ..watchlist = {'BTC/USD'};
+      ..marketError = 'error lama';
 
     auth
       ..status = AuthStatus.unauthenticated
@@ -55,7 +54,6 @@ void main() {
     expect(provider.quotes, isEmpty);
     expect(provider.quotesUpdatedAt, isNull);
     expect(provider.marketError, isNull);
-    expect(provider.watchlist, isEmpty);
   });
 
   test(

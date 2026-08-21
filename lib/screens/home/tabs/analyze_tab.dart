@@ -11,6 +11,7 @@ import '../../../models/market_models.dart';
 import '../../../providers/analysis_provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/market_provider.dart';
+import '../../../providers/watchlist_provider.dart';
 import '../../../widgets/error_banner.dart';
 import '../../../widgets/market_mini_chart.dart';
 import '../../analysis/analysis_detail_screen.dart';
@@ -67,8 +68,6 @@ class AnalyzeTab extends StatefulWidget {
 class _AnalyzeTabState extends State<AnalyzeTab> {
   final TextEditingController _contextController = TextEditingController();
 
-  bool _watchlistBusy = false;
-
   @override
   void initState() {
     super.initState();
@@ -84,7 +83,7 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
 
       unawaited(market.loadQuotes());
 
-      unawaited(market.loadWatchlist());
+      unawaited(context.read<WatchlistProvider>().loadWatchlist());
     });
   }
 
@@ -104,10 +103,12 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
 
     final analysis = context.read<AnalysisProvider>();
 
+    final watchlist = context.read<WatchlistProvider>();
+
     await Future.wait([
       market.loadSelectedMarketData(force: true),
       market.loadQuotes(force: true),
-      market.loadWatchlist(),
+      watchlist.loadWatchlist(),
       analysis.loadQuota(),
     ]);
   }
@@ -117,32 +118,18 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
   // ===========================================================================
 
   Future<void> _toggleWatchlist(String instrument) async {
-    if (_watchlistBusy) {
-      return;
-    }
+    final watchlist = context.read<WatchlistProvider>();
 
-    setState(() {
-      _watchlistBusy = true;
-    });
-
-    final market = context.read<MarketProvider>();
-
-    final ok = await market.toggleWatchlist(instrument);
+    final ok = await watchlist.toggleInstrument(instrument);
 
     if (!mounted) {
       return;
     }
 
-    setState(() {
-      _watchlistBusy = false;
-    });
-
     if (!ok) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            market.watchlistError ?? 'Gagal memperbarui watchlist.',
-          ),
+          content: Text(watchlist.error ?? 'Gagal memperbarui watchlist.'),
         ),
       );
     }
@@ -358,7 +345,6 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
                 onToggleWatchlist: () {
                   unawaited(_toggleWatchlist(instrument));
                 },
-                watchlistBusy: _watchlistBusy,
               ),
 
               const SizedBox(height: 14),
@@ -550,14 +536,11 @@ class _MarketOverviewCard extends StatelessWidget {
   const _MarketOverviewCard({
     required this.market,
     required this.onToggleWatchlist,
-    required this.watchlistBusy,
   });
 
   final MarketProvider market;
 
   final VoidCallback onToggleWatchlist;
-
-  final bool watchlistBusy;
 
   @override
   Widget build(BuildContext context) {
@@ -572,6 +555,8 @@ class _MarketOverviewCard extends StatelessWidget {
     final bearish = isDark ? AppColors.bearishDark : AppColors.bearishLight;
 
     final primary = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
+
+    final watchlist = context.watch<WatchlistProvider>();
 
     final quote = market.selectedQuote;
 
@@ -591,7 +576,7 @@ class _MarketOverviewCard extends StatelessWidget {
 
     final instrument = market.selectedInstrument;
 
-    final watchlisted = market.isWatchlisted(instrument);
+    final watchlisted = watchlist.isWatchlisted(instrument);
 
     return Card(
       child: Padding(
@@ -630,8 +615,8 @@ class _MarketOverviewCard extends StatelessWidget {
                   tooltip: watchlisted
                       ? 'Hapus dari watchlist'
                       : 'Tambahkan ke watchlist',
-                  onPressed: watchlistBusy ? null : onToggleWatchlist,
-                  icon: watchlistBusy
+                  onPressed: watchlist.isUpdating ? null : onToggleWatchlist,
+                  icon: watchlist.isUpdating
                       ? const SizedBox(
                           width: 20,
                           height: 20,

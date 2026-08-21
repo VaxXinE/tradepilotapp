@@ -7,6 +7,7 @@ import '../../providers/analysis_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/market_provider.dart';
 import '../../providers/notifications_provider.dart';
+import '../../providers/watchlist_provider.dart';
 import 'tabs/analyze_tab.dart';
 import 'tabs/dashboard_tab.dart';
 import 'tabs/history_tab.dart';
@@ -272,6 +273,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     final analysisProvider = context.read<AnalysisProvider>();
 
     final marketProvider = context.read<MarketProvider>();
+    final watchlistProvider = context.read<WatchlistProvider>();
 
     // -----------------------------------------------------------------------
     // Quote polling
@@ -289,7 +291,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       case 0:
         unawaited(analysisProvider.refreshCoreData(silent: !showLoading));
 
-        unawaited(marketProvider.loadWatchlist());
+        unawaited(watchlistProvider.loadWatchlist());
 
         break;
 
@@ -300,7 +302,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       case 1:
         unawaited(analysisProvider.loadQuota());
 
-        unawaited(marketProvider.loadWatchlist());
+        unawaited(watchlistProvider.loadWatchlist());
 
         break;
 
