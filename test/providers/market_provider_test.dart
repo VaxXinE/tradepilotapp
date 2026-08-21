@@ -215,6 +215,93 @@ void main() {
       expect(context.trend, MarketTrend.bullish);
     },
   );
+
+  test(
+    'selectedTechnicalSummary is null before any technical data loads',
+    () async {
+      final auth = AuthProvider();
+      await Future<void>.delayed(Duration.zero);
+      final provider = MarketProvider(auth, _FakeMarketRepository());
+      addTearDown(provider.dispose);
+
+      expect(provider.selectedTechnicalSummary, isNull);
+    },
+  );
+
+  test(
+    'selectedTechnicalSummary derives from the currently selected technical snapshot',
+    () async {
+      final auth = AuthProvider();
+      await Future<void>.delayed(Duration.zero);
+      final provider = MarketProvider(auth, _FakeMarketRepository());
+      addTearDown(provider.dispose);
+
+      provider.selectedTechnical = const BeginnerTechnicalSnapshot(
+        lastClose: 100,
+        change1dPercent: 0.1,
+        rsi: 65,
+        rsiSignal: 'Buy',
+        macdAction: 'Buy',
+        buyCount: 3,
+        sellCount: 1,
+        neutralCount: 0,
+        overallSignal: 'Buy',
+      );
+
+      final summary = provider.selectedTechnicalSummary;
+
+      expect(summary, isNotNull);
+      expect(summary!.trend, MarketTrend.bullish);
+    },
+  );
+
+  test('an old technical response cannot overwrite the latest selection '
+      '(stale response protection)', () async {
+    final repository = _FakeMarketRepository();
+    final oldResponse = Completer<BeginnerTechnicalSnapshot?>();
+    final latestResponse = Completer<BeginnerTechnicalSnapshot?>();
+    repository.technicalResponses
+      ..['4h'] = oldResponse
+      ..['1D'] = latestResponse;
+    final auth = AuthProvider();
+    await Future<void>.delayed(Duration.zero);
+    final provider = MarketProvider(auth, repository);
+    addTearDown(provider.dispose);
+
+    final oldRequest = provider.selectTimeframe('4h', force: true);
+    final latestRequest = provider.selectTimeframe('1D', force: true);
+    latestResponse.complete(
+      const BeginnerTechnicalSnapshot(
+        lastClose: 100,
+        change1dPercent: 1,
+        rsi: 60,
+        rsiSignal: 'Buy',
+        macdAction: 'Buy',
+        buyCount: 3,
+        sellCount: 0,
+        neutralCount: 0,
+        overallSignal: 'Buy',
+      ),
+    );
+    await latestRequest;
+    oldResponse.complete(
+      const BeginnerTechnicalSnapshot(
+        lastClose: 90,
+        change1dPercent: -1,
+        rsi: 25,
+        rsiSignal: 'Sell',
+        macdAction: 'Sell',
+        buyCount: 0,
+        sellCount: 3,
+        neutralCount: 0,
+        overallSignal: 'Sell',
+      ),
+    );
+    await oldRequest;
+
+    expect(provider.selectedTimeframe, '1D');
+    expect(provider.selectedTechnicalSummary?.trend, MarketTrend.bullish);
+  });
 }
 
 const _quote = LiveMarketQuote(
@@ -244,6 +331,8 @@ class _FakeMarketRepository extends MarketRepository {
   Completer<_QuoteSnapshot>? pending;
   final List<(String, String)> candleRequests = [];
   final Map<String, Completer<List<MarketCandle>>> candleResponses = {};
+  final Map<String, Completer<BeginnerTechnicalSnapshot?>> technicalResponses =
+      {};
   int calendarCalls = 0;
   final Map<String, Completer<List<EconomicCalendarEvent>>> calendarResponses =
       {};
@@ -275,8 +364,8 @@ class _FakeMarketRepository extends MarketRepository {
   Future<BeginnerTechnicalSnapshot?> getTechnical({
     required String instrument,
     required String timeframe,
-  }) async {
-    return null;
+  }) {
+    return technicalResponses[timeframe]?.future ?? Future.value(null);
   }
 
   @override

@@ -16,6 +16,7 @@ import '../../../widgets/error_banner.dart';
 import '../../../widgets/chart/timeframe_selector.dart';
 import '../../../widgets/calendar/economic_calendar_card.dart';
 import '../../../widgets/context/market_context_card.dart';
+import '../../../widgets/technical/technical_summary_card.dart';
 import '../../../widgets/market_mini_chart.dart';
 import '../../analysis/analysis_detail_screen.dart';
 import '../../../widgets/price_alert_sheet.dart';
@@ -397,9 +398,15 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
               // ---------------------------------------------------------------
               // TECHNICAL SUMMARY
               // ---------------------------------------------------------------
-              _TechnicalSummaryCard(
-                technical: market.selectedTechnical,
+              TechnicalSummaryCard(
+                summary: market.selectedTechnicalSummary,
                 isLoading: market.isLoadingSelectedMarket,
+                hasError:
+                    market.marketError != null &&
+                    market.selectedTechnical == null,
+                onRetry: () {
+                  unawaited(market.loadSelectedMarketData(force: true));
+                },
               ),
 
               const SizedBox(height: 14),
@@ -920,280 +927,6 @@ class _SessionContainer extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-// =============================================================================
-// TECHNICAL BEGINNER SUMMARY
-// =============================================================================
-
-class _TechnicalSummaryCard extends StatelessWidget {
-  const _TechnicalSummaryCard({
-    required this.technical,
-    required this.isLoading,
-  });
-
-  final BeginnerTechnicalSnapshot? technical;
-
-  final bool isLoading;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    final muted = isDark
-        ? AppColors.darkMutedForeground
-        : AppColors.lightMutedForeground;
-
-    if (isLoading && technical == null) {
-      return const Card(
-        child: Padding(
-          padding: EdgeInsets.all(24),
-          child: Center(child: CircularProgressIndicator()),
-        ),
-      );
-    }
-
-    if (technical == null) {
-      return Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Text(
-            'Ringkasan teknikal belum tersedia untuk market ini.',
-            style: TextStyle(color: muted, fontSize: 12.5),
-          ),
-        ),
-      );
-    }
-
-    final trend = _trendInterpretation(technical!);
-
-    final momentum = _momentumInterpretation(technical!);
-
-    final confirmation = _macdInterpretation(technical!);
-
-    final explanation = _beginnerExplanation(technical!);
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Row(
-              children: [
-                Icon(Icons.insights_outlined, size: 19),
-                SizedBox(width: 8),
-                Text(
-                  'Kondisi Teknikal',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 5),
-
-            Text(
-              'Kami sederhanakan indikator agar lebih mudah dibaca.',
-              style: TextStyle(color: muted, fontSize: 11.5),
-            ),
-
-            const SizedBox(height: 14),
-
-            _TechnicalRow(
-              icon: Icons.trending_up,
-              label: 'Arah',
-              value: trend.$1,
-              color: trend.$2,
-            ),
-
-            const Divider(height: 22),
-
-            _TechnicalRow(
-              icon: Icons.speed_rounded,
-              label: 'Momentum',
-              value: momentum.$1,
-              color: momentum.$2,
-            ),
-
-            const Divider(height: 22),
-
-            _TechnicalRow(
-              icon: Icons.fact_check_outlined,
-              label: 'Konfirmasi',
-              value: confirmation.$1,
-              color: confirmation.$2,
-            ),
-
-            const SizedBox(height: 16),
-
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                color: isDark ? AppColors.darkMuted : AppColors.lightMuted,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Apa artinya?',
-                    style: TextStyle(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    explanation,
-                    style: TextStyle(color: muted, fontSize: 12, height: 1.45),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            Text(
-              'RSI ${technical!.rsi?.toStringAsFixed(1) ?? '--'} '
-              '• Buy ${technical!.buyCount} '
-              '• Sell ${technical!.sellCount} '
-              '• Netral ${technical!.neutralCount}',
-              style: TextStyle(color: muted, fontSize: 10.5),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  (String, Color) _trendInterpretation(BeginnerTechnicalSnapshot t) {
-    final isDark = false;
-
-    // Warna diambil langsung agar tetap
-    // konsisten ketika widget dibangun.
-    if (t.bullish) {
-      return ('Cenderung naik', AppColors.bullishLight);
-    }
-
-    if (t.bearish) {
-      return ('Cenderung turun', AppColors.bearishLight);
-    }
-
-    return (
-      'Belum jelas',
-      isDark ? AppColors.neutralDark : AppColors.neutralLight,
-    );
-  }
-
-  (String, Color) _momentumInterpretation(BeginnerTechnicalSnapshot t) {
-    final rsi = t.rsi;
-
-    if (rsi == null) {
-      return ('Belum tersedia', AppColors.neutralLight);
-    }
-
-    if (rsi >= 70) {
-      return ('Sudah cukup tinggi', AppColors.neutralLight);
-    }
-
-    if (rsi <= 30) {
-      return ('Sudah cukup rendah', AppColors.neutralLight);
-    }
-
-    if (rsi >= 55) {
-      return ('Momentum naik', AppColors.bullishLight);
-    }
-
-    if (rsi <= 45) {
-      return ('Momentum turun', AppColors.bearishLight);
-    }
-
-    return ('Relatif netral', AppColors.neutralLight);
-  }
-
-  (String, Color) _macdInterpretation(BeginnerTechnicalSnapshot t) {
-    switch (t.macdAction.toLowerCase()) {
-      case 'buy':
-        return ('Mendukung kenaikan', AppColors.bullishLight);
-
-      case 'sell':
-        return ('Mendukung penurunan', AppColors.bearishLight);
-
-      default:
-        return ('Belum memberi konfirmasi kuat', AppColors.neutralLight);
-    }
-  }
-
-  String _beginnerExplanation(BeginnerTechnicalSnapshot t) {
-    final rsi = t.rsi;
-
-    if (t.bullish && rsi != null && rsi >= 70) {
-      return 'Mayoritas indikator masih cenderung mendukung kenaikan, '
-          'tetapi momentum sudah cukup tinggi. Hindari mengejar harga hanya '
-          'karena melihat pergerakan naik.';
-    }
-
-    if (t.bullish) {
-      return 'Lebih banyak indikator saat ini mendukung kenaikan. '
-          'Tetap tunggu area entry dan batas risiko dari hasil analisis AI '
-          'sebelum mengambil keputusan.';
-    }
-
-    if (t.bearish && rsi != null && rsi <= 30) {
-      return 'Tekanan turun masih terlihat, tetapi harga sudah cukup tertekan. '
-          'Kondisi seperti ini bisa mengalami pantulan sehingga entry terlambat '
-          'perlu dihindari.';
-    }
-
-    if (t.bearish) {
-      return 'Lebih banyak indikator saat ini mendukung penurunan. '
-          'Gunakan hasil analisis berikutnya untuk memahami area invalidasi '
-          'dan risiko sebelum bertindak.';
-    }
-
-    return 'Indikator belum menunjukkan arah yang dominan. '
-        'Untuk pemula, kondisi seperti ini biasanya lebih baik dibaca dengan '
-        'sabar daripada memaksakan entry.';
-  }
-}
-
-class _TechnicalRow extends StatelessWidget {
-  const _TechnicalRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: color),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            label,
-            style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
-          ),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            color: color,
-            fontSize: 12.5,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-      ],
     );
   }
 }

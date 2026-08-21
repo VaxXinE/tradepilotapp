@@ -6,8 +6,10 @@ import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 import 'package:trade_pilot_api_client/trade_pilot_client.dart';
 
 import '../core/market/market_context_engine.dart';
+import '../core/market/technical_summary_engine.dart';
 import '../models/market_context.dart';
 import '../models/market_models.dart';
+import '../models/technical_summary.dart';
 import '../repositories/market_repository.dart';
 import 'auth_provider.dart';
 
@@ -122,6 +124,10 @@ class MarketProvider extends ChangeNotifier {
       technical: selectedTechnical,
       calendar: selectedCalendar,
     );
+  }
+
+  TechnicalSummary? get selectedTechnicalSummary {
+    return TechnicalSummaryEngine.build(selectedTechnical);
   }
 
   // ===========================================================================
