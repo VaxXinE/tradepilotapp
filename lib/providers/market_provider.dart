@@ -199,6 +199,27 @@ class MarketProvider extends ChangeNotifier {
 
     isUpdatingWatchlist = false;
 
+    _selectionGeneration++;
+
+    selectedInstrument = 'XAU/USD';
+    selectedTimeframe = '1h';
+    selectedCandles = const [];
+    selectedTechnical = null;
+    selectedCalendar = const [];
+    isLoadingSelectedMarket = false;
+
+    quotes = {};
+    quotesUpdatedAt = null;
+    _quotesFetchedAt = null;
+    marketError = null;
+
+    _candleCache.clear();
+    _candleFetchedAt.clear();
+    _technicalCache.clear();
+    _technicalFetchedAt.clear();
+    _calendarCache.clear();
+    _calendarFetchedAt.clear();
+
     watchlist = {};
 
     isLoadingWatchlist = false;
@@ -255,6 +276,7 @@ class MarketProvider extends ChangeNotifier {
     }
 
     _quotesRequestInFlight = true;
+    final epoch = _sessionEpoch;
 
     if (!silent) {
       isLoadingQuotes = true;
@@ -263,6 +285,10 @@ class MarketProvider extends ChangeNotifier {
 
     try {
       final snapshot = await _repository.getLiveQuotes();
+
+      if (epoch != _sessionEpoch) {
+        return;
+      }
 
       final nextQuotes = <String, LiveMarketQuote>{};
 
@@ -282,7 +308,9 @@ class MarketProvider extends ChangeNotifier {
 
       marketError = null;
     } catch (e) {
-      marketError = _friendlyError(e, fallback: 'Gagal memuat harga live.');
+      if (epoch == _sessionEpoch) {
+        marketError = _friendlyError(e, fallback: 'Gagal memuat harga live.');
+      }
     } finally {
       _quotesRequestInFlight = false;
 
@@ -290,7 +318,9 @@ class MarketProvider extends ChangeNotifier {
         isLoadingQuotes = false;
       }
 
-      notifyListeners();
+      if (epoch == _sessionEpoch) {
+        notifyListeners();
+      }
     }
   }
 
