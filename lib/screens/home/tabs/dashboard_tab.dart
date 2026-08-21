@@ -13,6 +13,7 @@ import '../../../providers/market_provider.dart';
 import '../../../providers/notifications_provider.dart';
 import '../../../widgets/analysis_card.dart';
 import '../../../widgets/market/market_overview_card.dart';
+import '../../../widgets/market/market_session_card.dart';
 import '../../../widgets/price_alert_sheet.dart';
 import '../../analysis/analysis_detail_screen.dart';
 import '../../notifications/notifications_screen.dart';
@@ -171,6 +172,10 @@ class _DashboardTabState extends State<DashboardTab> {
                 widget.onOpenAnalyze(market.selectedInstrument);
               },
             ),
+
+            const SizedBox(height: 16),
+
+            MarketSessionCard(instrument: market.selectedInstrument),
 
             const SizedBox(height: 16),
 
