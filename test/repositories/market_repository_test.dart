@@ -67,6 +67,13 @@ void main() {
         },
         {'date': 'rusak'},
         {
+          'date': '2026-01-03T00:00:00Z',
+          'open': 10,
+          'high': 5,
+          'low': 1,
+          'close': 8,
+        },
+        {
           'date': '2026-01-01T00:00:00Z',
           'open': 1,
           'high': 2,

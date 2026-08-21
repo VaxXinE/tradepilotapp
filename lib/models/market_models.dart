@@ -161,6 +161,15 @@ class MarketCandle {
       throw const FormatException('Invalid candle price.');
     }
 
+    if (![open, high, low, close].every((value) => value.isFinite) ||
+        high < low ||
+        high < open ||
+        high < close ||
+        low > open ||
+        low > close) {
+      throw const FormatException('Invalid candle range.');
+    }
+
     return MarketCandle(
       date: date,
       open: open,

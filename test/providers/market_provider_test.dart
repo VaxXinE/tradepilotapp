@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
@@ -97,6 +98,49 @@ void main() {
       expect(repository.calls, 3);
     },
   );
+
+  test(
+    'selectTimeframe requests candle data for the selected timeframe',
+    () async {
+      final repository = _FakeMarketRepository();
+      final auth = AuthProvider();
+      await Future<void>.delayed(Duration.zero);
+      final provider = MarketProvider(auth, repository);
+      addTearDown(provider.dispose);
+
+      await provider.selectTimeframe('4h', force: true);
+
+      expect(provider.selectedTimeframe, '4h');
+      expect(repository.candleRequests, [('XAU/USD', '4h')]);
+      expect(provider.selectedCandles.single.close, 104);
+    },
+  );
+
+  test(
+    'an old timeframe response cannot overwrite the latest selection',
+    () async {
+      final repository = _FakeMarketRepository();
+      final oldResponse = Completer<List<MarketCandle>>();
+      final latestResponse = Completer<List<MarketCandle>>();
+      repository.candleResponses
+        ..['4h'] = oldResponse
+        ..['1D'] = latestResponse;
+      final auth = AuthProvider();
+      await Future<void>.delayed(Duration.zero);
+      final provider = MarketProvider(auth, repository);
+      addTearDown(provider.dispose);
+
+      final oldRequest = provider.selectTimeframe('4h', force: true);
+      final latestRequest = provider.selectTimeframe('1D', force: true);
+      latestResponse.complete([_candle(200, 210)]);
+      await latestRequest;
+      oldResponse.complete([_candle(100, 90)]);
+      await oldRequest;
+
+      expect(provider.selectedTimeframe, '1D');
+      expect(provider.selectedCandles.single.close, 210);
+    },
+  );
 }
 
 const _quote = LiveMarketQuote(
@@ -124,6 +168,8 @@ class _FakeMarketRepository extends MarketRepository {
   int calls = 0;
   Object? error;
   Completer<_QuoteSnapshot>? pending;
+  final List<(String, String)> candleRequests = [];
+  final Map<String, Completer<List<MarketCandle>>> candleResponses = {};
 
   @override
   Future<_QuoteSnapshot> getLiveQuotes() {
@@ -137,4 +183,30 @@ class _FakeMarketRepository extends MarketRepository {
     return pending?.future ??
         Future.value((quotes: [_quote], updatedAt: DateTime.now()));
   }
+
+  @override
+  Future<List<MarketCandle>> getCandles({
+    required String instrument,
+    required String timeframe,
+  }) {
+    candleRequests.add((instrument, timeframe));
+    return candleResponses[timeframe]?.future ??
+        Future.value([_candle(100, 104)]);
+  }
+
+  @override
+  Future<BeginnerTechnicalSnapshot?> getTechnical({
+    required String instrument,
+    required String timeframe,
+  }) async {
+    return null;
+  }
 }
+
+MarketCandle _candle(double open, double close) => MarketCandle(
+  date: DateTime.utc(2026, 8, 21),
+  open: open,
+  high: math.max(open, close) + 2,
+  low: math.min(open, close) - 2,
+  close: close,
+);

@@ -13,6 +13,7 @@ import '../../../providers/auth_provider.dart';
 import '../../../providers/market_provider.dart';
 import '../../../providers/watchlist_provider.dart';
 import '../../../widgets/error_banner.dart';
+import '../../../widgets/chart/timeframe_selector.dart';
 import '../../../widgets/market_mini_chart.dart';
 import '../../analysis/analysis_detail_screen.dart';
 import '../../../widgets/price_alert_sheet.dart';
@@ -349,18 +350,13 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
 
               const SizedBox(height: 12),
 
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: _timeframes.map((item) {
-                  return _SelectChip(
-                    label: item,
-                    selected: timeframe == item,
-                    onTap: () {
-                      unawaited(market.selectTimeframe(item));
-                    },
-                  );
-                }).toList(),
+              TimeframeSelector(
+                timeframes: _timeframes,
+                selected: timeframe,
+                isLoading: market.isLoadingSelectedMarket,
+                onSelected: (item) {
+                  unawaited(market.selectTimeframe(item));
+                },
               ),
 
               const SizedBox(height: 22),
@@ -720,7 +716,11 @@ class _MarketOverviewCard extends StatelessWidget {
 
             MarketMiniChart(
               candles: market.selectedCandles,
-              accentColor: changeColor,
+              technical: market.selectedTechnical,
+              currentPrice: quote?.price,
+              error: market.marketError == null
+                  ? null
+                  : 'Sebagian data chart belum tersedia.',
               isLoading: market.isLoadingSelectedMarket,
             ),
 

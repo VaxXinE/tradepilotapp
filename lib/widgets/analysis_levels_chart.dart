@@ -264,7 +264,7 @@ class AnalysisLevelsChart extends StatelessWidget {
 
     final error = Theme.of(context).colorScheme.error;
 
-    const takeProfit = Color(0xFF16A34A);
+    final takeProfit = Theme.of(context).colorScheme.tertiary;
 
     final result = <_PriceLevel>[];
 
@@ -279,7 +279,7 @@ class AnalysisLevelsChart extends StatelessWidget {
     if (entry != null) {
       result.add(
         _PriceLevel(
-          label: '${isBuy ? 'BUY' : 'SELL'} Entry',
+          label: 'Reference Entry',
           price: entry,
           displayValue: side.entryZone,
           color: primary,
@@ -291,7 +291,7 @@ class AnalysisLevelsChart extends StatelessWidget {
     if (stopLoss != null) {
       result.add(
         _PriceLevel(
-          label: 'Stop Loss',
+          label: 'Risk Reference',
           price: stopLoss,
           displayValue: side.stopLoss,
           color: error,
@@ -303,7 +303,7 @@ class AnalysisLevelsChart extends StatelessWidget {
     if (tp1 != null) {
       result.add(
         _PriceLevel(
-          label: 'TP1',
+          label: 'Target Reference 1',
           price: tp1,
           displayValue: side.takeProfit1,
           color: takeProfit,
@@ -315,7 +315,7 @@ class AnalysisLevelsChart extends StatelessWidget {
     if (tp2 != null) {
       result.add(
         _PriceLevel(
-          label: 'TP2',
+          label: 'Target Reference 2',
           price: tp2,
           displayValue: side.takeProfit2,
           color: takeProfit,

@@ -1065,7 +1065,7 @@ class _ChartCard extends StatelessWidget {
                 Icon(Icons.show_chart_rounded, size: 19),
                 SizedBox(width: 8),
                 Text(
-                  'Chart & Level Trading',
+                  'Chart & Reference Level',
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
                 ),
               ],
