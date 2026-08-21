@@ -6,16 +6,18 @@ import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 import 'package:trade_pilot_api_client/trade_pilot_client.dart';
 
 import '../models/market_models.dart';
+import '../repositories/market_repository.dart';
 import 'auth_provider.dart';
 
 class MarketProvider extends ChangeNotifier {
-  MarketProvider(this._authProvider) {
+  MarketProvider(this._authProvider, this._repository) {
     _activeUserId = _currentUserId;
 
     _authProvider.addListener(_handleAuthChanged);
   }
 
   final AuthProvider _authProvider;
+  final MarketRepository _repository;
 
   TradePilotClient get _client => _authProvider.client;
 
@@ -260,23 +262,11 @@ class MarketProvider extends ChangeNotifier {
     }
 
     try {
-      final response = await _client.dio.get('/quotes/live');
-
-      final body = marketMap(response.data);
-
-      final rawData = body['data'];
-
-      if (rawData is! List) {
-        throw const FormatException('Invalid live quote payload.');
-      }
+      final snapshot = await _repository.getLiveQuotes();
 
       final nextQuotes = <String, LiveMarketQuote>{};
 
-      for (final raw in rawData) {
-        final json = marketMap(raw);
-
-        final quote = LiveMarketQuote.fromJson(json);
-
+      for (final quote in snapshot.quotes) {
         if (quote.instrument.isEmpty || quote.price <= 0) {
           continue;
         }
@@ -288,9 +278,7 @@ class MarketProvider extends ChangeNotifier {
 
       _quotesFetchedAt = DateTime.now();
 
-      quotesUpdatedAt =
-          DateTime.tryParse(body['updatedAt']?.toString() ?? '') ??
-          _quotesFetchedAt;
+      quotesUpdatedAt = snapshot.updatedAt ?? _quotesFetchedAt;
 
       marketError = null;
     } catch (e) {
@@ -533,7 +521,10 @@ class MarketProvider extends ChangeNotifier {
       return existing;
     }
 
-    final future = _fetchCandles(normalized, timeframe);
+    final future = _repository.getCandles(
+      instrument: normalized,
+      timeframe: timeframe,
+    );
 
     _candleInFlight[key] = future;
 
@@ -548,38 +539,6 @@ class MarketProvider extends ChangeNotifier {
     } finally {
       _candleInFlight.remove(key);
     }
-  }
-
-  Future<List<MarketCandle>> _fetchCandles(
-    String instrument,
-    String timeframe,
-  ) async {
-    final response = await _client.dio.get(
-      '/historical/candles',
-      queryParameters: {'instrument': instrument, 'timeframe': timeframe},
-    );
-
-    final body = marketMap(response.data);
-
-    final rawCandles = body['candles'];
-
-    if (rawCandles is! List) {
-      throw const FormatException('Invalid candle payload.');
-    }
-
-    final candles = <MarketCandle>[];
-
-    for (final raw in rawCandles) {
-      try {
-        candles.add(MarketCandle.fromJson(marketMap(raw)));
-      } catch (_) {
-        // Skip malformed upstream bar.
-      }
-    }
-
-    candles.sort((a, b) => a.date.compareTo(b.date));
-
-    return candles;
   }
 
   // ===========================================================================
@@ -609,7 +568,10 @@ class MarketProvider extends ChangeNotifier {
       return existing;
     }
 
-    final future = _fetchTechnical(normalized, timeframe);
+    final future = _repository.getTechnical(
+      instrument: normalized,
+      timeframe: timeframe,
+    );
 
     _technicalInFlight[key] = future;
 
@@ -626,26 +588,6 @@ class MarketProvider extends ChangeNotifier {
     } finally {
       _technicalInFlight.remove(key);
     }
-  }
-
-  Future<BeginnerTechnicalSnapshot?> _fetchTechnical(
-    String instrument,
-    String timeframe,
-  ) async {
-    final response = await _client.dio.get(
-      '/historical/indicators',
-      queryParameters: {'instrument': instrument, 'timeframe': timeframe},
-    );
-
-    final body = marketMap(response.data);
-
-    final indicators = marketMap(body['indicators']);
-
-    if (indicators.isEmpty) {
-      return null;
-    }
-
-    return BeginnerTechnicalSnapshot.fromJson(indicators);
   }
 
   // ===========================================================================
@@ -672,7 +614,7 @@ class MarketProvider extends ChangeNotifier {
       return existing;
     }
 
-    final future = _fetchRelevantCalendar(normalized);
+    final future = _repository.getRelevantCalendar(normalized);
 
     _calendarInFlight[key] = future;
 
@@ -687,31 +629,6 @@ class MarketProvider extends ChangeNotifier {
     } finally {
       _calendarInFlight.remove(key);
     }
-  }
-
-  Future<List<EconomicCalendarEvent>> _fetchRelevantCalendar(
-    String instrument,
-  ) async {
-    final response = await _client.dio.get(
-      '/calendar/relevant',
-      queryParameters: {'instrument': instrument, 'maxItems': 8},
-    );
-
-    final body = marketMap(response.data);
-
-    final rawEvents = body['events'];
-
-    if (rawEvents is! List) {
-      return const [];
-    }
-
-    final events = <EconomicCalendarEvent>[];
-
-    for (final raw in rawEvents) {
-      events.add(EconomicCalendarEvent.fromJson(marketMap(raw)));
-    }
-
-    return events;
   }
 
   // ===========================================================================
