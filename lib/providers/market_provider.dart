@@ -91,7 +91,7 @@ class MarketProvider extends ChangeNotifier {
 
   DateTime? _quotesFetchedAt;
 
-  static const Duration _quoteRefreshInterval = Duration(seconds: 15);
+  static const Duration _quoteRefreshInterval = Duration(seconds: 5);
 
   static const Duration _quoteClientCacheTtl = Duration(seconds: 10);
 
