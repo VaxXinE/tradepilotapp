@@ -175,9 +175,7 @@ class NotificationsProvider extends ChangeNotifier {
       if (data != null) {
         items = data.notifications.toList();
 
-        unreadCount = items
-            .where((notification) => notification.readAt == null)
-            .length;
+        unreadCount = data.unreadCount;
       }
     } catch (_) {
       // Notification bukan critical path.

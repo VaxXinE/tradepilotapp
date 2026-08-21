@@ -6,7 +6,9 @@ import 'package:provider/provider.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart' as api;
 
 import '../../core/theme/app_colors.dart';
+import '../../providers/analysis_provider.dart';
 import '../../providers/notifications_provider.dart';
+import '../analysis/analysis_detail_screen.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -37,6 +39,103 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final provider = context.read<NotificationsProvider>();
 
     await Future.wait([provider.load(), provider.loadPreferences()]);
+  }
+
+  Future<void> _handleNotificationTap(api.Notification notification) async {
+    final notifications = context.read<NotificationsProvider>();
+
+    // -------------------------------------------------------------------------
+    // Mark read dulu.
+    // -------------------------------------------------------------------------
+
+    if (notification.readAt == null) {
+      await notifications.markRead(notification.id);
+
+      if (!mounted) {
+        return;
+      }
+    }
+
+    final actionType = notification.actionType;
+
+    final actionId = notification.actionId;
+
+    if (actionType == null) {
+      return;
+    }
+
+    // -------------------------------------------------------------------------
+    // SECURITY:
+    //
+    // Action HARUS allowlisted.
+    //
+    // Jangan pernah melakukan:
+    //
+    // Navigator.pushNamed(context, actionType)
+    //
+    // atau membuka arbitrary URL.
+    // -------------------------------------------------------------------------
+
+    switch (actionType) {
+      case api.NotificationActionTypeEnum.analysis:
+        if (actionId == null || actionId <= 0) {
+          _showInvalidAction();
+
+          return;
+        }
+
+        await _openAnalysis(actionId);
+
+        return;
+
+      case api.NotificationActionTypeEnum.history:
+      case api.NotificationActionTypeEnum.notifications:
+      case api.NotificationActionTypeEnum.dailySummary:
+      case api.NotificationActionTypeEnum.alerts:
+        // Akan di-wire ketika screen mobile terkait
+        // sudah masuk parity.
+        return;
+
+      default:
+        // Unknown action dari future backend
+        // harus fail closed.
+        return;
+    }
+  }
+
+  Future<void> _openAnalysis(int analysisId) async {
+    final provider = context.read<AnalysisProvider>();
+
+    final analysis = await provider.getAnalysis(analysisId, silent: true);
+
+    if (!mounted) {
+      return;
+    }
+
+    if (analysis == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Analisis tidak tersedia atau kamu tidak memiliki akses.',
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            AnalysisDetailScreen(analysisId: analysisId, preloaded: analysis),
+      ),
+    );
+  }
+
+  void _showInvalidAction() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Target notifikasi tidak valid.')),
+    );
   }
 
   @override
@@ -131,17 +230,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     ) ...[
                       _NotificationTile(
                         notification: provider.items[index],
-                        onTap: () async {
-                          final item = provider.items[index];
-
-                          if (item.readAt == null) {
-                            await provider.markRead(item.id);
-                          }
-
-                          // P2-B2:
-                          // deep-link akan masuk di sini
-                          // setelah notification contract
-                          // menyimpan action target.
+                        onTap: () {
+                          unawaited(
+                            _handleNotificationTap(provider.items[index]),
+                          );
                         },
                       ),
                       if (index != provider.items.length - 1)

@@ -19,6 +19,8 @@ part 'notification.g.dart';
 /// * [message] 
 /// * [type] 
 /// * [readAt] 
+/// * [actionType] - Structured in-app navigation target. Clients must allowlist supported action types and never interpret this value as an arbitrary URL.
+/// * [actionId] - Optional resource ID associated with actionType. For actionType=analysis this is the analysis ID.
 /// * [createdAt] 
 @BuiltValue()
 abstract class Notification implements Built<Notification, NotificationBuilder> {
@@ -43,6 +45,15 @@ abstract class Notification implements Built<Notification, NotificationBuilder> 
 
   @BuiltValueField(wireName: r'readAt')
   DateTime? get readAt;
+
+  /// Structured in-app navigation target. Clients must allowlist supported action types and never interpret this value as an arbitrary URL.
+  @BuiltValueField(wireName: r'actionType')
+  NotificationActionTypeEnum? get actionType;
+  // enum actionTypeEnum {  analysis,  history,  notifications,  daily_summary,  alerts,  };
+
+  /// Optional resource ID associated with actionType. For actionType=analysis this is the analysis ID.
+  @BuiltValueField(wireName: r'actionId')
+  int? get actionId;
 
   @BuiltValueField(wireName: r'createdAt')
   DateTime get createdAt;
@@ -109,6 +120,20 @@ class _$NotificationSerializer implements PrimitiveSerializer<Notification> {
       yield serializers.serialize(
         object.readAt,
         specifiedType: const FullType(DateTime),
+      );
+    }
+    if (object.actionType != null) {
+      yield r'actionType';
+      yield serializers.serialize(
+        object.actionType,
+        specifiedType: const FullType(NotificationActionTypeEnum),
+      );
+    }
+    if (object.actionId != null) {
+      yield r'actionId';
+      yield serializers.serialize(
+        object.actionId,
+        specifiedType: const FullType(int),
       );
     }
     yield r'createdAt';
@@ -191,6 +216,22 @@ class _$NotificationSerializer implements PrimitiveSerializer<Notification> {
           if (valueDes == null) continue;
           result.readAt = valueDes;
           break;
+        case r'actionType':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(NotificationActionTypeEnum),
+          ) as NotificationActionTypeEnum?;
+          if (valueDes == null) continue;
+          result.actionType = valueDes;
+          break;
+        case r'actionId':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(int),
+          ) as int?;
+          if (valueDes == null) continue;
+          result.actionId = valueDes;
+          break;
         case r'createdAt':
           final valueDes = serializers.deserialize(
             value,
@@ -242,5 +283,31 @@ class NotificationTypeEnum extends EnumClass {
 
   static BuiltSet<NotificationTypeEnum> get values => _$notificationTypeEnumValues;
   static NotificationTypeEnum valueOf(String name) => _$notificationTypeEnumValueOf(name);
+}
+
+class NotificationActionTypeEnum extends EnumClass {
+
+  /// Structured in-app navigation target. Clients must allowlist supported action types and never interpret this value as an arbitrary URL.
+  @BuiltValueEnumConst(wireName: r'analysis')
+  static const NotificationActionTypeEnum analysis = _$notificationActionTypeEnum_analysis;
+  /// Structured in-app navigation target. Clients must allowlist supported action types and never interpret this value as an arbitrary URL.
+  @BuiltValueEnumConst(wireName: r'history')
+  static const NotificationActionTypeEnum history = _$notificationActionTypeEnum_history;
+  /// Structured in-app navigation target. Clients must allowlist supported action types and never interpret this value as an arbitrary URL.
+  @BuiltValueEnumConst(wireName: r'notifications')
+  static const NotificationActionTypeEnum notifications = _$notificationActionTypeEnum_notifications;
+  /// Structured in-app navigation target. Clients must allowlist supported action types and never interpret this value as an arbitrary URL.
+  @BuiltValueEnumConst(wireName: r'daily_summary')
+  static const NotificationActionTypeEnum dailySummary = _$notificationActionTypeEnum_dailySummary;
+  /// Structured in-app navigation target. Clients must allowlist supported action types and never interpret this value as an arbitrary URL.
+  @BuiltValueEnumConst(wireName: r'alerts')
+  static const NotificationActionTypeEnum alerts = _$notificationActionTypeEnum_alerts;
+
+  static Serializer<NotificationActionTypeEnum> get serializer => _$notificationActionTypeEnumSerializer;
+
+  const NotificationActionTypeEnum._(String name): super(name);
+
+  static BuiltSet<NotificationActionTypeEnum> get values => _$notificationActionTypeEnumValues;
+  static NotificationActionTypeEnum valueOf(String name) => _$notificationActionTypeEnumValueOf(name);
 }
 
