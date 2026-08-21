@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 import 'package:trade_pilot_api_client/trade_pilot_client.dart';
 
+import '../core/market/market_context_engine.dart';
+import '../models/market_context.dart';
 import '../models/market_models.dart';
 import '../repositories/market_repository.dart';
 import 'auth_provider.dart';
@@ -106,6 +108,20 @@ class MarketProvider extends ChangeNotifier {
 
   LiveMarketQuote? get selectedQuote {
     return quoteFor(selectedInstrument);
+  }
+
+  // ===========================================================================
+  // MARKET CONTEXT — beginner-friendly summary derived from data above.
+  // ===========================================================================
+
+  MarketContext? get selectedMarketContext {
+    return MarketContextEngine.build(
+      instrument: selectedInstrument,
+      candles: selectedCandles,
+      quote: selectedQuote,
+      technical: selectedTechnical,
+      calendar: selectedCalendar,
+    );
   }
 
   // ===========================================================================

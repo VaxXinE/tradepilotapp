@@ -15,6 +15,7 @@ import '../../../providers/watchlist_provider.dart';
 import '../../../widgets/error_banner.dart';
 import '../../../widgets/chart/timeframe_selector.dart';
 import '../../../widgets/calendar/economic_calendar_card.dart';
+import '../../../widgets/context/market_context_card.dart';
 import '../../../widgets/market_mini_chart.dart';
 import '../../analysis/analysis_detail_screen.dart';
 import '../../../widgets/price_alert_sheet.dart';
@@ -371,6 +372,23 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
                 market: market,
                 onToggleWatchlist: () {
                   unawaited(_toggleWatchlist(instrument));
+                },
+              ),
+
+              const SizedBox(height: 14),
+
+              // ---------------------------------------------------------------
+              // MARKET CONTEXT
+              // ---------------------------------------------------------------
+              MarketContextCard(
+                instrument: instrument,
+                marketContext: market.selectedMarketContext,
+                isLoading: market.isLoadingSelectedMarket,
+                hasError:
+                    market.marketError != null &&
+                    market.selectedCandles.isEmpty,
+                onRetry: () {
+                  unawaited(market.loadSelectedMarketData(force: true));
                 },
               ),
 

@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
+import 'package:tradepilotapp/models/market_context.dart';
 import 'package:tradepilotapp/models/market_models.dart';
 import 'package:tradepilotapp/providers/auth_provider.dart';
 import 'package:tradepilotapp/providers/market_provider.dart';
@@ -183,6 +184,35 @@ void main() {
         provider.selectedCalendar.single.event,
         'Crypto Regulation Hearing',
       );
+    },
+  );
+
+  test('selectedMarketContext is null before any market data loads', () async {
+    final auth = AuthProvider();
+    await Future<void>.delayed(Duration.zero);
+    final provider = MarketProvider(auth, _FakeMarketRepository());
+    addTearDown(provider.dispose);
+
+    expect(provider.selectedMarketContext, isNull);
+  });
+
+  test(
+    'selectedMarketContext derives from the currently selected candles',
+    () async {
+      final auth = AuthProvider();
+      await Future<void>.delayed(Duration.zero);
+      final provider = MarketProvider(auth, _FakeMarketRepository());
+      addTearDown(provider.dispose);
+
+      provider
+        ..selectedInstrument = 'XAU/USD'
+        ..selectedCandles = [_candle(100, 100), _candle(100, 104)];
+
+      final context = provider.selectedMarketContext;
+
+      expect(context, isNotNull);
+      expect(context!.instrument, 'XAU/USD');
+      expect(context.trend, MarketTrend.bullish);
     },
   );
 }
