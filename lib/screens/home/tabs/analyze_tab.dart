@@ -990,9 +990,7 @@ class _PreTradeWarning extends StatelessWidget {
 
     final eventDate = event.eventDateTime;
 
-    final minutes = eventDate == null
-        ? null
-        : eventDate.difference(DateTime.now()).inMinutes;
+    final minutes = eventDate?.difference(DateTime.now()).inMinutes;
 
     return Container(
       padding: const EdgeInsets.all(14),

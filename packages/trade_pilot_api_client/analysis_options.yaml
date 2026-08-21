@@ -7,3 +7,9 @@ analyzer:
     - test/*.dart
   errors:
     deprecated_member_use_from_same_package: ignore
+    # Artifacts of the openapi-generator dart-dio template — the generator
+    # emits these on some files regardless of usage. Files are
+    # auto-generated and must not be hand-edited, so silence at the
+    # analyzer-config level instead.
+    unused_import: ignore
+    unused_element_parameter: ignore

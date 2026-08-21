@@ -337,7 +337,7 @@ class _HistoryTabState extends State<HistoryTab> {
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
       itemCount: items.length + (provider.isLoadingMoreVisibleHistory ? 1 : 0),
-      separatorBuilder: (_, __) {
+      separatorBuilder: (_, _) {
         return const SizedBox(height: 10);
       },
       itemBuilder: (context, index) {
