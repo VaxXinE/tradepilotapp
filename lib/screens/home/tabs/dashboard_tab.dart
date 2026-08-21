@@ -16,6 +16,8 @@ import '../../../widgets/analysis_card.dart';
 import '../../../widgets/market/market_overview_card.dart';
 import '../../../widgets/market/market_session_card.dart';
 import '../../../widgets/price_alert_sheet.dart';
+import '../../../widgets/watchlist/instrument_picker_sheet.dart';
+import '../../../widgets/watchlist/watchlist_item_card.dart';
 import '../../analysis/analysis_detail_screen.dart';
 import '../../notifications/notifications_screen.dart';
 
@@ -474,11 +476,7 @@ class _WatchlistMarketCard extends StatelessWidget {
             const SizedBox(height: 14),
 
             if (instruments.isEmpty)
-              _EmptyWatchlist(
-                onOpenAnalyze: () {
-                  onOpenInstrument(null);
-                },
-              )
+              _EmptyWatchlist(onAdd: onManageWatchlist)
             else ...[
               for (var i = 0; i < instruments.length; i++) ...[
                 _WatchlistRow(
@@ -629,9 +627,9 @@ class _WatchlistRow extends StatelessWidget {
 }
 
 class _EmptyWatchlist extends StatelessWidget {
-  const _EmptyWatchlist({required this.onOpenAnalyze});
+  const _EmptyWatchlist({required this.onAdd});
 
-  final VoidCallback onOpenAnalyze;
+  final VoidCallback onAdd;
 
   @override
   Widget build(BuildContext context) {
@@ -663,10 +661,7 @@ class _EmptyWatchlist extends StatelessWidget {
 
           const SizedBox(height: 8),
 
-          TextButton(
-            onPressed: onOpenAnalyze,
-            child: const Text('Pilih market favorit'),
-          ),
+          TextButton(onPressed: onAdd, child: const Text('Tambah simbol')),
         ],
       ),
     );
@@ -981,6 +976,75 @@ String _formatPrice(String instrument, double value) {
 class _WatchlistManagerSheet extends StatelessWidget {
   const _WatchlistManagerSheet();
 
+  Future<void> _addInstrument(BuildContext context) async {
+    final provider = context.read<WatchlistProvider>();
+    final existing = provider.items
+        .map((item) => item.instrument.trim().toUpperCase())
+        .toSet();
+
+    await InstrumentPickerSheet.show(
+      context,
+      existingInstruments: existing,
+      onSelected: (instrument) async {
+        final ok = await provider.addInstrument(instrument);
+        if (!context.mounted) {
+          return;
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              ok
+                  ? '$instrument ditambahkan ke watchlist.'
+                  : provider.error ?? '$instrument sudah ada di watchlist.',
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _removeInstrument(
+    BuildContext context,
+    String instrument,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Hapus dari watchlist?'),
+        content: Text('Hapus $instrument dari watchlist?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) {
+      return;
+    }
+
+    final provider = context.read<WatchlistProvider>();
+    final ok = await provider.removeInstrument(instrument);
+    if (!context.mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          ok
+              ? '$instrument dihapus dari watchlist.'
+              : provider.error ?? 'Gagal menghapus $instrument.',
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final watchlist = context.watch<WatchlistProvider>();
@@ -1016,11 +1080,16 @@ class _WatchlistManagerSheet extends StatelessWidget {
                     ),
                   ),
                   IconButton(
+                    tooltip: 'Tambah simbol',
+                    onPressed: watchlist.isUpdating
+                        ? null
+                        : () => _addInstrument(context),
+                    icon: const Icon(Icons.add_rounded),
+                  ),
+                  IconButton(
                     tooltip: 'Tutup',
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close_rounded),
                   ),
                 ],
               ),
@@ -1030,91 +1099,55 @@ class _WatchlistManagerSheet extends StatelessWidget {
               const LinearProgressIndicator(minHeight: 2),
 
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-                children: [
-                  for (final group
-                      in MarketProvider.instrumentGroups.entries) ...[
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(4, 14, 4, 6),
-                      child: Text(
-                        group.key,
-                        style: TextStyle(
-                          color: muted,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                        ),
+              child: watchlist.isLoading && watchlist.items.isEmpty
+                  ? const Center(child: CircularProgressIndicator())
+                  : watchlist.error != null && watchlist.items.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(watchlist.error!, textAlign: TextAlign.center),
+                          const SizedBox(height: 8),
+                          TextButton(
+                            onPressed: watchlist.loadWatchlist,
+                            child: const Text('Coba lagi'),
+                          ),
+                        ],
                       ),
+                    )
+                  : watchlist.items.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Watchlist kamu masih kosong.',
+                            style: TextStyle(color: muted),
+                          ),
+                          const SizedBox(height: 8),
+                          FilledButton.icon(
+                            onPressed: () => _addInstrument(context),
+                            icon: const Icon(Icons.add_rounded),
+                            label: const Text('Tambah simbol'),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                      itemCount: watchlist.items.length,
+                      itemBuilder: (context, index) {
+                        final item = watchlist.items[index];
+                        return WatchlistItemCard(
+                          item: item,
+                          onRemove: (instrument) =>
+                              _removeInstrument(context, instrument),
+                        );
+                      },
                     ),
-
-                    for (final instrument in group.value)
-                      _WatchlistManagerRow(instrument: instrument),
-                  ],
-                ],
-              ),
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _WatchlistManagerRow extends StatelessWidget {
-  const _WatchlistManagerRow({required this.instrument});
-
-  final String instrument;
-
-  @override
-  Widget build(BuildContext context) {
-    final market = context.watch<MarketProvider>();
-
-    final watchlist = context.watch<WatchlistProvider>();
-
-    final selected = watchlist.isWatchlisted(instrument);
-
-    final quote = market.quoteFor(instrument);
-
-    final muted = Theme.of(context).colorScheme.onSurfaceVariant;
-
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-      title: Text(
-        instrument,
-        style: const TextStyle(fontWeight: FontWeight.w800),
-      ),
-      subtitle: quote == null
-          ? Text(
-              'Harga live belum tersedia',
-              style: TextStyle(color: muted, fontSize: 10.5),
-            )
-          : Text(
-              _formatPrice(instrument, quote.price),
-              style: TextStyle(color: muted, fontSize: 11),
-            ),
-      trailing: IconButton(
-        tooltip: selected ? 'Hapus dari watchlist' : 'Tambahkan ke watchlist',
-        onPressed: watchlist.isUpdating
-            ? null
-            : () async {
-                final provider = context.read<WatchlistProvider>();
-                final ok = await provider.toggleInstrument(instrument);
-
-                if (!context.mounted) {
-                  return;
-                }
-
-                if (!ok) {
-                  final error = provider.error;
-
-                  if (error != null) {
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text(error)));
-                  }
-                }
-              },
-        icon: Icon(selected ? Icons.star_rounded : Icons.star_border_rounded),
       ),
     );
   }

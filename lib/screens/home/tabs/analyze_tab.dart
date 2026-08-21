@@ -120,6 +120,30 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
   Future<void> _toggleWatchlist(String instrument) async {
     final watchlist = context.read<WatchlistProvider>();
 
+    if (watchlist.isWatchlisted(instrument)) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Hapus dari watchlist?'),
+          content: Text('Hapus $instrument dari watchlist?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Batal'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Hapus'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirmed != true || !mounted) {
+        return;
+      }
+    }
+
     final ok = await watchlist.toggleInstrument(instrument);
 
     if (!mounted) {
@@ -131,6 +155,10 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
         SnackBar(
           content: Text(watchlist.error ?? 'Gagal memperbarui watchlist.'),
         ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Watchlist $instrument diperbarui.')),
       );
     }
   }

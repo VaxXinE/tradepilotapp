@@ -75,6 +75,11 @@ class WatchlistProvider extends ChangeNotifier {
 
   Future<bool> addInstrument(String instrument) async {
     final normalized = _normalize(instrument);
+    if (normalized.isEmpty) {
+      _error = 'Instrumen tidak boleh kosong.';
+      notifyListeners();
+      return false;
+    }
     if (isWatchlisted(normalized)) {
       return false;
     }
@@ -93,6 +98,11 @@ class WatchlistProvider extends ChangeNotifier {
 
   Future<bool> removeInstrument(String instrument) async {
     final normalized = _normalize(instrument);
+    if (normalized.isEmpty) {
+      _error = 'Instrumen tidak boleh kosong.';
+      notifyListeners();
+      return false;
+    }
     if (!isWatchlisted(normalized)) {
       return false;
     }

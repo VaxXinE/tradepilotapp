@@ -69,6 +69,21 @@ void main() {
     expect(provider.items, isEmpty);
     expect(provider.error, isNull);
   });
+
+  test('keeps state and exposes a friendly error when add fails', () async {
+    final repository = _FakeWatchlistRepository()
+      ..loaded = [_item('BTC/USD')]
+      ..addError = StateError('network failed');
+    final auth = await _authenticatedUser();
+    final provider = WatchlistProvider(auth, repository);
+    addTearDown(provider.dispose);
+
+    await provider.loadWatchlist();
+    expect(await provider.addInstrument('EUR/USD'), isFalse);
+
+    expect(provider.items.map((item) => item.instrument), ['BTC/USD']);
+    expect(provider.error, 'Gagal memperbarui watchlist.');
+  });
 }
 
 Future<AuthProvider> _authenticatedUser() async {
@@ -105,6 +120,7 @@ class _FakeWatchlistRepository extends WatchlistRepository {
   List<WatchlistItem> loaded = const [];
   Completer<List<WatchlistItem>>? pendingLoad;
   int addCalls = 0;
+  Object? addError;
   final List<String> removed = [];
 
   @override
@@ -115,6 +131,9 @@ class _FakeWatchlistRepository extends WatchlistRepository {
   @override
   Future<WatchlistItem?> addInstrument(String instrument) async {
     addCalls++;
+    if (addError case final error?) {
+      throw error;
+    }
     return _item(instrument);
   }
 
