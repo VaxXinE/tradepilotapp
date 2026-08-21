@@ -234,7 +234,7 @@ class MarketProvider extends ChangeNotifier {
     }
 
     // Immediate fetch.
-    unawaited(loadQuotes(force: true, silent: true));
+    unawaited(loadQuotes(force: true, silent: quotes.isNotEmpty));
 
     _quoteTimer = Timer.periodic(_quoteRefreshInterval, (_) {
       unawaited(loadQuotes(force: true, silent: true));
@@ -282,9 +282,7 @@ class MarketProvider extends ChangeNotifier {
 
       marketError = null;
     } catch (e) {
-      if (!silent) {
-        marketError = _friendlyError(e, fallback: 'Gagal memuat harga live.');
-      }
+      marketError = _friendlyError(e, fallback: 'Gagal memuat harga live.');
     } finally {
       _quotesRequestInFlight = false;
 
