@@ -11,8 +11,10 @@ import 'providers/analysis_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/market_provider.dart';
 import 'providers/notifications_provider.dart';
+import 'providers/price_alert_provider.dart';
 import 'providers/watchlist_provider.dart';
 import 'repositories/market_repository.dart';
+import 'repositories/price_alert_repository.dart';
 import 'repositories/watchlist_repository.dart';
 import 'screens/analysis/analysis_detail_screen.dart';
 import 'screens/home/tabs/history_tab.dart';
@@ -84,6 +86,17 @@ class TradePilotApp extends StatelessWidget {
           update: (context, auth, previous) {
             return previous ??
                 WatchlistProvider(auth, WatchlistRepository(auth.client));
+          },
+        ),
+
+        ChangeNotifierProxyProvider<AuthProvider, PriceAlertProvider>(
+          create: (context) {
+            final auth = context.read<AuthProvider>();
+            return PriceAlertProvider(auth, PriceAlertRepository(auth.client));
+          },
+          update: (context, auth, previous) {
+            return previous ??
+                PriceAlertProvider(auth, PriceAlertRepository(auth.client));
           },
         ),
 

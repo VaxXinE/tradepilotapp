@@ -19,7 +19,8 @@ import '../../../widgets/context/market_context_card.dart';
 import '../../../widgets/technical/technical_summary_card.dart';
 import '../../../widgets/market_mini_chart.dart';
 import '../../analysis/analysis_detail_screen.dart';
-import '../../../widgets/price_alert_sheet.dart';
+import '../../../widgets/price_alert/price_alert_sheet.dart';
+import '../../price_alert/price_alert_list_screen.dart';
 
 // =============================================================================
 // TIMEFRAMES
@@ -263,6 +264,15 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
       appBar: AppBar(
         title: const Text('Analisis AI'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_active_outlined),
+            tooltip: 'Price Alert Saya',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const PriceAlertListScreen()),
+              );
+            },
+          ),
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: Center(

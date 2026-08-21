@@ -2,8 +2,6 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
-import 'package:trade_pilot_api_client/trade_pilot_client.dart';
 
 import '../core/market/market_context_engine.dart';
 import '../core/market/technical_summary_engine.dart';
@@ -22,8 +20,6 @@ class MarketProvider extends ChangeNotifier {
 
   final AuthProvider _authProvider;
   final MarketRepository _repository;
-
-  TradePilotClient get _client => _authProvider.client;
 
   // ===========================================================================
   // SOURCE OF TRUTH — INSTRUMENTS
@@ -135,7 +131,6 @@ class MarketProvider extends ChangeNotifier {
   // ===========================================================================
 
   String? marketError;
-  String? alertError;
 
   // ===========================================================================
   // CACHES
@@ -183,12 +178,6 @@ class MarketProvider extends ChangeNotifier {
     return _authProvider.user?.id;
   }
 
-  bool _isCurrentUserSession({required int epoch, required int userId}) {
-    return epoch == _sessionEpoch &&
-        _authProvider.status == AuthStatus.authenticated &&
-        _currentUserId == userId;
-  }
-
   void _handleAuthChanged() {
     final nextUserId = _currentUserId;
 
@@ -222,8 +211,6 @@ class MarketProvider extends ChangeNotifier {
     _technicalFetchedAt.clear();
     _calendarCache.clear();
     _calendarFetchedAt.clear();
-
-    alertError = null;
 
     if (nextUserId == null) {
       setQuotePollingEnabled(false);
@@ -652,97 +639,6 @@ class MarketProvider extends ChangeNotifier {
       return result;
     } finally {
       _calendarInFlight.remove(key);
-    }
-  }
-
-  // ===========================================================================
-  // PRICE ALERT
-  // ===========================================================================
-
-  Future<bool> createPriceAlert({
-    required String instrument,
-    required double targetPrice,
-    required bool triggerAbove,
-    String? note,
-  }) async {
-    alertError = null;
-
-    if (_authProvider.status != AuthStatus.authenticated) {
-      alertError = 'Sesi login sudah berakhir.';
-
-      notifyListeners();
-      return false;
-    }
-
-    final userId = _currentUserId;
-
-    if (userId == null) {
-      alertError = 'Sesi login sudah berakhir.';
-
-      notifyListeners();
-
-      return false;
-    }
-
-    final epoch = _sessionEpoch;
-
-    final normalized = _normalizeInstrument(instrument);
-
-    if (!supportedInstruments.contains(normalized)) {
-      alertError = 'Instrumen tidak didukung.';
-
-      notifyListeners();
-      return false;
-    }
-
-    if (!targetPrice.isFinite || targetPrice <= 0) {
-      alertError = 'Target harga harus lebih besar dari 0.';
-
-      notifyListeners();
-      return false;
-    }
-
-    final cleanNote = note?.trim();
-
-    if (cleanNote != null && cleanNote.length > 200) {
-      alertError = 'Catatan maksimal 200 karakter.';
-
-      notifyListeners();
-      return false;
-    }
-
-    try {
-      await _client.userPriceAlerts.createUserPriceAlert(
-        createUserPriceAlertBody: CreateUserPriceAlertBody(
-          (builder) => builder
-            ..instrument = normalized
-            ..targetPrice = targetPrice
-            ..triggerDirection = triggerAbove
-                ? CreateUserPriceAlertBodyTriggerDirectionEnum.above
-                : CreateUserPriceAlertBodyTriggerDirectionEnum.below
-            ..note = cleanNote
-            ..lang = CreateUserPriceAlertBodyLangEnum.id,
-        ),
-      );
-      if (!_isCurrentUserSession(epoch: epoch, userId: userId)) {
-        return false;
-      }
-
-      alertError = null;
-
-      notifyListeners();
-
-      return true;
-    } catch (e) {
-      if (!_isCurrentUserSession(epoch: epoch, userId: userId)) {
-        return false;
-      }
-
-      alertError = _friendlyError(e, fallback: 'Gagal membuat alert harga.');
-
-      notifyListeners();
-
-      return false;
     }
   }
 

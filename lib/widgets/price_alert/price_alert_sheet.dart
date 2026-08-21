@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../providers/market_provider.dart';
+import '../../providers/price_alert_provider.dart';
 
 Future<bool?> showPriceAlertSheet({
   required BuildContext context,
@@ -93,9 +93,9 @@ class _PriceAlertSheetState extends State<_PriceAlertSheet> {
       _error = null;
     });
 
-    final provider = context.read<MarketProvider>();
+    final provider = context.read<PriceAlertProvider>();
 
-    final ok = await provider.createPriceAlert(
+    final ok = await provider.createAlert(
       instrument: widget.instrument,
       targetPrice: targetPrice,
       triggerAbove: _triggerAbove,
@@ -113,7 +113,7 @@ class _PriceAlertSheetState extends State<_PriceAlertSheet> {
 
     setState(() {
       _submitting = false;
-      _error = provider.alertError ?? 'Gagal membuat price alert.';
+      _error = provider.error ?? 'Gagal membuat price alert.';
     });
   }
 
@@ -132,7 +132,7 @@ class _PriceAlertSheetState extends State<_PriceAlertSheet> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Price Alert ${widget.instrument}',
+                'Alert Harga ${widget.instrument}',
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w900,
@@ -199,7 +199,7 @@ class _PriceAlertSheetState extends State<_PriceAlertSheet> {
                 maxLines: 2,
                 decoration: const InputDecoration(
                   labelText: 'Catatan (opsional)',
-                  hintText: 'Contoh: cek ulang kondisi market sebelum entry',
+                  hintText: 'Contoh: cek ulang kondisi market saat ini',
                 ),
               ),
 
@@ -231,7 +231,7 @@ class _PriceAlertSheetState extends State<_PriceAlertSheet> {
                         )
                       : const Icon(Icons.notifications_active_outlined),
                   label: Text(
-                    _submitting ? 'Menyimpan...' : 'Buat Price Alert',
+                    _submitting ? 'Menyimpan...' : 'Buat Alert Harga',
                   ),
                 ),
               ),

@@ -15,7 +15,8 @@ import '../../../providers/watchlist_provider.dart';
 import '../../../widgets/analysis_card.dart';
 import '../../../widgets/market/market_overview_card.dart';
 import '../../../widgets/market/market_session_card.dart';
-import '../../../widgets/price_alert_sheet.dart';
+import '../../../widgets/price_alert/price_alert_sheet.dart';
+import '../../price_alert/price_alert_list_screen.dart';
 import '../../../widgets/watchlist/instrument_picker_sheet.dart';
 import '../../../widgets/watchlist/watchlist_item_card.dart';
 import '../../analysis/analysis_detail_screen.dart';
@@ -131,6 +132,15 @@ class _DashboardTabState extends State<DashboardTab> {
       appBar: AppBar(
         title: const Text('Dashboard'),
         actions: [
+          IconButton(
+            tooltip: 'Price Alert Saya',
+            icon: const Icon(Icons.notifications_active_outlined),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const PriceAlertListScreen()),
+              );
+            },
+          ),
           IconButton(
             tooltip: 'Notifikasi',
             onPressed: () {

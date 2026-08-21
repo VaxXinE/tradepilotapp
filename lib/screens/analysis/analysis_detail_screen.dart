@@ -10,7 +10,7 @@ import '../../models/market_models.dart';
 import '../../providers/analysis_provider.dart';
 import '../../providers/market_provider.dart';
 import '../../widgets/analysis_levels_chart.dart';
-import '../../widgets/price_alert_sheet.dart';
+import '../../widgets/price_alert/price_alert_sheet.dart';
 
 class AnalysisDetailScreen extends StatefulWidget {
   const AnalysisDetailScreen({
