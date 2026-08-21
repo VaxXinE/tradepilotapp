@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -10,6 +12,7 @@ import '../../../providers/auth_provider.dart';
 import '../../../providers/market_provider.dart';
 import '../../../providers/notifications_provider.dart';
 import '../../../widgets/analysis_card.dart';
+import '../../../widgets/market/market_overview_card.dart';
 import '../../../widgets/price_alert_sheet.dart';
 import '../../analysis/analysis_detail_screen.dart';
 import '../../notifications/notifications_screen.dart';
@@ -155,6 +158,21 @@ class _DashboardTabState extends State<DashboardTab> {
             ),
 
             const SizedBox(height: 18),
+
+            MarketOverviewCard(
+              quote: market.selectedQuote,
+              isLoading: market.isLoadingQuotes,
+              error: market.marketError,
+              updatedAt: market.quotesUpdatedAt,
+              onRetry: () {
+                unawaited(market.loadQuotes(force: true));
+              },
+              onOpen: () {
+                widget.onOpenAnalyze(market.selectedInstrument);
+              },
+            ),
+
+            const SizedBox(height: 16),
 
             // ---------------------------------------------------------------
             // BEGINNER HERO
