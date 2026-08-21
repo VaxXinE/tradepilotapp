@@ -4,6 +4,7 @@ import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../services/native_push_service.dart';
 import '../../profile/change_password_screen.dart';
 
 class ProfileTab extends StatelessWidget {
@@ -88,9 +89,11 @@ Future<void> _confirmLogout(
   // AuthProvider.logout() mengubah AuthStatus menjadi unauthenticated.
   // SplashScreen sebagai root auth-gate akan otomatis mengganti
   // HomeShell menjadi LoginScreen.
-  await context
-      .read<AuthProvider>()
-      .logout();
+  await context.read<NativePushService>().unregister();
+
+  if (context.mounted) {
+    await context.read<AuthProvider>().logout();
+  }
 }
   @override
   Widget build(BuildContext context) {

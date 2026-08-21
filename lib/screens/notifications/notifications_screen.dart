@@ -8,6 +8,7 @@ import 'package:trade_pilot_api_client/trade_pilot_api_client.dart' as api;
 import '../../core/theme/app_colors.dart';
 import '../../providers/analysis_provider.dart';
 import '../../providers/notifications_provider.dart';
+import '../../services/native_push_service.dart';
 import '../analysis/analysis_detail_screen.dart';
 
 class NotificationsScreen extends StatefulWidget {
@@ -56,11 +57,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       }
     }
 
-    final actionType = notification.actionType;
+    final action = NotificationAction.fromData({
+      'actionType': notification.actionType?.name,
+      'actionId': notification.actionId,
+      'notificationId': notification.id,
+    });
 
-    final actionId = notification.actionId;
-
-    if (actionType == null) {
+    if (action == null) {
       return;
     }
 
@@ -76,29 +79,18 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     // atau membuka arbitrary URL.
     // -------------------------------------------------------------------------
 
-    switch (actionType) {
-      case api.NotificationActionTypeEnum.analysis:
-        if (actionId == null || actionId <= 0) {
-          _showInvalidAction();
-
-          return;
-        }
-
-        await _openAnalysis(actionId);
+    switch (action.type) {
+      case NotificationActionType.analysis:
+        await _openAnalysis(action.actionId!);
 
         return;
 
-      case api.NotificationActionTypeEnum.history:
-      case api.NotificationActionTypeEnum.notifications:
-      case api.NotificationActionTypeEnum.dailySummary:
-      case api.NotificationActionTypeEnum.alerts:
+      case NotificationActionType.history:
+      case NotificationActionType.notifications:
+      case NotificationActionType.dailySummary:
+      case NotificationActionType.alerts:
         // Akan di-wire ketika screen mobile terkait
         // sudah masuk parity.
-        return;
-
-      default:
-        // Unknown action dari future backend
-        // harus fail closed.
         return;
     }
   }
@@ -132,12 +124,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
-  void _showInvalidAction() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Target notifikasi tidak valid.')),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -147,6 +133,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         : AppColors.lightMutedForeground;
 
     final provider = context.watch<NotificationsProvider>();
+    final nativePush = context.watch<NativePushService>();
 
     return Scaffold(
       appBar: AppBar(
@@ -188,6 +175,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             ),
 
             const SizedBox(height: 14),
+
+            _NativePushCard(service: nativePush),
+
+            const SizedBox(height: 12),
 
             _PreferencesCard(provider: provider),
 
@@ -252,6 +243,44 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 // =============================================================================
 // PREFERENCES
 // =============================================================================
+
+class _NativePushCard extends StatelessWidget {
+  const _NativePushCard({required this.service});
+
+  final NativePushService service;
+
+  @override
+  Widget build(BuildContext context) {
+    final subtitle = service.isBusy
+        ? 'Memperbarui pengaturan perangkat...'
+        : service.isRegistered
+        ? 'Aktif untuk perangkat ini.'
+        : service.isPermissionDenied
+        ? 'Izin ditolak. Aktifkan kembali melalui pengaturan perangkat.'
+        : service.errorMessage ?? 'Terima push saat aplikasi tidak aktif.';
+
+    return Card(
+      child: SwitchListTile(
+        secondary: const Icon(Icons.phone_android_rounded),
+        title: const Text(
+          'Mobile Push',
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+        ),
+        subtitle: Text(subtitle, style: const TextStyle(fontSize: 11)),
+        value: service.isRegistered,
+        onChanged: service.isBusy
+            ? null
+            : (enabled) {
+                if (enabled) {
+                  unawaited(service.enable());
+                } else {
+                  unawaited(service.unregister());
+                }
+              },
+      ),
+    );
+  }
+}
 
 class _PreferencesCard extends StatelessWidget {
   const _PreferencesCard({required this.provider});
