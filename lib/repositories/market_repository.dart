@@ -69,9 +69,18 @@ class MarketRepository {
   Future<List<EconomicCalendarEvent>> getRelevantCalendar(
     String instrument,
   ) async {
+    final normalized = instrument.trim().toUpperCase();
+    if (!RegExp(r'^[A-Z0-9]{2,10}(?:/[A-Z0-9]{2,10})?$').hasMatch(normalized)) {
+      throw ArgumentError.value(
+        instrument,
+        'instrument',
+        'Invalid instrument.',
+      );
+    }
+
     final response = await _dio.get(
       '/calendar/relevant',
-      queryParameters: {'instrument': instrument, 'maxItems': 8},
+      queryParameters: {'instrument': normalized, 'maxItems': 8},
     );
     final rawEvents = marketMap(response.data)['events'];
 
@@ -79,9 +88,21 @@ class MarketRepository {
       return const [];
     }
 
-    return [
-      for (final raw in rawEvents)
-        EconomicCalendarEvent.fromJson(marketMap(raw)),
-    ];
+    final events = <EconomicCalendarEvent>[];
+    for (final raw in rawEvents) {
+      try {
+        events.add(EconomicCalendarEvent.fromJson(marketMap(raw)));
+      } catch (_) {
+        // Satu event upstream yang rusak tidak boleh mengosongkan calendar.
+      }
+    }
+    events.sort((a, b) {
+      final left = a.eventDateTime;
+      final right = b.eventDateTime;
+      if (left == null) return 1;
+      if (right == null) return -1;
+      return left.compareTo(right);
+    });
+    return events;
   }
 }

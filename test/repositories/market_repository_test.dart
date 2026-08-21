@@ -91,6 +91,60 @@ void main() {
     expect(candles.first.date, DateTime.parse('2026-01-01T00:00:00Z'));
     expect(candles.last.date, DateTime.parse('2026-01-02T00:00:00Z'));
   });
+
+  test(
+    'getRelevantCalendar normalizes input and skips invalid events',
+    () async {
+      final dio = Dio();
+      dio.interceptors.add(
+        InterceptorsWrapper(
+          onRequest: (options, handler) {
+            expect(options.queryParameters['instrument'], 'XAU/USD');
+            handler.resolve(
+              Response(
+                requestOptions: options,
+                data: {
+                  'events': [
+                    {
+                      'event': 'FOMC Decision',
+                      'currency': 'usd',
+                      'impact': 'high',
+                      'epochMs': 1787342400000,
+                      'forecast': '5.25%',
+                    },
+                    {'currency': 'USD'},
+                  ],
+                },
+              ),
+            );
+          },
+        ),
+      );
+
+      final events = await MarketRepository(
+        dio,
+      ).getRelevantCalendar(' xau/usd ');
+
+      expect(events, hasLength(1));
+      expect(events.single.currency, 'USD');
+      expect(events.single.isHighImpact, isTrue);
+    },
+  );
+
+  test('getRelevantCalendar accepts an empty response', () async {
+    final events = await MarketRepository(
+      _dioWithResponse({'events': []}),
+    ).getRelevantCalendar('EUR/USD');
+
+    expect(events, isEmpty);
+  });
+
+  test('getRelevantCalendar rejects malformed instruments', () async {
+    expect(
+      MarketRepository(Dio()).getRelevantCalendar('../admin'),
+      throwsArgumentError,
+    );
+  });
 }
 
 Dio _dioWithResponse(Object? data) {

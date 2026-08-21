@@ -14,6 +14,7 @@ import '../../../providers/market_provider.dart';
 import '../../../providers/watchlist_provider.dart';
 import '../../../widgets/error_banner.dart';
 import '../../../widgets/chart/timeframe_selector.dart';
+import '../../../widgets/calendar/economic_calendar_card.dart';
 import '../../../widgets/market_mini_chart.dart';
 import '../../analysis/analysis_detail_screen.dart';
 import '../../../widgets/price_alert_sheet.dart';
@@ -254,6 +255,8 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
 
     final quote = market.selectedQuote;
 
+    final highImpactSoon = _findHighImpactSoon(market.highImpactEvents);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Analisis AI'),
@@ -386,10 +389,16 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
               // ---------------------------------------------------------------
               // ECONOMIC CALENDAR
               // ---------------------------------------------------------------
-              _EconomicCalendarCard(
+              EconomicCalendarCard(
                 instrument: instrument,
                 events: market.selectedCalendar,
                 isLoading: market.isLoadingSelectedMarket,
+                hasError:
+                    market.marketError != null &&
+                    market.selectedCalendar.isEmpty,
+                onRetry: () {
+                  unawaited(market.loadSelectedMarketData(force: true));
+                },
               ),
 
               const SizedBox(height: 14),
@@ -447,10 +456,8 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
               // ---------------------------------------------------------------
               // HIGH IMPACT PRE-TRADE WARNING
               // ---------------------------------------------------------------
-              if (_findHighImpactSoon(market.selectedCalendar) != null) ...[
-                _PreTradeWarning(
-                  event: _findHighImpactSoon(market.selectedCalendar)!,
-                ),
+              if (highImpactSoon != null) ...[
+                _PreTradeWarning(event: highImpactSoon),
 
                 const SizedBox(height: 14),
               ],
@@ -1174,189 +1181,6 @@ class _TechnicalRow extends StatelessWidget {
 }
 
 // =============================================================================
-// ECONOMIC CALENDAR
-// =============================================================================
-
-class _EconomicCalendarCard extends StatelessWidget {
-  const _EconomicCalendarCard({
-    required this.instrument,
-    required this.events,
-    required this.isLoading,
-  });
-
-  final String instrument;
-
-  final List<EconomicCalendarEvent> events;
-
-  final bool isLoading;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    final muted = isDark
-        ? AppColors.darkMutedForeground
-        : AppColors.lightMutedForeground;
-
-    final visibleEvents = events.take(6).toList();
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.calendar_month_outlined, size: 19),
-                const SizedBox(width: 8),
-                const Expanded(
-                  child: Text(
-                    'Kalender Ekonomi',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
-                  ),
-                ),
-                Text(
-                  instrument,
-                  style: TextStyle(color: muted, fontSize: 10.5),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 6),
-
-            Text(
-              'Berita ekonomi besar dapat membuat harga bergerak lebih cepat dari biasanya.',
-              style: TextStyle(color: muted, fontSize: 11.5, height: 1.4),
-            ),
-
-            const SizedBox(height: 14),
-
-            if (isLoading && events.isEmpty)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(12),
-                  child: CircularProgressIndicator(),
-                ),
-              )
-            else if (visibleEvents.isEmpty)
-              Text(
-                'Tidak ada event ekonomi relevan yang akan datang.',
-                style: TextStyle(color: muted, fontSize: 12),
-              )
-            else
-              for (var i = 0; i < visibleEvents.length; i++) ...[
-                _CalendarEventRow(event: visibleEvents[i]),
-                if (i != visibleEvents.length - 1) const Divider(height: 22),
-              ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _CalendarEventRow extends StatelessWidget {
-  const _CalendarEventRow({required this.event});
-
-  final EconomicCalendarEvent event;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    final muted = isDark
-        ? AppColors.darkMutedForeground
-        : AppColors.lightMutedForeground;
-
-    final error = Theme.of(context).colorScheme.error;
-
-    final impactColor = event.isHighImpact ? error : muted;
-
-    final date = event.eventDateTime;
-
-    final timeLabel = date == null
-        ? '${event.date} ${event.time}'
-        : DateFormat('d MMM • HH:mm').format(date);
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(7),
-            color: impactColor.withValues(alpha: 0.1),
-          ),
-          child: Text(
-            event.impact.isEmpty ? '•' : event.impact,
-            style: TextStyle(
-              color: impactColor,
-              fontSize: 9,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ),
-
-        const SizedBox(width: 9),
-
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                event.event,
-                style: const TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 3),
-              Text(
-                '${event.currency} • $timeLabel',
-                style: TextStyle(color: muted, fontSize: 10.5),
-              ),
-              if (event.actual.trim().isNotEmpty ||
-                  event.forecast.trim().isNotEmpty ||
-                  event.previous.trim().isNotEmpty) ...[
-                const SizedBox(height: 7),
-
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: [
-                    if (event.actual.trim().isNotEmpty)
-                      _CalendarMetric(label: 'Aktual', value: event.actual),
-
-                    if (event.forecast.trim().isNotEmpty)
-                      _CalendarMetric(label: 'Forecast', value: event.forecast),
-
-                    if (event.previous.trim().isNotEmpty)
-                      _CalendarMetric(
-                        label: 'Sebelumnya',
-                        value: event.previous,
-                      ),
-                  ],
-                ),
-              ],
-              if (event.whyTraderCare.trim().isNotEmpty) ...[
-                const SizedBox(height: 5),
-                Text(
-                  event.whyTraderCare,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: muted, fontSize: 10.5, height: 1.35),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// =============================================================================
 // PRE TRADE WARNING
 // =============================================================================
 
@@ -1473,36 +1297,6 @@ class _SectionTitle extends StatelessWidget {
         const SizedBox(height: 3),
         Text(subtitle, style: TextStyle(color: muted, fontSize: 11.5)),
       ],
-    );
-  }
-}
-
-class _CalendarMetric extends StatelessWidget {
-  const _CalendarMetric({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final muted = Theme.of(context).colorScheme.onSurfaceVariant;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-      decoration: BoxDecoration(
-        color: Theme.of(
-          context,
-        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(7),
-      ),
-      child: Text(
-        '$label: $value',
-        style: TextStyle(
-          color: muted,
-          fontSize: 9.5,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
     );
   }
 }

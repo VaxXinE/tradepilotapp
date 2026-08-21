@@ -71,6 +71,11 @@ class MarketProvider extends ChangeNotifier {
 
   List<EconomicCalendarEvent> selectedCalendar = const [];
 
+  bool get hasEconomicCalendar => selectedCalendar.isNotEmpty;
+
+  List<EconomicCalendarEvent> get highImpactEvents =>
+      List.unmodifiable(selectedCalendar.where((event) => event.isHighImpact));
+
   bool isLoadingSelectedMarket = false;
 
   // ===========================================================================

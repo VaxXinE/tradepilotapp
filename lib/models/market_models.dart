@@ -253,6 +253,8 @@ class BeginnerTechnicalSnapshot {
 // ECONOMIC CALENDAR
 // =============================================================================
 
+enum EconomicImpactLevel { high, medium, low }
+
 class EconomicCalendarEvent {
   const EconomicCalendarEvent({
     required this.time,
@@ -293,21 +295,42 @@ class EconomicCalendarEvent {
   }
 
   bool get isHighImpact {
-    return impact == '★★★';
+    return impactLevel == EconomicImpactLevel.high;
+  }
+
+  EconomicImpactLevel get impactLevel {
+    final normalized = impact.trim().toLowerCase();
+    if (normalized == 'high' || normalized == '★★★' || normalized == '3') {
+      return EconomicImpactLevel.high;
+    }
+    if (normalized == 'medium' || normalized == '★★' || normalized == '2') {
+      return EconomicImpactLevel.medium;
+    }
+    return EconomicImpactLevel.low;
   }
 
   factory EconomicCalendarEvent.fromJson(Map<String, dynamic> json) {
+    final event = json['event']?.toString().trim() ?? '';
+    final currency = json['currency']?.toString().trim().toUpperCase() ?? '';
+    final epochMs = marketInt(json['epochMs']);
+
+    if (event.isEmpty ||
+        currency.isEmpty ||
+        (epochMs != null && epochMs <= 0)) {
+      throw const FormatException('Invalid economic calendar event.');
+    }
+
     return EconomicCalendarEvent(
-      time: json['time']?.toString() ?? '',
-      currency: json['currency']?.toString() ?? '',
-      impact: json['impact']?.toString() ?? '',
-      event: json['event']?.toString() ?? '',
-      previous: json['previous']?.toString() ?? '',
-      forecast: json['forecast']?.toString() ?? '',
-      actual: json['actual']?.toString() ?? '',
-      date: json['date']?.toString() ?? '',
-      epochMs: marketInt(json['epochMs']),
-      whyTraderCare: json['whyTraderCare']?.toString() ?? '',
+      time: json['time']?.toString().trim() ?? '',
+      currency: currency,
+      impact: json['impact']?.toString().trim() ?? '',
+      event: event,
+      previous: json['previous']?.toString().trim() ?? '',
+      forecast: json['forecast']?.toString().trim() ?? '',
+      actual: json['actual']?.toString().trim() ?? '',
+      date: json['date']?.toString().trim() ?? '',
+      epochMs: epochMs,
+      whyTraderCare: json['whyTraderCare']?.toString().trim() ?? '',
     );
   }
 }

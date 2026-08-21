@@ -141,6 +141,50 @@ void main() {
       expect(provider.selectedCandles.single.close, 210);
     },
   );
+
+  test('loads and caches calendar with high-impact helpers', () async {
+    final repository = _FakeMarketRepository();
+    final auth = AuthProvider();
+    await Future<void>.delayed(Duration.zero);
+    final provider = MarketProvider(auth, repository);
+    addTearDown(provider.dispose);
+
+    await provider.selectInstrument('XAU/USD', force: true);
+    await provider.getRelevantCalendarFor('xau/usd');
+
+    expect(repository.calendarCalls, 1);
+    expect(provider.hasEconomicCalendar, isTrue);
+    expect(provider.highImpactEvents.single.currency, 'USD');
+  });
+
+  test(
+    'an old calendar response cannot overwrite the latest instrument',
+    () async {
+      final repository = _FakeMarketRepository();
+      final oldResponse = Completer<List<EconomicCalendarEvent>>();
+      final latestResponse = Completer<List<EconomicCalendarEvent>>();
+      repository.calendarResponses
+        ..['EUR/USD'] = oldResponse
+        ..['BTC/USD'] = latestResponse;
+      final auth = AuthProvider();
+      await Future<void>.delayed(Duration.zero);
+      final provider = MarketProvider(auth, repository);
+      addTearDown(provider.dispose);
+
+      final oldRequest = provider.selectInstrument('EUR/USD', force: true);
+      final latestRequest = provider.selectInstrument('BTC/USD', force: true);
+      latestResponse.complete([_event('USD', 'Crypto Regulation Hearing')]);
+      await latestRequest;
+      oldResponse.complete([_event('EUR', 'ECB Speech')]);
+      await oldRequest;
+
+      expect(provider.selectedInstrument, 'BTC/USD');
+      expect(
+        provider.selectedCalendar.single.event,
+        'Crypto Regulation Hearing',
+      );
+    },
+  );
 }
 
 const _quote = LiveMarketQuote(
@@ -170,6 +214,9 @@ class _FakeMarketRepository extends MarketRepository {
   Completer<_QuoteSnapshot>? pending;
   final List<(String, String)> candleRequests = [];
   final Map<String, Completer<List<MarketCandle>>> candleResponses = {};
+  int calendarCalls = 0;
+  final Map<String, Completer<List<EconomicCalendarEvent>>> calendarResponses =
+      {};
 
   @override
   Future<_QuoteSnapshot> getLiveQuotes() {
@@ -201,6 +248,13 @@ class _FakeMarketRepository extends MarketRepository {
   }) async {
     return null;
   }
+
+  @override
+  Future<List<EconomicCalendarEvent>> getRelevantCalendar(String instrument) {
+    calendarCalls++;
+    return calendarResponses[instrument]?.future ??
+        Future.value([_event('USD', 'FOMC Decision')]);
+  }
 }
 
 MarketCandle _candle(double open, double close) => MarketCandle(
@@ -210,3 +264,17 @@ MarketCandle _candle(double open, double close) => MarketCandle(
   low: math.min(open, close) - 2,
   close: close,
 );
+
+EconomicCalendarEvent _event(String currency, String name) =>
+    EconomicCalendarEvent(
+      time: '19:00',
+      currency: currency,
+      impact: 'high',
+      event: name,
+      previous: '5.00%',
+      forecast: '5.25%',
+      actual: '',
+      date: '2026-08-21T12:00:00Z',
+      epochMs: 1787313600000,
+      whyTraderCare: '',
+    );
