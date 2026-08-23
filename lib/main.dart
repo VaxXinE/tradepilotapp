@@ -17,8 +17,10 @@ import 'repositories/market_repository.dart';
 import 'repositories/price_alert_repository.dart';
 import 'repositories/watchlist_repository.dart';
 import 'screens/analysis/analysis_detail_screen.dart';
+import 'screens/daily_summary/daily_summary_screen.dart';
 import 'screens/home/tabs/history_tab.dart';
 import 'screens/notifications/notifications_screen.dart';
+import 'screens/price_alert/price_alert_list_screen.dart';
 import 'screens/splash_screen.dart';
 import 'services/native_push_service.dart';
 
@@ -190,8 +192,14 @@ class _TradePilotMaterialAppState extends State<_TradePilotMaterialApp> {
         );
         return;
       case NotificationActionType.dailySummary:
+        await navigator.push(
+          MaterialPageRoute(builder: (_) => const DailySummaryScreen()),
+        );
+        return;
       case NotificationActionType.alerts:
-        // Screen mobile belum tersedia; fail closed tanpa arbitrary routing.
+        await navigator.push(
+          MaterialPageRoute(builder: (_) => const PriceAlertListScreen()),
+        );
         return;
     }
   }
