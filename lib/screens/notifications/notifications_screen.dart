@@ -9,7 +9,9 @@ import '../../core/theme/app_colors.dart';
 import '../../providers/analysis_provider.dart';
 import '../../providers/notifications_provider.dart';
 import '../../services/native_push_service.dart';
+import '../../widgets/error_banner.dart';
 import '../analysis/analysis_detail_screen.dart';
+import '../home/tabs/history_tab.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -86,6 +88,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         return;
 
       case NotificationActionType.history:
+        await Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const HistoryTab()));
+        return;
+
       case NotificationActionType.notifications:
       case NotificationActionType.dailySummary:
       case NotificationActionType.alerts:
@@ -201,6 +208,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             ),
 
             const SizedBox(height: 10),
+
+            ErrorBanner(message: provider.loadError),
 
             if (provider.isLoading && provider.items.isEmpty)
               const Padding(

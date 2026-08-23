@@ -64,6 +64,7 @@ class NotificationAction {
 
 class NativePushService extends ChangeNotifier {
   NativePushService(this._authProvider) {
+    _activeUserId = _currentUserId;
     _authProvider.addListener(_handleAuthChanged);
   }
 
@@ -93,6 +94,16 @@ class NativePushService extends ChangeNotifier {
   StreamSubscription<RemoteMessage>? _openedSubscription;
   String? _registeredToken;
   Future<void>? _initialization;
+  Future<bool>? _registrationRequest;
+  int? _activeUserId;
+  int _sessionEpoch = 0;
+
+  int? get _currentUserId => _authProvider.status == AuthStatus.authenticated
+      ? _authProvider.user?.id
+      : null;
+
+  bool _isCurrentSession(int epoch, int userId) =>
+      epoch == _sessionEpoch && userId == _currentUserId;
 
   bool get isPermissionDenied =>
       authorizationStatus == AuthorizationStatus.denied;
@@ -141,8 +152,9 @@ class NativePushService extends ChangeNotifier {
       (message) => _emitAction(message.data),
     );
     _tokenSubscription = _messaging.onTokenRefresh.listen((token) {
-      if (_authProvider.status == AuthStatus.authenticated) {
-        unawaited(_registerToken(token));
+      final userId = _currentUserId;
+      if (userId != null) {
+        unawaited(_registerToken(token, epoch: _sessionEpoch, userId: userId));
       }
     });
 
@@ -204,9 +216,11 @@ class NativePushService extends ChangeNotifier {
       return false;
     }
 
-    if (_authProvider.status != AuthStatus.authenticated) {
+    final userId = _currentUserId;
+    if (userId == null) {
       return false;
     }
+    final epoch = _sessionEpoch;
 
     if (Platform.isIOS) {
       for (var attempt = 0; attempt < 10; attempt++) {
@@ -215,35 +229,67 @@ class NativePushService extends ChangeNotifier {
           break;
         }
         await Future<void>.delayed(const Duration(milliseconds: 500));
+        if (!_isCurrentSession(epoch, userId)) return false;
       }
     }
 
     final token = await _messaging.getToken();
+    if (!_isCurrentSession(epoch, userId)) return false;
     if (token == null || token.isEmpty) {
       errorMessage = 'Token push belum tersedia pada perangkat ini.';
       notifyListeners();
       return false;
     }
 
-    return _registerToken(token);
+    return _registerToken(token, epoch: epoch, userId: userId);
   }
 
-  Future<bool> _registerToken(String token) async {
+  Future<bool> _registerToken(
+    String token, {
+    required int epoch,
+    required int userId,
+  }) async {
+    if (!_isCurrentSession(epoch, userId)) return false;
     if (token == _registeredToken && isRegistered) {
       return true;
     }
 
+    final pending = _registrationRequest;
+    if (pending != null) {
+      await pending;
+      if (!_isCurrentSession(epoch, userId)) return false;
+      if (token == _registeredToken && isRegistered) return true;
+    }
+
+    final request = _sendRegistration(token, epoch: epoch, userId: userId);
+    _registrationRequest = request;
+    try {
+      return await request;
+    } finally {
+      if (identical(_registrationRequest, request)) {
+        _registrationRequest = null;
+      }
+    }
+  }
+
+  Future<bool> _sendRegistration(
+    String token, {
+    required int epoch,
+    required int userId,
+  }) async {
     try {
       await _authProvider.client.dio.post<void>(
         '/native-push/register',
         data: {'token': token, 'platform': Platform.isIOS ? 'ios' : 'android'},
       );
+      if (!_isCurrentSession(epoch, userId)) return false;
       _registeredToken = token;
       isRegistered = true;
       errorMessage = null;
       notifyListeners();
       return true;
     } on DioException {
+      if (!_isCurrentSession(epoch, userId)) return false;
       isRegistered = false;
       errorMessage = 'Server belum dapat mendaftarkan perangkat push.';
       notifyListeners();
@@ -257,6 +303,13 @@ class NativePushService extends ChangeNotifier {
       return;
     }
 
+    final userId = _currentUserId;
+    if (userId == null) return;
+    final epoch = _sessionEpoch;
+
+    await _registrationRequest;
+    if (!_isCurrentSession(epoch, userId)) return;
+
     final token = _registeredToken ?? await _messaging.getToken();
     if (token == null || token.isEmpty) {
       return;
@@ -267,12 +320,14 @@ class NativePushService extends ChangeNotifier {
         '/native-push/unregister',
         data: {'token': token},
       );
-    } on DioException {
+    } catch (_) {
       // Logout tetap harus berlanjut ketika perangkat sedang offline.
     } finally {
-      _registeredToken = null;
-      isRegistered = false;
-      notifyListeners();
+      if (_isCurrentSession(epoch, userId)) {
+        _registeredToken = null;
+        isRegistered = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -281,17 +336,19 @@ class NativePushService extends ChangeNotifier {
       authorizationStatus == AuthorizationStatus.provisional;
 
   void _handleAuthChanged() {
-    if (_authProvider.status == AuthStatus.authenticated &&
-        _permissionGranted) {
-      unawaited(syncToken());
-      return;
-    }
+    final nextUserId = _currentUserId;
+    if (nextUserId == _activeUserId) return;
 
-    if (_authProvider.status == AuthStatus.unauthenticated) {
-      _registeredToken = null;
-      isRegistered = false;
-      notifyListeners();
+    _activeUserId = nextUserId;
+    _sessionEpoch++;
+    _registeredToken = null;
+    isRegistered = false;
+    errorMessage = null;
+
+    if (nextUserId != null && _permissionGranted) {
+      unawaited(syncToken());
     }
+    notifyListeners();
   }
 
   Future<void> _handleForegroundMessage(RemoteMessage message) async {

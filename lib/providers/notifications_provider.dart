@@ -43,6 +43,8 @@ class NotificationsProvider extends ChangeNotifier {
 
   bool isLoading = false;
 
+  String? loadError;
+
   PushPrefs? preferences;
 
   bool isLoadingPreferences = false;
@@ -105,6 +107,8 @@ class NotificationsProvider extends ChangeNotifier {
     unreadCount = 0;
 
     isLoading = false;
+
+    loadError = null;
 
     preferences = null;
 
@@ -176,10 +180,16 @@ class NotificationsProvider extends ChangeNotifier {
         items = data.notifications.toList();
 
         unreadCount = data.unreadCount;
+
+        loadError = null;
       }
     } catch (_) {
       // Notification bukan critical path.
       // Pertahankan cache terakhir.
+      if (_isCurrentSession(epoch: epoch, userId: userId) &&
+          requestId == _loadRequestId) {
+        loadError = 'Notifikasi belum dapat dimuat. Tarik untuk mencoba lagi.';
+      }
     } finally {
       if (requestId == _loadRequestId) {
         _loadRequestInFlight = false;

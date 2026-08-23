@@ -25,6 +25,24 @@ void main() {
         NotificationAction.fromData({'actionType': 'https://evil.example'}),
         isNull,
       );
+      expect(
+        NotificationAction.fromData({
+          'actionType': 'analysis',
+          'actionId': '-1',
+        }),
+        isNull,
+      );
+      expect(
+        NotificationAction.fromData({
+          'actionType': 'analysis',
+          'actionId': '1.5',
+        }),
+        isNull,
+      );
+      expect(
+        NotificationAction.fromData({'actionType': 'history'})?.type,
+        NotificationActionType.history,
+      );
     },
   );
 }
