@@ -29,6 +29,15 @@ class AuthProvider extends ChangeNotifier {
   String? _token;
   String? errorMessage;
   bool isBusy = false;
+  bool isUpdatingProfile = false;
+  bool isChangingPassword = false;
+  String? profileError;
+
+  static const int maxDisplayNameLength = 100;
+
+  int _sessionEpoch = 0;
+  int _profileRequestId = 0;
+  int _passwordRequestId = 0;
 
   Future<void> _restoreSession() async {
     final token = await _storage.readToken();
@@ -54,9 +63,11 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> login({required String email, required String password}) {
     return _run(() async {
       final response = await _client.auth.login(
-        loginBody: LoginBody((b) => b
-          ..email = email.trim().toLowerCase()
-          ..password = password),
+        loginBody: LoginBody(
+          (b) => b
+            ..email = email.trim().toLowerCase()
+            ..password = password,
+        ),
       );
       await _applyAuthResponse(response.data);
     });
@@ -72,13 +83,15 @@ class AuthProvider extends ChangeNotifier {
   }) {
     return _run(() async {
       final response = await _client.auth.register(
-        registerBody: RegisterBody((b) => b
-          ..email = email.trim().toLowerCase()
-          ..password = password
-          ..displayName = displayName
-          ..securityQuestion = securityQuestion
-          ..securityAnswer = securityAnswer
-          ..selectedMode = mode),
+        registerBody: RegisterBody(
+          (b) => b
+            ..email = email.trim().toLowerCase()
+            ..password = password
+            ..displayName = displayName
+            ..securityQuestion = securityQuestion
+            ..securityAnswer = securityAnswer
+            ..selectedMode = mode,
+        ),
       );
       await _applyAuthResponse(response.data);
     });
@@ -90,15 +103,31 @@ class AuthProvider extends ChangeNotifier {
     }
     _token = data.token;
     user = data.user;
+    _sessionEpoch++;
+    _profileRequestId++;
+    _passwordRequestId++;
+    isUpdatingProfile = false;
+    isChangingPassword = false;
+    profileError = null;
     await _storage.saveSession(token: data.token!, user: data.user);
     status = AuthStatus.authenticated;
   }
 
   Future<void> refreshMe() async {
+    final epoch = _sessionEpoch;
+    final userId = user?.id;
+    if (status != AuthStatus.authenticated || userId == null) return;
+
     try {
       final response = await _client.auth.getMe();
+
+      if (epoch != _sessionEpoch ||
+          status != AuthStatus.authenticated ||
+          user?.id != userId) {
+        return;
+      }
+
       user = response.data;
-      if (user != null) await _storage.saveUser(user!);
       notifyListeners();
     } catch (_) {
       // biarkan state lama kalau gagal refresh
@@ -106,6 +135,13 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> logout() async {
+    _sessionEpoch++;
+    _profileRequestId++;
+    _passwordRequestId++;
+    isUpdatingProfile = false;
+    isChangingPassword = false;
+    profileError = null;
+
     try {
       await _client.auth.logout();
     } catch (_) {
@@ -118,12 +154,166 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<bool> updateDisplayName(String value) async {
+    final displayName = value.trim();
+
+    if (displayName.length < 2 || displayName.length > maxDisplayNameLength) {
+      profileError =
+          'Nama harus terdiri dari 2–$maxDisplayNameLength karakter.';
+      notifyListeners();
+      return false;
+    }
+
+    if (displayName == user?.displayName) {
+      profileError = null;
+      notifyListeners();
+      return true;
+    }
+
+    return _updateProfile(
+      UpdateProfileBody((builder) => builder.displayName = displayName),
+    );
+  }
+
+  Future<bool> updateSelectedMode(UserSelectedModeEnum mode) {
+    final apiMode = mode == UserSelectedModeEnum.pro
+        ? UpdateProfileBodySelectedModeEnum.pro
+        : UpdateProfileBodySelectedModeEnum.beginner;
+
+    return _updateProfile(
+      UpdateProfileBody((builder) => builder.selectedMode = apiMode),
+    );
+  }
+
+  Future<bool> _updateProfile(UpdateProfileBody body) async {
+    final currentUser = user;
+    if (status != AuthStatus.authenticated ||
+        currentUser == null ||
+        isUpdatingProfile) {
+      return false;
+    }
+
+    final epoch = _sessionEpoch;
+    final userId = currentUser.id;
+    final requestId = ++_profileRequestId;
+
+    isUpdatingProfile = true;
+    profileError = null;
+    notifyListeners();
+
+    try {
+      final response = await _client.auth.updateProfile(
+        updateProfileBody: body,
+      );
+
+      if (!_isCurrentProfileSession(epoch, userId) ||
+          requestId != _profileRequestId) {
+        return false;
+      }
+
+      final updated = response.data;
+      if (updated == null) {
+        profileError = 'Respons profil dari server tidak valid.';
+        return false;
+      }
+
+      user = updated;
+      return true;
+    } catch (error) {
+      if (_isCurrentProfileSession(epoch, userId)) {
+        profileError = _profileFriendlyError(error);
+      }
+      return false;
+    } finally {
+      if (_isCurrentProfileSession(epoch, userId) &&
+          requestId == _profileRequestId) {
+        isUpdatingProfile = false;
+        notifyListeners();
+      }
+    }
+  }
+
+  Future<bool> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final currentUser = user;
+    if (status != AuthStatus.authenticated ||
+        currentUser == null ||
+        isChangingPassword) {
+      return false;
+    }
+
+    final epoch = _sessionEpoch;
+    final userId = currentUser.id;
+    final requestId = ++_passwordRequestId;
+
+    isChangingPassword = true;
+    profileError = null;
+    notifyListeners();
+
+    try {
+      await _client.auth.changePassword(
+        changePasswordBody: ChangePasswordBody(
+          (builder) => builder
+            ..currentPassword = currentPassword
+            ..newPassword = newPassword,
+        ),
+      );
+
+      return _isCurrentProfileSession(epoch, userId) &&
+          requestId == _passwordRequestId;
+    } catch (error) {
+      if (_isCurrentProfileSession(epoch, userId)) {
+        profileError = _profileFriendlyError(error, passwordOperation: true);
+      }
+      return false;
+    } finally {
+      if (_isCurrentProfileSession(epoch, userId) &&
+          requestId == _passwordRequestId) {
+        isChangingPassword = false;
+        notifyListeners();
+      }
+    }
+  }
+
+  bool _isCurrentProfileSession(int epoch, int userId) {
+    return epoch == _sessionEpoch &&
+        status == AuthStatus.authenticated &&
+        user?.id == userId;
+  }
+
+  String _profileFriendlyError(Object error, {bool passwordOperation = false}) {
+    if (error is DioException) {
+      if (error.response?.statusCode == 401) {
+        return passwordOperation
+            ? 'Password saat ini tidak sesuai.'
+            : 'Sesi login berakhir. Silakan masuk kembali.';
+      }
+      if (error.response?.statusCode == 400 ||
+          error.response?.statusCode == 422) {
+        return passwordOperation
+            ? 'Password belum memenuhi persyaratan keamanan.'
+            : 'Data profil belum valid. Periksa kembali isian kamu.';
+      }
+      if (error.type == DioExceptionType.connectionError ||
+          error.type == DioExceptionType.connectionTimeout) {
+        return 'Tidak bisa terhubung ke server. Periksa koneksi internet kamu.';
+      }
+    }
+
+    return passwordOperation
+        ? 'Gagal mengubah password. Silakan coba lagi.'
+        : 'Gagal memperbarui profil. Silakan coba lagi.';
+  }
+
   /// Step 1 lupa password: ambil pertanyaan keamanan berdasar email.
   Future<SecurityQuestionResponse?> getSecurityQuestion(String email) async {
     return _runValue(() async {
       final response = await _client.auth.getForgotPasswordQuestion(
-        forgotPasswordQuestionBody:
-            ForgotPasswordQuestionBody((b) => b..email = email.trim().toLowerCase()),
+        forgotPasswordQuestionBody: ForgotPasswordQuestionBody(
+          (b) => b..email = email.trim().toLowerCase(),
+        ),
       );
       return response.data;
     });
@@ -136,9 +326,11 @@ class AuthProvider extends ChangeNotifier {
   }) async {
     return _runValue(() async {
       final response = await _client.auth.verifySecurityAnswer(
-        verifySecurityAnswerBody: VerifySecurityAnswerBody((b) => b
-          ..email = email.trim().toLowerCase()
-          ..securityAnswer = answer),
+        verifySecurityAnswerBody: VerifySecurityAnswerBody(
+          (b) => b
+            ..email = email.trim().toLowerCase()
+            ..securityAnswer = answer,
+        ),
       );
       return response.data;
     });
@@ -151,9 +343,11 @@ class AuthProvider extends ChangeNotifier {
   }) {
     return _run(() async {
       await _client.auth.resetPassword(
-        resetPasswordBody: ResetPasswordBody((b) => b
-          ..resetToken = resetToken
-          ..newPassword = newPassword),
+        resetPasswordBody: ResetPasswordBody(
+          (b) => b
+            ..resetToken = resetToken
+            ..newPassword = newPassword,
+        ),
       );
     });
   }
@@ -194,13 +388,15 @@ class AuthProvider extends ChangeNotifier {
 
   String _friendlyError(Object e) {
     if (e is DioException) {
-      final data = e.response?.data;
-      if (data is Map && data['message'] is String) {
-        return data['message'] as String;
-      }
       if (e.type == DioExceptionType.connectionError ||
           e.type == DioExceptionType.connectionTimeout) {
         return 'Tidak bisa terhubung ke server. Periksa koneksi internet kamu.';
+      }
+      if (e.response?.statusCode == 401) {
+        return 'Email atau password tidak sesuai.';
+      }
+      if (e.response?.statusCode == 429) {
+        return 'Terlalu banyak percobaan. Tunggu sebentar lalu coba lagi.';
       }
       return 'Terjadi kesalahan. Silakan coba lagi.';
     }

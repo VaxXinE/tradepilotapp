@@ -4,104 +4,78 @@ import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../screens/notifications/notifications_screen.dart';
 import '../../../services/native_push_service.dart';
 import '../../profile/change_password_screen.dart';
+import '../../profile/edit_profile_screen.dart';
 
 class ProfileTab extends StatelessWidget {
   const ProfileTab({super.key});
 
-  Future<void> _toggleMode(BuildContext context, User user) async {
+  Future<void> _toggleMode(BuildContext context, bool enabled) async {
     final auth = context.read<AuthProvider>();
-    final newMode = user.selectedMode == UserSelectedModeEnum.pro
-        ? UpdateProfileBodySelectedModeEnum.beginner
-        : UpdateProfileBodySelectedModeEnum.pro;
-    try {
-      final response = await auth.client.auth.updateProfile(
-        updateProfileBody: UpdateProfileBody((b) => b..selectedMode = newMode),
-      );
-      if (response.data != null) {
-        await auth.refreshMe();
-      }
-    } catch (_) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Gagal mengubah mode. Coba lagi.')),
-        );
-      }
+    final success = await auth.updateSelectedMode(
+      enabled ? UserSelectedModeEnum.pro : UserSelectedModeEnum.beginner,
+    );
+
+    if (!success && context.mounted && auth.profileError != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(auth.profileError!)));
     }
   }
 
-Future<void> _confirmLogout(
-  BuildContext context,
-) async {
-  final confirmed =
-      await showDialog<bool>(
-    context: context,
-    builder: (dialogContext) {
-      return AlertDialog(
-        title: const Text(
-          'Keluar',
-        ),
-        content: const Text(
-          'Yakin ingin keluar dari akun ini?',
-        ),
+  Future<void> _confirmLogout(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Keluar'),
+        content: const Text('Yakin ingin keluar dari akun ini?'),
         actions: [
           TextButton(
-            onPressed: () {
-              Navigator.pop(
-                dialogContext,
-                false,
-              );
-            },
-            child: const Text(
-              'Batal',
-            ),
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Batal'),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.pop(
-                dialogContext,
-                true,
-              );
-            },
+            onPressed: () => Navigator.pop(dialogContext, true),
             child: Text(
               'Keluar',
-              style: TextStyle(
-                color:
-                    Theme.of(
-                  dialogContext,
-                ).colorScheme.error,
-              ),
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
           ),
         ],
-      );
-    },
-  );
+      ),
+    );
 
-  if (confirmed != true ||
-      !context.mounted) {
-    return;
+    if (confirmed != true || !context.mounted) return;
+
+    try {
+      await context.read<NativePushService>().unregister();
+    } catch (_) {
+      // Unregister push bersifat best effort; sesi lokal tetap harus berakhir.
+    } finally {
+      if (context.mounted) await context.read<AuthProvider>().logout();
+    }
   }
 
-  // Jangan melakukan Navigator.push/pop di sini.
-  //
-  // AuthProvider.logout() mengubah AuthStatus menjadi unauthenticated.
-  // SplashScreen sebagai root auth-gate akan otomatis mengganti
-  // HomeShell menjadi LoginScreen.
-  await context.read<NativePushService>().unregister();
-
-  if (context.mounted) {
-    await context.read<AuthProvider>().logout();
+  String _notificationStatus(NativePushService push) {
+    if (push.isRegistered) return 'Aktif untuk perangkat ini';
+    if (push.isPermissionDenied) return 'Izin sistem tidak diberikan';
+    return 'Belum didaftarkan pada perangkat ini';
   }
-}
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final muted = isDark ? AppColors.darkMutedForeground : AppColors.lightMutedForeground;
+    final muted = isDark
+        ? AppColors.darkMutedForeground
+        : AppColors.lightMutedForeground;
     final primary = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
-    final onPrimary = isDark ? AppColors.darkPrimaryForeground : AppColors.lightPrimaryForeground;
+    final onPrimary = isDark
+        ? AppColors.darkPrimaryForeground
+        : AppColors.lightPrimaryForeground;
     final auth = context.watch<AuthProvider>();
+    final push = context.watch<NativePushService>();
     final user = auth.user;
 
     if (user == null) return const SizedBox.shrink();
@@ -112,81 +86,194 @@ Future<void> _confirmLogout(
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 30,
-                backgroundColor: primary,
-                child: Text(
-                  user.displayName.isNotEmpty ? user.displayName[0].toUpperCase() : '?',
-                  style: TextStyle(color: onPrimary, fontWeight: FontWeight.w800, fontSize: 22),
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(user.displayName, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 2),
-                    Text(user.email, style: TextStyle(color: muted, fontSize: 13)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 720),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Mode Trading', style: TextStyle(fontWeight: FontWeight.w700)),
-                        const SizedBox(height: 2),
-                        Text(isPro ? 'Pro' : 'Pemula', style: TextStyle(color: muted, fontSize: 12.5)),
-                      ],
-                    ),
+                  _ProfileHeader(
+                    name: user.displayName,
+                    email: user.email,
+                    primary: primary,
+                    onPrimary: onPrimary,
+                    muted: muted,
                   ),
-                  Switch(
-                    value: isPro,
-                    activeThumbColor: primary,
-                    onChanged: (_) => _toggleMode(context, user),
+                  const SizedBox(height: 24),
+                  _Section(
+                    title: 'Akun',
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.person_outline_rounded),
+                        title: const Text('Informasi Profil'),
+                        subtitle: const Text('Ubah nama tampilan'),
+                        trailing: const Icon(Icons.chevron_right_rounded),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const EditProfileScreen(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  _Section(
+                    title: 'Preferensi',
+                    children: [
+                      SwitchListTile(
+                        secondary: const Icon(Icons.tune_rounded),
+                        title: const Text('Mode Pro'),
+                        subtitle: Text(
+                          isPro
+                              ? 'Analisis ditampilkan dalam mode Pro'
+                              : 'Analisis ditampilkan dalam mode Pemula',
+                        ),
+                        value: isPro,
+                        onChanged: auth.isUpdatingProfile
+                            ? null
+                            : (value) => _toggleMode(context, value),
+                      ),
+                    ],
+                  ),
+                  _Section(
+                    title: 'Keamanan',
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.lock_outline_rounded),
+                        title: const Text('Ganti Password'),
+                        trailing: const Icon(Icons.chevron_right_rounded),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const ChangePasswordScreen(),
+                          ),
+                        ),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: const Icon(Icons.help_outline_rounded),
+                        title: const Text('Pertanyaan Keamanan'),
+                        subtitle: Text(
+                          user.securityQuestion ?? 'Belum tersedia',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  _Section(
+                    title: 'Notifikasi',
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.notifications_outlined),
+                        title: const Text('Pengaturan Notifikasi'),
+                        subtitle: Text(_notificationStatus(push)),
+                        trailing: const Icon(Icons.chevron_right_rounded),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const NotificationsScreen(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  OutlinedButton.icon(
+                    onPressed: auth.isBusy
+                        ? null
+                        : () => _confirmLogout(context),
+                    icon: Icon(
+                      Icons.logout_rounded,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                    label: Text(
+                      'Keluar',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 12),
-          Card(
-            clipBehavior: Clip.antiAlias,
-            child: Column(
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.lock_outline_rounded),
-                  title: const Text('Ganti Password'),
-                  trailing: const Icon(Icons.chevron_right_rounded),
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const ChangePasswordScreen()),
-                  ),
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.help_outline_rounded),
-                  title: const Text('Pertanyaan Keamanan'),
-                  subtitle: Text(user.securityQuestion ?? '-', maxLines: 1, overflow: TextOverflow.ellipsis),
-                ),
-              ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileHeader extends StatelessWidget {
+  const _ProfileHeader({
+    required this.name,
+    required this.email,
+    required this.primary,
+    required this.onPrimary,
+    required this.muted,
+  });
+
+  final String name;
+  final String email;
+  final Color primary;
+  final Color onPrimary;
+  final Color muted;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        CircleAvatar(
+          radius: 30,
+          backgroundColor: primary,
+          child: Text(
+            name.isEmpty ? '?' : name[0].toUpperCase(),
+            style: TextStyle(
+              color: onPrimary,
+              fontWeight: FontWeight.w800,
+              fontSize: 22,
             ),
           ),
-          const SizedBox(height: 24),
-          OutlinedButton.icon(
-            onPressed: () => _confirmLogout(context),
-            icon: Icon(Icons.logout_rounded, color: Theme.of(context).colorScheme.error),
-            label: Text('Keluar', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                name,
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(email, style: TextStyle(color: muted, fontSize: 13)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _Section extends StatelessWidget {
+  const _Section({required this.title, required this.children});
+
+  final String title;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 8),
+            child: Text(title, style: Theme.of(context).textTheme.titleSmall),
+          ),
+          Card(
+            clipBehavior: Clip.antiAlias,
+            child: Column(children: children),
           ),
         ],
       ),
