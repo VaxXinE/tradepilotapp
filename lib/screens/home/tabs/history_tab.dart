@@ -5,11 +5,14 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/history/history_statistics.dart';
 import '../../../models/history_filters.dart';
+import '../../../models/history_sort.dart';
 import '../../../providers/analysis_provider.dart';
 import '../../../providers/market_provider.dart';
-import '../../../widgets/analysis_card.dart';
 import '../../../widgets/error_banner.dart';
+import '../../../widgets/history/history_analysis_card.dart';
+import '../../../widgets/history/history_summary_card.dart';
 import '../../analysis/analysis_detail_screen.dart';
 
 class HistoryTab extends StatefulWidget {
@@ -336,21 +339,33 @@ class _HistoryTabState extends State<HistoryTab> {
       controller: _scrollController,
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
-      itemCount: items.length + (provider.isLoadingMoreVisibleHistory ? 1 : 0),
+      itemCount:
+          items.length + 1 + (provider.isLoadingMoreVisibleHistory ? 1 : 0),
       separatorBuilder: (_, _) {
         return const SizedBox(height: 10);
       },
       itemBuilder: (context, index) {
-        if (index >= items.length) {
+        if (index == 0) {
+          return HistorySummaryCard(
+            statistics: HistoryStatistics.fromAnalyses(items),
+            isPartial:
+                items.length < provider.visibleHistorySourceTotal ||
+                provider.hasClientHistoryRefinement,
+          );
+        }
+
+        final itemIndex = index - 1;
+
+        if (itemIndex >= items.length) {
           return const Padding(
             padding: EdgeInsets.symmetric(vertical: 16),
             child: Center(child: CircularProgressIndicator(strokeWidth: 2.4)),
           );
         }
 
-        final analysis = items[index];
+        final analysis = items[itemIndex];
 
-        return AnalysisCard(
+        return HistoryAnalysisCard(
           analysis: analysis,
           onTap: () {
             Navigator.of(context).push(
@@ -402,6 +417,28 @@ class _ActiveFilters extends StatelessWidget {
           ),
           onDeleted: () {
             onChanged(filters.copyWith(mode: HistoryModeFilter.all));
+          },
+        ),
+      );
+    }
+
+    if (filters.outcome != HistoryOutcomeFilter.all) {
+      chips.add(
+        InputChip(
+          label: Text('Outcome: ${_outcomeLabel(filters.outcome)}'),
+          onDeleted: () {
+            onChanged(filters.copyWith(outcome: HistoryOutcomeFilter.all));
+          },
+        ),
+      );
+    }
+
+    if (filters.minConfidence case final confidence?) {
+      chips.add(
+        InputChip(
+          label: Text('Keyakinan ≥ $confidence%'),
+          onDeleted: () {
+            onChanged(filters.copyWith(clearConfidence: true));
           },
         ),
       );
@@ -485,6 +522,19 @@ class _ActiveFilters extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  static String _outcomeLabel(HistoryOutcomeFilter outcome) {
+    switch (outcome) {
+      case HistoryOutcomeFilter.success:
+        return 'Positif';
+      case HistoryOutcomeFilter.failed:
+        return 'Negatif';
+      case HistoryOutcomeFilter.pending:
+        return 'Menunggu';
+      case HistoryOutcomeFilter.all:
+        return 'Semua';
+    }
   }
 }
 
@@ -653,6 +703,95 @@ class _HistoryFilterSheetState extends State<_HistoryFilterSheet> {
                   const SizedBox(height: 24),
 
                   const Text(
+                    'Status evaluasi',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+                  ),
+
+                  const SizedBox(height: 9),
+
+                  Wrap(
+                    spacing: 7,
+                    runSpacing: 7,
+                    children: [
+                      for (final option in HistoryOutcomeFilter.values)
+                        ChoiceChip(
+                          label: Text(_outcomeOptionLabel(option)),
+                          selected: _draft.outcome == option,
+                          onSelected: (_) {
+                            setState(() {
+                              _draft = _draft.copyWith(outcome: option);
+                            });
+                          },
+                        ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  const Text(
+                    'Minimum keyakinan',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+                  ),
+
+                  const SizedBox(height: 9),
+
+                  Wrap(
+                    spacing: 7,
+                    runSpacing: 7,
+                    children: [
+                      ChoiceChip(
+                        label: const Text('Semua'),
+                        selected: _draft.minConfidence == null,
+                        onSelected: (_) {
+                          setState(() {
+                            _draft = _draft.copyWith(clearConfidence: true);
+                          });
+                        },
+                      ),
+                      for (final confidence in const [60, 70, 80, 90])
+                        ChoiceChip(
+                          label: Text('≥ $confidence%'),
+                          selected: _draft.minConfidence == confidence,
+                          onSelected: (_) {
+                            setState(() {
+                              _draft = _draft.copyWith(
+                                minConfidence: confidence,
+                              );
+                            });
+                          },
+                        ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  const Text(
+                    'Urutan',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+                  ),
+
+                  const SizedBox(height: 9),
+
+                  Wrap(
+                    spacing: 7,
+                    runSpacing: 7,
+                    children: [
+                      for (final sort in HistorySort.values)
+                        ChoiceChip(
+                          label: Text(_sortLabel(sort)),
+                          selected: _draft.sort == sort,
+                          onSelected: (_) {
+                            setState(() {
+                              _draft = _draft.copyWith(sort: sort);
+                            });
+                          },
+                        ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  const Text(
                     'Instrumen',
                     style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
                   ),
@@ -766,5 +905,29 @@ class _HistoryFilterSheetState extends State<_HistoryFilterSheet> {
         ),
       ),
     );
+  }
+
+  static String _outcomeOptionLabel(HistoryOutcomeFilter outcome) {
+    switch (outcome) {
+      case HistoryOutcomeFilter.all:
+        return 'Semua';
+      case HistoryOutcomeFilter.pending:
+        return 'Menunggu';
+      case HistoryOutcomeFilter.success:
+        return 'Outcome positif';
+      case HistoryOutcomeFilter.failed:
+        return 'Outcome negatif';
+    }
+  }
+
+  static String _sortLabel(HistorySort sort) {
+    switch (sort) {
+      case HistorySort.newest:
+        return 'Terbaru';
+      case HistorySort.oldest:
+        return 'Terlama';
+      case HistorySort.confidenceHighest:
+        return 'Keyakinan tertinggi';
+    }
   }
 }

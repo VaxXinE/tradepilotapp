@@ -1,12 +1,15 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:built_collection/built_collection.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 import 'package:trade_pilot_api_client/trade_pilot_client.dart';
 
 import '../models/history_filters.dart';
+import '../models/history_sort.dart';
 import 'auth_provider.dart';
 
 /// Single source of truth untuk seluruh state analisis.
@@ -28,6 +31,10 @@ class AnalysisProvider extends ChangeNotifier {
     _activeUserId = _currentAuthenticatedUserId;
 
     _authProvider.addListener(_handleAuthStateChanged);
+
+    if (_activeUserId case final userId?) {
+      unawaited(_restoreHistoryPreferences(userId, _sessionEpoch));
+    }
   }
 
   final AuthProvider _authProvider;
@@ -92,27 +99,54 @@ class AnalysisProvider extends ChangeNotifier {
   }
 
   List<Analysis> get visibleHistory {
-    return hasActiveHistoryFilters ? filteredHistory : history;
+    // The generated API has no outcome/confidence/sort parameters yet.
+    // Refine a copy of the loaded page so Dashboard's base history stays intact.
+    final result = List<Analysis>.of(
+      historyFilters.hasServerFilters ? filteredHistory : history,
+    );
+
+    result.removeWhere((analysis) => !_matchesClientFilters(analysis));
+    result.sort(_compareVisibleHistory);
+
+    return result;
   }
 
   int get visibleHistoryTotal {
-    return hasActiveHistoryFilters ? filteredHistoryTotal : historyTotal;
+    if (historyFilters.outcome != HistoryOutcomeFilter.all ||
+        historyFilters.minConfidence != null) {
+      return visibleHistory.length;
+    }
+
+    return visibleHistorySourceTotal;
+  }
+
+  int get visibleHistorySourceTotal {
+    return historyFilters.hasServerFilters
+        ? filteredHistoryTotal
+        : historyTotal;
+  }
+
+  bool get hasClientHistoryRefinement {
+    return historyFilters.outcome != HistoryOutcomeFilter.all ||
+        historyFilters.minConfidence != null;
   }
 
   bool get isLoadingVisibleHistory {
-    return hasActiveHistoryFilters
+    return historyFilters.hasServerFilters
         ? isLoadingFilteredHistory
         : isLoadingHistory;
   }
 
   bool get isLoadingMoreVisibleHistory {
-    return hasActiveHistoryFilters
+    return historyFilters.hasServerFilters
         ? isLoadingMoreFilteredHistory
         : isLoadingMoreHistory;
   }
 
   String? get visibleHistoryError {
-    return hasActiveHistoryFilters ? filteredHistoryError : errorMessage;
+    return historyFilters.hasServerFilters
+        ? filteredHistoryError
+        : errorMessage;
   }
 
   // ===========================================================================
@@ -217,6 +251,10 @@ class AnalysisProvider extends ChangeNotifier {
     _resetCachedData();
 
     notifyListeners();
+
+    if (nextUserId != null) {
+      unawaited(_restoreHistoryPreferences(nextUserId, _sessionEpoch));
+    }
   }
 
   void _resetCachedData() {
@@ -636,7 +674,12 @@ class AnalysisProvider extends ChangeNotifier {
   /// Request filter lama dibatalkan agar hasil dari query lama
   /// tidak bisa menimpa query yang lebih baru.
   Future<void> applyHistoryFilters(HistoryFilters filters) async {
+    final epoch = _sessionEpoch;
+    final userId = _activeUserId;
     final normalized = filters.normalized();
+    final serverFiltersChanged = !historyFilters.hasSameServerFilters(
+      normalized,
+    );
 
     final from = normalized.from;
 
@@ -651,6 +694,18 @@ class AnalysisProvider extends ChangeNotifier {
     }
 
     historyFilters = normalized;
+
+    await _persistHistoryPreferences(normalized);
+
+    if (epoch != _sessionEpoch || userId != _activeUserId) {
+      return;
+    }
+
+    if (!serverFiltersChanged) {
+      filteredHistoryError = null;
+      notifyListeners();
+      return;
+    }
 
     // -----------------------------------------------------------------------
     // Bump generation sebelum cancel request lama.
@@ -678,7 +733,7 @@ class AnalysisProvider extends ChangeNotifier {
     // kembali ke base/unfiltered history.
     // -----------------------------------------------------------------------
 
-    if (!normalized.isActive) {
+    if (!normalized.hasServerFilters) {
       filteredHistory = [];
 
       filteredHistoryTotal = 0;
@@ -707,7 +762,7 @@ class AnalysisProvider extends ChangeNotifier {
   /// Kalau filter aktif → refresh filtered query.
   /// Kalau filter tidak aktif → refresh base history.
   Future<void> refreshVisibleHistory({bool silent = true}) async {
-    if (!hasActiveHistoryFilters) {
+    if (!historyFilters.hasServerFilters) {
       await loadHistory(refresh: true, silent: silent);
 
       return;
@@ -727,7 +782,7 @@ class AnalysisProvider extends ChangeNotifier {
 
   /// Pagination untuk history yang sedang terlihat.
   Future<void> loadMoreVisibleHistory() async {
-    if (!hasActiveHistoryFilters) {
+    if (!historyFilters.hasServerFilters) {
       await loadMoreHistory();
 
       return;
@@ -914,6 +969,121 @@ class AnalysisProvider extends ChangeNotifier {
     }
 
     return Date(date.year, date.month, date.day);
+  }
+
+  bool _matchesClientFilters(Analysis analysis) {
+    switch (historyFilters.outcome) {
+      case HistoryOutcomeFilter.success:
+        if (analysis.outcomeStatus != AnalysisOutcomeStatusEnum.tp1Hit &&
+            analysis.outcomeStatus != AnalysisOutcomeStatusEnum.tp2Hit) {
+          return false;
+        }
+        break;
+      case HistoryOutcomeFilter.failed:
+        if (analysis.outcomeStatus != AnalysisOutcomeStatusEnum.slHit &&
+            analysis.outcomeStatus != AnalysisOutcomeStatusEnum.expired &&
+            analysis.outcomeStatus != AnalysisOutcomeStatusEnum.invalidated) {
+          return false;
+        }
+        break;
+      case HistoryOutcomeFilter.pending:
+        if (analysis.outcomeStatus != null &&
+            analysis.outcomeStatus != AnalysisOutcomeStatusEnum.pending) {
+          return false;
+        }
+        break;
+      case HistoryOutcomeFilter.all:
+        break;
+    }
+
+    final minimum = historyFilters.minConfidence;
+    if (minimum != null && _averageConfidence(analysis) < minimum) {
+      return false;
+    }
+
+    return true;
+  }
+
+  int _compareVisibleHistory(Analysis left, Analysis right) {
+    int result;
+
+    switch (historyFilters.sort) {
+      case HistorySort.newest:
+        result = right.createdAt.compareTo(left.createdAt);
+        break;
+      case HistorySort.oldest:
+        result = left.createdAt.compareTo(right.createdAt);
+        break;
+      case HistorySort.confidenceHighest:
+        result = _averageConfidence(right).compareTo(_averageConfidence(left));
+        break;
+    }
+
+    if (result != 0) {
+      return result;
+    }
+
+    return right.id.compareTo(left.id);
+  }
+
+  double _averageConfidence(Analysis analysis) {
+    final minimum = analysis.confidenceMin;
+    final maximum = analysis.confidenceMax;
+
+    if (minimum != null && maximum != null) {
+      return (minimum + maximum) / 2;
+    }
+
+    return (minimum ?? maximum ?? -1).toDouble();
+  }
+
+  String _historyPreferencesKey(int userId) {
+    return 'history_preferences_v1_$userId';
+  }
+
+  Future<void> _persistHistoryPreferences(HistoryFilters filters) async {
+    final userId = _currentAuthenticatedUserId;
+    if (userId == null) {
+      return;
+    }
+
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      await preferences.setString(
+        _historyPreferencesKey(userId),
+        jsonEncode(filters.toPreferencesJson()),
+      );
+    } catch (_) {
+      // Preference storage is non-critical; filtering must keep working.
+    }
+  }
+
+  Future<void> _restoreHistoryPreferences(int userId, int epoch) async {
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      final encoded = preferences.getString(_historyPreferencesKey(userId));
+
+      if (encoded == null || !_isSessionCurrent(epoch)) {
+        return;
+      }
+
+      final decoded = jsonDecode(encoded);
+      if (decoded is! Map) {
+        return;
+      }
+
+      final restored = HistoryFilters.fromPreferencesJson(
+        decoded.map((key, value) => MapEntry(key.toString(), value)),
+      );
+
+      if (!_isSessionCurrent(epoch) || _activeUserId != userId) {
+        return;
+      }
+
+      await applyHistoryFilters(restored);
+    } catch (_) {
+      // Corrupted/legacy preferences fall back to the already-reset defaults.
+    }
   }
 
   // ===========================================================================

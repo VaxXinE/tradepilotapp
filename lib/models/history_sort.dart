@@ -1,1 +1,1 @@
-enum HistorySort { newest, oldest, confidenceHighest, successRate }
+enum HistorySort { newest, oldest, confidenceHighest }
