@@ -8,6 +8,10 @@ import '../../../screens/notifications/notifications_screen.dart';
 import '../../../services/native_push_service.dart';
 import '../../profile/change_password_screen.dart';
 import '../../profile/edit_profile_screen.dart';
+import '../../analytics/analytics_screen.dart';
+import '../../daily_summary/daily_summary_screen.dart';
+import '../../journal/trade_journal_screen.dart';
+import '../../trader_mirror/trader_mirror_screen.dart';
 
 class ProfileTab extends StatelessWidget {
   const ProfileTab({super.key});
@@ -170,6 +174,63 @@ class ProfileTab extends StatelessWidget {
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (_) => const NotificationsScreen(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  _Section(
+                    title: 'Insight & Jurnal',
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.menu_book_outlined),
+                        title: const Text('Trade Journal'),
+                        subtitle: const Text(
+                          'Catatan transaksi dan refleksi pribadi',
+                        ),
+                        trailing: const Icon(Icons.chevron_right_rounded),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const TradeJournalScreen(),
+                          ),
+                        ),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: const Icon(Icons.insights_outlined),
+                        title: const Text('Analytics'),
+                        subtitle: const Text(
+                          'Pola aktivitas dan hasil evaluasi',
+                        ),
+                        trailing: const Icon(Icons.chevron_right_rounded),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const AnalyticsScreen(),
+                          ),
+                        ),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: const Icon(Icons.today_outlined),
+                        title: const Text('Ringkasan Harian'),
+                        trailing: const Icon(Icons.chevron_right_rounded),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const DailySummaryScreen(),
+                          ),
+                        ),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: const Icon(Icons.self_improvement_outlined),
+                        title: const Text('Trader Mirror'),
+                        subtitle: const Text(
+                          'Refleksi kebiasaan berbasis data',
+                        ),
+                        trailing: const Icon(Icons.chevron_right_rounded),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const TraderMirrorScreen(),
                           ),
                         ),
                       ),
