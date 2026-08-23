@@ -10,6 +10,7 @@ import '../../models/market_models.dart';
 import '../../providers/analysis_provider.dart';
 import '../../providers/market_provider.dart';
 import '../../widgets/analysis_levels_chart.dart';
+import '../../widgets/analysis_note_card.dart';
 import '../../widgets/price_alert/price_alert_sheet.dart';
 
 class AnalysisDetailScreen extends StatefulWidget {
@@ -292,6 +293,34 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
     );
   }
 
+  Future<bool> _saveNote(String note) async {
+    final current = _analysis;
+    if (current == null) return false;
+    final provider = context.read<AnalysisProvider>();
+    final updated = await provider.saveAnalysisNote(
+      analysis: current,
+      note: note,
+    );
+    if (!mounted) return false;
+    if (updated != null) {
+      setState(() => _analysis = updated);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            updated.hasNote == true ? 'Catatan tersimpan.' : 'Catatan dihapus.',
+          ),
+        ),
+      );
+      return true;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(provider.errorMessage ?? 'Catatan gagal disimpan.'),
+      ),
+    );
+    return false;
+  }
+
   // ===========================================================================
   // BUILD
   // ===========================================================================
@@ -463,6 +492,16 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
               onPressed: _openPriceAlert,
               icon: const Icon(Icons.notifications_active_outlined),
               label: const Text('Buat Price Alert'),
+            ),
+
+            const SizedBox(height: 14),
+
+            Consumer<AnalysisProvider>(
+              builder: (context, provider, _) => AnalysisNoteCard(
+                note: analysis.userNote,
+                isSaving: provider.isSavingNote(analysis.id),
+                onSave: _saveNote,
+              ),
             ),
 
             const SizedBox(height: 24),

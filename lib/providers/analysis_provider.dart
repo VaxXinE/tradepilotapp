@@ -175,6 +175,10 @@ class AnalysisProvider extends ChangeNotifier {
 
   int _createRequestId = 0;
 
+  final Set<int> _savingNoteIds = <int>{};
+
+  bool isSavingNote(int analysisId) => _savingNoteIds.contains(analysisId);
+
   // ===========================================================================
   // INTERNAL STATE — FILTERED HISTORY
   // ===========================================================================
@@ -230,6 +234,8 @@ class AnalysisProvider extends ChangeNotifier {
     _quotaRequestId++;
 
     _createRequestId++;
+
+    _savingNoteIds.clear();
 
     _filteredHistoryRequestId++;
 
@@ -1131,6 +1137,62 @@ class AnalysisProvider extends ChangeNotifier {
     }
   }
 
+  Future<Analysis?> saveAnalysisNote({
+    required Analysis analysis,
+    required String note,
+  }) async {
+    if (_authProvider.status != AuthStatus.authenticated ||
+        _savingNoteIds.contains(analysis.id) ||
+        note.length > 5000) {
+      if (note.length > 5000) {
+        errorMessage = 'Catatan maksimal 5.000 karakter.';
+        notifyListeners();
+      }
+      return null;
+    }
+
+    final epoch = _sessionEpoch;
+    final userId = _activeUserId;
+    _savingNoteIds.add(analysis.id);
+    errorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await _client.analyses.setAnalysisNote(
+        id: analysis.id,
+        setAnalysisNoteRequest: SetAnalysisNoteRequest(
+          (builder) => builder.note = note,
+        ),
+      );
+      final saved = response.data;
+      if (!_isSessionCurrent(epoch) ||
+          userId != _activeUserId ||
+          saved == null) {
+        return null;
+      }
+
+      final normalized = saved.note.trim();
+      final updated = analysis.rebuild(
+        (builder) => builder
+          ..userNote = normalized.isEmpty ? null : saved.note
+          ..userNoteUpdatedAt = normalized.isEmpty ? null : saved.updatedAt
+          ..hasNote = normalized.isNotEmpty,
+      );
+      _upsertHistory(updated);
+      return updated;
+    } catch (error) {
+      if (_isSessionCurrent(epoch) && userId == _activeUserId) {
+        errorMessage = _friendlyNoteError(error);
+      }
+      return null;
+    } finally {
+      if (_isSessionCurrent(epoch) && userId == _activeUserId) {
+        _savingNoteIds.remove(analysis.id);
+        notifyListeners();
+      }
+    }
+  }
+
   // ===========================================================================
   // FEEDBACK
   // ===========================================================================
@@ -1369,6 +1431,21 @@ class AnalysisProvider extends ChangeNotifier {
     }
 
     return 'Analisis gagal. Silakan coba lagi.';
+  }
+
+  String _friendlyNoteError(Object error) {
+    if (error is DioException) {
+      if (error.response?.statusCode == 401) {
+        return 'Sesi login sudah berakhir. Silakan login kembali.';
+      }
+      if (error.type == DioExceptionType.connectionError ||
+          error.type == DioExceptionType.connectionTimeout ||
+          error.type == DioExceptionType.receiveTimeout ||
+          error.type == DioExceptionType.sendTimeout) {
+        return 'Catatan belum tersimpan. Periksa koneksi lalu coba lagi.';
+      }
+    }
+    return 'Catatan belum dapat disimpan. Silakan coba lagi.';
   }
 
   // ===========================================================================
