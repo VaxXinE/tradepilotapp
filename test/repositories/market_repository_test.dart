@@ -92,6 +92,38 @@ void main() {
     expect(candles.last.date, DateTime.parse('2026-01-02T00:00:00Z'));
   });
 
+  test('getCandles parses and sorts daily or weekly API dates', () async {
+    final repository = MarketRepository(
+      _dioWithResponse({
+        'candles': [
+          {
+            'date': '25 Aug 2026',
+            'open': 4600,
+            'high': 4700,
+            'low': 4550,
+            'close': 4650,
+          },
+          {
+            'date': '29 Aug 2025',
+            'open': 3300,
+            'high': 3400,
+            'low': 3250,
+            'close': 3350,
+          },
+        ],
+      }),
+    );
+
+    final candles = await repository.getCandles(
+      instrument: 'XAU/USD',
+      timeframe: '1D',
+    );
+
+    expect(candles, hasLength(2));
+    expect(candles.first.date, DateTime.utc(2025, 8, 29));
+    expect(candles.last.date, DateTime.utc(2026, 8, 25));
+  });
+
   test(
     'getRelevantCalendar normalizes input and skips invalid events',
     () async {

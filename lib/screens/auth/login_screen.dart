@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -8,17 +10,36 @@ import 'forgot_password_screen.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({super.key, this.localAuthentication});
+
+  final LocalAuthentication? localAuthentication;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  static const _rememberedEmailKey = 'remembered_login_email';
+  static const _rememberedPasswordKey = 'remembered_login_password';
+
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _storage = const FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+  );
+  late final LocalAuthentication _localAuthentication;
   bool _obscurePassword = true;
+  bool _rememberMe = false;
+  bool _biometricsAvailable = false;
+  bool _isAuthenticatingBiometric = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _localAuthentication = widget.localAuthentication ?? LocalAuthentication();
+    _restoreRememberedCredentials();
+  }
 
   @override
   void dispose() {
@@ -30,11 +51,88 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     final auth = context.read<AuthProvider>();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    final rememberMe = _rememberMe;
     FocusScope.of(context).unfocus();
-    await auth.login(
-      email: _emailController.text.trim(),
-      password: _passwordController.text,
-    );
+    final success = await auth.login(email: email, password: password);
+    if (!success) return;
+
+    try {
+      if (rememberMe) {
+        await _storage.write(key: _rememberedEmailKey, value: email);
+        await _storage.write(key: _rememberedPasswordKey, value: password);
+      } else {
+        await _clearRememberedCredentials();
+      }
+    } catch (_) {
+      // Login tetap berhasil jika secure storage perangkat bermasalah.
+    }
+  }
+
+  Future<void> _restoreRememberedCredentials() async {
+    try {
+      final email = await _storage.read(key: _rememberedEmailKey);
+      final password = await _storage.read(key: _rememberedPasswordKey);
+      if (!mounted || email == null || password == null) return;
+
+      _emailController.text = email;
+      _passwordController.text = password;
+      final biometrics = await _localAuthentication.getAvailableBiometrics();
+      if (!mounted) return;
+      setState(() {
+        _rememberMe = true;
+        _biometricsAvailable = biometrics.isNotEmpty;
+      });
+    } catch (_) {
+      // Form tetap bisa dipakai tanpa kredensial tersimpan.
+    }
+  }
+
+  Future<void> _setRememberMe(bool? value) async {
+    final enabled = value ?? false;
+    setState(() {
+      _rememberMe = enabled;
+      if (!enabled) _biometricsAvailable = false;
+    });
+    if (!enabled) {
+      try {
+        await _clearRememberedCredentials();
+      } catch (_) {
+        // Penghapusan akan dicoba lagi saat login berikutnya.
+      }
+    }
+  }
+
+  Future<void> _clearRememberedCredentials() async {
+    await _storage.delete(key: _rememberedEmailKey);
+    await _storage.delete(key: _rememberedPasswordKey);
+  }
+
+  Future<void> _loginWithBiometrics() async {
+    if (_isAuthenticatingBiometric) return;
+    setState(() => _isAuthenticatingBiometric = true);
+
+    try {
+      final authenticated = await _localAuthentication.authenticate(
+        localizedReason: 'Verifikasi identitas untuk masuk ke Trade Pilot',
+        biometricOnly: true,
+        persistAcrossBackgrounding: true,
+      );
+      if (authenticated && mounted) await _submit();
+    } on LocalAuthException {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Biometrik tidak tersedia. Gunakan email dan password.',
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isAuthenticatingBiometric = false);
+    }
   }
 
   @override
@@ -149,16 +247,30 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ? 'Password wajib diisi'
                                 : null,
                           ),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: TextButton(
-                              onPressed: () => Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => const ForgotPasswordScreen(),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: CheckboxListTile(
+                                  key: const Key('remember-me-checkbox'),
+                                  value: _rememberMe,
+                                  onChanged: _setRememberMe,
+                                  title: const Text('Ingat saya'),
+                                  controlAffinity:
+                                      ListTileControlAffinity.leading,
+                                  contentPadding: EdgeInsets.zero,
+                                  dense: true,
                                 ),
                               ),
-                              child: const Text('Lupa password?'),
-                            ),
+                              TextButton(
+                                onPressed: () => Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        const ForgotPasswordScreen(),
+                                  ),
+                                ),
+                                child: const Text('Lupa password?'),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 8),
                           ElevatedButton(
@@ -174,6 +286,38 @@ class _LoginScreenState extends State<LoginScreen> {
                                   )
                                 : const Text('Masuk'),
                           ),
+                          if (_biometricsAvailable) ...[
+                            const SizedBox(height: 16),
+                            Row(
+                              children: [
+                                const Expanded(child: Divider()),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                  ),
+                                  child: Text(
+                                    'atau',
+                                    style: TextStyle(color: muted),
+                                  ),
+                                ),
+                                const Expanded(child: Divider()),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            OutlinedButton.icon(
+                              key: const Key('biometric-login-button'),
+                              onPressed:
+                                  auth.isBusy || _isAuthenticatingBiometric
+                                  ? null
+                                  : _loginWithBiometrics,
+                              icon: const Icon(Icons.fingerprint_rounded),
+                              label: Text(
+                                _isAuthenticatingBiometric
+                                    ? 'Memverifikasi...'
+                                    : 'Masuk dengan sidik jari / wajah',
+                              ),
+                            ),
+                          ],
                           const SizedBox(height: 22),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,

@@ -25,6 +25,7 @@ dependencies:
 
   # Local/secure storage for session token + cached user
   flutter_secure_storage: ^9.2.2
+  local_auth: ^3.0.2
   shared_preferences: ^2.3.3
 
   # Utilities

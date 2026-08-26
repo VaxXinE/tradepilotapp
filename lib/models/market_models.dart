@@ -1,3 +1,21 @@
+import 'package:intl/intl.dart';
+
+final _marketDayFormat = DateFormat('d MMM yyyy', 'en_US');
+
+DateTime? _parseMarketDate(Object? value) {
+  final raw = value?.toString().trim();
+  if (raw == null || raw.isEmpty) return null;
+
+  final isoDate = DateTime.tryParse(raw);
+  if (isoDate != null) return isoDate;
+
+  try {
+    return _marketDayFormat.parseStrict(raw, true);
+  } on FormatException {
+    return null;
+  }
+}
+
 double? marketDouble(Object? value) {
   if (value == null) {
     return null;
@@ -144,9 +162,7 @@ class MarketCandle {
   bool get bullish => close >= open;
 
   factory MarketCandle.fromJson(Map<String, dynamic> json) {
-    final rawDate = json['date']?.toString();
-
-    final date = rawDate == null ? null : DateTime.tryParse(rawDate);
+    final date = _parseMarketDate(json['date']);
 
     if (date == null) {
       throw const FormatException('Invalid candle date.');
