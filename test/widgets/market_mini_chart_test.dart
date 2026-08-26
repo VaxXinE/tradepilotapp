@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tradepilotapp/core/theme/app_colors.dart';
 import 'package:tradepilotapp/models/market_models.dart';
 import 'package:tradepilotapp/widgets/market_mini_chart.dart';
 
@@ -20,6 +21,26 @@ void main() {
 
     expect(find.byKey(const ValueKey('bullish-candle-0')), findsOneWidget);
     expect(find.byKey(const ValueKey('bearish-candle-1')), findsOneWidget);
+    final bullishBodies = tester.widgetList<ColoredBox>(
+      find.descendant(
+        of: find.byKey(const ValueKey('bullish-candle-0')),
+        matching: find.byType(ColoredBox),
+      ),
+    );
+    final bearishBodies = tester.widgetList<ColoredBox>(
+      find.descendant(
+        of: find.byKey(const ValueKey('bearish-candle-1')),
+        matching: find.byType(ColoredBox),
+      ),
+    );
+    expect(
+      bullishBodies.map((widget) => widget.color),
+      everyElement(AppColors.bullishLight),
+    );
+    expect(
+      bearishBodies.map((widget) => widget.color),
+      everyElement(AppColors.bearishLight),
+    );
     expect(find.textContaining('Candlestick: hijau'), findsOneWidget);
     expect(
       find.byWidgetPredicate(

@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
+import 'package:tradepilotapp/core/theme/theme_controller.dart';
 import 'package:tradepilotapp/providers/auth_provider.dart';
 import 'package:tradepilotapp/screens/home/tabs/profile_tab.dart';
 import 'package:tradepilotapp/screens/profile/change_password_screen.dart';
@@ -17,6 +19,7 @@ void main() {
   );
 
   setUp(() {
+    SharedPreferences.setMockInitialValues({});
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(storageChannel, (_) async => null);
   });
@@ -33,6 +36,7 @@ void main() {
     await tester.runAsync(() => Future<void>.delayed(Duration.zero));
     _authenticate(auth);
     final push = NativePushService(auth);
+    final theme = ThemeController(await SharedPreferences.getInstance());
     addTearDown(push.dispose);
 
     await tester.pumpWidget(
@@ -40,6 +44,7 @@ void main() {
         providers: [
           ChangeNotifierProvider.value(value: auth),
           ChangeNotifierProvider.value(value: push),
+          ChangeNotifierProvider.value(value: theme),
         ],
         child: const MaterialApp(home: ProfileTab()),
       ),
@@ -48,7 +53,17 @@ void main() {
     expect(find.text('User Profile'), findsOneWidget);
     expect(find.text('user@example.com'), findsOneWidget);
     expect(find.text('Informasi Profil'), findsOneWidget);
-    expect(find.text('Mode Pro'), findsOneWidget);
+    expect(find.text('Mode analisis'), findsOneWidget);
+    expect(find.text('Tema gelap'), findsOneWidget);
+    expect(
+      tester
+          .widget<SwitchListTile>(
+            find.widgetWithText(SwitchListTile, 'Tema gelap'),
+          )
+          .value,
+      isTrue,
+    );
+    expect(find.textContaining('Saat ini: Pemula'), findsOneWidget);
     expect(find.text('Ganti Password'), findsOneWidget);
     expect(find.text('Pengaturan Notifikasi'), findsOneWidget);
   });
@@ -87,6 +102,7 @@ void main() {
     _authenticate(auth);
     auth.client.dio.httpClientAdapter = _LogoutAdapter();
     final push = NativePushService(auth);
+    final theme = ThemeController(await SharedPreferences.getInstance());
     addTearDown(push.dispose);
 
     await tester.pumpWidget(
@@ -94,6 +110,7 @@ void main() {
         providers: [
           ChangeNotifierProvider.value(value: auth),
           ChangeNotifierProvider.value(value: push),
+          ChangeNotifierProvider.value(value: theme),
         ],
         child: const MaterialApp(home: ProfileTab()),
       ),

@@ -7,16 +7,22 @@ class InstrumentPickerSheet extends StatefulWidget {
     super.key,
     required this.onSelected,
     this.existingInstruments = const {},
+    this.selectedInstrument,
+    this.title = 'Tambah instrumen',
   });
 
   final Future<void> Function(String instrument) onSelected;
 
   final Set<String> existingInstruments;
+  final String? selectedInstrument;
+  final String title;
 
   static Future<void> show(
     BuildContext context, {
     required Future<void> Function(String instrument) onSelected,
     Set<String> existingInstruments = const {},
+    String? selectedInstrument,
+    String title = 'Tambah instrumen',
   }) {
     return showModalBottomSheet<void>(
       context: context,
@@ -25,6 +31,8 @@ class InstrumentPickerSheet extends StatefulWidget {
         return InstrumentPickerSheet(
           onSelected: onSelected,
           existingInstruments: existingInstruments,
+          selectedInstrument: selectedInstrument,
+          title: title,
         );
       },
     );
@@ -78,9 +86,12 @@ class _InstrumentPickerSheetState extends State<InstrumentPickerSheet> {
 
               const SizedBox(height: 16),
 
-              const Text(
-                'Add Instrument',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              Text(
+                widget.title,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
 
               Padding(
@@ -88,9 +99,11 @@ class _InstrumentPickerSheetState extends State<InstrumentPickerSheet> {
 
                 child: TextField(
                   decoration: const InputDecoration(
-                    hintText: 'Search instrument',
+                    hintText: 'Cari instrumen',
                     prefixIcon: Icon(Icons.search),
                   ),
+                  textCapitalization: TextCapitalization.characters,
+                  autocorrect: false,
 
                   onChanged: (value) {
                     setState(() {
@@ -124,17 +137,19 @@ class _InstrumentPickerSheetState extends State<InstrumentPickerSheet> {
                         final exists = widget.existingInstruments.contains(
                           instrument,
                         );
+                        final selected =
+                            widget.selectedInstrument == instrument;
 
                         return ListTile(
                           title: Text(instrument),
 
-                          trailing: exists
+                          trailing: exists || selected
                               ? const Icon(Icons.check)
                               : const Icon(Icons.add),
 
-                          enabled: !exists,
+                          enabled: !exists && !selected,
 
-                          onTap: exists
+                          onTap: exists || selected
                               ? null
                               : () async {
                                   await widget.onSelected(instrument);

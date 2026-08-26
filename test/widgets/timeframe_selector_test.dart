@@ -19,6 +19,12 @@ void main() {
         ),
       ),
     );
+    expect(
+      tester
+          .widget<ChoiceChip>(find.byKey(const ValueKey('timeframe-1h')))
+          .onSelected,
+      isNotNull,
+    );
     await tester.tap(find.byKey(const ValueKey('timeframe-4h')));
     expect(selected, '4h');
 

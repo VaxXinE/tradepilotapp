@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/theme_controller.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../screens/notifications/notifications_screen.dart';
 import '../../../services/native_push_service.dart';
@@ -80,6 +81,7 @@ class ProfileTab extends StatelessWidget {
         : AppColors.lightPrimaryForeground;
     final auth = context.watch<AuthProvider>();
     final push = context.watch<NativePushService>();
+    final themeController = context.watch<ThemeController>();
     final user = auth.user;
 
     if (user == null) return const SizedBox.shrink();
@@ -124,12 +126,28 @@ class ProfileTab extends StatelessWidget {
                     title: 'Preferensi',
                     children: [
                       SwitchListTile(
+                        secondary: Icon(
+                          themeController.isDarkMode
+                              ? Icons.dark_mode_outlined
+                              : Icons.light_mode_outlined,
+                        ),
+                        title: const Text('Tema gelap'),
+                        subtitle: Text(
+                          themeController.isDarkMode
+                              ? 'Aktif • nyaman digunakan pada cahaya rendah'
+                              : 'Nonaktif • menggunakan tampilan terang',
+                        ),
+                        value: themeController.isDarkMode,
+                        onChanged: themeController.setDarkMode,
+                      ),
+                      const Divider(height: 1),
+                      SwitchListTile(
                         secondary: const Icon(Icons.tune_rounded),
-                        title: const Text('Mode Pro'),
+                        title: const Text('Mode analisis'),
                         subtitle: Text(
                           isPro
-                              ? 'Analisis ditampilkan dalam mode Pro'
-                              : 'Analisis ditampilkan dalam mode Pemula',
+                              ? 'Saat ini: Pro • detail teknis lengkap'
+                              : 'Saat ini: Pemula • penjelasan lebih sederhana',
                         ),
                         value: isPro,
                         onChanged: auth.isUpdatingProfile
@@ -279,38 +297,44 @@ class _ProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        CircleAvatar(
-          radius: 30,
-          backgroundColor: primary,
-          child: Text(
-            name.isEmpty ? '?' : name[0].toUpperCase(),
-            style: TextStyle(
-              color: onPrimary,
-              fontWeight: FontWeight.w800,
-              fontSize: 22,
-            ),
-          ),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                name,
-                style: const TextStyle(
-                  fontSize: 17,
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 30,
+              backgroundColor: primary,
+              child: Text(
+                name.isEmpty ? '?' : name[0].toUpperCase(),
+                style: TextStyle(
+                  color: onPrimary,
                   fontWeight: FontWeight.w800,
+                  fontSize: 22,
                 ),
               ),
-              const SizedBox(height: 2),
-              Text(email, style: TextStyle(color: muted, fontSize: 13)),
-            ],
-          ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(email, style: TextStyle(color: muted, fontSize: 12.5)),
+                ],
+              ),
+            ),
+            Icon(Icons.verified_user_outlined, color: primary, size: 20),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../core/theme/app_colors.dart';
 import '../providers/auth_provider.dart';
 import 'auth/login_screen.dart';
 import 'home/home_shell.dart';
@@ -33,23 +32,20 @@ class _SplashBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 84,
-              height: 84,
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Icon(
-                Icons.candlestick_chart_rounded,
-                size: 44,
-                color: isDark ? AppColors.darkPrimaryForeground : AppColors.lightPrimaryForeground,
+            ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: Image.asset(
+                'assets/images/trade_pilot_app_icon.png',
+                width: 96,
+                height: 96,
+                fit: BoxFit.cover,
+                filterQuality: FilterQuality.high,
+                semanticLabel: 'Logo Trade Pilot',
               ),
             ),
             const SizedBox(height: 20),
@@ -61,7 +57,7 @@ class _SplashBody extends StatelessWidget {
             Text(
               'Analisis trading bertenaga AI',
               style: TextStyle(
-                color: isDark ? AppColors.darkMutedForeground : AppColors.lightMutedForeground,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 28),

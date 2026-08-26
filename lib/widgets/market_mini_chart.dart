@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../core/theme/app_colors.dart';
 import '../models/market_models.dart';
 
 class MarketMiniChart extends StatelessWidget {
@@ -142,6 +143,7 @@ class _CandlePlot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final chartWidth = math.max(width - 98, 1.0);
     final plotMin = math.min(support, currentPrice);
     final plotMax = math.max(resistance, currentPrice);
@@ -157,12 +159,12 @@ class _CandlePlot extends StatelessWidget {
           _ReferenceLine(
             top: topFor(resistance),
             label: 'Resistance ${_formatPrice(resistance)}',
-            color: colors.tertiary,
+            color: colors.onSurfaceVariant.withValues(alpha: 0.82),
           ),
           _ReferenceLine(
             top: topFor(support),
             label: 'Support ${_formatPrice(support)}',
-            color: colors.secondary,
+            color: colors.onSurfaceVariant.withValues(alpha: 0.62),
           ),
           _ReferenceLine(
             top: topFor(currentPrice),
@@ -185,8 +187,12 @@ class _CandlePlot extends StatelessWidget {
                 candle: candles[index],
                 topFor: topFor,
                 plotTop: topFor(candles[index].high),
-                bullishColor: colors.primary,
-                bearishColor: colors.error,
+                bullishColor: isDark
+                    ? AppColors.bullishDark
+                    : AppColors.bullishLight,
+                bearishColor: isDark
+                    ? AppColors.bearishDark
+                    : AppColors.bearishLight,
               ),
             ),
         ],

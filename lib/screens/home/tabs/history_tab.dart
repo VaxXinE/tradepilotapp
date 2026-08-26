@@ -184,7 +184,7 @@ class _HistoryTabState extends State<HistoryTab> {
                     textInputAction: TextInputAction.search,
                     decoration: InputDecoration(
                       counterText: '',
-                      hintText: 'Cari instrumen, catatan, FOMC, breakout...',
+                      hintText: 'Cari instrumen atau catatan',
                       prefixIcon: const Icon(Icons.search_rounded),
                       suffixIcon: filters.query.isEmpty
                           ? null
@@ -202,7 +202,7 @@ class _HistoryTabState extends State<HistoryTab> {
                 Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    IconButton.filledTonal(
+                    IconButton.filled(
                       tooltip: 'Filter',
                       onPressed: _openFilters,
                       icon: const Icon(Icons.filter_list_rounded),

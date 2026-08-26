@@ -25,20 +25,39 @@ class MarketOverviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currentQuote = quote;
+    final premiumBackground = Theme.of(context).brightness == Brightness.dark
+        ? AppColors.darkCard
+        : const Color(0xFF1B1B18);
 
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: currentQuote == null
-            ? _EmptyState(isLoading: isLoading, error: error, onRetry: onRetry)
-            : _QuoteState(
-                quote: currentQuote,
-                isLoading: isLoading,
-                hasError: error != null,
-                updatedAt: updatedAt,
-                onRetry: onRetry,
-                onOpen: onOpen,
-              ),
+      color: currentQuote == null ? null : premiumBackground,
+      clipBehavior: Clip.antiAlias,
+      child: DefaultTextStyle.merge(
+        style: TextStyle(
+          color: currentQuote == null ? null : AppColors.darkText,
+        ),
+        child: IconTheme.merge(
+          data: IconThemeData(
+            color: currentQuote == null ? null : AppColors.darkText,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(18),
+            child: currentQuote == null
+                ? _EmptyState(
+                    isLoading: isLoading,
+                    error: error,
+                    onRetry: onRetry,
+                  )
+                : _QuoteState(
+                    quote: currentQuote,
+                    isLoading: isLoading,
+                    hasError: error != null,
+                    updatedAt: updatedAt,
+                    onRetry: onRetry,
+                    onOpen: onOpen,
+                  ),
+          ),
+        ),
       ),
     );
   }
@@ -68,7 +87,7 @@ class _EmptyState extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Market Overview',
+          'Ringkasan Pasar',
           style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
         ),
         const SizedBox(height: 12),
@@ -103,11 +122,10 @@ class _QuoteState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final changeColor = quote.changePercent >= 0
-        ? (isDark ? AppColors.bullishDark : AppColors.bullishLight)
-        : (isDark ? AppColors.bearishDark : AppColors.bearishLight);
-    final muted = Theme.of(context).colorScheme.onSurfaceVariant;
+        ? AppColors.bullishDark
+        : AppColors.bearishDark;
+    const muted = AppColors.darkMutedForeground;
 
     return InkWell(
       onTap: onOpen,
@@ -119,7 +137,7 @@ class _QuoteState extends StatelessWidget {
             children: [
               const Expanded(
                 child: Text(
-                  'Market Overview',
+                  'Ringkasan Pasar',
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
                 ),
               ),
@@ -128,7 +146,9 @@ class _QuoteState extends StatelessWidget {
                   width: 14,
                   height: 14,
                   child: CircularProgressIndicator(strokeWidth: 2),
-                ),
+                )
+              else
+                const Icon(Icons.arrow_forward_rounded, size: 18),
             ],
           ),
           const SizedBox(height: 14),

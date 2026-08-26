@@ -33,7 +33,7 @@ void main() {
       ),
     );
 
-    expect(find.text('Market Overview'), findsOneWidget);
+    expect(find.text('Ringkasan Pasar'), findsOneWidget);
     expect(find.text('XAU/USD'), findsOneWidget);
     expect(find.text('2,345.20'), findsOneWidget);
     expect(find.text('+0.42%'), findsOneWidget);

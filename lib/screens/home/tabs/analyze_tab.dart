@@ -18,6 +18,7 @@ import '../../../widgets/calendar/economic_calendar_card.dart';
 import '../../../widgets/context/market_context_card.dart';
 import '../../../widgets/technical/technical_summary_card.dart';
 import '../../../widgets/market_mini_chart.dart';
+import '../../../widgets/watchlist/instrument_picker_sheet.dart';
 import '../../analysis/analysis_detail_screen.dart';
 import '../../../widgets/price_alert/price_alert_sheet.dart';
 import '../../price_alert/price_alert_list_screen.dart';
@@ -322,41 +323,33 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
                 subtitle: 'Pilih market yang ingin kamu pahami.',
               ),
 
-              const SizedBox(height: 14),
+              const SizedBox(height: 10),
 
-              for (final entry in MarketProvider.instrumentGroups.entries) ...[
-                Text(
-                  entry.key,
-                  style: TextStyle(
-                    color: muted,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
+              Card(
+                clipBehavior: Clip.antiAlias,
+                child: ListTile(
+                  leading: const Icon(Icons.show_chart_rounded),
+                  title: Text(
+                    instrument,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
                   ),
-                ),
-
-                const SizedBox(height: 8),
-
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: entry.value.map((item) {
-                    return _SelectChip(
-                      label: item,
-                      selected: item == instrument,
-                      onTap: () {
-                        unawaited(market.selectInstrument(item));
-                      },
+                  subtitle: const Text('Ketuk untuk mengganti instrumen'),
+                  trailing: const Icon(Icons.expand_more_rounded),
+                  onTap: () {
+                    InstrumentPickerSheet.show(
+                      context,
+                      title: 'Pilih instrumen',
+                      selectedInstrument: instrument,
+                      onSelected: market.selectInstrument,
                     );
-                  }).toList(),
+                  },
                 ),
-
-                const SizedBox(height: 14),
-              ],
+              ),
 
               // ---------------------------------------------------------------
               // TIMEFRAME
               // ---------------------------------------------------------------
-              const SizedBox(height: 4),
+              const SizedBox(height: 18),
 
               const _SectionTitle(
                 title: 'Timeframe',
@@ -1056,52 +1049,6 @@ class _SectionTitle extends StatelessWidget {
         const SizedBox(height: 3),
         Text(subtitle, style: TextStyle(color: muted, fontSize: 11.5)),
       ],
-    );
-  }
-}
-
-class _SelectChip extends StatelessWidget {
-  const _SelectChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    final primary = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
-
-    final border = isDark ? AppColors.darkBorder : AppColors.lightBorder;
-
-    final onPrimary = isDark
-        ? AppColors.darkPrimaryForeground
-        : AppColors.lightPrimaryForeground;
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(999),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-        decoration: BoxDecoration(
-          color: selected ? primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: selected ? primary : border),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: selected ? onPrimary : null,
-          ),
-        ),
-      ),
     );
   }
 }

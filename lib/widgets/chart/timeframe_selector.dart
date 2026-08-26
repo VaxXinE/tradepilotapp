@@ -25,9 +25,11 @@ class TimeframeSelector extends StatelessWidget {
             key: ValueKey('timeframe-$timeframe'),
             label: Text(timeframe),
             selected: timeframe == selected,
-            onSelected: isLoading || timeframe == selected
+            onSelected: isLoading
                 ? null
-                : (_) => onSelected(timeframe),
+                : (_) {
+                    if (timeframe != selected) onSelected(timeframe);
+                  },
           ),
       ],
     );

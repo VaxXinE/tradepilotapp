@@ -134,7 +134,7 @@ class _DashboardTabState extends State<DashboardTab> {
         actions: [
           IconButton(
             tooltip: 'Price Alert Saya',
-            icon: const Icon(Icons.notifications_active_outlined),
+            icon: const Icon(Icons.price_check_outlined),
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const PriceAlertListScreen()),
@@ -162,17 +162,48 @@ class _DashboardTabState extends State<DashboardTab> {
             // GREETING
             // ---------------------------------------------------------------
             Text(
-              'Halo, ${user?.displayName ?? ''} 👋',
-              style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
+              'Selamat datang kembali',
+              style: TextStyle(color: muted, fontSize: 12.5),
             ),
 
-            const SizedBox(height: 4),
+            const SizedBox(height: 3),
 
-            Text(
-              user?.selectedMode == UserSelectedModeEnum.pro
-                  ? 'Mode Pro'
-                  : 'Mode Pemula',
-              style: TextStyle(color: muted, fontSize: 12.5),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    user?.displayName.trim().isNotEmpty == true
+                        ? user!.displayName.trim()
+                        : 'Trader',
+                    style: const TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.6,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.secondary,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    user?.selectedMode == UserSelectedModeEnum.pro
+                        ? 'PRO'
+                        : 'PEMULA',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSecondary,
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.7,
+                    ),
+                  ),
+                ),
+              ],
             ),
 
             const SizedBox(height: 18),
@@ -379,7 +410,7 @@ class _BeginnerHeroCard extends StatelessWidget {
                 Icon(Icons.auto_awesome_rounded, size: 20),
                 SizedBox(width: 8),
                 Text(
-                  'Mau analisis market?',
+                  'Mau analisis pasar?',
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
                 ),
               ],
@@ -388,8 +419,8 @@ class _BeginnerHeroCard extends StatelessWidget {
             const SizedBox(height: 7),
 
             Text(
-              'Mulai dari harga, sesi market, chart, indikator, '
-              'dan event ekonomi sebelum meminta analisis AI.',
+              'Tinjau harga, sesi pasar, chart, indikator, dan agenda ekonomi '
+              'sebelum meminta analisis AI.',
               style: TextStyle(color: muted, fontSize: 12, height: 1.4),
             ),
 

@@ -24,32 +24,49 @@ class HistorySummaryCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              isPartial
-                  ? 'Ringkasan hasil yang sedang dimuat'
-                  : 'Ringkasan riwayat yang ditampilkan',
+              isPartial ? 'Ringkasan sementara' : 'Ringkasan riwayat',
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w900,
               ),
             ),
             const SizedBox(height: 11),
-            Wrap(
-              spacing: 18,
-              runSpacing: 10,
-              children: [
-                _Metric(label: 'Terlihat', value: '${statistics.total}'),
-                _Metric(label: 'Dievaluasi', value: '$evaluated'),
-                _Metric(label: 'Menunggu', value: '${statistics.pendingCount}'),
-                _Metric(
-                  label: 'Outcome positif',
-                  value: '${statistics.successCount}',
-                ),
-                _Metric(
-                  label: 'Rata-rata keyakinan',
-                  value: statistics.total == 0
-                      ? '—'
-                      : '${statistics.averageConfidence.round()}%',
-                ),
-              ],
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final width = (constraints.maxWidth - 16) / 3;
+                return Wrap(
+                  spacing: 8,
+                  runSpacing: 10,
+                  children: [
+                    _Metric(
+                      width: width,
+                      label: 'Terlihat',
+                      value: '${statistics.total}',
+                    ),
+                    _Metric(
+                      width: width,
+                      label: 'Dievaluasi',
+                      value: '$evaluated',
+                    ),
+                    _Metric(
+                      width: width,
+                      label: 'Menunggu',
+                      value: '${statistics.pendingCount}',
+                    ),
+                    _Metric(
+                      width: width,
+                      label: 'Positif',
+                      value: '${statistics.successCount}',
+                    ),
+                    _Metric(
+                      width: width,
+                      label: 'Keyakinan rata-rata',
+                      value: statistics.total == 0
+                          ? '—'
+                          : '${statistics.averageConfidence.round()}%',
+                    ),
+                  ],
+                );
+              },
             ),
             if (evaluated > 0) ...[
               const SizedBox(height: 10),
@@ -69,8 +86,13 @@ class HistorySummaryCard extends StatelessWidget {
 }
 
 class _Metric extends StatelessWidget {
-  const _Metric({required this.label, required this.value});
+  const _Metric({
+    required this.width,
+    required this.label,
+    required this.value,
+  });
 
+  final double width;
   final String label;
   final String value;
 
@@ -79,7 +101,7 @@ class _Metric extends StatelessWidget {
     final theme = Theme.of(context);
 
     return SizedBox(
-      width: 112,
+      width: width,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

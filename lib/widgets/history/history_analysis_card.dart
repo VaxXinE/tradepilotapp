@@ -24,9 +24,9 @@ class HistoryAnalysisCard extends StatelessWidget {
     final confidence = _confidenceLabel(analysis);
     final details = [
       if (analysis.riskLevel?.trim().isNotEmpty == true)
-        'Risiko ${analysis.riskLevel!.trim()}',
+        'Risiko ${_riskLabel(analysis.riskLevel!)}',
       if (analysis.marketCondition?.trim().isNotEmpty == true)
-        analysis.marketCondition!.trim(),
+        _marketConditionLabel(analysis.marketCondition!),
     ];
 
     return Card(
@@ -135,6 +135,40 @@ class HistoryAnalysisCard extends StatelessWidget {
         return 'Netral';
       default:
         return 'Bias belum tersedia';
+    }
+  }
+
+  static String _riskLabel(String value) {
+    switch (value.trim().toLowerCase()) {
+      case 'low':
+        return 'rendah';
+      case 'medium':
+        return 'sedang';
+      case 'high':
+        return 'tinggi';
+      default:
+        return value.trim().replaceAll('_', ' ');
+    }
+  }
+
+  static String _marketConditionLabel(String value) {
+    switch (value.trim().toLowerCase()) {
+      case 'trending_up':
+      case 'uptrend':
+        return 'Tren naik';
+      case 'trending_down':
+      case 'downtrend':
+        return 'Tren turun';
+      case 'sideways':
+      case 'ranging':
+        return 'Bergerak sideways';
+      case 'trending':
+        return 'Sedang trending';
+      default:
+        final normalized = value.trim().replaceAll('_', ' ');
+        return normalized.isEmpty
+            ? normalized
+            : '${normalized[0].toUpperCase()}${normalized.substring(1)}';
     }
   }
 

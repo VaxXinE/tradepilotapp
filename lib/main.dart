@@ -4,8 +4,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/theme/app_theme.dart';
+import 'core/theme/theme_controller.dart';
 import 'firebase_options.dart';
 import 'providers/analysis_provider.dart';
 import 'providers/auth_provider.dart';
@@ -33,16 +35,23 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-  runApp(const TradePilotApp());
+  final preferences = await SharedPreferences.getInstance();
+  runApp(TradePilotApp(preferences: preferences));
 }
 
 class TradePilotApp extends StatelessWidget {
-  const TradePilotApp({super.key});
+  const TradePilotApp({super.key, required this.preferences});
+
+  final SharedPreferences preferences;
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider<ThemeController>(
+          create: (_) => ThemeController(preferences),
+        ),
+
         // =====================================================================
         // AUTH
         // =====================================================================
@@ -212,13 +221,15 @@ class _TradePilotMaterialAppState extends State<_TradePilotMaterialApp> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.watch<ThemeController>();
+
     return MaterialApp(
       navigatorKey: _navigatorKey,
       title: 'Trade Pilot',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.system,
+      themeMode: theme.mode,
       home: const SplashScreen(),
     );
   }

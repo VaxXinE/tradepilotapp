@@ -11,8 +11,8 @@ void main() {
       isPartial: false,
     );
 
-    expect(find.text('Ringkasan riwayat yang ditampilkan'), findsOneWidget);
-    expect(find.text('Outcome positif'), findsOneWidget);
+    expect(find.text('Ringkasan riwayat'), findsOneWidget);
+    expect(find.text('Positif'), findsOneWidget);
     expect(find.text('—'), findsOneWidget);
   });
 
@@ -30,7 +30,7 @@ void main() {
 
     await _pumpSummary(tester, statistics, isPartial: true);
 
-    expect(find.text('Ringkasan hasil yang sedang dimuat'), findsOneWidget);
+    expect(find.text('Ringkasan sementara'), findsOneWidget);
     expect(find.text('3'), findsOneWidget);
     expect(find.text('1'), findsOneWidget);
     expect(

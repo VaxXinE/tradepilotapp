@@ -63,7 +63,7 @@ void main() {
     );
 
     expect(tester.takeException(), isNull);
-    expect(find.text('Market Overview'), findsOneWidget);
+    expect(find.text('Ringkasan Pasar'), findsOneWidget);
     expect(find.text('Sesi Market'), findsOneWidget);
   });
 
