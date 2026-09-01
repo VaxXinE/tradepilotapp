@@ -1,0 +1,718 @@
+import 'dart:async';
+
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+
+import '../core/market/market_context_engine.dart';
+import '../core/market/technical_summary_engine.dart';
+import '../models/market_context.dart';
+import '../models/market_models.dart';
+import '../models/technical_summary.dart';
+import '../repositories/market_repository.dart';
+import 'auth_provider.dart';
+
+class MarketProvider extends ChangeNotifier {
+  MarketProvider(this._authProvider, this._repository) {
+    _activeUserId = _currentUserId;
+
+    _authProvider.addListener(_handleAuthChanged);
+  }
+
+  final AuthProvider _authProvider;
+  final MarketRepository _repository;
+
+  // ===========================================================================
+  // SOURCE OF TRUTH — INSTRUMENTS
+  // ===========================================================================
+
+  /// Disamakan dengan Trade-Pilot web `prod`
+  /// dan SUPPORTED_INSTRUMENTS backend.
+  static const instrumentGroups = {
+    'Futures': [
+      'XAU/USD',
+      'BRENT',
+      'XAG/USD',
+      'HSI',
+      'NIKKEI',
+      'DJIA',
+      'NASDAQ',
+      'DXY',
+    ],
+    'Forex': ['AUD/USD', 'EUR/USD', 'GBP/USD', 'USD/CHF', 'USD/JPY', 'USD/IDR'],
+    'Crypto': ['BTC/USD', 'ETH/USD', 'SOL/USD', 'BNB/USD', 'XRP/USD'],
+  };
+
+  static final Set<String> supportedInstruments = {
+    for (final group in instrumentGroups.values) ...group,
+  };
+
+  static const supportedTimeframes = {
+    '1m',
+    '5m',
+    '15m',
+    '30m',
+    '1h',
+    '4h',
+    '1D',
+    '1W',
+  };
+
+  // ===========================================================================
+  // SELECTED MARKET
+  // ===========================================================================
+
+  String selectedInstrument = 'XAU/USD';
+
+  String selectedTimeframe = '1h';
+
+  List<MarketCandle> selectedCandles = const [];
+
+  BeginnerTechnicalSnapshot? selectedTechnical;
+
+  List<EconomicCalendarEvent> selectedCalendar = const [];
+
+  bool get hasEconomicCalendar => selectedCalendar.isNotEmpty;
+
+  List<EconomicCalendarEvent> get highImpactEvents =>
+      List.unmodifiable(selectedCalendar.where((event) => event.isHighImpact));
+
+  bool isLoadingSelectedMarket = false;
+
+  // ===========================================================================
+  // LIVE QUOTES
+  // ===========================================================================
+
+  Map<String, LiveMarketQuote> quotes = {};
+
+  bool isLoadingQuotes = false;
+
+  DateTime? quotesUpdatedAt;
+
+  Timer? _quoteTimer;
+
+  bool _quotePollingEnabled = false;
+
+  bool _quotesRequestInFlight = false;
+
+  DateTime? _quotesFetchedAt;
+
+  static const Duration _quoteRefreshInterval = Duration(seconds: 5);
+
+  static const Duration _quoteClientCacheTtl = Duration(seconds: 10);
+
+  LiveMarketQuote? quoteFor(String instrument) {
+    return quotes[_normalizeInstrument(instrument)];
+  }
+
+  LiveMarketQuote? get selectedQuote {
+    return quoteFor(selectedInstrument);
+  }
+
+  // ===========================================================================
+  // MARKET CONTEXT — beginner-friendly summary derived from data above.
+  // ===========================================================================
+
+  MarketContext? get selectedMarketContext {
+    return MarketContextEngine.build(
+      instrument: selectedInstrument,
+      candles: selectedCandles,
+      quote: selectedQuote,
+      technical: selectedTechnical,
+      calendar: selectedCalendar,
+    );
+  }
+
+  TechnicalSummary? get selectedTechnicalSummary {
+    return TechnicalSummaryEngine.build(selectedTechnical);
+  }
+
+  // ===========================================================================
+  // ERRORS
+  // ===========================================================================
+
+  String? marketError;
+
+  // ===========================================================================
+  // CACHES
+  // ===========================================================================
+
+  final Map<String, List<MarketCandle>> _candleCache = {};
+
+  final Map<String, DateTime> _candleFetchedAt = {};
+
+  final Map<String, BeginnerTechnicalSnapshot> _technicalCache = {};
+
+  final Map<String, DateTime> _technicalFetchedAt = {};
+
+  final Map<String, List<EconomicCalendarEvent>> _calendarCache = {};
+
+  final Map<String, DateTime> _calendarFetchedAt = {};
+
+  final Map<String, Future<List<MarketCandle>>> _candleInFlight = {};
+
+  final Map<String, Future<BeginnerTechnicalSnapshot?>> _technicalInFlight = {};
+
+  final Map<String, Future<List<EconomicCalendarEvent>>> _calendarInFlight = {};
+
+  static const Duration _candleCacheTtl = Duration(seconds: 30);
+
+  static const Duration _technicalCacheTtl = Duration(seconds: 30);
+
+  static const Duration _calendarCacheTtl = Duration(minutes: 30);
+
+  int _selectionGeneration = 0;
+
+  int? _activeUserId;
+
+  int _sessionEpoch = 0;
+
+  // ===========================================================================
+  // AUTH / USER-SCOPED STATE
+  // ===========================================================================
+
+  int? get _currentUserId {
+    if (_authProvider.status != AuthStatus.authenticated) {
+      return null;
+    }
+
+    return _authProvider.user?.id;
+  }
+
+  void _handleAuthChanged() {
+    final nextUserId = _currentUserId;
+
+    if (nextUserId == _activeUserId) {
+      return;
+    }
+
+    _activeUserId = nextUserId;
+
+    // Invalidasi semua response user-scoped
+    // dari session sebelumnya.
+    _sessionEpoch++;
+
+    _selectionGeneration++;
+
+    selectedInstrument = 'XAU/USD';
+    selectedTimeframe = '1h';
+    selectedCandles = const [];
+    selectedTechnical = null;
+    selectedCalendar = const [];
+    isLoadingSelectedMarket = false;
+
+    quotes = {};
+    quotesUpdatedAt = null;
+    _quotesFetchedAt = null;
+    marketError = null;
+
+    _candleCache.clear();
+    _candleFetchedAt.clear();
+    _technicalCache.clear();
+    _technicalFetchedAt.clear();
+    _calendarCache.clear();
+    _calendarFetchedAt.clear();
+
+    if (nextUserId == null) {
+      setQuotePollingEnabled(false);
+    }
+
+    notifyListeners();
+  }
+
+  // ===========================================================================
+  // LIVE QUOTE POLLING
+  // ===========================================================================
+
+  void setQuotePollingEnabled(bool enabled) {
+    if (_quotePollingEnabled == enabled) {
+      return;
+    }
+
+    _quotePollingEnabled = enabled;
+
+    _quoteTimer?.cancel();
+    _quoteTimer = null;
+
+    if (!enabled) {
+      return;
+    }
+
+    // Immediate fetch.
+    unawaited(loadQuotes(force: true, silent: quotes.isNotEmpty));
+
+    _quoteTimer = Timer.periodic(_quoteRefreshInterval, (_) {
+      unawaited(loadQuotes(force: true, silent: true));
+    });
+  }
+
+  Future<void> loadQuotes({bool force = false, bool silent = false}) async {
+    if (_quotesRequestInFlight) {
+      return;
+    }
+
+    final last = _quotesFetchedAt;
+
+    if (!force &&
+        last != null &&
+        DateTime.now().difference(last) < _quoteClientCacheTtl) {
+      return;
+    }
+
+    _quotesRequestInFlight = true;
+    final epoch = _sessionEpoch;
+
+    if (!silent) {
+      isLoadingQuotes = true;
+      notifyListeners();
+    }
+
+    try {
+      final snapshot = await _repository.getLiveQuotes();
+
+      if (epoch != _sessionEpoch) {
+        return;
+      }
+
+      final nextQuotes = <String, LiveMarketQuote>{};
+
+      for (final quote in snapshot.quotes) {
+        if (quote.instrument.isEmpty || quote.price <= 0) {
+          continue;
+        }
+
+        nextQuotes[_normalizeInstrument(quote.instrument)] = quote;
+      }
+
+      quotes = nextQuotes;
+
+      _quotesFetchedAt = DateTime.now();
+
+      quotesUpdatedAt = snapshot.updatedAt ?? _quotesFetchedAt;
+
+      marketError = null;
+    } catch (e) {
+      if (epoch == _sessionEpoch) {
+        marketError = _friendlyError(e, fallback: 'Gagal memuat harga live.');
+      }
+    } finally {
+      _quotesRequestInFlight = false;
+
+      if (!silent) {
+        isLoadingQuotes = false;
+      }
+
+      if (epoch == _sessionEpoch) {
+        notifyListeners();
+      }
+    }
+  }
+
+  // ===========================================================================
+  // SELECT INSTRUMENT
+  // ===========================================================================
+
+  Future<void> selectInstrument(
+    String instrument, {
+    String? timeframe,
+    bool force = false,
+  }) async {
+    final normalized = _normalizeInstrument(instrument);
+
+    if (!supportedInstruments.contains(normalized)) {
+      marketError = 'Instrumen tidak didukung.';
+
+      notifyListeners();
+      return;
+    }
+
+    final nextTimeframe = timeframe ?? selectedTimeframe;
+
+    if (!supportedTimeframes.contains(nextTimeframe)) {
+      marketError = 'Timeframe tidak didukung.';
+
+      notifyListeners();
+      return;
+    }
+
+    selectedInstrument = normalized;
+
+    selectedTimeframe = nextTimeframe;
+
+    selectedCandles = const [];
+
+    selectedTechnical = null;
+
+    selectedCalendar = const [];
+
+    await loadSelectedMarketData(force: force);
+  }
+
+  Future<void> selectTimeframe(String timeframe, {bool force = false}) async {
+    if (!supportedTimeframes.contains(timeframe)) {
+      marketError = 'Timeframe tidak didukung.';
+
+      notifyListeners();
+      return;
+    }
+
+    selectedTimeframe = timeframe;
+
+    selectedCandles = const [];
+    selectedTechnical = null;
+
+    await loadSelectedTechnicalData(force: force);
+  }
+
+  Future<void> loadSelectedMarketData({bool force = false}) async {
+    final generation = ++_selectionGeneration;
+
+    final instrument = selectedInstrument;
+
+    final timeframe = selectedTimeframe;
+
+    isLoadingSelectedMarket = true;
+    marketError = null;
+
+    notifyListeners();
+
+    var candles = const <MarketCandle>[];
+
+    BeginnerTechnicalSnapshot? technical;
+
+    var calendar = const <EconomicCalendarEvent>[];
+
+    var candlesLoaded = false;
+    var technicalLoaded = false;
+    var calendarLoaded = false;
+
+    Object? firstError;
+
+    try {
+      await Future.wait<void>([
+        () async {
+          try {
+            candles = await getCandlesFor(instrument, timeframe, force: force);
+
+            candlesLoaded = true;
+          } catch (error) {
+            firstError ??= error;
+          }
+        }(),
+
+        () async {
+          try {
+            technical = await getTechnicalFor(
+              instrument,
+              timeframe,
+              force: force,
+            );
+
+            technicalLoaded = true;
+          } catch (error) {
+            firstError ??= error;
+          }
+        }(),
+
+        () async {
+          try {
+            calendar = await getRelevantCalendarFor(instrument, force: force);
+
+            calendarLoaded = true;
+          } catch (error) {
+            firstError ??= error;
+          }
+        }(),
+      ]);
+
+      // User keburu ganti instrument/timeframe.
+      // Jangan timpa selection terbaru dengan response lama.
+      if (generation != _selectionGeneration ||
+          instrument != selectedInstrument ||
+          timeframe != selectedTimeframe) {
+        return;
+      }
+
+      if (candlesLoaded) {
+        selectedCandles = candles;
+      }
+
+      if (technicalLoaded) {
+        selectedTechnical = technical;
+      }
+
+      if (calendarLoaded) {
+        selectedCalendar = calendar;
+      }
+
+      if (firstError != null) {
+        marketError = _friendlyError(
+          firstError!,
+          fallback: 'Sebagian data pasar belum tersedia.',
+        );
+      } else {
+        marketError = null;
+      }
+    } finally {
+      if (generation == _selectionGeneration) {
+        isLoadingSelectedMarket = false;
+
+        notifyListeners();
+      }
+    }
+  }
+
+  Future<void> loadSelectedTechnicalData({bool force = false}) async {
+    final generation = ++_selectionGeneration;
+
+    final instrument = selectedInstrument;
+
+    final timeframe = selectedTimeframe;
+
+    isLoadingSelectedMarket = true;
+
+    marketError = null;
+
+    notifyListeners();
+
+    try {
+      final results = await Future.wait<dynamic>([
+        getCandlesFor(instrument, timeframe, force: force),
+        getTechnicalFor(instrument, timeframe, force: force),
+      ]);
+
+      if (generation != _selectionGeneration ||
+          instrument != selectedInstrument ||
+          timeframe != selectedTimeframe) {
+        return;
+      }
+
+      selectedCandles = results[0] as List<MarketCandle>;
+
+      selectedTechnical = results[1] as BeginnerTechnicalSnapshot?;
+    } catch (e) {
+      if (generation == _selectionGeneration) {
+        marketError = _friendlyError(
+          e,
+          fallback: 'Gagal memuat data teknikal.',
+        );
+      }
+    } finally {
+      if (generation == _selectionGeneration) {
+        isLoadingSelectedMarket = false;
+
+        notifyListeners();
+      }
+    }
+  }
+
+  // ===========================================================================
+  // CANDLES
+  // ===========================================================================
+
+  Future<List<MarketCandle>> getCandlesFor(
+    String instrument,
+    String timeframe, {
+    bool force = false,
+  }) async {
+    final normalized = _normalizeInstrument(instrument);
+
+    _validateInstrument(normalized);
+
+    _validateTimeframe(timeframe);
+
+    final key = '$normalized|$timeframe';
+
+    if (!force && _isFresh(_candleFetchedAt[key], _candleCacheTtl)) {
+      return _candleCache[key] ?? const [];
+    }
+
+    final existing = _candleInFlight[key];
+
+    if (existing != null) {
+      return existing;
+    }
+
+    final future = _repository.getCandles(
+      instrument: normalized,
+      timeframe: timeframe,
+    );
+
+    _candleInFlight[key] = future;
+
+    try {
+      final result = await future;
+
+      _candleCache[key] = result;
+
+      _candleFetchedAt[key] = DateTime.now();
+
+      return result;
+    } finally {
+      _candleInFlight.remove(key);
+    }
+  }
+
+  // ===========================================================================
+  // TECHNICAL INDICATORS
+  // ===========================================================================
+
+  Future<BeginnerTechnicalSnapshot?> getTechnicalFor(
+    String instrument,
+    String timeframe, {
+    bool force = false,
+  }) async {
+    final normalized = _normalizeInstrument(instrument);
+
+    _validateInstrument(normalized);
+
+    _validateTimeframe(timeframe);
+
+    final key = '$normalized|$timeframe';
+
+    if (!force && _isFresh(_technicalFetchedAt[key], _technicalCacheTtl)) {
+      return _technicalCache[key];
+    }
+
+    final existing = _technicalInFlight[key];
+
+    if (existing != null) {
+      return existing;
+    }
+
+    final future = _repository.getTechnical(
+      instrument: normalized,
+      timeframe: timeframe,
+    );
+
+    _technicalInFlight[key] = future;
+
+    try {
+      final result = await future;
+
+      if (result != null) {
+        _technicalCache[key] = result;
+
+        _technicalFetchedAt[key] = DateTime.now();
+      }
+
+      return result;
+    } finally {
+      _technicalInFlight.remove(key);
+    }
+  }
+
+  // ===========================================================================
+  // ECONOMIC CALENDAR
+  // ===========================================================================
+
+  Future<List<EconomicCalendarEvent>> getRelevantCalendarFor(
+    String instrument, {
+    bool force = false,
+  }) async {
+    final normalized = _normalizeInstrument(instrument);
+
+    _validateInstrument(normalized);
+
+    final key = normalized;
+
+    if (!force && _isFresh(_calendarFetchedAt[key], _calendarCacheTtl)) {
+      return _calendarCache[key] ?? const [];
+    }
+
+    final existing = _calendarInFlight[key];
+
+    if (existing != null) {
+      return existing;
+    }
+
+    final future = _repository.getRelevantCalendar(normalized);
+
+    _calendarInFlight[key] = future;
+
+    try {
+      final result = await future;
+
+      _calendarCache[key] = result;
+
+      _calendarFetchedAt[key] = DateTime.now();
+
+      return result;
+    } finally {
+      _calendarInFlight.remove(key);
+    }
+  }
+
+  // ===========================================================================
+  // UTILITY
+  // ===========================================================================
+
+  String _normalizeInstrument(String instrument) {
+    return instrument.trim().toUpperCase();
+  }
+
+  void _validateInstrument(String instrument) {
+    if (!supportedInstruments.contains(instrument)) {
+      throw ArgumentError.value(
+        instrument,
+        'instrument',
+        'Instrument tidak didukung.',
+      );
+    }
+  }
+
+  void _validateTimeframe(String timeframe) {
+    if (!supportedTimeframes.contains(timeframe)) {
+      throw ArgumentError.value(
+        timeframe,
+        'timeframe',
+        'Timeframe tidak didukung.',
+      );
+    }
+  }
+
+  bool _isFresh(DateTime? timestamp, Duration ttl) {
+    if (timestamp == null) {
+      return false;
+    }
+
+    return DateTime.now().difference(timestamp) < ttl;
+  }
+
+  String _friendlyError(Object error, {required String fallback}) {
+    if (error is DioException) {
+      final body = error.response?.data;
+
+      if (body is Map) {
+        final message = body['error'] ?? body['message'];
+
+        if (message is String && message.trim().isNotEmpty) {
+          return message.trim();
+        }
+      }
+
+      if (error.response?.statusCode == 401) {
+        return 'Sesi login sudah berakhir.';
+      }
+
+      if (error.type == DioExceptionType.connectionError ||
+          error.type == DioExceptionType.connectionTimeout) {
+        return 'Tidak dapat terhubung ke server.';
+      }
+    }
+
+    return fallback;
+  }
+
+  // ===========================================================================
+  // DISPOSE
+  // ===========================================================================
+
+  @override
+  void dispose() {
+    _quoteTimer?.cancel();
+
+    _authProvider.removeListener(_handleAuthChanged);
+
+    super.dispose();
+  }
+}
