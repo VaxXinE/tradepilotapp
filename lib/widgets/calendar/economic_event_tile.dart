@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../models/market_models.dart';
+import '../../l10n/l10n.dart';
 import 'impact_level_badge.dart';
 
 class EconomicEventTile extends StatelessWidget {
@@ -53,32 +54,36 @@ class EconomicEventTile extends StatelessWidget {
             runSpacing: 6,
             children: [
               if (event.actual.isNotEmpty)
-                _Metric(label: 'Aktual', value: event.actual),
+                _Metric(label: context.l10n.actual, value: event.actual),
               if (event.forecast.isNotEmpty)
                 _Metric(label: 'Forecast', value: event.forecast),
               if (event.previous.isNotEmpty)
-                _Metric(label: 'Sebelumnya', value: event.previous),
+                _Metric(label: context.l10n.previous, value: event.previous),
             ],
           ),
         ],
         const SizedBox(height: 8),
         Text(
-          _relationExplanation(event.currency, instrument),
+          _relationExplanation(context.l10n, event.currency, instrument),
           style: TextStyle(color: muted, fontSize: 10.5, height: 1.35),
         ),
       ],
     );
   }
 
-  String _relationExplanation(String currency, String instrument) {
+  String _relationExplanation(
+    AppLocalizations l10n,
+    String currency,
+    String instrument,
+  ) {
     final normalized = instrument.toUpperCase();
     if (normalized == 'XAU/USD' && currency.toUpperCase() == 'USD') {
-      return 'Mengapa penting? Data USD sering memengaruhi Gold dan dapat meningkatkan volatilitas XAU/USD.';
+      return l10n.goldEventExplanation;
     }
     if (normalized.split('/').contains(currency.toUpperCase())) {
-      return 'Mengapa penting? Event $currency berkaitan langsung dengan $instrument dan dapat meningkatkan volatilitas.';
+      return l10n.currencyEventExplanation(currency, instrument);
     }
-    return 'Mengapa penting? Event ini dapat memengaruhi sentimen dan volatilitas $instrument.';
+    return l10n.genericEventExplanation(instrument);
   }
 
   String _flag(String currency) => switch (currency.toUpperCase()) {

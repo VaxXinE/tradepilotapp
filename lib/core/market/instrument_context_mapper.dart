@@ -8,48 +8,45 @@ class InstrumentContextMapper {
 
   static const Map<String, String> _notes = {
     'XAU/USD':
-        'Emas biasanya sensitif terhadap kebijakan suku bunga dan '
-        'pergerakan dolar AS (USD).',
-    'XAG/USD':
-        'Perak cenderung mengikuti pola emas, namun pergerakannya '
-        'sering lebih tajam.',
+        'Gold is usually sensitive to interest-rate policy and US dollar '
+        '(USD) movements.',
+    'XAG/USD': 'Silver often follows gold, but its moves can be sharper.',
     'BRENT':
-        'Minyak sensitif terhadap pasokan global, kebijakan OPEC, dan '
-        'kondisi ekonomi dunia.',
+        'Oil is sensitive to global supply, OPEC policy, and global economic '
+        'conditions.',
     'DXY':
-        'Indeks dolar AS mengukur kekuatan USD terhadap mata uang '
-        'utama lainnya.',
+        'The US Dollar Index measures USD strength against other major '
+        'currencies.',
     'EUR/USD':
-        'Pasangan ini bergerak mengikuti kebijakan bank sentral Eropa '
-        '(ECB) dan Amerika (The Fed).',
+        'This pair responds to European Central Bank (ECB) and US Federal '
+        'Reserve policy.',
     'GBP/USD':
-        'Pasangan ini sensitif terhadap data ekonomi Inggris (BoE) dan '
-        'dolar AS.',
+        'This pair is sensitive to UK economic data, Bank of England policy, '
+        'and the US dollar.',
     'AUD/USD':
-        'Pasangan ini terpengaruh harga komoditas dan kebijakan bank '
-        'sentral Australia (RBA).',
+        'This pair is influenced by commodity prices and Reserve Bank of '
+        'Australia policy.',
     'USD/CHF':
-        'Franc Swiss sering dianggap aset safe haven, jadi pasangan ini '
-        'bereaksi terhadap sentimen risiko global.',
+        'The Swiss franc is often considered a safe-haven asset, so this pair '
+        'responds to global risk sentiment.',
     'USD/JPY':
-        'Pasangan ini dipengaruhi kebijakan suku bunga Jepang (BoJ) dan '
-        'dolar AS.',
+        'This pair is influenced by Bank of Japan policy and the US dollar.',
     'USD/IDR':
-        'Rupiah dipengaruhi kebijakan Bank Indonesia serta arus modal '
-        'asing ke pasar Indonesia.',
+        'The rupiah is influenced by Bank Indonesia policy and foreign capital '
+        'flows into Indonesian markets.',
   };
 
   static const _cryptoNote =
-      'Market kripto berjalan 24/7 dan cenderung sensitif terhadap '
-      'sentimen pasar, likuiditas, dan berita regulasi.';
+      'Crypto markets trade 24/7 and are sensitive to market sentiment, '
+      'liquidity, and regulatory news.';
 
   static const _indexNote =
-      'Indeks saham mengikuti performa gabungan saham-saham besar dan '
-      'sensitif terhadap berita ekonomi makro.';
+      'Stock indices track groups of major companies and are sensitive to '
+      'macroeconomic news.';
 
   static const _fallbackNote =
-      'Pergerakan instrumen ini dipengaruhi oleh sentimen pasar dan '
-      'data ekonomi terkait.';
+      'This instrument is influenced by market sentiment and related economic '
+      'data.';
 
   static const _indices = {'HSI', 'NIKKEI', 'DJIA', 'NASDAQ'};
 

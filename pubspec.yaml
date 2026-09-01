@@ -2,13 +2,15 @@ name: tradepilotapp
 description: "Trade Pilot — AI Trading Assistant (Flutter mobile app)."
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.0.0+2
 
 environment:
   sdk: ^3.10.4
 
 dependencies:
   flutter:
+    sdk: flutter
+  flutter_localizations:
     sdk: flutter
 
   cupertino_icons: ^1.0.8
@@ -27,21 +29,24 @@ dependencies:
   flutter_secure_storage: ^9.2.2
   local_auth: ^3.0.2
   shared_preferences: ^2.3.3
+  url_launcher: ^6.3.2
 
   # Utilities
-  intl: ^0.19.0
+  intl: ^0.20.2
   fl_chart: ^0.69.0
   built_collection: ^5.1.1
-  firebase_core: ^4.13.0
-  firebase_messaging: ^16.5.0
-  flutter_local_notifications: ^22.3.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  url_launcher_platform_interface: ^2.3.2
 
 flutter:
+  config:
+    enable-swift-package-manager: false
+  generate: true
   uses-material-design: true
   assets:
     - assets/images/
+    - shorebird.yaml

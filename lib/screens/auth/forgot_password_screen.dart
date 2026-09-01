@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/auth_provider.dart';
+import '../../l10n/l10n.dart';
 import '../../widgets/error_banner.dart';
 
 /// Alur lupa password 3 langkah, setara `forgot-password.tsx` di web app:
@@ -73,9 +74,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
     if (ok && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Password berhasil diubah. Silakan masuk.'),
-        ),
+        SnackBar(content: Text(context.l10n.passwordResetSuccess)),
       );
       Navigator.of(context).pop();
     }
@@ -85,9 +84,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final muted = theme.colorScheme.onSurfaceVariant;
+    final l10n = context.l10n;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Lupa Password')),
+      appBar: AppBar(title: Text(l10n.forgotPasswordTitle)),
       body: SafeArea(
         child: Consumer<AuthProvider>(
           builder: (context, auth, _) {
@@ -124,7 +124,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'Langkah $_step dari 3',
+                            l10n.stepOfThree(_step),
                             style: TextStyle(
                               color: muted,
                               fontSize: 13,
@@ -150,13 +150,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   List<Widget> _buildStepEmail(AuthProvider auth, Color muted) => [
-    const Text(
-      'Temukan akunmu',
-      style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+    Text(
+      context.l10n.findYourAccount,
+      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
     ),
     const SizedBox(height: 6),
     Text(
-      'Masukkan email akun untuk memulai pemulihan password.',
+      context.l10n.findAccountDescription,
       style: TextStyle(color: muted, height: 1.4),
     ),
     const SizedBox(height: 24),
@@ -168,30 +168,32 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       autocorrect: false,
       autofillHints: const [AutofillHints.email],
       onFieldSubmitted: (_) => _submitEmail(),
-      decoration: const InputDecoration(
-        labelText: 'Email',
-        hintText: 'nama@email.com',
-        prefixIcon: Icon(Icons.mail_outline_rounded),
+      decoration: InputDecoration(
+        labelText: context.l10n.email,
+        hintText: context.l10n.emailHint,
+        prefixIcon: const Icon(Icons.mail_outline_rounded),
       ),
       validator: (value) => (value?.trim().contains('@') ?? false)
           ? null
-          : 'Masukkan email yang valid',
+          : context.l10n.invalidEmail,
     ),
     const SizedBox(height: 20),
     ElevatedButton(
       onPressed: auth.isBusy ? null : _submitEmail,
-      child: auth.isBusy ? const _BtnSpinner() : const Text('Lanjut'),
+      child: auth.isBusy
+          ? const _BtnSpinner()
+          : Text(context.l10n.continueLabel),
     ),
   ];
 
   List<Widget> _buildStepAnswer(AuthProvider auth, Color muted) => [
-    const Text(
-      'Verifikasi identitasmu',
-      style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+    Text(
+      context.l10n.verifyIdentity,
+      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
     ),
     const SizedBox(height: 6),
     Text(
-      'Jawab pertanyaan keamanan yang dibuat saat pendaftaran.',
+      context.l10n.securityAnswerDescription,
       style: TextStyle(color: muted, height: 1.4),
     ),
     const SizedBox(height: 24),
@@ -204,17 +206,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       controller: _answerController,
       textInputAction: TextInputAction.done,
       onFieldSubmitted: (_) => _submitAnswer(),
-      decoration: const InputDecoration(
-        labelText: 'Jawaban',
-        prefixIcon: Icon(Icons.shield_outlined),
+      decoration: InputDecoration(
+        labelText: context.l10n.answer,
+        prefixIcon: const Icon(Icons.shield_outlined),
       ),
       validator: (value) =>
-          (value?.trim().isEmpty ?? true) ? 'Jawaban wajib diisi' : null,
+          (value?.trim().isEmpty ?? true) ? context.l10n.answerRequired : null,
     ),
     const SizedBox(height: 20),
     ElevatedButton(
       onPressed: auth.isBusy ? null : _submitAnswer,
-      child: auth.isBusy ? const _BtnSpinner() : const Text('Verifikasi'),
+      child: auth.isBusy ? const _BtnSpinner() : Text(context.l10n.verify),
     ),
     const SizedBox(height: 8),
     TextButton(
@@ -224,18 +226,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               _step = 1;
               _answerController.clear();
             }),
-      child: const Text('Ganti email'),
+      child: Text(context.l10n.changeEmail),
     ),
   ];
 
   List<Widget> _buildStepNewPassword(AuthProvider auth, Color muted) => [
-    const Text(
-      'Buat password baru',
-      style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+    Text(
+      context.l10n.createNewPassword,
+      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
     ),
     const SizedBox(height: 6),
     Text(
-      'Gunakan minimal 8 karakter dan jangan gunakan ulang password lama.',
+      context.l10n.newPasswordDescription,
       style: TextStyle(color: muted, height: 1.4),
     ),
     const SizedBox(height: 24),
@@ -246,24 +248,29 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       autofillHints: const [AutofillHints.newPassword],
       onFieldSubmitted: (_) => _submitNewPassword(),
       decoration: InputDecoration(
-        labelText: 'Password baru',
-        helperText: 'Minimal 8 karakter',
+        labelText: context.l10n.newPassword,
+        helperText: context.l10n.minimumEightCharacters,
         prefixIcon: const Icon(Icons.lock_outline_rounded),
         suffixIcon: IconButton(
-          tooltip: _obscure ? 'Tampilkan password' : 'Sembunyikan password',
+          tooltip: _obscure
+              ? context.l10n.showPassword
+              : context.l10n.hidePassword,
           icon: Icon(
             _obscure ? Icons.visibility_off_rounded : Icons.visibility_rounded,
           ),
           onPressed: () => setState(() => _obscure = !_obscure),
         ),
       ),
-      validator: (value) =>
-          (value?.length ?? 0) < 8 ? 'Password minimal 8 karakter' : null,
+      validator: (value) => (value?.length ?? 0) < 8
+          ? context.l10n.passwordMinimumCharacters
+          : null,
     ),
     const SizedBox(height: 20),
     ElevatedButton(
       onPressed: auth.isBusy ? null : _submitNewPassword,
-      child: auth.isBusy ? const _BtnSpinner() : const Text('Simpan Password'),
+      child: auth.isBusy
+          ? const _BtnSpinner()
+          : Text(context.l10n.savePassword),
     ),
   ];
 }

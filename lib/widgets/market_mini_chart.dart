@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../core/theme/app_colors.dart';
+import '../l10n/l10n.dart';
 import '../models/market_models.dart';
 
 class MarketMiniChart extends StatelessWidget {
@@ -25,6 +26,7 @@ class MarketMiniChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     if (isLoading && candles.isEmpty) {
       return const SizedBox(
         height: 240,
@@ -37,7 +39,7 @@ class MarketMiniChart extends StatelessWidget {
         height: 180,
         child: Center(
           child: Text(
-            error ?? 'Data chart belum tersedia.',
+            error ?? l10n.chartDataUnavailable,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -59,10 +61,10 @@ class MarketMiniChart extends StatelessWidget {
         ? 0.0
         : ((resistance - support) / latest).abs() * 100;
     final risk = rangePercent >= 5
-        ? 'Tinggi'
+        ? l10n.high
         : rangePercent >= 2
-        ? 'Sedang'
-        : 'Rendah';
+        ? l10n.medium
+        : l10n.low;
     final colors = Theme.of(context).colorScheme;
 
     return Column(
@@ -71,17 +73,16 @@ class MarketMiniChart extends StatelessWidget {
         Row(
           children: [
             Text(
-              'Tren: ${bullish
-                  ? 'Cenderung bullish'
+              '${l10n.trend}: ${bullish
+                  ? l10n.bullishBias
                   : bearish
-                  ? 'Cenderung bearish'
-                  : 'Netral'}',
+                  ? l10n.bearishBias
+                  : l10n.neutral}',
               style: const TextStyle(fontWeight: FontWeight.w800),
             ),
             const Spacer(),
             Tooltip(
-              message:
-                  'Level pada chart adalah referensi historis, bukan rekomendasi transaksi.',
+              message: l10n.historicalLevelsDisclaimer,
               child: Icon(
                 Icons.help_outline_rounded,
                 size: 18,
@@ -110,12 +111,12 @@ class MarketMiniChart extends StatelessWidget {
         ],
         const SizedBox(height: 10),
         Text(
-          'Candlestick: hijau = harga naik, merah = harga turun.',
+          l10n.candlestickHelp,
           style: TextStyle(color: colors.onSurfaceVariant, fontSize: 11),
         ),
         const SizedBox(height: 4),
         Text(
-          'Risiko pergerakan: $risk. Support dan resistance adalah level referensi dari data yang terlihat.',
+          l10n.movementRisk(risk),
           style: TextStyle(color: colors.onSurfaceVariant, fontSize: 11),
         ),
       ],
@@ -168,7 +169,7 @@ class _CandlePlot extends StatelessWidget {
           ),
           _ReferenceLine(
             top: topFor(currentPrice),
-            label: 'Saat ini ${_formatPrice(currentPrice)}',
+            label: context.l10n.currentPrice(_formatPrice(currentPrice)),
             color: colors.primary,
           ),
           for (var index = 0; index < candles.length; index++)

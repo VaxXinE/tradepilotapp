@@ -112,8 +112,7 @@ class TechnicalSummaryEngine {
 
     if (rsi != null && (rsi <= 20 || rsi >= 80)) {
       buffer.write(
-        ' Momentum tinggi dapat meningkatkan risiko pembalikan arah, '
-        'jadi tetap berhati-hati.',
+        ' Strong momentum can increase reversal risk, so stay cautious.',
       );
     }
 
@@ -124,21 +123,21 @@ class TechnicalSummaryEngine {
     final total = t.totalSignals;
 
     if (total <= 0) {
-      return 'Indikator belum menunjukkan arah yang dominan.';
+      return 'The indicators do not show a dominant direction yet.';
     }
 
     if (t.bullish) {
-      return '${t.buyCount} dari $total indikator saat ini mendukung '
-          'kenaikan.';
+      return '${t.buyCount} of $total indicators currently support an '
+          'upward move.';
     }
 
     if (t.bearish) {
-      return '${t.sellCount} dari $total indikator saat ini mendukung '
-          'penurunan.';
+      return '${t.sellCount} of $total indicators currently support a '
+          'downward move.';
     }
 
-    return 'Indikator belum menunjukkan arah yang dominan '
-        '(${t.neutralCount} dari $total netral).';
+    return 'The indicators do not show a dominant direction '
+        '(${t.neutralCount} of $total are neutral).';
   }
 
   static String? _rsiSentence(BeginnerTechnicalSnapshot t) {
@@ -149,30 +148,28 @@ class TechnicalSummaryEngine {
     }
 
     if (rsi < _oversold) {
-      return 'RSI ${rsi.toStringAsFixed(1)} menunjukkan momentum sedang '
-          'melemah dan harga berada dekat area rendah.';
+      return 'RSI ${rsi.toStringAsFixed(1)} indicates weakening momentum '
+          'with price near a lower area.';
     }
 
     if (rsi > _overbought) {
-      return 'RSI ${rsi.toStringAsFixed(1)} menunjukkan momentum sedang '
-          'tinggi; kondisi ini dapat berarti pergerakan kuat, namun tetap '
-          'perhatikan risiko perubahan arah.';
+      return 'RSI ${rsi.toStringAsFixed(1)} indicates strong momentum; this '
+          'may reflect a strong move, but reversal risk remains.';
     }
 
-    return 'RSI ${rsi.toStringAsFixed(1)} menunjukkan momentum yang '
-        'relatif normal.';
+    return 'RSI ${rsi.toStringAsFixed(1)} indicates relatively normal momentum.';
   }
 
   static String _macdSentence(BeginnerTechnicalSnapshot t) {
     switch (t.macdAction.trim().toLowerCase()) {
       case 'buy':
-        return 'MACD menunjukkan momentum jangka pendek cenderung positif.';
+        return 'MACD indicates positive short-term momentum.';
 
       case 'sell':
-        return 'MACD menunjukkan momentum jangka pendek sedang melemah.';
+        return 'MACD indicates weakening short-term momentum.';
 
       default:
-        return 'MACD belum menunjukkan perubahan momentum yang signifikan.';
+        return 'MACD does not show a significant momentum shift yet.';
     }
   }
 }

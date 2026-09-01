@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/price_alert_provider.dart';
+import '../../l10n/l10n.dart';
 
 Future<bool?> showPriceAlertSheet({
   required BuildContext context,
@@ -72,7 +73,7 @@ class _PriceAlertSheetState extends State<_PriceAlertSheet> {
 
     if (targetPrice == null || !targetPrice.isFinite || targetPrice <= 0) {
       setState(() {
-        _error = 'Masukkan target harga yang valid.';
+        _error = context.l10n.invalidTargetPrice;
       });
 
       return;
@@ -82,7 +83,7 @@ class _PriceAlertSheetState extends State<_PriceAlertSheet> {
 
     if (note.length > 200) {
       setState(() {
-        _error = 'Catatan maksimal 200 karakter.';
+        _error = context.l10n.noteMaximumCharacters;
       });
 
       return;
@@ -113,12 +114,13 @@ class _PriceAlertSheetState extends State<_PriceAlertSheet> {
 
     setState(() {
       _submitting = false;
-      _error = provider.error ?? 'Gagal membuat price alert.';
+      _error = provider.error ?? context.l10n.priceAlertCreateFailed;
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
 
     final muted = Theme.of(context).colorScheme.onSurfaceVariant;
@@ -132,7 +134,7 @@ class _PriceAlertSheetState extends State<_PriceAlertSheet> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Alert Harga ${widget.instrument}',
+                l10n.priceAlertTitle(widget.instrument),
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w900,
@@ -142,16 +144,17 @@ class _PriceAlertSheetState extends State<_PriceAlertSheet> {
               const SizedBox(height: 6),
 
               Text(
-                'Harga sekarang '
-                '${_formatPrice(widget.instrument, widget.currentPrice)}',
+                l10n.currentMarketPrice(
+                  _formatPrice(widget.instrument, widget.currentPrice),
+                ),
                 style: TextStyle(color: muted, fontSize: 12.5),
               ),
 
               const SizedBox(height: 18),
 
-              const Text(
-                'Beri tahu saya ketika harga...',
-                style: TextStyle(fontWeight: FontWeight.w700),
+              Text(
+                l10n.notifyWhenPrice,
+                style: const TextStyle(fontWeight: FontWeight.w700),
               ),
 
               const SizedBox(height: 10),
@@ -161,7 +164,7 @@ class _PriceAlertSheetState extends State<_PriceAlertSheet> {
                 runSpacing: 8,
                 children: [
                   ChoiceChip(
-                    label: const Text('Naik melewati'),
+                    label: Text(l10n.risesAbove),
                     selected: _triggerAbove,
                     onSelected: (_) {
                       setState(() {
@@ -170,7 +173,7 @@ class _PriceAlertSheetState extends State<_PriceAlertSheet> {
                     },
                   ),
                   ChoiceChip(
-                    label: const Text('Turun melewati'),
+                    label: Text(l10n.fallsBelow),
                     selected: !_triggerAbove,
                     onSelected: (_) {
                       setState(() {
@@ -188,7 +191,7 @@ class _PriceAlertSheetState extends State<_PriceAlertSheet> {
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
-                decoration: const InputDecoration(labelText: 'Target Harga'),
+                decoration: InputDecoration(labelText: l10n.targetPrice),
               ),
 
               const SizedBox(height: 12),
@@ -197,9 +200,9 @@ class _PriceAlertSheetState extends State<_PriceAlertSheet> {
                 controller: _noteController,
                 maxLength: 200,
                 maxLines: 2,
-                decoration: const InputDecoration(
-                  labelText: 'Catatan (opsional)',
-                  hintText: 'Contoh: cek ulang kondisi market saat ini',
+                decoration: InputDecoration(
+                  labelText: l10n.optionalNote,
+                  hintText: l10n.priceAlertNoteHint,
                 ),
               ),
 
@@ -231,7 +234,7 @@ class _PriceAlertSheetState extends State<_PriceAlertSheet> {
                         )
                       : const Icon(Icons.notifications_active_outlined),
                   label: Text(
-                    _submitting ? 'Menyimpan...' : 'Buat Alert Harga',
+                    _submitting ? l10n.saving : l10n.createPriceAlertButton,
                   ),
                 ),
               ),

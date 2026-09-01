@@ -7,6 +7,7 @@ import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
 import '../../../core/market/market_sessions.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../l10n/l10n.dart';
 import '../../../models/market_models.dart';
 import '../../../providers/analysis_provider.dart';
 import '../../../providers/auth_provider.dart';
@@ -130,16 +131,16 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (dialogContext) => AlertDialog(
-          title: const Text('Hapus dari watchlist?'),
-          content: Text('Hapus $instrument dari watchlist?'),
+          title: Text(context.l10n.removeFromWatchlist),
+          content: Text(context.l10n.removeInstrumentConfirmation(instrument)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Batal'),
+              child: Text(context.l10n.cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('Hapus'),
+              child: Text(context.l10n.remove),
             ),
           ],
         ),
@@ -159,12 +160,12 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
     if (!ok) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(watchlist.error ?? 'Gagal memperbarui watchlist.'),
+          content: Text(watchlist.error ?? context.l10n.watchlistUpdateFailed),
         ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Watchlist $instrument diperbarui.')),
+        SnackBar(content: Text(context.l10n.watchlistUpdated(instrument))),
       );
     }
   }
@@ -178,14 +179,9 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
     LiveMarketQuote? quote,
   ) async {
     if (quote == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Price alert membutuhkan harga live. '
-            'Harga live belum tersedia untuk instrumen ini.',
-          ),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.alertNeedsLivePrice)));
 
       return;
     }
@@ -198,7 +194,7 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
 
     if (created == true && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Price alert $instrument berhasil dibuat.')),
+        SnackBar(content: Text(context.l10n.priceAlertCreated(instrument))),
       );
     }
   }
@@ -260,14 +256,15 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
     final quote = market.selectedQuote;
 
     final highImpactSoon = _findHighImpactSoon(market.highImpactEvents);
+    final l10n = context.l10n;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Analisis AI'),
+        title: Text(l10n.aiAnalysis),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_active_outlined),
-            tooltip: 'Price Alert Saya',
+            tooltip: l10n.myPriceAlerts,
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const PriceAlertListScreen()),
@@ -288,9 +285,12 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
                       ? AppColors.darkSecondary
                       : AppColors.lightSecondary,
                 ),
-                child: const Text(
-                  'Mode Pemula',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+                child: Text(
+                  l10n.beginnerMode,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ),
@@ -318,9 +318,9 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
               // ---------------------------------------------------------------
               // INSTRUMENT
               // ---------------------------------------------------------------
-              const _SectionTitle(
-                title: 'Pilih Instrumen',
-                subtitle: 'Pilih market yang ingin kamu pahami.',
+              _SectionTitle(
+                title: l10n.selectInstrument,
+                subtitle: l10n.selectMarketDescription,
               ),
 
               const SizedBox(height: 10),
@@ -333,12 +333,12 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
                     instrument,
                     style: const TextStyle(fontWeight: FontWeight.w800),
                   ),
-                  subtitle: const Text('Ketuk untuk mengganti instrumen'),
+                  subtitle: Text(l10n.tapToChangeInstrument),
                   trailing: const Icon(Icons.expand_more_rounded),
                   onTap: () {
                     InstrumentPickerSheet.show(
                       context,
-                      title: 'Pilih instrumen',
+                      title: l10n.selectInstrument,
                       selectedInstrument: instrument,
                       onSelected: market.selectInstrument,
                     );
@@ -351,9 +351,9 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
               // ---------------------------------------------------------------
               const SizedBox(height: 18),
 
-              const _SectionTitle(
-                title: 'Timeframe',
-                subtitle: 'Timeframe menentukan sudut pandang analisis pasar.',
+              _SectionTitle(
+                title: l10n.timeframe,
+                subtitle: l10n.timeframeDescription,
               ),
 
               const SizedBox(height: 12),
@@ -441,15 +441,15 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
                 icon: const Icon(Icons.notifications_active_outlined),
                 label: Text(
                   quote == null
-                      ? 'Price Alert Belum Tersedia'
-                      : 'Buat Price Alert',
+                      ? l10n.priceAlertUnavailable
+                      : l10n.createPriceAlert,
                 ),
               ),
 
               if (quote == null) ...[
                 const SizedBox(height: 7),
                 Text(
-                  'Instrumen ini belum memiliki feed harga live yang bisa dipakai untuk alert.',
+                  l10n.instrumentHasNoLiveFeed,
                   textAlign: TextAlign.center,
                   style: TextStyle(color: muted, fontSize: 11.5),
                 ),
@@ -460,10 +460,9 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
               // ---------------------------------------------------------------
               // USER CONTEXT
               // ---------------------------------------------------------------
-              const _SectionTitle(
-                title: 'Catatan Tambahan',
-                subtitle:
-                    'Opsional. Ceritakan posisi atau kondisi yang ingin AI pertimbangkan.',
+              _SectionTitle(
+                title: l10n.additionalNotes,
+                subtitle: l10n.additionalNotesDescription,
               ),
 
               const SizedBox(height: 10),
@@ -473,10 +472,7 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
                 maxLines: 3,
                 maxLength: 500,
                 textInputAction: TextInputAction.newline,
-                decoration: const InputDecoration(
-                  hintText:
-                      'Contoh: Saya belum punya posisi dan ingin menunggu entry yang lebih aman...',
-                ),
+                decoration: InputDecoration(hintText: l10n.additionalNotesHint),
               ),
 
               const SizedBox(height: 10),
@@ -507,8 +503,8 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
                     : const Icon(Icons.auto_awesome_rounded, size: 18),
                 label: Text(
                   analysis.isSubmitting
-                      ? 'Menganalisis pasar...'
-                      : 'Dapatkan Analisis AI',
+                      ? l10n.analyzingMarket
+                      : l10n.getAiAnalysis,
                 ),
               ),
 
@@ -516,7 +512,9 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
                 const SizedBox(height: 10),
                 Center(
                   child: Text(
-                    '${analysis.quota!.daily.remaining} analisis tersisa hari ini',
+                    l10n.analysesRemainingToday(
+                      analysis.quota!.daily.remaining,
+                    ),
                     style: TextStyle(color: muted, fontSize: 12.5),
                   ),
                 ),
@@ -525,8 +523,7 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
               const SizedBox(height: 12),
 
               Text(
-                'Analisis AI adalah alat bantu pengambilan keputusan, bukan jaminan profit. '
-                'Selalu pertimbangkan risiko sebelum membuka posisi.',
+                l10n.aiAnalysisDisclaimer,
                 textAlign: TextAlign.center,
                 style: TextStyle(color: muted, fontSize: 11, height: 1.4),
               ),
@@ -563,14 +560,16 @@ class _BeginnerIntroCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Pahami pasar sebelum entry',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                  Text(
+                    context.l10n.understandMarketBeforeEntry,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    'Trade Pilot akan membantu menjelaskan harga, momentum, '
-                    'sesi pasar, dan event penting dengan bahasa yang lebih sederhana.',
+                    context.l10n.beginnerAnalysisIntro,
                     style: TextStyle(
                       color: muted,
                       fontSize: 12.5,
@@ -664,7 +663,7 @@ class _MarketOverviewCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 5),
                       Text(
-                        '${market.selectedTimeframe} • ${quote != null ? 'Harga live' : 'Harga referensi'}',
+                        '${market.selectedTimeframe} • ${quote != null ? context.l10n.livePrice : context.l10n.referencePrice}',
                         style: TextStyle(color: muted, fontSize: 11.5),
                       ),
                     ],
@@ -672,8 +671,8 @@ class _MarketOverviewCard extends StatelessWidget {
                 ),
                 IconButton(
                   tooltip: watchlisted
-                      ? 'Hapus dari watchlist'
-                      : 'Tambahkan ke watchlist',
+                      ? context.l10n.removeFromWatchlist
+                      : context.l10n.addToWatchlist,
                   onPressed: watchlist.isUpdating ? null : onToggleWatchlist,
                   icon: watchlist.isUpdating
                       ? const SizedBox(
@@ -755,14 +754,18 @@ class _MarketOverviewCard extends StatelessWidget {
               currentPrice: quote?.price,
               error: market.marketError == null
                   ? null
-                  : 'Sebagian data chart belum tersedia.',
+                  : context.l10n.partialChartUnavailable,
               isLoading: market.isLoadingSelectedMarket,
             ),
 
             if (quote != null && market.quotesUpdatedAt != null) ...[
               const SizedBox(height: 8),
               Text(
-                'Harga diperbarui ${DateFormat('HH:mm:ss').format(market.quotesUpdatedAt!.toLocal())}',
+                context.l10n.pricesUpdatedAt(
+                  DateFormat(
+                    'HH:mm:ss',
+                  ).format(market.quotesUpdatedAt!.toLocal()),
+                ),
                 style: TextStyle(color: muted, fontSize: 10.5),
               ),
             ],
@@ -843,8 +846,8 @@ class _MarketSessionPill extends StatelessWidget {
     if (isCryptoMarketInstrument(instrument)) {
       return _SessionContainer(
         color: bullish,
-        title: 'Market Crypto 24/7',
-        subtitle: 'Crypto tidak mengikuti sesi forex.',
+        title: context.l10n.cryptoMarketAlwaysOpen,
+        subtitle: context.l10n.cryptoNoForexSessions,
       );
     }
 
@@ -854,9 +857,11 @@ class _MarketSessionPill extends StatelessWidget {
       return _SessionContainer(
         color: muted,
         title: status.isWeekendClosed
-            ? 'Market ditutup akhir pekan'
-            : 'Tidak ada sesi utama yang aktif',
-        subtitle: status.next == null ? null : _nextSessionText(status.next!),
+            ? context.l10n.marketClosedWeekend
+            : context.l10n.noMainSessionActive,
+        subtitle: status.next == null
+            ? null
+            : _nextSessionText(context, status.next!),
       );
     }
 
@@ -866,18 +871,22 @@ class _MarketSessionPill extends StatelessWidget {
       color: bullish,
       title: names,
       subtitle: status.isOverlap
-          ? 'Overlap sesi • likuiditas biasanya lebih tinggi'
+          ? context.l10n.sessionOverlap
           : status.next == null
-          ? 'Sesi pasar aktif'
-          : _nextSessionText(status.next!),
+          ? context.l10n.marketSessionActive
+          : _nextSessionText(context, status.next!),
     );
   }
 
-  String _nextSessionText(MarketSessionTransition transition) {
-    final action = transition.type == 'open' ? 'buka' : 'tutup';
-
-    return '${marketSessionLabel(transition.session)} $action dalam '
-        '${formatMarketDuration(transition.until)}';
+  String _nextSessionText(
+    BuildContext context,
+    MarketSessionTransition transition,
+  ) {
+    final session = marketSessionLabel(transition.session);
+    final duration = formatMarketDuration(transition.until);
+    return transition.type == 'open'
+        ? context.l10n.sessionOpensIn(session, duration)
+        : context.l10n.sessionClosesIn(session, duration);
   }
 }
 
@@ -1002,7 +1011,7 @@ class _PreTradeWarning extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Event high impact segera berlangsung',
+                  context.l10n.highImpactEventSoon,
                   style: TextStyle(
                     color: error,
                     fontSize: 12.5,
@@ -1012,8 +1021,8 @@ class _PreTradeWarning extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   '${event.event}'
-                  '${minutes == null ? '' : ' • sekitar $minutes menit lagi'}. '
-                  'Harga dapat bergerak cepat dan spread dapat melebar.',
+                  '${minutes == null ? '' : context.l10n.eventStartsInMinutes(minutes)}. '
+                  '${context.l10n.highImpactRisk}',
                   style: const TextStyle(fontSize: 11.5, height: 1.4),
                 ),
               ],

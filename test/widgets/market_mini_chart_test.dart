@@ -4,6 +4,8 @@ import 'package:tradepilotapp/core/theme/app_colors.dart';
 import 'package:tradepilotapp/models/market_models.dart';
 import 'package:tradepilotapp/widgets/market_mini_chart.dart';
 
+import '../helpers/localized_test_app.dart';
+
 void main() {
   testWidgets('renders bullish and bearish candles with beginner labels', (
     tester,
@@ -41,7 +43,7 @@ void main() {
       bearishBodies.map((widget) => widget.color),
       everyElement(AppColors.bearishLight),
     );
-    expect(find.textContaining('Candlestick: hijau'), findsOneWidget);
+    expect(find.textContaining('Candlesticks: green'), findsOneWidget);
     expect(
       find.byWidgetPredicate(
         (widget) =>
@@ -68,7 +70,7 @@ void main() {
 
   testWidgets('shows empty and safe error states', (tester) async {
     await tester.pumpWidget(_app(const MarketMiniChart(candles: [])));
-    expect(find.text('Data chart belum tersedia.'), findsOneWidget);
+    expect(find.text('Chart data is unavailable.'), findsOneWidget);
 
     await tester.pumpWidget(
       _app(const MarketMiniChart(candles: [], error: 'Data gagal dimuat.')),
@@ -77,7 +79,7 @@ void main() {
   });
 }
 
-Widget _app(Widget child) => MaterialApp(
+Widget _app(Widget child) => localizedTestApp(
   home: Scaffold(body: SingleChildScrollView(child: child)),
 );
 

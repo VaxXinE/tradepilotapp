@@ -38,7 +38,7 @@ void main() {
       );
 
       expect(summary!.trend, MarketTrend.bullish);
-      expect(summary.explanation, contains('3 dari 4'));
+      expect(summary.explanation, contains('3 of 4'));
     });
 
     test('bearish when overall signal is sell', () {
@@ -47,7 +47,7 @@ void main() {
       );
 
       expect(summary!.trend, MarketTrend.bearish);
-      expect(summary.explanation, contains('2 dari 3'));
+      expect(summary.explanation, contains('2 of 3'));
     });
 
     test('neutral when overall signal is neutral', () {
@@ -64,7 +64,7 @@ void main() {
       final summary = TechnicalSummaryEngine.build(_snapshot(rsi: 22));
 
       expect(summary!.momentum, MarketLevel.high);
-      expect(summary.explanation, contains('area rendah'));
+      expect(summary.explanation, contains('lower area'));
     });
 
     test(
@@ -74,8 +74,8 @@ void main() {
 
         expect(summary!.momentum, MarketLevel.high);
         expect(summary.riskLevel, isNot(MarketLevel.low));
-        expect(summary.explanation, contains('risiko perubahan arah'));
-        expect(summary.explanation, contains('risiko pembalikan arah'));
+        expect(summary.explanation, contains('reversal risk'));
+        expect(summary.explanation, contains('reversal risk'));
       },
     );
 
@@ -83,7 +83,7 @@ void main() {
       final summary = TechnicalSummaryEngine.build(_snapshot(rsi: 50));
 
       expect(summary!.momentum, MarketLevel.low);
-      expect(summary.explanation, contains('relatif normal'));
+      expect(summary.explanation, contains('relatively normal'));
     });
 
     test('defaults momentum to medium when RSI is unavailable', () {
@@ -99,7 +99,7 @@ void main() {
         _snapshot(macdAction: 'Buy'),
       );
 
-      expect(summary!.explanation, contains('cenderung positif'));
+      expect(summary!.explanation, contains('positive short-term'));
     });
 
     test('describes a weakening short-term momentum', () {
@@ -107,7 +107,7 @@ void main() {
         _snapshot(macdAction: 'Sell'),
       );
 
-      expect(summary!.explanation, contains('sedang melemah'));
+      expect(summary!.explanation, contains('weakening short-term'));
     });
 
     test('describes no significant change for a neutral MACD', () {
@@ -115,7 +115,7 @@ void main() {
         _snapshot(macdAction: 'Neutral'),
       );
 
-      expect(summary!.explanation, contains('belum menunjukkan perubahan'));
+      expect(summary!.explanation, contains('does not show a significant'));
     });
   });
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../providers/market_provider.dart';
+import '../../l10n/l10n.dart';
 
 class InstrumentPickerSheet extends StatefulWidget {
   const InstrumentPickerSheet({
@@ -8,21 +9,21 @@ class InstrumentPickerSheet extends StatefulWidget {
     required this.onSelected,
     this.existingInstruments = const {},
     this.selectedInstrument,
-    this.title = 'Tambah instrumen',
+    this.title,
   });
 
   final Future<void> Function(String instrument) onSelected;
 
   final Set<String> existingInstruments;
   final String? selectedInstrument;
-  final String title;
+  final String? title;
 
   static Future<void> show(
     BuildContext context, {
     required Future<void> Function(String instrument) onSelected,
     Set<String> existingInstruments = const {},
     String? selectedInstrument,
-    String title = 'Tambah instrumen',
+    String? title,
   }) {
     return showModalBottomSheet<void>(
       context: context,
@@ -87,7 +88,7 @@ class _InstrumentPickerSheetState extends State<InstrumentPickerSheet> {
               const SizedBox(height: 16),
 
               Text(
-                widget.title,
+                widget.title ?? context.l10n.addInstrument,
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -98,9 +99,9 @@ class _InstrumentPickerSheetState extends State<InstrumentPickerSheet> {
                 padding: const EdgeInsets.all(16),
 
                 child: TextField(
-                  decoration: const InputDecoration(
-                    hintText: 'Cari instrumen',
-                    prefixIcon: Icon(Icons.search),
+                  decoration: InputDecoration(
+                    hintText: context.l10n.searchInstrument,
+                    prefixIcon: const Icon(Icons.search),
                   ),
                   textCapitalization: TextCapitalization.characters,
                   autocorrect: false,

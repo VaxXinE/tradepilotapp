@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../l10n/l10n.dart';
 
 class PriceAlertTile extends StatelessWidget {
   const PriceAlertTile({
@@ -25,19 +26,22 @@ class PriceAlertTile extends StatelessWidget {
         alert.triggerDirection == UserPriceAlertTriggerDirectionEnum.above;
 
     final conditionText = isAbove
-        ? 'Naik melewati ${alert.targetPrice}'
-        : 'Turun melewati ${alert.targetPrice}';
+        ? '${context.l10n.risesAbove} ${alert.targetPrice}'
+        : '${context.l10n.fallsBelow} ${alert.targetPrice}';
 
     final (statusLabel, statusColor) = switch (alert.status) {
       UserPriceAlertStatusEnum.triggered => (
-        'Terpicu',
+        context.l10n.triggered,
         isDark ? AppColors.bullishDark : AppColors.bullishLight,
       ),
       UserPriceAlertStatusEnum.cancelled => (
-        'Dibatalkan',
+        context.l10n.cancelled,
         isDark ? AppColors.neutralDark : AppColors.neutralLight,
       ),
-      _ => ('Aktif', isDark ? AppColors.darkAccent : AppColors.lightAccent),
+      _ => (
+        context.l10n.active,
+        isDark ? AppColors.darkAccent : AppColors.lightAccent,
+      ),
     };
 
     final note = alert.note?.trim() ?? '';
@@ -118,7 +122,7 @@ class PriceAlertTile extends StatelessWidget {
                 )
               : IconButton(
                   icon: const Icon(Icons.delete_outline_rounded, size: 20),
-                  tooltip: 'Hapus alert',
+                  tooltip: context.l10n.deleteAlert,
                   onPressed: onDelete,
                 ),
       ],

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../l10n/l10n.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/error_banner.dart';
 
@@ -22,8 +23,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _obscurePassword = true;
   RegisterBodySelectedModeEnum _mode = RegisterBodySelectedModeEnum.beginner;
 
-  static const _securityQuestion = 'Nama hewan peliharaan pertama kamu?';
-
   @override
   void dispose() {
     _nameController.dispose();
@@ -41,7 +40,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       email: _emailController.text.trim(),
       password: _passwordController.text,
       displayName: _nameController.text.trim(),
-      securityQuestion: _securityQuestion,
       securityAnswer: _securityAnswerController.text.trim(),
       mode: _mode,
     );
@@ -55,9 +53,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final muted = isDark
         ? AppColors.darkMutedForeground
         : AppColors.lightMutedForeground;
+    final l10n = context.l10n;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Buat Akun')),
+      appBar: AppBar(title: Text(l10n.createAccount)),
       body: SafeArea(
         child: Consumer<AuthProvider>(
           builder: (context, auth, _) {
@@ -72,16 +71,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          const Text(
-                            'Mulai perjalanan tradingmu',
-                            style: TextStyle(
+                          Text(
+                            l10n.startTradingJourney,
+                            style: const TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            'Buat akun dan sesuaikan analisis dengan pengalamanmu.',
+                            l10n.registerDescription,
                             style: TextStyle(color: muted, height: 1.4),
                           ),
                           const SizedBox(height: 24),
@@ -91,12 +90,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             textInputAction: TextInputAction.next,
                             textCapitalization: TextCapitalization.words,
                             autofillHints: const [AutofillHints.name],
-                            decoration: const InputDecoration(
-                              labelText: 'Nama lengkap',
-                              prefixIcon: Icon(Icons.person_outline_rounded),
+                            decoration: InputDecoration(
+                              labelText: l10n.fullName,
+                              prefixIcon: const Icon(
+                                Icons.person_outline_rounded,
+                              ),
                             ),
                             validator: (v) => (v == null || v.trim().isEmpty)
-                                ? 'Nama wajib diisi'
+                                ? l10n.nameRequired
                                 : null,
                           ),
                           const SizedBox(height: 14),
@@ -107,15 +108,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             textCapitalization: TextCapitalization.none,
                             autocorrect: false,
                             autofillHints: const [AutofillHints.email],
-                            decoration: const InputDecoration(
-                              labelText: 'Email',
-                              hintText: 'nama@email.com',
-                              prefixIcon: Icon(Icons.mail_outline_rounded),
+                            decoration: InputDecoration(
+                              labelText: l10n.email,
+                              hintText: l10n.emailHint,
+                              prefixIcon: const Icon(
+                                Icons.mail_outline_rounded,
+                              ),
                             ),
                             validator: (value) =>
                                 (value?.trim().contains('@') ?? false)
                                 ? null
-                                : 'Masukkan email yang valid',
+                                : l10n.invalidEmail,
                           ),
                           const SizedBox(height: 14),
                           TextFormField(
@@ -124,15 +127,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             textInputAction: TextInputAction.next,
                             autofillHints: const [AutofillHints.newPassword],
                             decoration: InputDecoration(
-                              labelText: 'Password',
-                              helperText: 'Minimal 8 karakter',
+                              labelText: l10n.password,
+                              helperText: l10n.minimumEightCharacters,
                               prefixIcon: const Icon(
                                 Icons.lock_outline_rounded,
                               ),
                               suffixIcon: IconButton(
                                 tooltip: _obscurePassword
-                                    ? 'Tampilkan password'
-                                    : 'Sembunyikan password',
+                                    ? l10n.showPassword
+                                    : l10n.hidePassword,
                                 icon: Icon(
                                   _obscurePassword
                                       ? Icons.visibility_off_rounded
@@ -144,12 +147,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ),
                             ),
                             validator: (v) => (v == null || v.length < 8)
-                                ? 'Password minimal 8 karakter'
+                                ? l10n.passwordMinimumCharacters
                                 : null,
                           ),
                           const SizedBox(height: 20),
                           Text(
-                            'Level pengalaman',
+                            l10n.experienceLevel,
                             style: TextStyle(
                               fontWeight: FontWeight.w600,
                               color: muted,
@@ -158,16 +161,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                           const SizedBox(height: 8),
                           SegmentedButton<RegisterBodySelectedModeEnum>(
-                            segments: const [
+                            segments: [
                               ButtonSegment(
                                 value: RegisterBodySelectedModeEnum.beginner,
                                 icon: Icon(Icons.school_outlined),
-                                label: Text('Pemula'),
+                                label: Text(l10n.beginner),
                               ),
                               ButtonSegment(
                                 value: RegisterBodySelectedModeEnum.pro,
                                 icon: Icon(Icons.show_chart_rounded),
-                                label: Text('Pro'),
+                                label: Text(l10n.pro),
                               ),
                             ],
                             selected: {_mode},
@@ -179,13 +182,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           const SizedBox(height: 8),
                           Text(
                             _mode == RegisterBodySelectedModeEnum.beginner
-                                ? 'Penjelasan lebih sederhana dan bertahap.'
-                                : 'Informasi pasar lebih ringkas dan teknis.',
+                                ? l10n.beginnerModeHelp
+                                : l10n.proModeHelp,
                             style: TextStyle(color: muted, fontSize: 12.5),
                           ),
                           const SizedBox(height: 20),
                           Text(
-                            'Pertanyaan Keamanan',
+                            l10n.securityQuestion,
                             style: TextStyle(
                               fontWeight: FontWeight.w600,
                               color: muted,
@@ -194,7 +197,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            _securityQuestion,
+                            l10n.firstPetQuestion,
                             style: TextStyle(
                               color: muted,
                               fontSize: 13,
@@ -206,12 +209,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             controller: _securityAnswerController,
                             textInputAction: TextInputAction.done,
                             onFieldSubmitted: (_) => _submit(),
-                            decoration: const InputDecoration(
-                              labelText: 'Jawaban',
-                              prefixIcon: Icon(Icons.shield_outlined),
+                            decoration: InputDecoration(
+                              labelText: l10n.answer,
+                              prefixIcon: const Icon(Icons.shield_outlined),
                             ),
                             validator: (v) => (v == null || v.trim().isEmpty)
-                                ? 'Jawaban wajib diisi'
+                                ? l10n.answerRequired
                                 : null,
                           ),
                           const SizedBox(height: 24),
@@ -226,7 +229,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       color: theme.colorScheme.onPrimary,
                                     ),
                                   )
-                                : const Text('Buat Akun'),
+                                : Text(l10n.createAccount),
                           ),
                           const SizedBox(height: 24),
                         ],

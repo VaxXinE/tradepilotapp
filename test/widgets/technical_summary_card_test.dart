@@ -4,6 +4,8 @@ import 'package:tradepilotapp/models/market_context.dart';
 import 'package:tradepilotapp/models/technical_summary.dart';
 import 'package:tradepilotapp/widgets/technical/technical_summary_card.dart';
 
+import '../helpers/localized_test_app.dart';
+
 void main() {
   const bullish = TechnicalSummary(
     trend: MarketTrend.bullish,
@@ -23,7 +25,7 @@ void main() {
 
   testWidgets('renders a positive (bullish) summary', (tester) async {
     await tester.pumpWidget(
-      const MaterialApp(
+      localizedTestApp(
         home: Scaffold(body: TechnicalSummaryCard(summary: bullish)),
       ),
     );
@@ -33,31 +35,31 @@ void main() {
       find.text('3 dari 4 indikator saat ini mendukung kenaikan.'),
       findsOneWidget,
     );
-    expect(find.text('Sedang'), findsNWidgets(2));
+    expect(find.text('Medium'), findsNWidgets(2));
   });
 
   testWidgets('renders a negative (bearish) summary', (tester) async {
     await tester.pumpWidget(
-      const MaterialApp(
+      localizedTestApp(
         home: Scaffold(body: TechnicalSummaryCard(summary: bearish)),
       ),
     );
 
     expect(find.text('Bearish'), findsOneWidget);
-    expect(find.text('Tinggi'), findsNWidgets(2));
+    expect(find.text('High'), findsNWidgets(2));
   });
 
   testWidgets('shows an empty state when there is no technical data', (
     tester,
   ) async {
     await tester.pumpWidget(
-      const MaterialApp(
+      localizedTestApp(
         home: Scaffold(body: TechnicalSummaryCard(summary: null)),
       ),
     );
 
     expect(
-      find.text('Ringkasan teknikal belum tersedia untuk market ini.'),
+      find.text('A technical summary is not available for this market yet.'),
       findsOneWidget,
     );
   });
@@ -66,7 +68,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      const MaterialApp(
+      localizedTestApp(
         home: Scaffold(
           body: TechnicalSummaryCard(summary: null, isLoading: true),
         ),
@@ -80,7 +82,7 @@ void main() {
     var retried = false;
 
     await tester.pumpWidget(
-      MaterialApp(
+      localizedTestApp(
         home: Scaffold(
           body: TechnicalSummaryCard(
             summary: null,
@@ -91,9 +93,12 @@ void main() {
       ),
     );
 
-    expect(find.text('Ringkasan teknikal belum dapat dimuat.'), findsOneWidget);
+    expect(
+      find.text('The technical summary could not be loaded.'),
+      findsOneWidget,
+    );
 
-    await tester.tap(find.text('Coba lagi'));
+    await tester.tap(find.text('Try again'));
 
     expect(retried, isTrue);
   });

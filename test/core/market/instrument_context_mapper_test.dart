@@ -3,7 +3,7 @@ import 'package:tradepilotapp/core/market/instrument_context_mapper.dart';
 
 void main() {
   test('returns a specific note for a known instrument', () {
-    expect(InstrumentContextMapper.explain('XAU/USD'), contains('Emas'));
+    expect(InstrumentContextMapper.explain('XAU/USD'), contains('Gold'));
     expect(InstrumentContextMapper.explain('eur/usd'), contains('ECB'));
   });
 

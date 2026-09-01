@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 import 'package:tradepilotapp/widgets/price_alert/price_alert_card.dart';
 
+import '../helpers/localized_test_app.dart';
+
 UserPriceAlert _alert({
   required int id,
   String instrument = 'XAU/USD',
@@ -28,7 +30,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      MaterialApp(
+      localizedTestApp(
         home: Scaffold(
           body: PriceAlertCard(
             alerts: [
@@ -47,30 +49,30 @@ void main() {
     );
 
     expect(find.text('XAU/USD'), findsOneWidget);
-    expect(find.text('Naik melewati 2500'), findsOneWidget);
+    expect(find.text('Rises above 2500'), findsOneWidget);
     expect(find.text('cek ulang kondisi market'), findsOneWidget);
-    expect(find.text('Aktif'), findsOneWidget);
+    expect(find.text('Active'), findsOneWidget);
 
     expect(find.text('EUR/USD'), findsOneWidget);
-    expect(find.text('Turun melewati 1.05'), findsOneWidget);
-    expect(find.text('Terpicu'), findsOneWidget);
+    expect(find.text('Falls below 1.05'), findsOneWidget);
+    expect(find.text('Triggered'), findsOneWidget);
   });
 
   testWidgets('shows an empty state when there are no alerts', (tester) async {
     await tester.pumpWidget(
-      const MaterialApp(
+      localizedTestApp(
         home: Scaffold(body: PriceAlertCard(alerts: [])),
       ),
     );
 
-    expect(find.textContaining('Belum ada price alert'), findsOneWidget);
+    expect(find.textContaining('No price alerts yet'), findsOneWidget);
   });
 
   testWidgets('shows a loading indicator while there is no data yet', (
     tester,
   ) async {
     await tester.pumpWidget(
-      const MaterialApp(
+      localizedTestApp(
         home: Scaffold(body: PriceAlertCard(alerts: [], isLoading: true)),
       ),
     );
@@ -82,7 +84,7 @@ void main() {
     var retried = false;
 
     await tester.pumpWidget(
-      MaterialApp(
+      localizedTestApp(
         home: Scaffold(
           body: PriceAlertCard(
             alerts: const [],
@@ -93,9 +95,9 @@ void main() {
       ),
     );
 
-    expect(find.text('Price alert belum dapat dimuat.'), findsOneWidget);
+    expect(find.text('Price alerts could not be loaded.'), findsOneWidget);
 
-    await tester.tap(find.text('Coba lagi'));
+    await tester.tap(find.text('Try again'));
 
     expect(retried, isTrue);
   });
@@ -106,7 +108,7 @@ void main() {
     int? deletedId;
 
     await tester.pumpWidget(
-      MaterialApp(
+      localizedTestApp(
         home: Scaffold(
           body: PriceAlertCard(
             alerts: [

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../models/market_models.dart';
+import '../../l10n/l10n.dart';
 import 'economic_event_tile.dart';
 
 class EconomicCalendarCard extends StatelessWidget {
@@ -21,6 +22,7 @@ class EconomicCalendarCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final muted = Theme.of(context).colorScheme.onSurfaceVariant;
     final visibleEvents = events.take(6).toList();
 
@@ -34,10 +36,13 @@ class EconomicCalendarCard extends StatelessWidget {
               children: [
                 const Icon(Icons.calendar_month_outlined, size: 19),
                 const SizedBox(width: 8),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Kalender Ekonomi',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                    l10n.economicCalendar,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
                 Text(instrument, style: TextStyle(color: muted, fontSize: 11)),
@@ -45,7 +50,7 @@ class EconomicCalendarCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              'Event ekonomi dapat membuat harga bergerak lebih cepat. Ini informasi risiko, bukan sinyal trading.',
+              l10n.economicEventRiskDisclaimer,
               style: TextStyle(color: muted, fontSize: 11.5, height: 1.4),
             ),
             const SizedBox(height: 14),
@@ -55,18 +60,18 @@ class EconomicCalendarCard extends StatelessWidget {
               Center(
                 child: Column(
                   children: [
-                    const Text('Kalender ekonomi belum dapat dimuat.'),
+                    Text(l10n.economicCalendarLoadFailed),
                     if (onRetry != null)
                       TextButton(
                         onPressed: onRetry,
-                        child: const Text('Coba lagi'),
+                        child: Text(l10n.tryAgain),
                       ),
                   ],
                 ),
               )
             else if (visibleEvents.isEmpty)
               Text(
-                'Tidak ada event ekonomi relevan yang akan datang.',
+                l10n.noUpcomingEconomicEvents,
                 style: TextStyle(color: muted),
               )
             else

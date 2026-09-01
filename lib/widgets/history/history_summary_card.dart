@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/history/history_statistics.dart';
+import '../../l10n/l10n.dart';
 
 class HistorySummaryCard extends StatelessWidget {
   const HistorySummaryCard({
@@ -24,7 +25,9 @@ class HistorySummaryCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              isPartial ? 'Ringkasan sementara' : 'Ringkasan riwayat',
+              isPartial
+                  ? context.l10n.partialSummary
+                  : context.l10n.historySummary,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w900,
               ),
@@ -39,27 +42,27 @@ class HistorySummaryCard extends StatelessWidget {
                   children: [
                     _Metric(
                       width: width,
-                      label: 'Terlihat',
+                      label: context.l10n.visible,
                       value: '${statistics.total}',
                     ),
                     _Metric(
                       width: width,
-                      label: 'Dievaluasi',
+                      label: context.l10n.evaluated,
                       value: '$evaluated',
                     ),
                     _Metric(
                       width: width,
-                      label: 'Menunggu',
+                      label: context.l10n.pending,
                       value: '${statistics.pendingCount}',
                     ),
                     _Metric(
                       width: width,
-                      label: 'Positif',
+                      label: context.l10n.positive,
                       value: '${statistics.successCount}',
                     ),
                     _Metric(
                       width: width,
-                      label: 'Keyakinan rata-rata',
+                      label: context.l10n.averageConfidence,
                       value: statistics.total == 0
                           ? '—'
                           : '${statistics.averageConfidence.round()}%',
@@ -71,8 +74,9 @@ class HistorySummaryCard extends StatelessWidget {
             if (evaluated > 0) ...[
               const SizedBox(height: 10),
               Text(
-                '${statistics.successRate.round()}% outcome positif dari '
-                'analisis yang sudah dievaluasi.',
+                context.l10n.positiveEvaluatedSummary(
+                  statistics.successRate.round(),
+                ),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),

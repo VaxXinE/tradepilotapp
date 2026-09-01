@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tradepilotapp/core/history/history_statistics.dart';
+import 'package:tradepilotapp/l10n/l10n.dart';
 import 'package:tradepilotapp/widgets/history/history_summary_card.dart';
 
 void main() {
@@ -11,8 +12,8 @@ void main() {
       isPartial: false,
     );
 
-    expect(find.text('Ringkasan riwayat'), findsOneWidget);
-    expect(find.text('Positif'), findsOneWidget);
+    expect(find.text('History summary'), findsOneWidget);
+    expect(find.text('Positive'), findsOneWidget);
     expect(find.text('—'), findsOneWidget);
   });
 
@@ -30,13 +31,11 @@ void main() {
 
     await _pumpSummary(tester, statistics, isPartial: true);
 
-    expect(find.text('Ringkasan sementara'), findsOneWidget);
+    expect(find.text('Partial summary'), findsOneWidget);
     expect(find.text('3'), findsOneWidget);
     expect(find.text('1'), findsOneWidget);
     expect(
-      find.textContaining(
-        'outcome positif dari analisis yang sudah dievaluasi',
-      ),
+      find.textContaining('positive outcomes from evaluated analyses'),
       findsOneWidget,
     );
   });
@@ -49,6 +48,8 @@ Future<void> _pumpSummary(
 }) {
   return tester.pumpWidget(
     MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: HistorySummaryCard(statistics: statistics, isPartial: isPartial),
       ),

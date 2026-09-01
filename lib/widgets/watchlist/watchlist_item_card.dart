@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
+import '../../l10n/l10n.dart';
+
 class WatchlistItemCard extends StatelessWidget {
   const WatchlistItemCard({
     super.key,
@@ -37,20 +39,20 @@ class WatchlistItemCard extends StatelessWidget {
                 ),
                 TextButton(
                   onPressed: () => onRemove(item.instrument),
-                  child: const Text('Hapus'),
+                  child: Text(context.l10n.delete),
                 ),
               ],
             ),
             const SizedBox(height: 8),
             Text(
-              'Ditambahkan: ${_formatDate(item.addedAt)}',
+              context.l10n.addedOn(_formatDate(item.addedAt)),
               style: TextStyle(color: colors.onSurfaceVariant),
             ),
             const SizedBox(height: 4),
             Text(
               item.mostRecentAnalysisId == null || lastAnalysisAt == null
-                  ? 'Belum ada analisis'
-                  : 'Analisis terakhir: ${_formatDate(lastAnalysisAt)}',
+                  ? context.l10n.noPreviousAnalysis
+                  : context.l10n.lastAnalysis(_formatDate(lastAnalysisAt)),
               style: TextStyle(color: colors.onSurfaceVariant),
             ),
           ],

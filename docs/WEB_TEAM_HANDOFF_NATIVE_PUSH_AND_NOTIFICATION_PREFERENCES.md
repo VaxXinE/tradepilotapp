@@ -1,5 +1,10 @@
 # Handoff Tim Web — Native Push (P2-B3) + Preference Contract (P2-B4.1)
 
+> **DIARSIPKAN:** aplikasi mobile saat ini tidak memakai Firebase/FCM atau
+> native push. Jangan implementasikan bagian native push dari dokumen ini
+> sampai fitur tersebut diputuskan aktif kembali. Notification inbox backend
+> tetap digunakan.
+
 Dokumen ini dibuat dari audit read-only repo `aisgbizdev/Trade-Pilot` branch
 `prod` pada commit `16d9eb6` dan implementasi Flutter saat ini.
 

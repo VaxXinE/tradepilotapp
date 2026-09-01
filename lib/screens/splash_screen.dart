@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/auth_provider.dart';
+import '../l10n/l10n.dart';
 import 'auth/login_screen.dart';
 import 'home/home_shell.dart';
 
@@ -45,17 +46,17 @@ class _SplashBody extends StatelessWidget {
                 height: 96,
                 fit: BoxFit.cover,
                 filterQuality: FilterQuality.high,
-                semanticLabel: 'Logo Trade Pilot',
+                semanticLabel: context.l10n.tradePilotLogo,
               ),
             ),
             const SizedBox(height: 20),
-            const Text(
-              'Trade Pilot',
+            Text(
+              context.l10n.appTitle,
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 6),
             Text(
-              'Analisis trading bertenaga AI',
+              context.l10n.aiTradingAssistant,
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),

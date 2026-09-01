@@ -4,6 +4,8 @@ import 'package:tradepilotapp/models/market_models.dart';
 import 'package:tradepilotapp/widgets/calendar/economic_calendar_card.dart';
 import 'package:tradepilotapp/widgets/calendar/impact_level_badge.dart';
 
+import '../helpers/localized_test_app.dart';
+
 void main() {
   testWidgets('renders event metrics, impact, and instrument explanation', (
     tester,
@@ -15,8 +17,8 @@ void main() {
     expect(find.text('FOMC Interest Rate Decision'), findsOneWidget);
     expect(find.text('High Impact'), findsOneWidget);
     expect(find.text('Forecast: 5.25%'), findsOneWidget);
-    expect(find.text('Aktual: 5.50%'), findsOneWidget);
-    expect(find.textContaining('memengaruhi Gold'), findsOneWidget);
+    expect(find.text('Actual: 5.50%'), findsOneWidget);
+    expect(find.textContaining('affects Gold'), findsOneWidget);
   });
 
   testWidgets('renders an empty calendar state', (tester) async {
@@ -25,7 +27,7 @@ void main() {
     );
 
     expect(
-      find.text('Tidak ada event ekonomi relevan yang akan datang.'),
+      find.text('There are no relevant upcoming economic events.'),
       findsOneWidget,
     );
   });
@@ -39,7 +41,7 @@ void main() {
   });
 }
 
-Widget _app(Widget child) => MaterialApp(
+Widget _app(Widget child) => localizedTestApp(
   home: Scaffold(body: SingleChildScrollView(child: child)),
 );
 

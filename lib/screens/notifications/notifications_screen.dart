@@ -6,9 +6,9 @@ import 'package:provider/provider.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart' as api;
 
 import '../../core/theme/app_colors.dart';
+import '../../models/notification_action.dart';
 import '../../providers/analysis_provider.dart';
 import '../../providers/notifications_provider.dart';
-import '../../services/native_push_service.dart';
 import '../../widgets/error_banner.dart';
 import '../analysis/analysis_detail_screen.dart';
 import '../home/tabs/history_tab.dart';
@@ -140,8 +140,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         : AppColors.lightMutedForeground;
 
     final provider = context.watch<NotificationsProvider>();
-    final nativePush = context.watch<NativePushService>();
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Notifikasi'),
@@ -182,10 +180,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             ),
 
             const SizedBox(height: 14),
-
-            _NativePushCard(service: nativePush),
-
-            const SizedBox(height: 12),
 
             _PreferencesCard(provider: provider),
 
@@ -252,44 +246,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 // =============================================================================
 // PREFERENCES
 // =============================================================================
-
-class _NativePushCard extends StatelessWidget {
-  const _NativePushCard({required this.service});
-
-  final NativePushService service;
-
-  @override
-  Widget build(BuildContext context) {
-    final subtitle = service.isBusy
-        ? 'Memperbarui pengaturan perangkat...'
-        : service.isRegistered
-        ? 'Aktif untuk perangkat ini.'
-        : service.isPermissionDenied
-        ? 'Izin ditolak. Aktifkan kembali melalui pengaturan perangkat.'
-        : service.errorMessage ?? 'Terima push saat aplikasi tidak aktif.';
-
-    return Card(
-      child: SwitchListTile(
-        secondary: const Icon(Icons.phone_android_rounded),
-        title: const Text(
-          'Mobile Push',
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
-        ),
-        subtitle: Text(subtitle, style: const TextStyle(fontSize: 11)),
-        value: service.isRegistered,
-        onChanged: service.isBusy
-            ? null
-            : (enabled) {
-                if (enabled) {
-                  unawaited(service.enable());
-                } else {
-                  unawaited(service.unregister());
-                }
-              },
-      ),
-    );
-  }
-}
 
 class _PreferencesCard extends StatelessWidget {
   const _PreferencesCard({required this.provider});

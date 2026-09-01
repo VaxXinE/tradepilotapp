@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../l10n/l10n.dart';
 import '../../models/market_models.dart';
 
 class MarketOverviewCard extends StatelessWidget {
@@ -86,17 +87,17 @@ class _EmptyState extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Ringkasan Pasar',
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+        Text(
+          context.l10n.marketOverview,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
         ),
         const SizedBox(height: 12),
-        Text(error ?? 'Data harga belum tersedia.'),
+        Text(error ?? context.l10n.priceDataUnavailable),
         const SizedBox(height: 8),
         OutlinedButton.icon(
           onPressed: onRetry,
           icon: const Icon(Icons.refresh_rounded),
-          label: const Text('Coba lagi'),
+          label: Text(context.l10n.tryAgain),
         ),
       ],
     );
@@ -135,10 +136,13 @@ class _QuoteState extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Ringkasan Pasar',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+                  context.l10n.marketOverview,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ),
               if (isLoading)
@@ -188,16 +192,19 @@ class _QuoteState extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    'Data terbaru belum tersedia.',
+                    context.l10n.latestDataUnavailable,
                     style: TextStyle(color: muted, fontSize: 11),
                   ),
                 ),
-                TextButton(onPressed: onRetry, child: const Text('Coba lagi')),
+                TextButton(
+                  onPressed: onRetry,
+                  child: Text(context.l10n.tryAgain),
+                ),
               ],
             )
           else
             Text(
-              _updatedText(updatedAt),
+              _updatedText(context.l10n, updatedAt),
               style: TextStyle(color: muted, fontSize: 10.5),
             ),
         ],
@@ -206,22 +213,22 @@ class _QuoteState extends StatelessWidget {
   }
 }
 
-String _updatedText(DateTime? time) {
+String _updatedText(AppLocalizations l10n, DateTime? time) {
   if (time == null) {
-    return 'Menunggu pembaruan...';
+    return l10n.waitingForUpdate;
   }
 
   final elapsedSeconds = DateTime.now().difference(time).inSeconds;
   final seconds = elapsedSeconds < 0 ? 0 : elapsedSeconds;
   if (seconds < 5) {
-    return 'Baru saja diperbarui';
+    return l10n.updatedJustNow;
   }
 
   if (seconds < 60) {
-    return 'Diperbarui $seconds detik lalu';
+    return l10n.updatedSecondsAgo(seconds);
   }
 
-  return 'Diperbarui ${DateFormat('HH:mm:ss').format(time.toLocal())}';
+  return l10n.updatedAt(DateFormat('HH:mm:ss').format(time.toLocal()));
 }
 
 String _formatPrice(String instrument, double value) {

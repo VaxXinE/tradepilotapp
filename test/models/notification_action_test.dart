@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tradepilotapp/services/native_push_service.dart';
+import 'package:tradepilotapp/models/notification_action.dart';
 
 void main() {
   test(

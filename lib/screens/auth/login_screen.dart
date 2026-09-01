@@ -4,6 +4,7 @@ import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../l10n/l10n.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/error_banner.dart';
 import 'forgot_password_screen.dart';
@@ -115,7 +116,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final authenticated = await _localAuthentication.authenticate(
-        localizedReason: 'Verifikasi identitas untuk masuk ke Trade Pilot',
+        localizedReason: context.l10n.biometricReason,
         biometricOnly: true,
         persistAcrossBackgrounding: true,
       );
@@ -123,11 +124,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } on LocalAuthException {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Biometrik tidak tersedia. Gunakan email dan password.',
-            ),
-          ),
+          SnackBar(content: Text(context.l10n.biometricUnavailable)),
         );
       }
     } finally {
@@ -142,6 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final muted = isDark
         ? AppColors.darkMutedForeground
         : AppColors.lightMutedForeground;
+    final l10n = context.l10n;
 
     return Scaffold(
       body: SafeArea(
@@ -172,27 +170,27 @@ class _LoginScreenState extends State<LoginScreen> {
                                 'assets/images/trade_pilot_logo.png',
                                 fit: BoxFit.contain,
                                 filterQuality: FilterQuality.high,
-                                semanticLabel: 'Logo Trade Pilot',
+                                semanticLabel: l10n.tradePilotLogo,
                               ),
                             ),
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            'Analisis trading bertenaga AI',
+                            l10n.aiTradingAssistant,
                             textAlign: TextAlign.center,
                             style: TextStyle(color: muted),
                           ),
                           const SizedBox(height: 40),
-                          const Text(
-                            'Selamat datang kembali',
-                            style: TextStyle(
+                          Text(
+                            l10n.welcomeBack,
+                            style: const TextStyle(
                               fontSize: 21,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            'Masuk untuk melanjutkan analisis pasar kamu.',
+                            l10n.loginDescription,
                             style: TextStyle(color: muted, height: 1.4),
                           ),
                           const SizedBox(height: 22),
@@ -204,16 +202,18 @@ class _LoginScreenState extends State<LoginScreen> {
                             textCapitalization: TextCapitalization.none,
                             autocorrect: false,
                             autofillHints: const [AutofillHints.email],
-                            decoration: const InputDecoration(
-                              labelText: 'Email',
-                              hintText: 'nama@email.com',
-                              prefixIcon: Icon(Icons.mail_outline_rounded),
+                            decoration: InputDecoration(
+                              labelText: l10n.email,
+                              hintText: l10n.emailHint,
+                              prefixIcon: const Icon(
+                                Icons.mail_outline_rounded,
+                              ),
                             ),
                             validator: (value) {
                               final email = value?.trim() ?? '';
                               return email.contains('@')
                                   ? null
-                                  : 'Masukkan email yang valid';
+                                  : l10n.invalidEmail;
                             },
                           ),
                           const SizedBox(height: 14),
@@ -224,14 +224,14 @@ class _LoginScreenState extends State<LoginScreen> {
                             autofillHints: const [AutofillHints.password],
                             onFieldSubmitted: (_) => _submit(),
                             decoration: InputDecoration(
-                              labelText: 'Password',
+                              labelText: l10n.password,
                               prefixIcon: const Icon(
                                 Icons.lock_outline_rounded,
                               ),
                               suffixIcon: IconButton(
                                 tooltip: _obscurePassword
-                                    ? 'Tampilkan password'
-                                    : 'Sembunyikan password',
+                                    ? l10n.showPassword
+                                    : l10n.hidePassword,
                                 icon: Icon(
                                   _obscurePassword
                                       ? Icons.visibility_off_rounded
@@ -244,7 +244,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             validator: (value) =>
                                 (value == null || value.isEmpty)
-                                ? 'Password wajib diisi'
+                                ? l10n.passwordRequired
                                 : null,
                           ),
                           Row(
@@ -254,7 +254,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   key: const Key('remember-me-checkbox'),
                                   value: _rememberMe,
                                   onChanged: _setRememberMe,
-                                  title: const Text('Ingat saya'),
+                                  title: Text(l10n.rememberMe),
                                   controlAffinity:
                                       ListTileControlAffinity.leading,
                                   contentPadding: EdgeInsets.zero,
@@ -268,7 +268,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         const ForgotPasswordScreen(),
                                   ),
                                 ),
-                                child: const Text('Lupa password?'),
+                                child: Text(l10n.forgotPassword),
                               ),
                             ],
                           ),
@@ -284,23 +284,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                       color: theme.colorScheme.onPrimary,
                                     ),
                                   )
-                                : const Text('Masuk'),
+                                : Text(l10n.signIn),
                           ),
                           if (_biometricsAvailable) ...[
                             const SizedBox(height: 16),
                             Row(
                               children: [
-                                const Expanded(child: Divider()),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                  ),
-                                  child: Text(
-                                    'atau',
-                                    style: TextStyle(color: muted),
-                                  ),
-                                ),
-                                const Expanded(child: Divider()),
+                                const Expanded(child: Divider(endIndent: 12)),
+                                Text(l10n.or, style: TextStyle(color: muted)),
+                                const Expanded(child: Divider(indent: 12)),
                               ],
                             ),
                             const SizedBox(height: 16),
@@ -313,17 +305,18 @@ class _LoginScreenState extends State<LoginScreen> {
                               icon: const Icon(Icons.fingerprint_rounded),
                               label: Text(
                                 _isAuthenticatingBiometric
-                                    ? 'Memverifikasi...'
-                                    : 'Masuk dengan sidik jari / wajah',
+                                    ? l10n.verifying
+                                    : l10n.signInWithBiometrics,
                               ),
                             ),
                           ],
                           const SizedBox(height: 22),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                          Wrap(
+                            alignment: WrapAlignment.center,
+                            crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
                               Text(
-                                'Belum punya akun? ',
+                                l10n.noAccount,
                                 style: TextStyle(color: muted),
                               ),
                               TextButton(
@@ -336,7 +329,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   padding: EdgeInsets.zero,
                                   minimumSize: const Size(48, 48),
                                 ),
-                                child: const Text('Daftar'),
+                                child: Text(l10n.register),
                               ),
                             ],
                           ),

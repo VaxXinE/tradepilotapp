@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
+import 'package:tradepilotapp/l10n/l10n.dart';
 import 'package:tradepilotapp/widgets/history/history_analysis_card.dart';
 
 void main() {
@@ -16,9 +17,9 @@ void main() {
       ),
     );
 
-    expect(find.text('Menunggu evaluasi'), findsOneWidget);
-    expect(find.text('Keyakinan 70–80%'), findsOneWidget);
-    expect(find.text('Bullish kuat'), findsOneWidget);
+    expect(find.text('Evaluation pending'), findsOneWidget);
+    expect(find.text('Confidence 70–80%'), findsOneWidget);
+    expect(find.text('Strong bullish'), findsOneWidget);
     expect(find.byIcon(Icons.menu_book_rounded), findsOneWidget);
   });
 
@@ -29,19 +30,19 @@ void main() {
       tester,
       _analysis(outcome: AnalysisOutcomeStatusEnum.tp1Hit),
     );
-    expect(find.text('Target referensi 1 tercapai'), findsOneWidget);
+    expect(find.text('Reference target 1 reached'), findsOneWidget);
 
     await _pumpCard(
       tester,
       _analysis(outcome: AnalysisOutcomeStatusEnum.slHit),
     );
-    expect(find.text('Batas risiko tersentuh'), findsOneWidget);
+    expect(find.text('Risk limit reached'), findsOneWidget);
   });
 
   testWidgets('legacy null outcome uses a safe fallback', (tester) async {
     await _pumpCard(tester, _analysis());
 
-    expect(find.text('Belum dievaluasi'), findsOneWidget);
+    expect(find.text('Not yet evaluated'), findsOneWidget);
     expect(find.textContaining('WIN'), findsNothing);
     expect(find.textContaining('PROFIT'), findsNothing);
   });
@@ -50,6 +51,8 @@ void main() {
 Future<void> _pumpCard(WidgetTester tester, Analysis analysis) {
   return tester.pumpWidget(
     MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: SingleChildScrollView(
           child: HistoryAnalysisCard(analysis: analysis, onTap: () {}),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../models/technical_summary.dart';
+import '../../l10n/l10n.dart';
 import '../context/context_indicator.dart';
 import 'indicator_badge.dart';
 
@@ -20,6 +21,7 @@ class TechnicalSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final muted = Theme.of(context).colorScheme.onSurfaceVariant;
     final data = summary;
 
@@ -29,22 +31,24 @@ class TechnicalSummaryCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(
+            Row(
               children: [
-                Icon(Icons.speed_rounded, size: 19),
-                SizedBox(width: 8),
+                const Icon(Icons.speed_rounded, size: 19),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Ringkasan Teknikal',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                    l10n.technicalSummary,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 6),
             Text(
-              'Kami sederhanakan indikator agar mudah dipahami. Bukan '
-              'sinyal atau rekomendasi trading.',
+              l10n.indicatorEducationDisclaimer,
               style: TextStyle(color: muted, fontSize: 11.5, height: 1.4),
             ),
             const SizedBox(height: 14),
@@ -54,22 +58,22 @@ class TechnicalSummaryCard extends StatelessWidget {
               Center(
                 child: Column(
                   children: [
-                    const Text('Ringkasan teknikal belum dapat dimuat.'),
+                    Text(l10n.technicalSummaryLoadFailed),
                     if (onRetry != null)
                       TextButton(
                         onPressed: onRetry,
-                        child: const Text('Coba lagi'),
+                        child: Text(l10n.tryAgain),
                       ),
                   ],
                 ),
               )
             else if (data == null)
               Text(
-                'Ringkasan teknikal belum tersedia untuk market ini.',
+                l10n.technicalSummaryUnavailable,
                 style: TextStyle(color: muted),
               )
             else
-              _TechnicalSummaryBody(data: data),
+              _TechnicalSummaryBody(data: data, l10n: l10n),
           ],
         ),
       ),
@@ -78,9 +82,10 @@ class TechnicalSummaryCard extends StatelessWidget {
 }
 
 class _TechnicalSummaryBody extends StatelessWidget {
-  const _TechnicalSummaryBody({required this.data});
+  const _TechnicalSummaryBody({required this.data, required this.l10n});
 
   final TechnicalSummary data;
+  final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
@@ -90,22 +95,22 @@ class _TechnicalSummaryBody extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _IndicatorRow(
-          label: 'Trend',
+          label: l10n.trend,
           child: ContextIndicator(trend: data.trend),
         ),
         const Divider(height: 24),
         _IndicatorRow(
-          label: 'Momentum',
+          label: l10n.momentum,
           child: IndicatorBadge(level: data.momentum),
         ),
         const Divider(height: 24),
         _IndicatorRow(
-          label: 'Risiko',
+          label: l10n.risk,
           child: IndicatorBadge(level: data.riskLevel),
         ),
         const SizedBox(height: 14),
         Text(
-          'Apa artinya?',
+          l10n.whatDoesItMean,
           style: TextStyle(
             color: muted,
             fontSize: 10.5,

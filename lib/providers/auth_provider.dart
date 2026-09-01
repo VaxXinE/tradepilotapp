@@ -11,6 +11,9 @@ enum AuthStatus { unknown, authenticated, unauthenticated }
 /// State management untuk sesi login, setara dengan `AuthContext.tsx`
 /// pada app Expo di repo Trade-Pilot (`artifacts/mobile`).
 class AuthProvider extends ChangeNotifier {
+  static const _firstPetSecurityQuestion =
+      'Nama hewan peliharaan pertama kamu?';
+
   AuthProvider() {
     _client = TradePilotClient(
       baseUrl: ApiConfig.baseUrl,
@@ -31,6 +34,7 @@ class AuthProvider extends ChangeNotifier {
   bool isBusy = false;
   bool isUpdatingProfile = false;
   bool isChangingPassword = false;
+  bool isDeletingAccount = false;
   String? profileError;
 
   static const int maxDisplayNameLength = 100;
@@ -77,7 +81,6 @@ class AuthProvider extends ChangeNotifier {
     required String email,
     required String password,
     required String displayName,
-    required String securityQuestion,
     required String securityAnswer,
     required RegisterBodySelectedModeEnum mode,
   }) {
@@ -88,7 +91,7 @@ class AuthProvider extends ChangeNotifier {
             ..email = email.trim().toLowerCase()
             ..password = password
             ..displayName = displayName
-            ..securityQuestion = securityQuestion
+            ..securityQuestion = _firstPetSecurityQuestion
             ..securityAnswer = securityAnswer
             ..selectedMode = mode,
         ),
@@ -108,6 +111,7 @@ class AuthProvider extends ChangeNotifier {
     _passwordRequestId++;
     isUpdatingProfile = false;
     isChangingPassword = false;
+    isDeletingAccount = false;
     profileError = null;
     await _storage.saveSession(token: data.token!, user: data.user);
     status = AuthStatus.authenticated;
@@ -140,6 +144,7 @@ class AuthProvider extends ChangeNotifier {
     _passwordRequestId++;
     isUpdatingProfile = false;
     isChangingPassword = false;
+    isDeletingAccount = false;
     profileError = null;
 
     try {
@@ -182,6 +187,16 @@ class AuthProvider extends ChangeNotifier {
 
     return _updateProfile(
       UpdateProfileBody((builder) => builder.selectedMode = apiMode),
+    );
+  }
+
+  Future<bool> updateLanguage(String languageCode) {
+    final language = languageCode == 'id'
+        ? UpdateProfileBodyLangEnum.id
+        : UpdateProfileBodyLangEnum.en;
+
+    return _updateProfile(
+      UpdateProfileBody((builder) => builder.lang = language),
     );
   }
 
@@ -277,6 +292,56 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> deleteAccount(String currentPassword) async {
+    final currentUser = user;
+    if (status != AuthStatus.authenticated ||
+        currentUser == null ||
+        currentPassword.isEmpty ||
+        isDeletingAccount) {
+      return false;
+    }
+
+    final epoch = _sessionEpoch;
+    final userId = currentUser.id;
+    isDeletingAccount = true;
+    profileError = null;
+    notifyListeners();
+
+    try {
+      await _client.dio.delete<void>(
+        '/auth/account',
+        data: {'currentPassword': currentPassword},
+      );
+
+      if (!_isCurrentProfileSession(epoch, userId)) return false;
+
+      _sessionEpoch++;
+      _profileRequestId++;
+      _passwordRequestId++;
+      isDeletingAccount = false;
+      _token = null;
+      user = null;
+      status = AuthStatus.unauthenticated;
+      try {
+        await _storage.clear();
+      } catch (_) {
+        // Akun sudah terhapus di server; sesi memori tetap wajib ditutup.
+      }
+      notifyListeners();
+      return true;
+    } catch (error) {
+      if (_isCurrentProfileSession(epoch, userId)) {
+        profileError = _deleteAccountFriendlyError(error);
+      }
+      return false;
+    } finally {
+      if (_isCurrentProfileSession(epoch, userId) && isDeletingAccount) {
+        isDeletingAccount = false;
+        notifyListeners();
+      }
+    }
+  }
+
   bool _isCurrentProfileSession(int epoch, int userId) {
     return epoch == _sessionEpoch &&
         status == AuthStatus.authenticated &&
@@ -305,6 +370,22 @@ class AuthProvider extends ChangeNotifier {
     return passwordOperation
         ? 'Gagal mengubah password. Silakan coba lagi.'
         : 'Gagal memperbarui profil. Silakan coba lagi.';
+  }
+
+  String _deleteAccountFriendlyError(Object error) {
+    if (error is DioException) {
+      if (error.response?.statusCode == 401) {
+        return 'Password saat ini tidak sesuai.';
+      }
+      if (error.response?.statusCode == 429) {
+        return 'Terlalu banyak percobaan. Tunggu sebentar lalu coba lagi.';
+      }
+      if (error.type == DioExceptionType.connectionError ||
+          error.type == DioExceptionType.connectionTimeout) {
+        return 'Tidak bisa terhubung ke server. Periksa koneksi internet kamu.';
+      }
+    }
+    return 'Gagal menghapus akun. Silakan coba lagi.';
   }
 
   /// Step 1 lupa password: ambil pertanyaan keamanan berdasar email.
@@ -397,6 +478,15 @@ class AuthProvider extends ChangeNotifier {
       }
       if (e.response?.statusCode == 429) {
         return 'Terlalu banyak percobaan. Tunggu sebentar lalu coba lagi.';
+      }
+      final responseData = e.response?.data;
+      final responseMessage = responseData is Map<String, dynamic>
+          ? responseData['error']
+          : null;
+      if ((e.response?.statusCode == 400 || e.response?.statusCode == 409) &&
+          responseMessage is String &&
+          responseMessage.isNotEmpty) {
+        return responseMessage;
       }
       return 'Terjadi kesalahan. Silakan coba lagi.';
     }

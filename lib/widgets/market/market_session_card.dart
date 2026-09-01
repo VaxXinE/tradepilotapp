@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/market/market_sessions.dart';
 import '../../core/theme/app_colors.dart';
+import '../../l10n/l10n.dart';
 
 class MarketSessionCard extends StatelessWidget {
   const MarketSessionCard({super.key, required this.instrument, this.now});
@@ -11,6 +12,7 @@ class MarketSessionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final status = getMarketSessionStatus(now: now);
     final isCrypto = isCryptoMarketInstrument(instrument);
     final isActive = isCrypto || status.openSessions.isNotEmpty;
@@ -21,18 +23,18 @@ class MarketSessionCard extends StatelessWidget {
     final muted = Theme.of(context).colorScheme.onSurfaceVariant;
 
     final title = isCrypto
-        ? 'Market Crypto 24/7'
+        ? l10n.cryptoMarket247
         : status.openSessions.isEmpty
-        ? 'Market ditutup'
+        ? l10n.marketClosed
         : status.openSessions.map(marketSessionLabel).join(' + ');
 
     final liquidity = isCrypto
-        ? 'BERVARIASI'
+        ? l10n.variesUppercase
         : status.isOverlap
-        ? 'TINGGI'
+        ? l10n.highUppercase
         : isActive
-        ? 'SEDANG'
-        : 'RENDAH';
+        ? l10n.mediumUppercase
+        : l10n.lowUppercase;
 
     return Card(
       child: Padding(
@@ -40,9 +42,9 @@ class MarketSessionCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Sesi Market',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+            Text(
+              l10n.marketSession,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: 14),
             Row(
@@ -75,7 +77,7 @@ class MarketSessionCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        isActive ? 'AKTIF' : 'TUTUP',
+                        isActive ? l10n.activeUppercase : l10n.closedUppercase,
                         style: TextStyle(
                           color: statusColor,
                           fontSize: 10,
@@ -88,18 +90,18 @@ class MarketSessionCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            _InfoRow(label: 'Likuiditas', value: liquidity),
+            _InfoRow(label: l10n.liquidity, value: liquidity),
             if (!isCrypto && status.next != null) ...[
               const SizedBox(height: 9),
               _InfoRow(
-                label: 'Berikutnya',
-                value: _transitionText(status.next!),
+                label: l10n.next,
+                value: _transitionText(l10n, status.next!),
               ),
             ],
             if (status.isOverlap && !isCrypto) ...[
               const SizedBox(height: 10),
               Text(
-                'Overlap sesi biasanya memiliki aktivitas pasar lebih tinggi.',
+                l10n.sessionOverlapActivity,
                 style: TextStyle(color: muted, fontSize: 10.5, height: 1.35),
               ),
             ],
@@ -143,8 +145,14 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
-String _transitionText(MarketSessionTransition transition) {
-  final action = transition.type == 'open' ? 'buka' : 'tutup';
-  return '${marketSessionLabel(transition.session)} $action dalam '
-      '${formatMarketDuration(transition.until)}';
+String _transitionText(
+  AppLocalizations l10n,
+  MarketSessionTransition transition,
+) {
+  final action = transition.type == 'open' ? l10n.opens : l10n.closes;
+  return l10n.sessionTransition(
+    marketSessionLabel(transition.session),
+    action,
+    formatMarketDuration(transition.until),
+  );
 }

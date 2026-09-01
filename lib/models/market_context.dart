@@ -10,7 +10,7 @@ extension MarketTrendLabel on MarketTrend {
       case MarketTrend.bearish:
         return 'Bearish';
       case MarketTrend.neutral:
-        return 'Netral';
+        return 'Neutral';
     }
   }
 }
@@ -19,11 +19,11 @@ extension MarketLevelLabel on MarketLevel {
   String get label {
     switch (this) {
       case MarketLevel.low:
-        return 'Rendah';
+        return 'Low';
       case MarketLevel.medium:
-        return 'Sedang';
+        return 'Medium';
       case MarketLevel.high:
-        return 'Tinggi';
+        return 'High';
     }
   }
 }

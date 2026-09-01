@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
 import '../core/theme/app_colors.dart';
+import '../l10n/l10n.dart';
 
 class AnalysisCard extends StatelessWidget {
   const AnalysisCard({super.key, required this.analysis, required this.onTap});
@@ -13,7 +14,9 @@ class AnalysisCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final muted = isDark ? AppColors.darkMutedForeground : AppColors.lightMutedForeground;
+    final muted = isDark
+        ? AppColors.darkMutedForeground
+        : AppColors.lightMutedForeground;
     final border = isDark ? AppColors.darkBorder : AppColors.lightBorder;
 
     final isExpired = analysis.validUntil.isBefore(DateTime.now());
@@ -21,13 +24,13 @@ class AnalysisCard extends StatelessWidget {
     final biasColor = bias.contains('bull')
         ? (isDark ? AppColors.bullishDark : AppColors.bullishLight)
         : bias.contains('bear')
-            ? (isDark ? AppColors.bearishDark : AppColors.bearishLight)
-            : (isDark ? AppColors.neutralDark : AppColors.neutralLight);
+        ? (isDark ? AppColors.bearishDark : AppColors.bearishLight)
+        : (isDark ? AppColors.neutralDark : AppColors.neutralLight);
     final biasLabel = bias.contains('bull')
         ? 'Bullish'
         : bias.contains('bear')
-            ? 'Bearish'
-            : 'Netral';
+        ? 'Bearish'
+        : context.l10n.neutral;
 
     return InkWell(
       onTap: onTap,
@@ -40,7 +43,10 @@ class AnalysisCard extends StatelessWidget {
               Container(
                 width: 4,
                 height: 44,
-                decoration: BoxDecoration(color: biasColor, borderRadius: BorderRadius.circular(4)),
+                decoration: BoxDecoration(
+                  color: biasColor,
+                  borderRadius: BorderRadius.circular(4),
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -52,19 +58,29 @@ class AnalysisCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             analysis.instrument,
-                            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                            ),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
                             color: biasColor.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(
                             biasLabel,
-                            style: TextStyle(color: biasColor, fontSize: 11, fontWeight: FontWeight.w700),
+                            style: TextStyle(
+                              color: biasColor,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                       ],
@@ -72,9 +88,19 @@ class AnalysisCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        Text(analysis.timeframe, style: TextStyle(color: muted, fontSize: 12.5)),
+                        Text(
+                          analysis.timeframe,
+                          style: TextStyle(color: muted, fontSize: 12.5),
+                        ),
                         const SizedBox(width: 8),
-                        Container(width: 3, height: 3, decoration: BoxDecoration(color: muted, shape: BoxShape.circle)),
+                        Container(
+                          width: 3,
+                          height: 3,
+                          decoration: BoxDecoration(
+                            color: muted,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           DateFormat('d MMM, HH:mm').format(analysis.createdAt),
@@ -89,17 +115,25 @@ class AnalysisCard extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  if (analysis.confidenceMin != null && analysis.confidenceMax != null)
+                  if (analysis.confidenceMin != null &&
+                      analysis.confidenceMax != null)
                     Text(
                       '${analysis.confidenceMin}-${analysis.confidenceMax}%',
-                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                      ),
                     ),
                   const SizedBox(height: 2),
                   Text(
-                    isExpired ? 'Kedaluwarsa' : 'Berlaku',
+                    isExpired ? context.l10n.expired : context.l10n.valid,
                     style: TextStyle(
                       fontSize: 10.5,
-                      color: isExpired ? (isDark ? AppColors.bearishDark : AppColors.bearishLight) : muted,
+                      color: isExpired
+                          ? (isDark
+                                ? AppColors.bearishDark
+                                : AppColors.bearishLight)
+                          : muted,
                     ),
                   ),
                 ],

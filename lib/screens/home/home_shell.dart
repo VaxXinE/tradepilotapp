@@ -8,6 +8,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/market_provider.dart';
 import '../../providers/notifications_provider.dart';
 import '../../providers/watchlist_provider.dart';
+import '../../l10n/l10n.dart';
 import 'tabs/analyze_tab.dart';
 import 'tabs/dashboard_tab.dart';
 import 'tabs/history_tab.dart';
@@ -375,6 +376,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
       body: IndexedStack(index: _index, children: _tabs),
       bottomNavigationBar: DecoratedBox(
@@ -388,26 +390,26 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         child: NavigationBar(
           selectedIndex: _index,
           onDestinationSelected: _onTabSelected,
-          destinations: const [
+          destinations: [
             NavigationDestination(
               icon: Icon(Icons.space_dashboard_outlined),
               selectedIcon: Icon(Icons.space_dashboard_rounded),
-              label: 'Dashboard',
+              label: l10n.dashboard,
             ),
             NavigationDestination(
               icon: Icon(Icons.auto_awesome_outlined),
               selectedIcon: Icon(Icons.auto_awesome_rounded),
-              label: 'Analisis',
+              label: l10n.analysis,
             ),
             NavigationDestination(
               icon: Icon(Icons.history_outlined),
               selectedIcon: Icon(Icons.history_rounded),
-              label: 'Riwayat',
+              label: l10n.history,
             ),
             NavigationDestination(
               icon: Icon(Icons.person_outline_rounded),
               selectedIcon: Icon(Icons.person_rounded),
-              label: 'Profil',
+              label: l10n.profile,
             ),
           ],
         ),

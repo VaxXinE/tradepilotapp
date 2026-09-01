@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../l10n/l10n.dart';
 import '../../../core/history/history_statistics.dart';
 import '../../../models/history_filters.dart';
 import '../../../models/history_sort.dart';
@@ -167,9 +168,10 @@ class _HistoryTabState extends State<HistoryTab> {
     final provider = context.watch<AnalysisProvider>();
 
     final filters = provider.historyFilters;
+    final l10n = context.l10n;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Riwayat')),
+      appBar: AppBar(title: Text(l10n.history)),
       body: Column(
         children: [
           Padding(
@@ -184,12 +186,12 @@ class _HistoryTabState extends State<HistoryTab> {
                     textInputAction: TextInputAction.search,
                     decoration: InputDecoration(
                       counterText: '',
-                      hintText: 'Cari instrumen atau catatan',
+                      hintText: l10n.searchInstrumentOrNote,
                       prefixIcon: const Icon(Icons.search_rounded),
                       suffixIcon: filters.query.isEmpty
                           ? null
                           : IconButton(
-                              tooltip: 'Hapus pencarian',
+                              tooltip: l10n.clearSearch,
                               onPressed: _clearSearch,
                               icon: const Icon(Icons.close_rounded),
                             ),
@@ -203,7 +205,7 @@ class _HistoryTabState extends State<HistoryTab> {
                   clipBehavior: Clip.none,
                   children: [
                     IconButton.filled(
-                      tooltip: 'Filter',
+                      tooltip: l10n.filter,
                       onPressed: _openFilters,
                       icon: const Icon(Icons.filter_list_rounded),
                     ),
@@ -307,7 +309,9 @@ class _HistoryTabState extends State<HistoryTab> {
           const SizedBox(height: 12),
           Center(
             child: Text(
-              filtered ? 'Tidak ada analisis yang cocok' : 'Belum ada analisis',
+              filtered
+                  ? context.l10n.noMatchingAnalyses
+                  : context.l10n.noAnalyses,
               style: TextStyle(color: muted, fontWeight: FontWeight.w700),
             ),
           ),
@@ -315,8 +319,8 @@ class _HistoryTabState extends State<HistoryTab> {
           Center(
             child: Text(
               filtered
-                  ? 'Coba ubah kata pencarian atau filter.'
-                  : 'Analisis AI kamu akan muncul di sini.',
+                  ? context.l10n.changeSearchOrFilter
+                  : context.l10n.analysesAppearHere,
               textAlign: TextAlign.center,
               style: TextStyle(color: muted, fontSize: 12),
             ),
@@ -327,7 +331,7 @@ class _HistoryTabState extends State<HistoryTab> {
             Center(
               child: TextButton(
                 onPressed: _resetFilters,
-                child: const Text('Reset filter'),
+                child: Text(context.l10n.resetFilter),
               ),
             ),
           ],
@@ -412,8 +416,8 @@ class _ActiveFilters extends StatelessWidget {
         InputChip(
           label: Text(
             filters.mode == HistoryModeFilter.beginner
-                ? 'Mode: Pemula'
-                : 'Mode: Pro',
+                ? context.l10n.modeBeginner
+                : context.l10n.modePro,
           ),
           onDeleted: () {
             onChanged(filters.copyWith(mode: HistoryModeFilter.all));
@@ -425,7 +429,11 @@ class _ActiveFilters extends StatelessWidget {
     if (filters.outcome != HistoryOutcomeFilter.all) {
       chips.add(
         InputChip(
-          label: Text('Outcome: ${_outcomeLabel(filters.outcome)}'),
+          label: Text(
+            context.l10n.outcomeLabel(
+              _outcomeLabel(context.l10n, filters.outcome),
+            ),
+          ),
           onDeleted: () {
             onChanged(filters.copyWith(outcome: HistoryOutcomeFilter.all));
           },
@@ -436,7 +444,7 @@ class _ActiveFilters extends StatelessWidget {
     if (filters.minConfidence case final confidence?) {
       chips.add(
         InputChip(
-          label: Text('Keyakinan ≥ $confidence%'),
+          label: Text(context.l10n.confidenceAtLeast(confidence)),
           onDeleted: () {
             onChanged(filters.copyWith(clearConfidence: true));
           },
@@ -506,14 +514,14 @@ class _ActiveFilters extends StatelessWidget {
           Row(
             children: [
               Text(
-                '$resultCount hasil',
+                context.l10n.resultCount(resultCount),
                 style: const TextStyle(
                   fontSize: 11.5,
                   fontWeight: FontWeight.w700,
                 ),
               ),
               const Spacer(),
-              TextButton(onPressed: onReset, child: const Text('Reset')),
+              TextButton(onPressed: onReset, child: Text(context.l10n.reset)),
             ],
           ),
 
@@ -524,16 +532,19 @@ class _ActiveFilters extends StatelessWidget {
     );
   }
 
-  static String _outcomeLabel(HistoryOutcomeFilter outcome) {
+  static String _outcomeLabel(
+    AppLocalizations l10n,
+    HistoryOutcomeFilter outcome,
+  ) {
     switch (outcome) {
       case HistoryOutcomeFilter.success:
-        return 'Positif';
+        return l10n.positive;
       case HistoryOutcomeFilter.failed:
-        return 'Negatif';
+        return l10n.negative;
       case HistoryOutcomeFilter.pending:
-        return 'Menunggu';
+        return l10n.pending;
       case HistoryOutcomeFilter.all:
-        return 'Semua';
+        return l10n.all;
     }
   }
 }
@@ -613,6 +624,7 @@ class _HistoryFilterSheetState extends State<_HistoryFilterSheet> {
     final muted = Theme.of(context).colorScheme.onSurfaceVariant;
 
     final formatter = DateFormat('d MMM yyyy');
+    final l10n = context.l10n;
 
     return SafeArea(
       child: SizedBox(
@@ -623,10 +635,10 @@ class _HistoryFilterSheetState extends State<_HistoryFilterSheet> {
               padding: const EdgeInsets.fromLTRB(20, 4, 12, 12),
               child: Row(
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Filter Riwayat',
-                      style: TextStyle(
+                      l10n.historyFilters,
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w900,
                       ),
@@ -642,7 +654,7 @@ class _HistoryFilterSheetState extends State<_HistoryFilterSheet> {
                         _draft = HistoryFilters(query: _draft.query);
                       });
                     },
-                    child: const Text('Reset'),
+                    child: Text(l10n.reset),
                   ),
                 ],
               ),
@@ -654,9 +666,12 @@ class _HistoryFilterSheetState extends State<_HistoryFilterSheet> {
               child: ListView(
                 padding: const EdgeInsets.all(20),
                 children: [
-                  const Text(
-                    'Mode',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+                  Text(
+                    l10n.mode,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
 
                   const SizedBox(height: 9),
@@ -665,7 +680,7 @@ class _HistoryFilterSheetState extends State<_HistoryFilterSheet> {
                     spacing: 8,
                     children: [
                       ChoiceChip(
-                        label: const Text('Semua'),
+                        label: Text(l10n.all),
                         selected: _draft.mode == HistoryModeFilter.all,
                         onSelected: (_) {
                           setState(() {
@@ -676,7 +691,7 @@ class _HistoryFilterSheetState extends State<_HistoryFilterSheet> {
                         },
                       ),
                       ChoiceChip(
-                        label: const Text('Pemula'),
+                        label: Text(l10n.beginner),
                         selected: _draft.mode == HistoryModeFilter.beginner,
                         onSelected: (_) {
                           setState(() {
@@ -687,7 +702,7 @@ class _HistoryFilterSheetState extends State<_HistoryFilterSheet> {
                         },
                       ),
                       ChoiceChip(
-                        label: const Text('Pro'),
+                        label: Text(l10n.pro),
                         selected: _draft.mode == HistoryModeFilter.pro,
                         onSelected: (_) {
                           setState(() {
@@ -702,9 +717,12 @@ class _HistoryFilterSheetState extends State<_HistoryFilterSheet> {
 
                   const SizedBox(height: 24),
 
-                  const Text(
-                    'Status evaluasi',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+                  Text(
+                    l10n.evaluationStatus,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
 
                   const SizedBox(height: 9),
@@ -715,7 +733,7 @@ class _HistoryFilterSheetState extends State<_HistoryFilterSheet> {
                     children: [
                       for (final option in HistoryOutcomeFilter.values)
                         ChoiceChip(
-                          label: Text(_outcomeOptionLabel(option)),
+                          label: Text(_outcomeOptionLabel(l10n, option)),
                           selected: _draft.outcome == option,
                           onSelected: (_) {
                             setState(() {
@@ -728,9 +746,12 @@ class _HistoryFilterSheetState extends State<_HistoryFilterSheet> {
 
                   const SizedBox(height: 24),
 
-                  const Text(
-                    'Minimum keyakinan',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+                  Text(
+                    l10n.minimumConfidence,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
 
                   const SizedBox(height: 9),
@@ -740,7 +761,7 @@ class _HistoryFilterSheetState extends State<_HistoryFilterSheet> {
                     runSpacing: 7,
                     children: [
                       ChoiceChip(
-                        label: const Text('Semua'),
+                        label: Text(l10n.all),
                         selected: _draft.minConfidence == null,
                         onSelected: (_) {
                           setState(() {
@@ -765,9 +786,12 @@ class _HistoryFilterSheetState extends State<_HistoryFilterSheet> {
 
                   const SizedBox(height: 24),
 
-                  const Text(
-                    'Urutan',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+                  Text(
+                    l10n.sortOrder,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
 
                   const SizedBox(height: 9),
@@ -778,7 +802,7 @@ class _HistoryFilterSheetState extends State<_HistoryFilterSheet> {
                     children: [
                       for (final sort in HistorySort.values)
                         ChoiceChip(
-                          label: Text(_sortLabel(sort)),
+                          label: Text(_sortLabel(l10n, sort)),
                           selected: _draft.sort == sort,
                           onSelected: (_) {
                             setState(() {
@@ -791,9 +815,12 @@ class _HistoryFilterSheetState extends State<_HistoryFilterSheet> {
 
                   const SizedBox(height: 24),
 
-                  const Text(
-                    'Instrumen',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+                  Text(
+                    l10n.instrument,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
 
                   const SizedBox(height: 10),
@@ -829,9 +856,12 @@ class _HistoryFilterSheetState extends State<_HistoryFilterSheet> {
 
                   const SizedBox(height: 24),
 
-                  const Text(
-                    'Timeframe',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+                  Text(
+                    l10n.timeframe,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
 
                   const SizedBox(height: 9),
@@ -854,9 +884,12 @@ class _HistoryFilterSheetState extends State<_HistoryFilterSheet> {
 
                   const SizedBox(height: 24),
 
-                  const Text(
-                    'Rentang Tanggal',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+                  Text(
+                    l10n.dateRange,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
 
                   const SizedBox(height: 9),
@@ -866,7 +899,7 @@ class _HistoryFilterSheetState extends State<_HistoryFilterSheet> {
                     icon: const Icon(Icons.date_range_rounded),
                     label: Text(
                       _draft.from == null || _draft.to == null
-                          ? 'Pilih tanggal'
+                          ? l10n.selectDate
                           : '${formatter.format(_draft.from!)} – '
                                 '${formatter.format(_draft.to!)}',
                     ),
@@ -882,7 +915,7 @@ class _HistoryFilterSheetState extends State<_HistoryFilterSheet> {
                           );
                         });
                       },
-                      child: const Text('Hapus rentang tanggal'),
+                      child: Text(l10n.clearDateRange),
                     ),
                 ],
               ),
@@ -897,7 +930,7 @@ class _HistoryFilterSheetState extends State<_HistoryFilterSheet> {
                     Navigator.of(context).pop(_draft.normalized());
                   },
                   icon: const Icon(Icons.filter_alt_rounded),
-                  label: const Text('Terapkan Filter'),
+                  label: Text(l10n.applyFilters),
                 ),
               ),
             ),
@@ -907,27 +940,30 @@ class _HistoryFilterSheetState extends State<_HistoryFilterSheet> {
     );
   }
 
-  static String _outcomeOptionLabel(HistoryOutcomeFilter outcome) {
+  static String _outcomeOptionLabel(
+    AppLocalizations l10n,
+    HistoryOutcomeFilter outcome,
+  ) {
     switch (outcome) {
       case HistoryOutcomeFilter.all:
-        return 'Semua';
+        return l10n.all;
       case HistoryOutcomeFilter.pending:
-        return 'Menunggu';
+        return l10n.pending;
       case HistoryOutcomeFilter.success:
-        return 'Outcome positif';
+        return l10n.positiveOutcome;
       case HistoryOutcomeFilter.failed:
-        return 'Outcome negatif';
+        return l10n.negativeOutcome;
     }
   }
 
-  static String _sortLabel(HistorySort sort) {
+  static String _sortLabel(AppLocalizations l10n, HistorySort sort) {
     switch (sort) {
       case HistorySort.newest:
-        return 'Terbaru';
+        return l10n.newest;
       case HistorySort.oldest:
-        return 'Terlama';
+        return l10n.oldest;
       case HistorySort.confidenceHighest:
-        return 'Keyakinan tertinggi';
+        return l10n.highestConfidence;
     }
   }
 }

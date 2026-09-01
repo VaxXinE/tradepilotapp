@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../l10n/l10n.dart';
 import '../../../models/market_models.dart';
 import '../../../providers/analysis_provider.dart';
 import '../../../providers/auth_provider.dart';
@@ -95,7 +96,7 @@ class _DashboardTabState extends State<DashboardTab> {
 
     if (created == true) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Price alert $instrument berhasil dibuat.')),
+        SnackBar(content: Text(context.l10n.priceAlertCreated(instrument))),
       );
     }
   }
@@ -121,6 +122,7 @@ class _DashboardTabState extends State<DashboardTab> {
     final watchlist = context.watch<WatchlistProvider>();
 
     final notifications = context.watch<NotificationsProvider>();
+    final l10n = context.l10n;
 
     final user = auth.user;
 
@@ -130,10 +132,10 @@ class _DashboardTabState extends State<DashboardTab> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Dashboard'),
+        title: Text(l10n.dashboard),
         actions: [
           IconButton(
-            tooltip: 'Price Alert Saya',
+            tooltip: l10n.myPriceAlerts,
             icon: const Icon(Icons.price_check_outlined),
             onPressed: () {
               Navigator.of(context).push(
@@ -142,7 +144,7 @@ class _DashboardTabState extends State<DashboardTab> {
             },
           ),
           IconButton(
-            tooltip: 'Notifikasi',
+            tooltip: l10n.notifications,
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const NotificationsScreen()),
@@ -162,7 +164,7 @@ class _DashboardTabState extends State<DashboardTab> {
             // GREETING
             // ---------------------------------------------------------------
             Text(
-              'Selamat datang kembali',
+              l10n.welcomeBack,
               style: TextStyle(color: muted, fontSize: 12.5),
             ),
 
@@ -174,7 +176,7 @@ class _DashboardTabState extends State<DashboardTab> {
                   child: Text(
                     user?.displayName.trim().isNotEmpty == true
                         ? user!.displayName.trim()
-                        : 'Trader',
+                        : l10n.trader,
                     style: const TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.w800,
@@ -194,7 +196,7 @@ class _DashboardTabState extends State<DashboardTab> {
                   child: Text(
                     user?.selectedMode == UserSelectedModeEnum.pro
                         ? 'PRO'
-                        : 'PEMULA',
+                        : l10n.beginner.toUpperCase(),
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onSecondary,
                       fontSize: 9.5,
@@ -280,10 +282,10 @@ class _DashboardTabState extends State<DashboardTab> {
               // -------------------------------------------------------------
               Row(
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Analisis Terbaru',
-                      style: TextStyle(
+                      l10n.latestAnalyses,
+                      style: const TextStyle(
                         fontWeight: FontWeight.w800,
                         fontSize: 16,
                       ),
@@ -291,7 +293,7 @@ class _DashboardTabState extends State<DashboardTab> {
                   ),
                   TextButton(
                     onPressed: widget.onOpenHistory,
-                    child: const Text('Lihat semua'),
+                    child: Text(l10n.viewAll),
                   ),
                 ],
               ),
@@ -329,8 +331,7 @@ class _DashboardTabState extends State<DashboardTab> {
             const SizedBox(height: 20),
 
             Text(
-              'Trade Pilot membantu membaca kondisi pasar, '
-              'tetapi keputusan dan manajemen risiko tetap berada di tangan kamu.',
+              l10n.decisionDisclaimer,
               textAlign: TextAlign.center,
               style: TextStyle(color: muted, fontSize: 10.5, height: 1.4),
             ),
@@ -405,13 +406,16 @@ class _BeginnerHeroCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(
+            Row(
               children: [
                 Icon(Icons.auto_awesome_rounded, size: 20),
                 SizedBox(width: 8),
                 Text(
-                  'Mau analisis pasar?',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
+                  context.l10n.wantMarketAnalysis,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ],
             ),
@@ -419,8 +423,7 @@ class _BeginnerHeroCard extends StatelessWidget {
             const SizedBox(height: 7),
 
             Text(
-              'Tinjau harga, sesi pasar, chart, indikator, dan agenda ekonomi '
-              'sebelum meminta analisis AI.',
+              context.l10n.analysisPreparation,
               style: TextStyle(color: muted, fontSize: 12, height: 1.4),
             ),
 
@@ -431,7 +434,7 @@ class _BeginnerHeroCard extends StatelessWidget {
               child: ElevatedButton.icon(
                 onPressed: onAnalyze,
                 icon: const Icon(Icons.insights_rounded),
-                label: const Text('Mulai Analisis'),
+                label: Text(context.l10n.startAnalysis),
               ),
             ),
           ],
@@ -486,14 +489,17 @@ class _WatchlistMarketCard extends StatelessWidget {
               children: [
                 const Icon(Icons.star_rounded, size: 19),
                 const SizedBox(width: 8),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Watchlist Pasar',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+                    context.l10n.marketWatchlist,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ),
                 IconButton(
-                  tooltip: 'Kelola watchlist',
+                  tooltip: context.l10n.manageWatchlist,
                   onPressed: onManageWatchlist,
                   icon: const Icon(Icons.add_rounded, size: 20),
                 ),
@@ -510,7 +516,7 @@ class _WatchlistMarketCard extends StatelessWidget {
             const SizedBox(height: 5),
 
             Text(
-              'Pantau market favorit tanpa membuka halaman lain.',
+              context.l10n.watchlistDescription,
               style: TextStyle(color: muted, fontSize: 11),
             ),
 
@@ -537,7 +543,11 @@ class _WatchlistMarketCard extends StatelessWidget {
             if (market.quotesUpdatedAt != null) ...[
               const SizedBox(height: 10),
               Text(
-                'Harga diperbarui ${DateFormat('HH:mm:ss').format(market.quotesUpdatedAt!.toLocal())}',
+                context.l10n.pricesUpdatedAt(
+                  DateFormat(
+                    'HH:mm:ss',
+                  ).format(market.quotesUpdatedAt!.toLocal()),
+                ),
                 style: TextStyle(color: muted, fontSize: 9.5),
               ),
             ],
@@ -610,7 +620,7 @@ class _WatchlistRow extends StatelessWidget {
                           )
                         else
                           Text(
-                            'Live price belum tersedia',
+                            context.l10n.livePriceUnavailable,
                             style: TextStyle(color: muted, fontSize: 10.5),
                           ),
                       ],
@@ -647,8 +657,8 @@ class _WatchlistRow extends StatelessWidget {
 
         IconButton(
           tooltip: quote == null
-              ? 'Harga live belum tersedia'
-              : 'Buat price alert',
+              ? context.l10n.livePriceUnavailable
+              : context.l10n.createPriceAlert,
           onPressed: quote == null
               ? null
               : () {
@@ -658,7 +668,7 @@ class _WatchlistRow extends StatelessWidget {
         ),
 
         IconButton(
-          tooltip: 'Buka analisis',
+          tooltip: context.l10n.openAnalysis,
           onPressed: onOpen,
           icon: const Icon(Icons.chevron_right_rounded),
         ),
@@ -692,7 +702,7 @@ class _EmptyWatchlist extends StatelessWidget {
           const SizedBox(height: 7),
 
           Text(
-            'Watchlist masih kosong',
+            context.l10n.watchlistEmpty,
             style: TextStyle(
               color: muted,
               fontSize: 12,
@@ -702,7 +712,7 @@ class _EmptyWatchlist extends StatelessWidget {
 
           const SizedBox(height: 8),
 
-          TextButton(onPressed: onAdd, child: const Text('Tambah simbol')),
+          TextButton(onPressed: onAdd, child: Text(context.l10n.addSymbol)),
         ],
       ),
     );
@@ -742,7 +752,7 @@ class _StatsRow extends StatelessWidget {
       children: [
         Expanded(
           child: _StatCard(
-            label: 'Total Analisis',
+            label: context.l10n.totalAnalyses,
             value: '$total',
             icon: Icons.insert_chart_outlined_rounded,
           ),
@@ -752,7 +762,7 @@ class _StatsRow extends StatelessWidget {
 
         Expanded(
           child: _StatCard(
-            label: 'Mode Pemula',
+            label: context.l10n.beginnerMode,
             value: '$beginner',
             icon: Icons.school_outlined,
           ),
@@ -762,7 +772,7 @@ class _StatsRow extends StatelessWidget {
 
         Expanded(
           child: _StatCard(
-            label: 'Keyakinan AI',
+            label: context.l10n.aiConfidence,
             value: confidence,
             icon: Icons.speed_rounded,
           ),
@@ -850,9 +860,9 @@ class _QuotaCard extends StatelessWidget {
             children: [
               Icon(Icons.all_inclusive_rounded, color: primary),
               const SizedBox(width: 10),
-              const Text(
-                'Kuota analisis tidak terbatas',
-                style: TextStyle(fontWeight: FontWeight.w600),
+              Text(
+                context.l10n.unlimitedAnalysisQuota,
+                style: const TextStyle(fontWeight: FontWeight.w600),
               ),
             ],
           ),
@@ -866,15 +876,15 @@ class _QuotaCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Kuota Analisis',
-              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+            Text(
+              context.l10n.analysisQuota,
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
             ),
 
             const SizedBox(height: 10),
 
             _QuotaBar(
-              label: 'Per jam',
+              label: context.l10n.perHour,
               used: quota.hourly.used,
               limit: quota.hourly.limit,
               primary: primary,
@@ -884,7 +894,7 @@ class _QuotaCard extends StatelessWidget {
             const SizedBox(height: 9),
 
             _QuotaBar(
-              label: 'Per hari',
+              label: context.l10n.perDay,
               used: quota.daily.used,
               limit: quota.daily.limit,
               primary: primary,
@@ -969,7 +979,7 @@ class _EmptyRecent extends StatelessWidget {
             const SizedBox(height: 8),
 
             Text(
-              'Belum ada analisis',
+              context.l10n.noAnalyses,
               style: TextStyle(color: muted, fontWeight: FontWeight.w600),
             ),
 
@@ -977,7 +987,7 @@ class _EmptyRecent extends StatelessWidget {
 
             TextButton(
               onPressed: onAnalyze,
-              child: const Text('Buat analisis pertama'),
+              child: Text(context.l10n.createFirstAnalysis),
             ),
           ],
         ),
@@ -1035,8 +1045,9 @@ class _WatchlistManagerSheet extends StatelessWidget {
           SnackBar(
             content: Text(
               ok
-                  ? '$instrument ditambahkan ke watchlist.'
-                  : provider.error ?? '$instrument sudah ada di watchlist.',
+                  ? context.l10n.instrumentAddedToWatchlist(instrument)
+                  : provider.error ??
+                        context.l10n.instrumentAlreadyInWatchlist(instrument),
             ),
           ),
         );
@@ -1051,16 +1062,16 @@ class _WatchlistManagerSheet extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Hapus dari watchlist?'),
-        content: Text('Hapus $instrument dari watchlist?'),
+        title: Text(context.l10n.removeFromWatchlist),
+        content: Text(context.l10n.removeInstrumentConfirmation(instrument)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Batal'),
+            child: Text(context.l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Hapus'),
+            child: Text(context.l10n.remove),
           ),
         ],
       ),
@@ -1079,8 +1090,9 @@ class _WatchlistManagerSheet extends StatelessWidget {
       SnackBar(
         content: Text(
           ok
-              ? '$instrument dihapus dari watchlist.'
-              : provider.error ?? 'Gagal menghapus $instrument.',
+              ? context.l10n.instrumentRemovedFromWatchlist(instrument)
+              : provider.error ??
+                    context.l10n.removeInstrumentFailed(instrument),
         ),
       ),
     );
@@ -1101,34 +1113,34 @@ class _WatchlistManagerSheet extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 4, 12, 12),
               child: Row(
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Kelola Watchlist',
-                          style: TextStyle(
+                          context.l10n.manageWatchlist,
+                          style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w900,
                           ),
                         ),
                         SizedBox(height: 3),
                         Text(
-                          'Pilih market yang ingin dipantau di Dashboard.',
-                          style: TextStyle(fontSize: 11.5),
+                          context.l10n.selectMarketsForDashboard,
+                          style: const TextStyle(fontSize: 11.5),
                         ),
                       ],
                     ),
                   ),
                   IconButton(
-                    tooltip: 'Tambah simbol',
+                    tooltip: context.l10n.addSymbol,
                     onPressed: watchlist.isUpdating
                         ? null
                         : () => _addInstrument(context),
                     icon: const Icon(Icons.add_rounded),
                   ),
                   IconButton(
-                    tooltip: 'Tutup',
+                    tooltip: context.l10n.close,
                     onPressed: () => Navigator.of(context).pop(),
                     icon: const Icon(Icons.close_rounded),
                   ),
@@ -1151,7 +1163,7 @@ class _WatchlistManagerSheet extends StatelessWidget {
                           const SizedBox(height: 8),
                           TextButton(
                             onPressed: watchlist.loadWatchlist,
-                            child: const Text('Coba lagi'),
+                            child: Text(context.l10n.tryAgain),
                           ),
                         ],
                       ),
@@ -1162,14 +1174,14 @@ class _WatchlistManagerSheet extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            'Watchlist kamu masih kosong.',
+                            context.l10n.watchlistEmpty,
                             style: TextStyle(color: muted),
                           ),
                           const SizedBox(height: 8),
                           FilledButton.icon(
                             onPressed: () => _addInstrument(context),
                             icon: const Icon(Icons.add_rounded),
-                            label: const Text('Tambah simbol'),
+                            label: Text(context.l10n.addSymbol),
                           ),
                         ],
                       ),

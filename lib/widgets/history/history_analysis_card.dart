@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../l10n/l10n.dart';
 
 class HistoryAnalysisCard extends StatelessWidget {
   const HistoryAnalysisCard({
@@ -24,9 +25,9 @@ class HistoryAnalysisCard extends StatelessWidget {
     final confidence = _confidenceLabel(analysis);
     final details = [
       if (analysis.riskLevel?.trim().isNotEmpty == true)
-        'Risiko ${_riskLabel(analysis.riskLevel!)}',
+        context.l10n.riskValue(_riskLabel(context, analysis.riskLevel!)),
       if (analysis.marketCondition?.trim().isNotEmpty == true)
-        _marketConditionLabel(analysis.marketCondition!),
+        _marketConditionLabel(context, analysis.marketCondition!),
     ];
 
     return Card(
@@ -50,7 +51,7 @@ class HistoryAnalysisCard extends StatelessWidget {
                   ),
                   if (analysis.hasNote == true)
                     Tooltip(
-                      message: 'Memiliki catatan jurnal',
+                      message: context.l10n.hasJournalNote,
                       child: Icon(
                         Icons.menu_book_rounded,
                         size: 18,
@@ -63,7 +64,7 @@ class HistoryAnalysisCard extends StatelessWidget {
               ),
               const SizedBox(height: 3),
               Text(
-                '${analysis.timeframe} • ${_modeLabel(analysis.mode)} • '
+                '${analysis.timeframe} • ${_modeLabel(context, analysis.mode)} • '
                 '${DateFormat('d MMM yyyy, HH:mm').format(analysis.createdAt.toLocal())}',
                 style: theme.textTheme.bodySmall?.copyWith(color: muted),
               ),
@@ -74,12 +75,12 @@ class HistoryAnalysisCard extends StatelessWidget {
                 children: [
                   _InfoChip(
                     icon: Icons.swap_vert_rounded,
-                    label: _biasLabel(analysis.tradingBias),
+                    label: _biasLabel(context, analysis.tradingBias),
                     color: _biasColor(dark, analysis.tradingBias),
                   ),
                   _InfoChip(
                     icon: Icons.speed_rounded,
-                    label: 'Keyakinan $confidence',
+                    label: context.l10n.confidenceValue(confidence),
                     color: theme.colorScheme.primary,
                   ),
                   _OutcomeBadge(status: analysis.outcomeStatus),
@@ -101,8 +102,10 @@ class HistoryAnalysisCard extends StatelessWidget {
     );
   }
 
-  static String _modeLabel(AnalysisModeEnum mode) {
-    return mode == AnalysisModeEnum.pro ? 'Pro' : 'Pemula';
+  static String _modeLabel(BuildContext context, AnalysisModeEnum mode) {
+    return mode == AnalysisModeEnum.pro
+        ? context.l10n.pro
+        : context.l10n.beginner;
   }
 
   static String _confidenceLabel(Analysis analysis) {
@@ -117,11 +120,11 @@ class HistoryAnalysisCard extends StatelessWidget {
     return '$minimum–$maximum%';
   }
 
-  static String _biasLabel(String? value) {
+  static String _biasLabel(BuildContext context, String? value) {
     switch (value?.trim().toLowerCase()) {
       case 'bearish_strong':
       case 'strong_sell':
-        return 'Bearish kuat';
+        return context.l10n.strongBearish;
       case 'bearish':
       case 'sell':
         return 'Bearish';
@@ -130,40 +133,40 @@ class HistoryAnalysisCard extends StatelessWidget {
         return 'Bullish';
       case 'bullish_strong':
       case 'strong_buy':
-        return 'Bullish kuat';
+        return context.l10n.strongBullish;
       case 'neutral':
-        return 'Netral';
+        return context.l10n.neutral;
       default:
-        return 'Bias belum tersedia';
+        return context.l10n.biasUnavailable;
     }
   }
 
-  static String _riskLabel(String value) {
+  static String _riskLabel(BuildContext context, String value) {
     switch (value.trim().toLowerCase()) {
       case 'low':
-        return 'rendah';
+        return context.l10n.low.toLowerCase();
       case 'medium':
-        return 'sedang';
+        return context.l10n.medium.toLowerCase();
       case 'high':
-        return 'tinggi';
+        return context.l10n.high.toLowerCase();
       default:
         return value.trim().replaceAll('_', ' ');
     }
   }
 
-  static String _marketConditionLabel(String value) {
+  static String _marketConditionLabel(BuildContext context, String value) {
     switch (value.trim().toLowerCase()) {
       case 'trending_up':
       case 'uptrend':
-        return 'Tren naik';
+        return context.l10n.trendingUp;
       case 'trending_down':
       case 'downtrend':
-        return 'Tren turun';
+        return context.l10n.trendingDown;
       case 'sideways':
       case 'ranging':
-        return 'Bergerak sideways';
+        return context.l10n.movingSideways;
       case 'trending':
-        return 'Sedang trending';
+        return context.l10n.trendingMarket;
       default:
         final normalized = value.trim().replaceAll('_', ' ');
         return normalized.isEmpty
@@ -212,30 +215,33 @@ class _OutcomeBadge extends StatelessWidget {
 
     return _InfoChip(
       icon: Icons.fact_check_outlined,
-      label: _label(status),
+      label: _label(context, status),
       color: color,
     );
   }
 
-  static String _label(AnalysisOutcomeStatusEnum? status) {
+  static String _label(
+    BuildContext context,
+    AnalysisOutcomeStatusEnum? status,
+  ) {
     switch (status) {
       case AnalysisOutcomeStatusEnum.pending:
-        return 'Menunggu evaluasi';
+        return context.l10n.evaluationPending;
       case AnalysisOutcomeStatusEnum.tp1Hit:
-        return 'Target referensi 1 tercapai';
+        return context.l10n.referenceTargetOneHit;
       case AnalysisOutcomeStatusEnum.tp2Hit:
-        return 'Target referensi 2 tercapai';
+        return context.l10n.referenceTargetTwoHit;
       case AnalysisOutcomeStatusEnum.slHit:
-        return 'Batas risiko tersentuh';
+        return context.l10n.riskLimitHit;
       case AnalysisOutcomeStatusEnum.expired:
-        return 'Masa analisis berakhir';
+        return context.l10n.analysisPeriodEnded;
       case AnalysisOutcomeStatusEnum.invalidated:
-        return 'Analisis tidak dapat dievaluasi';
+        return context.l10n.analysisCannotBeEvaluated;
       case null:
-        return 'Belum dievaluasi';
+        return context.l10n.notYetEvaluated;
     }
 
-    return 'Belum dievaluasi';
+    return context.l10n.notYetEvaluated;
   }
 }
 

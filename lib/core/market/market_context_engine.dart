@@ -205,29 +205,29 @@ class MarketContextEngine {
       case MarketTrend.bullish:
         switch (volatility) {
           case MarketLevel.low:
-            return 'Bullish stabil';
+            return 'Stable bullish trend';
           case MarketLevel.medium:
-            return 'Bullish dengan volatilitas sedang';
+            return 'Bullish with moderate volatility';
           case MarketLevel.high:
-            return 'Bullish tapi volatile';
+            return 'Bullish but volatile';
         }
       case MarketTrend.bearish:
         switch (volatility) {
           case MarketLevel.low:
-            return 'Tekanan bearish stabil';
+            return 'Stable bearish pressure';
           case MarketLevel.medium:
-            return 'Bearish dengan volatilitas sedang';
+            return 'Bearish with moderate volatility';
           case MarketLevel.high:
-            return 'Bearish dan volatile';
+            return 'Bearish and volatile';
         }
       case MarketTrend.neutral:
         switch (volatility) {
           case MarketLevel.low:
-            return 'Sideways / konsolidasi';
+            return 'Sideways / consolidation';
           case MarketLevel.medium:
-            return 'Sideways dengan pergerakan naik-turun';
+            return 'Sideways with moderate swings';
           case MarketLevel.high:
-            return 'Sideways tapi volatile';
+            return 'Sideways but volatile';
         }
     }
   }
@@ -242,18 +242,16 @@ class MarketContextEngine {
     final isCrypto = isCryptoMarketInstrument(instrument);
 
     final sessionPhrase = isCrypto
-        ? 'market kripto yang aktif 24/7'
+        ? 'the 24/7 crypto market'
         : _sessionPhrase(now);
 
     final trendPhrase = switch (trend) {
-      MarketTrend.bullish => 'bergerak naik (bullish)',
-      MarketTrend.bearish => 'bergerak turun (bearish)',
-      MarketTrend.neutral => 'bergerak sideways',
+      MarketTrend.bullish => 'is moving upward (bullish)',
+      MarketTrend.bearish => 'is moving downward (bearish)',
+      MarketTrend.neutral => 'is moving sideways',
     };
 
-    final buffer = StringBuffer(
-      'Harga $instrument $trendPhrase di $sessionPhrase.',
-    );
+    final buffer = StringBuffer('$instrument $trendPhrase in $sessionPhrase.');
 
     final note = InstrumentContextMapper.explain(instrument);
 
@@ -265,14 +263,12 @@ class MarketContextEngine {
       final delta = upcomingHighImpact.eventDateTime!.difference(now);
 
       buffer.write(
-        ' Ada event ${upcomingHighImpact.currency} berdampak tinggi '
-        '${_untilPhrase(delta)}, jadi pergerakan harga bisa lebih cepat '
-        'dari biasanya.',
+        ' A high-impact ${upcomingHighImpact.currency} event is due '
+        '${_untilPhrase(delta)}, so prices may move faster than usual.',
       );
     } else if (volatility == MarketLevel.high) {
       buffer.write(
-        ' Volatilitas sedang tinggi, jadi pergerakan harga bisa lebih '
-        'cepat dari biasanya.',
+        ' Volatility is high, so prices may move faster than usual.',
       );
     }
 
@@ -283,17 +279,17 @@ class MarketContextEngine {
     final status = getMarketSessionStatus(now: now);
 
     if (status.openSessions.isEmpty) {
-      return 'saat market sedang tutup';
+      return 'a closed market';
     }
 
     final sessions = status.openSessions.map(marketSessionLabel).join(' + ');
 
-    return 'saat sesi $sessions aktif';
+    return 'the active $sessions session';
   }
 
   static String _untilPhrase(Duration delta) {
     if (delta.inMinutes < 60) {
-      return 'dalam ${delta.inMinutes} menit';
+      return 'in ${delta.inMinutes} minutes';
     }
 
     final hours = delta.inMinutes / 60;
@@ -304,7 +300,7 @@ class MarketContextEngine {
         ? rounded.toInt().toString()
         : rounded.toString();
 
-    return 'dalam $label jam';
+    return 'in $label hours';
   }
 
   static List<MarketCandle> _lastN(List<MarketCandle> candles, int n) {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../models/market_context.dart';
+import '../../l10n/l10n.dart';
 import 'context_indicator.dart';
 
 class MarketContextCard extends StatelessWidget {
@@ -21,6 +22,7 @@ class MarketContextCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final muted = Theme.of(context).colorScheme.onSurfaceVariant;
     final data = marketContext;
 
@@ -34,10 +36,13 @@ class MarketContextCard extends StatelessWidget {
               children: [
                 const Icon(Icons.insights_outlined, size: 19),
                 const SizedBox(width: 8),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Konteks Market',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                    l10n.marketContext,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
                 Text(instrument, style: TextStyle(color: muted, fontSize: 11)),
@@ -45,8 +50,7 @@ class MarketContextCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              'Ringkasan edukasi kondisi pasar saat ini. Bukan sinyal atau '
-              'rekomendasi trading.',
+              l10n.marketEducationDisclaimer,
               style: TextStyle(color: muted, fontSize: 11.5, height: 1.4),
             ),
             const SizedBox(height: 14),
@@ -56,22 +60,19 @@ class MarketContextCard extends StatelessWidget {
               Center(
                 child: Column(
                   children: [
-                    const Text('Konteks market belum dapat dimuat.'),
+                    Text(l10n.marketContextLoadFailed),
                     if (onRetry != null)
                       TextButton(
                         onPressed: onRetry,
-                        child: const Text('Coba lagi'),
+                        child: Text(l10n.tryAgain),
                       ),
                   ],
                 ),
               )
             else if (data == null)
-              Text(
-                'Data belum cukup untuk menilai kondisi market.',
-                style: TextStyle(color: muted),
-              )
+              Text(l10n.insufficientMarketData, style: TextStyle(color: muted))
             else
-              _MarketContextBody(data: data),
+              _MarketContextBody(data: data, l10n: l10n),
           ],
         ),
       ),
@@ -80,9 +81,10 @@ class MarketContextCard extends StatelessWidget {
 }
 
 class _MarketContextBody extends StatelessWidget {
-  const _MarketContextBody({required this.data});
+  const _MarketContextBody({required this.data, required this.l10n});
 
   final MarketContext data;
+  final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
@@ -108,7 +110,7 @@ class _MarketContextBody extends StatelessWidget {
         ),
         const SizedBox(height: 14),
         Text(
-          'Kenapa?',
+          l10n.why,
           style: TextStyle(
             color: muted,
             fontSize: 10.5,
@@ -125,7 +127,7 @@ class _MarketContextBody extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                'Tingkat risiko',
+                l10n.riskLevel,
                 style: TextStyle(color: muted, fontSize: 11),
               ),
             ),

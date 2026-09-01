@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tradepilotapp/models/market_context.dart';
 import 'package:tradepilotapp/widgets/context/market_context_card.dart';
 
+import '../helpers/localized_test_app.dart';
+
 void main() {
   const bullish = MarketContext(
     instrument: 'XAU/USD',
@@ -24,7 +26,7 @@ void main() {
 
   testWidgets('renders a bullish context', (tester) async {
     await tester.pumpWidget(
-      const MaterialApp(
+      localizedTestApp(
         home: Scaffold(
           body: MarketContextCard(
             instrument: 'XAU/USD',
@@ -40,12 +42,12 @@ void main() {
       find.text('Harga XAU/USD bergerak naik saat sesi London aktif.'),
       findsOneWidget,
     );
-    expect(find.text('Sedang'), findsOneWidget);
+    expect(find.text('Medium'), findsOneWidget);
   });
 
   testWidgets('renders a bearish context', (tester) async {
     await tester.pumpWidget(
-      const MaterialApp(
+      localizedTestApp(
         home: Scaffold(
           body: MarketContextCard(
             instrument: 'EUR/USD',
@@ -57,14 +59,14 @@ void main() {
 
     expect(find.text('Bearish'), findsOneWidget);
     expect(find.text('Bearish dan volatile'), findsOneWidget);
-    expect(find.text('Tinggi'), findsOneWidget);
+    expect(find.text('High'), findsOneWidget);
   });
 
   testWidgets('shows an empty state when there is not enough data', (
     tester,
   ) async {
     await tester.pumpWidget(
-      const MaterialApp(
+      localizedTestApp(
         home: Scaffold(
           body: MarketContextCard(instrument: 'XAU/USD', marketContext: null),
         ),
@@ -72,7 +74,7 @@ void main() {
     );
 
     expect(
-      find.text('Data belum cukup untuk menilai kondisi market.'),
+      find.text('There is not enough data to assess market conditions.'),
       findsOneWidget,
     );
   });
@@ -81,7 +83,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      const MaterialApp(
+      localizedTestApp(
         home: Scaffold(
           body: MarketContextCard(
             instrument: 'XAU/USD',
@@ -99,7 +101,7 @@ void main() {
     var retried = false;
 
     await tester.pumpWidget(
-      MaterialApp(
+      localizedTestApp(
         home: Scaffold(
           body: MarketContextCard(
             instrument: 'XAU/USD',
@@ -111,9 +113,12 @@ void main() {
       ),
     );
 
-    expect(find.text('Konteks market belum dapat dimuat.'), findsOneWidget);
+    expect(
+      find.text('The market context could not be loaded.'),
+      findsOneWidget,
+    );
 
-    await tester.tap(find.text('Coba lagi'));
+    await tester.tap(find.text('Try again'));
 
     expect(retried, isTrue);
   });

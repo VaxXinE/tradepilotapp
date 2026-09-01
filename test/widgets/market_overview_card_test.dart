@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tradepilotapp/models/market_models.dart';
 import 'package:tradepilotapp/widgets/market/market_overview_card.dart';
 
+import '../helpers/localized_test_app.dart';
+
 void main() {
   testWidgets('shows selected quote without advanced market fields', (
     tester,
@@ -19,7 +21,7 @@ void main() {
     );
 
     await tester.pumpWidget(
-      MaterialApp(
+      localizedTestApp(
         home: Scaffold(
           body: MarketOverviewCard(
             quote: quote,
@@ -33,7 +35,7 @@ void main() {
       ),
     );
 
-    expect(find.text('Ringkasan Pasar'), findsOneWidget);
+    expect(find.text('Market Overview'), findsOneWidget);
     expect(find.text('XAU/USD'), findsOneWidget);
     expect(find.text('2,345.20'), findsOneWidget);
     expect(find.text('+0.42%'), findsOneWidget);

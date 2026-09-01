@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
+import '../../l10n/l10n.dart';
 import 'price_alert_tile.dart';
 
 class PriceAlertCard extends StatelessWidget {
@@ -35,18 +36,20 @@ class PriceAlertCard extends StatelessWidget {
               children: [
                 const Icon(Icons.notifications_active_outlined, size: 19),
                 const SizedBox(width: 8),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Price Alert Saya',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                    context.l10n.myPriceAlertsTitle,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 6),
             Text(
-              'Alert harga memberi tahu Anda ketika harga mencapai kondisi '
-              'ini. Ini bukan sinyal atau rekomendasi trading.',
+              context.l10n.priceAlertDisclaimer,
               style: TextStyle(color: muted, fontSize: 11.5, height: 1.4),
             ),
             const SizedBox(height: 14),
@@ -56,21 +59,17 @@ class PriceAlertCard extends StatelessWidget {
               Center(
                 child: Column(
                   children: [
-                    const Text('Price alert belum dapat dimuat.'),
+                    Text(context.l10n.priceAlertsLoadFailed),
                     if (onRetry != null)
                       TextButton(
                         onPressed: onRetry,
-                        child: const Text('Coba lagi'),
+                        child: Text(context.l10n.tryAgain),
                       ),
                   ],
                 ),
               )
             else if (alerts.isEmpty)
-              Text(
-                'Belum ada price alert. Buat alert untuk mendapat '
-                'pemberitahuan saat harga mencapai level tertentu.',
-                style: TextStyle(color: muted),
-              )
+              Text(context.l10n.noPriceAlerts, style: TextStyle(color: muted))
             else
               for (var index = 0; index < alerts.length; index++) ...[
                 PriceAlertTile(

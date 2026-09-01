@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/auth_provider.dart';
+import '../../l10n/l10n.dart';
 import '../../widgets/error_banner.dart';
 
 class EditProfileScreen extends StatefulWidget {
@@ -37,9 +38,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
     if (!mounted || !success) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Profil berhasil diperbarui.')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(context.l10n.profileUpdated)));
     Navigator.of(context).pop();
   }
 
@@ -47,9 +48,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final user = auth.user;
+    final l10n = context.l10n;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit Profil')),
+      appBar: AppBar(title: Text(l10n.editProfile)),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -65,12 +67,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   maxLength: AuthProvider.maxDisplayNameLength,
                   textCapitalization: TextCapitalization.words,
                   textInputAction: TextInputAction.done,
-                  decoration: const InputDecoration(labelText: 'Nama Tampilan'),
+                  decoration: InputDecoration(labelText: l10n.displayName),
                   validator: (value) {
                     final length = value?.trim().length ?? 0;
-                    if (length < 2) return 'Nama minimal 2 karakter';
+                    if (length < 2) return l10n.nameMinimumCharacters;
                     if (length > AuthProvider.maxDisplayNameLength) {
-                      return 'Nama terlalu panjang';
+                      return l10n.nameTooLong;
                     }
                     return null;
                   },
@@ -82,9 +84,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 TextFormField(
                   initialValue: user?.email ?? '',
                   readOnly: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    helperText: 'Perubahan email belum didukung oleh server.',
+                  decoration: InputDecoration(
+                    labelText: l10n.email,
+                    helperText: l10n.emailChangeUnsupported,
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -96,7 +98,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           height: 20,
                           child: CircularProgressIndicator(strokeWidth: 2.4),
                         )
-                      : const Text('Simpan'),
+                      : Text(l10n.save),
                 ),
               ],
             ),

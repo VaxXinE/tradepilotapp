@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:tradepilotapp/core/theme/app_theme.dart';
+import 'package:tradepilotapp/l10n/l10n.dart';
 import 'package:tradepilotapp/providers/auth_provider.dart';
 import 'package:tradepilotapp/screens/auth/forgot_password_screen.dart';
 import 'package:tradepilotapp/screens/auth/login_screen.dart';
@@ -35,13 +37,13 @@ void main() {
       tester.getSize(find.byKey(const Key('login-brand-mark'))),
       const Size(120, 80),
     );
-    expect(find.text('Selamat datang kembali'), findsOneWidget);
+    expect(find.text('Welcome back'), findsOneWidget);
 
-    await tester.tap(find.widgetWithText(ElevatedButton, 'Masuk'));
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Sign In'));
     await tester.pump();
 
-    expect(find.text('Masukkan email yang valid'), findsOneWidget);
-    expect(find.text('Password wajib diisi'), findsOneWidget);
+    expect(find.text('Enter a valid email address'), findsOneWidget);
+    expect(find.text('Password is required'), findsOneWidget);
   });
 
   testWidgets('login restores remembered credentials from secure storage', (
@@ -92,22 +94,22 @@ void main() {
   ) async {
     await _pumpAuthScreen(tester, const RegisterScreen());
 
-    expect(find.text('Pemula'), findsOneWidget);
+    expect(find.text('Beginner'), findsOneWidget);
     expect(find.text('Pro'), findsOneWidget);
     await tester.tap(find.text('Pro'));
     await tester.pump();
     expect(
-      find.text('Informasi pasar lebih ringkas dan teknis.'),
+      find.text('More concise and technical market information.'),
       findsOneWidget,
     );
 
-    final submit = find.widgetWithText(ElevatedButton, 'Buat Akun');
+    final submit = find.widgetWithText(ElevatedButton, 'Create Account');
     await tester.ensureVisible(submit);
     await tester.tap(submit);
     await tester.pump();
 
-    expect(find.text('Nama wajib diisi'), findsOneWidget);
-    expect(find.text('Masukkan email yang valid'), findsOneWidget);
+    expect(find.text('Name is required'), findsOneWidget);
+    expect(find.text('Enter a valid email address'), findsOneWidget);
   });
 
   testWidgets('forgot password explains progress and reports invalid email', (
@@ -115,13 +117,13 @@ void main() {
   ) async {
     await _pumpAuthScreen(tester, const ForgotPasswordScreen());
 
-    expect(find.text('Langkah 1 dari 3'), findsOneWidget);
-    expect(find.text('Temukan akunmu'), findsOneWidget);
+    expect(find.text('Step 1 of 3'), findsOneWidget);
+    expect(find.text('Find your account'), findsOneWidget);
 
-    await tester.tap(find.widgetWithText(ElevatedButton, 'Lanjut'));
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Continue'));
     await tester.pump();
 
-    expect(find.text('Masukkan email yang valid'), findsOneWidget);
+    expect(find.text('Enter a valid email address'), findsOneWidget);
   });
 }
 
@@ -150,7 +152,18 @@ Future<void> _pumpAuthScreen(WidgetTester tester, Widget screen) {
   return tester.pumpWidget(
     ChangeNotifierProvider(
       create: (_) => AuthProvider(),
-      child: MaterialApp(theme: AppTheme.light, home: screen),
+      child: MaterialApp(
+        theme: AppTheme.light,
+        locale: const Locale('en'),
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: screen,
+      ),
     ),
   );
 }

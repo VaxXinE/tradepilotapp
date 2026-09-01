@@ -38,6 +38,31 @@ void main() {
   );
 
   test(
+    'registration keeps localized UI text out of the API contract',
+    () async {
+      final auth = AuthProvider();
+      final adapter = _RegisterAdapter();
+      auth.client.dio.httpClientAdapter = adapter;
+      await pumpEventQueue();
+
+      expect(
+        await auth.register(
+          email: 'release-test@example.com',
+          password: 'secure-password',
+          displayName: 'Release Test',
+          securityAnswer: 'answer',
+          mode: RegisterBodySelectedModeEnum.beginner,
+        ),
+        isTrue,
+      );
+      expect(
+        adapter.requestData['securityQuestion'],
+        'Nama hewan peliharaan pertama kamu?',
+      );
+    },
+  );
+
+  test(
     'profile mutation rejects invalid input and hides raw server errors',
     () async {
       final auth = await _authenticatedUser();
@@ -70,6 +95,15 @@ void main() {
     adapter.completeProfile(mode: 'pro');
     expect(await first, isTrue);
     expect(auth.user?.selectedMode, UserSelectedModeEnum.pro);
+  });
+
+  test('language changes are synced to the authenticated profile', () async {
+    final auth = await _authenticatedUser();
+    final adapter = _ProfileAdapter();
+    auth.client.dio.httpClientAdapter = adapter;
+
+    expect(await auth.updateLanguage('en'), isTrue);
+    expect(adapter.lastProfileData['lang'], 'en');
   });
 
   test('stale profile response cannot restore state after logout', () async {
@@ -128,6 +162,7 @@ User _user({required String name, String mode = 'beginner'}) => User(
 
 class _ProfileAdapter implements HttpClientAdapter {
   int profileCalls = 0;
+  Map<String, dynamic> lastProfileData = {};
   bool failProfile = false;
   bool failPassword = false;
   bool deferProfile = false;
@@ -145,6 +180,7 @@ class _ProfileAdapter implements HttpClientAdapter {
   ) async {
     if (options.path == '/auth/profile') {
       profileCalls++;
+      lastProfileData = Map<String, dynamic>.from(options.data as Map);
       if (failProfile) return _errorResponse();
       if (deferProfile) {
         _pendingProfile = Completer<ResponseBody>();
@@ -187,6 +223,44 @@ class _ProfileAdapter implements HttpClientAdapter {
       Headers.contentTypeHeader: [Headers.jsonContentType],
     },
   );
+
+  @override
+  void close({bool force = false}) {}
+}
+
+class _RegisterAdapter implements HttpClientAdapter {
+  Map<String, dynamic> requestData = {};
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    if (options.path != '/auth/register') {
+      throw StateError('Unexpected request: ${options.path}');
+    }
+    requestData = Map<String, dynamic>.from(options.data as Map);
+    return ResponseBody.fromString(
+      jsonEncode({
+        'token': 'registration-token',
+        'user': {
+          'id': 2,
+          'email': 'release-test@example.com',
+          'displayName': 'Release Test',
+          'role': 'user',
+          'selectedMode': 'beginner',
+          'themePreference': 'dark',
+          'securityQuestion': 'Nama hewan peliharaan pertama kamu?',
+          'onboardingCompleted': false,
+        },
+      }),
+      201,
+      headers: {
+        Headers.contentTypeHeader: [Headers.jsonContentType],
+      },
+    );
+  }
 
   @override
   void close({bool force = false}) {}

@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/localization/locale_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme_controller.dart';
+import '../../../l10n/l10n.dart';
 import '../../../providers/auth_provider.dart';
-import '../../../screens/notifications/notifications_screen.dart';
-import '../../../services/native_push_service.dart';
+// import '../../../screens/notifications/notifications_screen.dart';
 import '../../profile/change_password_screen.dart';
+import '../../profile/delete_account_screen.dart';
 import '../../profile/edit_profile_screen.dart';
 import '../../analytics/analytics_screen.dart';
 import '../../daily_summary/daily_summary_screen.dart';
@@ -16,6 +19,28 @@ import '../../trader_mirror/trader_mirror_screen.dart';
 
 class ProfileTab extends StatelessWidget {
   const ProfileTab({super.key});
+
+  static const _privacyUrl = 'https://tradepilot.id/privacy';
+  static const _termsUrl = 'https://tradepilot.id/terms';
+  static const _supportUrl = 'https://tradepilot.id/support';
+
+  Future<void> _openUrl(BuildContext context, String url) async {
+    try {
+      if (await launchUrl(
+        Uri.parse(url),
+        mode: LaunchMode.externalApplication,
+      )) {
+        return;
+      }
+    } catch (_) {
+      // Native plugin belum siap/gagal membuka browser; tampilkan error aman.
+    }
+    if (context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.linkOpenFailed)));
+    }
+  }
 
   Future<void> _toggleMode(BuildContext context, bool enabled) async {
     final auth = context.read<AuthProvider>();
@@ -31,20 +56,21 @@ class ProfileTab extends StatelessWidget {
   }
 
   Future<void> _confirmLogout(BuildContext context) async {
+    final l10n = context.l10n;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Keluar'),
-        content: const Text('Yakin ingin keluar dari akun ini?'),
+        title: Text(l10n.signOut),
+        content: Text(l10n.signOutConfirmation),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Batal'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
             child: Text(
-              'Keluar',
+              l10n.signOut,
               style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
           ),
@@ -54,19 +80,42 @@ class ProfileTab extends StatelessWidget {
 
     if (confirmed != true || !context.mounted) return;
 
-    try {
-      await context.read<NativePushService>().unregister();
-    } catch (_) {
-      // Unregister push bersifat best effort; sesi lokal tetap harus berakhir.
-    } finally {
-      if (context.mounted) await context.read<AuthProvider>().logout();
-    }
+    await context.read<AuthProvider>().logout();
   }
 
-  String _notificationStatus(NativePushService push) {
-    if (push.isRegistered) return 'Aktif untuk perangkat ini';
-    if (push.isPermissionDenied) return 'Izin sistem tidak diberikan';
-    return 'Belum didaftarkan pada perangkat ini';
+  Future<void> _selectLanguage(
+    BuildContext context,
+    String currentLanguageCode,
+  ) async {
+    final selected = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => SimpleDialog(
+        title: Text(context.l10n.language),
+        children: [
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(dialogContext, 'en'),
+            child: _LanguageOption(
+              label: 'English',
+              selected: currentLanguageCode == 'en',
+            ),
+          ),
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(dialogContext, 'id'),
+            child: _LanguageOption(
+              label: 'Bahasa Indonesia',
+              selected: currentLanguageCode == 'id',
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (selected != null && context.mounted) {
+      await context.read<LocaleController>().setLanguage(selected);
+      if (context.mounted) {
+        await context.read<AuthProvider>().updateLanguage(selected);
+      }
+    }
   }
 
   @override
@@ -80,15 +129,16 @@ class ProfileTab extends StatelessWidget {
         ? AppColors.darkPrimaryForeground
         : AppColors.lightPrimaryForeground;
     final auth = context.watch<AuthProvider>();
-    final push = context.watch<NativePushService>();
     final themeController = context.watch<ThemeController>();
+    final localeController = context.watch<LocaleController>();
+    final l10n = context.l10n;
     final user = auth.user;
 
     if (user == null) return const SizedBox.shrink();
     final isPro = user.selectedMode == UserSelectedModeEnum.pro;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Profil')),
+      appBar: AppBar(title: Text(l10n.profile)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -107,12 +157,12 @@ class ProfileTab extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
                   _Section(
-                    title: 'Akun',
+                    title: l10n.account,
                     children: [
                       ListTile(
                         leading: const Icon(Icons.person_outline_rounded),
-                        title: const Text('Informasi Profil'),
-                        subtitle: const Text('Ubah nama tampilan'),
+                        title: Text(l10n.profileInformation),
+                        subtitle: Text(l10n.changeDisplayName),
                         trailing: const Icon(Icons.chevron_right_rounded),
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute(
@@ -123,19 +173,34 @@ class ProfileTab extends StatelessWidget {
                     ],
                   ),
                   _Section(
-                    title: 'Preferensi',
+                    title: l10n.preferences,
                     children: [
+                      ListTile(
+                        leading: const Icon(Icons.language_rounded),
+                        title: Text(l10n.language),
+                        subtitle: Text(
+                          localeController.locale.languageCode == 'id'
+                              ? l10n.indonesian
+                              : l10n.english,
+                        ),
+                        trailing: const Icon(Icons.chevron_right_rounded),
+                        onTap: () => _selectLanguage(
+                          context,
+                          localeController.locale.languageCode,
+                        ),
+                      ),
+                      const Divider(height: 1),
                       SwitchListTile(
                         secondary: Icon(
                           themeController.isDarkMode
                               ? Icons.dark_mode_outlined
                               : Icons.light_mode_outlined,
                         ),
-                        title: const Text('Tema gelap'),
+                        title: Text(l10n.darkTheme),
                         subtitle: Text(
                           themeController.isDarkMode
-                              ? 'Aktif • nyaman digunakan pada cahaya rendah'
-                              : 'Nonaktif • menggunakan tampilan terang',
+                              ? l10n.darkThemeEnabled
+                              : l10n.darkThemeDisabled,
                         ),
                         value: themeController.isDarkMode,
                         onChanged: themeController.setDarkMode,
@@ -143,11 +208,11 @@ class ProfileTab extends StatelessWidget {
                       const Divider(height: 1),
                       SwitchListTile(
                         secondary: const Icon(Icons.tune_rounded),
-                        title: const Text('Mode analisis'),
+                        title: Text(l10n.analysisMode),
                         subtitle: Text(
                           isPro
-                              ? 'Saat ini: Pro • detail teknis lengkap'
-                              : 'Saat ini: Pemula • penjelasan lebih sederhana',
+                              ? l10n.proModeDescription
+                              : l10n.beginnerModeDescription,
                         ),
                         value: isPro,
                         onChanged: auth.isUpdatingProfile
@@ -157,11 +222,11 @@ class ProfileTab extends StatelessWidget {
                     ],
                   ),
                   _Section(
-                    title: 'Keamanan',
+                    title: l10n.security,
                     children: [
                       ListTile(
                         leading: const Icon(Icons.lock_outline_rounded),
-                        title: const Text('Ganti Password'),
+                        title: Text(l10n.changePassword),
                         trailing: const Icon(Icons.chevron_right_rounded),
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute(
@@ -172,9 +237,9 @@ class ProfileTab extends StatelessWidget {
                       const Divider(height: 1),
                       ListTile(
                         leading: const Icon(Icons.help_outline_rounded),
-                        title: const Text('Pertanyaan Keamanan'),
+                        title: Text(l10n.securityQuestion),
                         subtitle: Text(
-                          user.securityQuestion ?? 'Belum tersedia',
+                          user.securityQuestion ?? l10n.notAvailable,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -182,30 +247,72 @@ class ProfileTab extends StatelessWidget {
                     ],
                   ),
                   _Section(
-                    title: 'Notifikasi',
+                    title: l10n.legalAndHelp,
                     children: [
                       ListTile(
-                        leading: const Icon(Icons.notifications_outlined),
-                        title: const Text('Pengaturan Notifikasi'),
-                        subtitle: Text(_notificationStatus(push)),
+                        leading: const Icon(Icons.privacy_tip_outlined),
+                        title: Text(l10n.privacyPolicy),
+                        trailing: const Icon(Icons.open_in_new_rounded),
+                        onTap: () => _openUrl(context, _privacyUrl),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: const Icon(Icons.description_outlined),
+                        title: Text(l10n.termsOfService),
+                        trailing: const Icon(Icons.open_in_new_rounded),
+                        onTap: () => _openUrl(context, _termsUrl),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: const Icon(Icons.support_agent_rounded),
+                        title: Text(l10n.support),
+                        trailing: const Icon(Icons.open_in_new_rounded),
+                        onTap: () => _openUrl(context, _supportUrl),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: Icon(
+                          Icons.delete_forever_outlined,
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                        title: Text(
+                          l10n.deleteAccount,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
                         trailing: const Icon(Icons.chevron_right_rounded),
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (_) => const NotificationsScreen(),
+                            builder: (_) => const DeleteAccountScreen(),
                           ),
                         ),
                       ),
                     ],
                   ),
+                  // _Section(
+                  //   title: 'Notifikasi',
+                  //   children: [
+                  //     ListTile(
+                  //       leading: const Icon(Icons.notifications_outlined),
+                  //       title: const Text('Pengaturan Notifikasi'),
+                  //       subtitle: const Text('Notifikasi dalam aplikasi'),
+                  //       trailing: const Icon(Icons.chevron_right_rounded),
+                  //       onTap: () => Navigator.of(context).push(
+                  //         MaterialPageRoute(
+                  //           builder: (_) => const NotificationsScreen(),
+                  //         ),
+                  //       ),
+                  //     ),
+                  //   ],
+                  // ),
                   _Section(
-                    title: 'Insight & Jurnal',
+                    title: l10n.insightsAndJournal,
                     children: [
                       ListTile(
                         leading: const Icon(Icons.menu_book_outlined),
-                        title: const Text('Trade Journal'),
-                        subtitle: const Text(
-                          'Catatan transaksi dan refleksi pribadi',
-                        ),
+                        title: Text(l10n.tradeJournal),
+                        subtitle: Text(l10n.tradeJournalDescription),
                         trailing: const Icon(Icons.chevron_right_rounded),
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute(
@@ -216,10 +323,8 @@ class ProfileTab extends StatelessWidget {
                       const Divider(height: 1),
                       ListTile(
                         leading: const Icon(Icons.insights_outlined),
-                        title: const Text('Analytics'),
-                        subtitle: const Text(
-                          'Pola aktivitas dan hasil evaluasi',
-                        ),
+                        title: Text(l10n.analytics),
+                        subtitle: Text(l10n.analyticsDescription),
                         trailing: const Icon(Icons.chevron_right_rounded),
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute(
@@ -230,7 +335,7 @@ class ProfileTab extends StatelessWidget {
                       const Divider(height: 1),
                       ListTile(
                         leading: const Icon(Icons.today_outlined),
-                        title: const Text('Ringkasan Harian'),
+                        title: Text(l10n.dailySummary),
                         trailing: const Icon(Icons.chevron_right_rounded),
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute(
@@ -241,10 +346,8 @@ class ProfileTab extends StatelessWidget {
                       const Divider(height: 1),
                       ListTile(
                         leading: const Icon(Icons.self_improvement_outlined),
-                        title: const Text('Trader Mirror'),
-                        subtitle: const Text(
-                          'Refleksi kebiasaan berbasis data',
-                        ),
+                        title: Text(l10n.traderMirror),
+                        subtitle: Text(l10n.traderMirrorDescription),
                         trailing: const Icon(Icons.chevron_right_rounded),
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute(
@@ -264,7 +367,7 @@ class ProfileTab extends StatelessWidget {
                       color: Theme.of(context).colorScheme.error,
                     ),
                     label: Text(
-                      'Keluar',
+                      l10n.signOut,
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.error,
                       ),
@@ -276,6 +379,23 @@ class ProfileTab extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _LanguageOption extends StatelessWidget {
+  const _LanguageOption({required this.label, required this.selected});
+
+  final String label;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(child: Text(label)),
+        if (selected) const Icon(Icons.check_rounded),
+      ],
     );
   }
 }
