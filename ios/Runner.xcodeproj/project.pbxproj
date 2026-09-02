@@ -198,6 +198,7 @@
 				9705A1C41CF9048500538489 /* Embed Frameworks */,
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
 				4A3682AC15359EDC5787601D /* [CP] Embed Pods Frameworks */,
+				AB12CD34EF56AB78CD90EF12 /* Fix Native Assets Frameworks */,
 			);
 			buildRules = (
 			);
@@ -269,6 +270,22 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		AB12CD34EF56AB78CD90EF12 /* Fix Native Assets Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Fix Native Assets Frameworks";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Works around a still-open Flutter bug where frameworks produced via Dart\n# native assets (used by local_auth_darwin -> objective_c) are embedded without\n# a MinimumOSVersion in their Info.plist and without a dSYM, which fails App\n# Store Connect validation. See flutter/flutter#148501 and #185039.\nFRAMEWORKS_DIR=\"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\n\nfor FW in App objective_c; do\n  PLIST=\"${FRAMEWORKS_DIR}/${FW}.framework/Info.plist\"\n  if [ -f \"$PLIST\" ]; then\n    /usr/libexec/PlistBuddy -c \"Add :MinimumOSVersion string ${IPHONEOS_DEPLOYMENT_TARGET}\" \"$PLIST\" 2>/dev/null || \\\n    /usr/libexec/PlistBuddy -c \"Set :MinimumOSVersion ${IPHONEOS_DEPLOYMENT_TARGET}\" \"$PLIST\"\n  fi\n\n  BIN=\"${FRAMEWORKS_DIR}/${FW}.framework/${FW}\"\n  DSYM_DEST=\"${DWARF_DSYM_FOLDER_PATH}/${FW}.framework.dSYM\"\n  if [ -f \"$BIN\" ] && [ ! -d \"$DSYM_DEST\" ]; then\n    dsymutil \"$BIN\" -o \"$DSYM_DEST\"\n  fi\ndone\n";
+			showEnvVarsInLog = 0;
+		};
 		06FDCF5210E4025A24926739 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
