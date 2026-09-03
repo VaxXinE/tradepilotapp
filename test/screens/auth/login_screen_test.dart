@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tradepilotapp/core/localization/locale_controller.dart';
 import 'package:tradepilotapp/core/theme/app_theme.dart';
 import 'package:tradepilotapp/l10n/l10n.dart';
 import 'package:tradepilotapp/providers/auth_provider.dart';
@@ -148,10 +150,15 @@ class _FakeLocalAuthentication extends LocalAuthentication {
   }
 }
 
-Future<void> _pumpAuthScreen(WidgetTester tester, Widget screen) {
+Future<void> _pumpAuthScreen(WidgetTester tester, Widget screen) async {
+  SharedPreferences.setMockInitialValues({});
+  final preferences = await SharedPreferences.getInstance();
   return tester.pumpWidget(
-    ChangeNotifierProvider(
-      create: (_) => AuthProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => LocaleController(preferences)),
+      ],
       child: MaterialApp(
         theme: AppTheme.light,
         locale: const Locale('en'),

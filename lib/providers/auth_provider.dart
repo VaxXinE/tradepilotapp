@@ -11,9 +11,6 @@ enum AuthStatus { unknown, authenticated, unauthenticated }
 /// State management untuk sesi login, setara dengan `AuthContext.tsx`
 /// pada app Expo di repo Trade-Pilot (`artifacts/mobile`).
 class AuthProvider extends ChangeNotifier {
-  static const _firstPetSecurityQuestion =
-      'Nama hewan peliharaan pertama kamu?';
-
   AuthProvider() {
     _client = TradePilotClient(
       baseUrl: ApiConfig.baseUrl,
@@ -82,6 +79,7 @@ class AuthProvider extends ChangeNotifier {
     required String password,
     required String displayName,
     required String securityAnswer,
+    required String securityQuestion,
     required RegisterBodySelectedModeEnum mode,
   }) {
     return _run(() async {
@@ -91,7 +89,7 @@ class AuthProvider extends ChangeNotifier {
             ..email = email.trim().toLowerCase()
             ..password = password
             ..displayName = displayName
-            ..securityQuestion = _firstPetSecurityQuestion
+            ..securityQuestion = securityQuestion
             ..securityAnswer = securityAnswer
             ..selectedMode = mode,
         ),
@@ -200,6 +198,45 @@ class AuthProvider extends ChangeNotifier {
     );
   }
 
+  Future<bool> updateTheme(bool dark) {
+    return _updateProfile(
+      UpdateProfileBody(
+        (builder) => builder.themePreference = dark
+            ? UpdateProfileBodyThemePreferenceEnum.dark
+            : UpdateProfileBodyThemePreferenceEnum.light,
+      ),
+    );
+  }
+
+  Future<bool> completeOnboarding() {
+    return _updateProfile(
+      UpdateProfileBody((builder) => builder.onboardingCompleted = true),
+    );
+  }
+
+  Future<bool> updateAvatarPath(String? objectPath) async {
+    if (objectPath != null) {
+      return _updateProfile(
+        UpdateProfileBody((builder) => builder.avatarUrl = objectPath),
+      );
+    }
+    if (status != AuthStatus.authenticated || isUpdatingProfile) return false;
+    isUpdatingProfile = true;
+    profileError = null;
+    notifyListeners();
+    try {
+      await _client.dio.patch<void>('/auth/profile', data: {'avatarUrl': null});
+      await refreshMe();
+      return true;
+    } catch (error) {
+      profileError = _profileFriendlyError(error);
+      return false;
+    } finally {
+      isUpdatingProfile = false;
+      notifyListeners();
+    }
+  }
+
   Future<bool> _updateProfile(UpdateProfileBody body) async {
     final currentUser = user;
     if (status != AuthStatus.authenticated ||
@@ -289,6 +326,41 @@ class AuthProvider extends ChangeNotifier {
         isChangingPassword = false;
         notifyListeners();
       }
+    }
+  }
+
+  Future<bool> changeSecurityQuestion({
+    required String currentPassword,
+    required String securityQuestion,
+    required String securityAnswer,
+  }) async {
+    final currentUser = user;
+    if (status != AuthStatus.authenticated ||
+        currentUser == null ||
+        isChangingPassword) {
+      return false;
+    }
+
+    isChangingPassword = true;
+    profileError = null;
+    notifyListeners();
+    try {
+      await _client.auth.changeSecurityQuestion(
+        changeSecurityQuestionBody: ChangeSecurityQuestionBody(
+          (builder) => builder
+            ..currentPassword = currentPassword
+            ..securityQuestion = securityQuestion
+            ..securityAnswer = securityAnswer,
+        ),
+      );
+      await refreshMe();
+      return true;
+    } catch (error) {
+      profileError = _profileFriendlyError(error, passwordOperation: true);
+      return false;
+    } finally {
+      isChangingPassword = false;
+      notifyListeners();
     }
   }
 

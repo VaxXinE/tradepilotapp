@@ -10,10 +10,12 @@ class HistoryAnalysisCard extends StatelessWidget {
     super.key,
     required this.analysis,
     required this.onTap,
+    this.onReanalyze,
   });
 
   final Analysis analysis;
   final VoidCallback onTap;
+  final VoidCallback? onReanalyze;
 
   @override
   Widget build(BuildContext context) {
@@ -59,6 +61,13 @@ class HistoryAnalysisCard extends StatelessWidget {
                       ),
                     ),
                   const SizedBox(width: 4),
+                  if (onReanalyze != null)
+                    IconButton(
+                      tooltip: context.l10n.reanalyze,
+                      visualDensity: VisualDensity.compact,
+                      onPressed: onReanalyze,
+                      icon: const Icon(Icons.refresh_rounded),
+                    ),
                   Icon(Icons.chevron_right_rounded, color: muted),
                 ],
               ),

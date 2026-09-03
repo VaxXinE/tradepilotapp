@@ -166,7 +166,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   height: 8,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: provider.isRealtimeConnected ? Colors.green : muted,
+                    color: provider.isRealtimeConnected
+                        ? (isDark
+                              ? AppColors.bullishDark
+                              : AppColors.bullishLight)
+                        : muted,
                   ),
                 ),
                 const SizedBox(width: 7),
@@ -431,6 +435,66 @@ class _PreferencesCard extends StatelessWidget {
           ),
 
           const Divider(),
+          const Align(
+            alignment: Alignment.centerLeft,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(8, 8, 8, 4),
+              child: Text(
+                'Guardrail keputusan',
+                style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800),
+              ),
+            ),
+          ),
+          _PreferenceSwitch(
+            title: 'Peringatan revenge trading',
+            subtitle: 'Peringatan lunak setelah kerugian terbaru.',
+            value: prefs.guardrailRevenge,
+            enabled: !provider.isSavingPreferences,
+            onChanged: (value) => unawaited(
+              provider.updatePreference(
+                key: NotificationPreferenceKey.guardrailRevenge,
+                enabled: value,
+              ),
+            ),
+          ),
+          _PreferenceSwitch(
+            title: 'Peringatan overtrading',
+            subtitle: 'Peringatan saat jumlah analisis terlalu rapat.',
+            value: prefs.guardrailOvertrading,
+            enabled: !provider.isSavingPreferences,
+            onChanged: (value) => unawaited(
+              provider.updatePreference(
+                key: NotificationPreferenceKey.guardrailOvertrading,
+                enabled: value,
+              ),
+            ),
+          ),
+          _PreferenceSwitch(
+            title: 'Peringatan risiko tinggi',
+            subtitle: 'Peringatan event high-impact dalam 30 menit.',
+            value: prefs.guardrailHighRisk,
+            enabled: !provider.isSavingPreferences,
+            onChanged: (value) => unawaited(
+              provider.updatePreference(
+                key: NotificationPreferenceKey.guardrailHighRisk,
+                enabled: value,
+              ),
+            ),
+          ),
+          _PreferenceSwitch(
+            title: 'Cooling-off 30 menit',
+            subtitle: 'Jeda opsional setelah kerugian signifikan.',
+            value: prefs.coolingOffEnabled,
+            enabled: !provider.isSavingPreferences,
+            onChanged: (value) => unawaited(
+              provider.updatePreference(
+                key: NotificationPreferenceKey.coolingOff,
+                enabled: value,
+              ),
+            ),
+          ),
+
+          const Divider(),
 
           const Align(
             alignment: Alignment.centerLeft,
@@ -683,7 +747,9 @@ class _NotificationTile extends StatelessWidget {
   static Color _colorFor(BuildContext context, api.NotificationTypeEnum type) {
     switch (type.name) {
       case 'warning':
-        return Colors.orange;
+        return Theme.of(context).brightness == Brightness.dark
+            ? AppColors.neutralDark
+            : AppColors.neutralLight;
 
       case 'error':
         return Theme.of(context).colorScheme.error;

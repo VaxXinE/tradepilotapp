@@ -4,18 +4,21 @@ import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/localization/locale_controller.dart';
+import '../../../core/api/api_config.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme_controller.dart';
 import '../../../l10n/l10n.dart';
 import '../../../providers/auth_provider.dart';
 // import '../../../screens/notifications/notifications_screen.dart';
 import '../../profile/change_password_screen.dart';
+import '../../profile/change_security_question_screen.dart';
 import '../../profile/delete_account_screen.dart';
 import '../../profile/edit_profile_screen.dart';
 import '../../analytics/analytics_screen.dart';
 import '../../daily_summary/daily_summary_screen.dart';
 import '../../journal/trade_journal_screen.dart';
 import '../../trader_mirror/trader_mirror_screen.dart';
+import '../../mindset/mindset_screen.dart';
 
 class ProfileTab extends StatelessWidget {
   const ProfileTab({super.key});
@@ -48,6 +51,18 @@ class ProfileTab extends StatelessWidget {
       enabled ? UserSelectedModeEnum.pro : UserSelectedModeEnum.beginner,
     );
 
+    if (!success && context.mounted && auth.profileError != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(auth.profileError!)));
+    }
+  }
+
+  Future<void> _toggleTheme(BuildContext context, bool enabled) async {
+    await context.read<ThemeController>().setDarkMode(enabled);
+    if (!context.mounted) return;
+    final auth = context.read<AuthProvider>();
+    final success = await auth.updateTheme(enabled);
     if (!success && context.mounted && auth.profileError != null) {
       ScaffoldMessenger.of(
         context,
@@ -151,6 +166,7 @@ class ProfileTab extends StatelessWidget {
                   _ProfileHeader(
                     name: user.displayName,
                     email: user.email,
+                    avatarUrl: user.avatarUrl,
                     primary: primary,
                     onPrimary: onPrimary,
                     muted: muted,
@@ -203,7 +219,9 @@ class ProfileTab extends StatelessWidget {
                               : l10n.darkThemeDisabled,
                         ),
                         value: themeController.isDarkMode,
-                        onChanged: themeController.setDarkMode,
+                        onChanged: auth.isUpdatingProfile
+                            ? null
+                            : (value) => _toggleTheme(context, value),
                       ),
                       const Divider(height: 1),
                       SwitchListTile(
@@ -242,6 +260,13 @@ class ProfileTab extends StatelessWidget {
                           user.securityQuestion ?? l10n.notAvailable,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing: const Icon(Icons.chevron_right_rounded),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                const ChangeSecurityQuestionScreen(),
+                          ),
                         ),
                       ),
                     ],
@@ -355,6 +380,18 @@ class ProfileTab extends StatelessWidget {
                           ),
                         ),
                       ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: const Icon(Icons.psychology_alt_outlined),
+                        title: Text(l10n.traderMindset),
+                        subtitle: Text(l10n.traderMindsetDescription),
+                        trailing: const Icon(Icons.chevron_right_rounded),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const MindsetScreen(),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -404,6 +441,7 @@ class _ProfileHeader extends StatelessWidget {
   const _ProfileHeader({
     required this.name,
     required this.email,
+    required this.avatarUrl,
     required this.primary,
     required this.onPrimary,
     required this.muted,
@@ -411,12 +449,14 @@ class _ProfileHeader extends StatelessWidget {
 
   final String name;
   final String email;
+  final String? avatarUrl;
   final Color primary;
   final Color onPrimary;
   final Color muted;
 
   @override
   Widget build(BuildContext context) {
+    final imageUrl = _avatarUrl(avatarUrl);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(18),
@@ -425,6 +465,7 @@ class _ProfileHeader extends StatelessWidget {
             CircleAvatar(
               radius: 30,
               backgroundColor: primary,
+              foregroundImage: imageUrl == null ? null : NetworkImage(imageUrl),
               child: Text(
                 name.isEmpty ? '?' : name[0].toUpperCase(),
                 style: TextStyle(
@@ -456,6 +497,12 @@ class _ProfileHeader extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String? _avatarUrl(String? path) {
+    if (path == null || path.isEmpty) return null;
+    final clean = path.startsWith('/') ? path.substring(1) : path;
+    return '${ApiConfig.baseUrl}/storage/$clean';
   }
 }
 

@@ -128,6 +128,12 @@ abstract class AppLocalizations {
   /// **'Analysis'**
   String get analysis;
 
+  /// No description provided for @reanalyze.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyze again'**
+  String get reanalyze;
+
   /// No description provided for @history.
   ///
   /// In en, this message translates to:
@@ -236,6 +242,24 @@ abstract class AppLocalizations {
   /// **'Security Question'**
   String get securityQuestion;
 
+  /// No description provided for @changeSecurityQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Security Question'**
+  String get changeSecurityQuestion;
+
+  /// No description provided for @newSecurityAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'New security answer'**
+  String get newSecurityAnswer;
+
+  /// No description provided for @securityQuestionUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Security question updated.'**
+  String get securityQuestionUpdated;
+
   /// No description provided for @notAvailable.
   ///
   /// In en, this message translates to:
@@ -325,6 +349,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Data-driven habit reflection'**
   String get traderMirrorDescription;
+
+  /// No description provided for @traderMindset.
+  ///
+  /// In en, this message translates to:
+  /// **'Trader\'s Mindset'**
+  String get traderMindset;
+
+  /// No description provided for @traderMindsetDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Short lessons for disciplined decisions'**
+  String get traderMindsetDescription;
+
+  /// No description provided for @mindsetDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Educational material only. It is not financial or psychological advice.'**
+  String get mindsetDisclaimer;
 
   /// No description provided for @signOut.
   ///
@@ -433,6 +475,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Profile updated successfully.'**
   String get profileUpdated;
+
+  /// No description provided for @changePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Change photo'**
+  String get changePhoto;
+
+  /// No description provided for @avatarRequirements.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a JPG, PNG, WebP, or GIF image up to 5 MB.'**
+  String get avatarRequirements;
+
+  /// No description provided for @avatarUploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile photo could not be uploaded.'**
+  String get avatarUploadFailed;
 
   /// No description provided for @passwordChanged.
   ///
@@ -650,6 +710,18 @@ abstract class AppLocalizations {
   /// **'Answer is required'**
   String get answerRequired;
 
+  /// No description provided for @registerConsent.
+  ///
+  /// In en, this message translates to:
+  /// **'By registering, you agree to:'**
+  String get registerConsent;
+
+  /// No description provided for @andLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'and'**
+  String get andLabel;
+
   /// No description provided for @passwordResetSuccess.
   ///
   /// In en, this message translates to:
@@ -770,6 +842,30 @@ abstract class AppLocalizations {
   /// **'Want a market analysis?'**
   String get wantMarketAnalysis;
 
+  /// No description provided for @getStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Get started with Trade Pilot'**
+  String get getStarted;
+
+  /// No description provided for @onboardingSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a market, review the live context, then create your first analysis. Results are decision support—not trading orders.'**
+  String get onboardingSteps;
+
+  /// No description provided for @gotIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get gotIt;
+
+  /// No description provided for @liveMarkets.
+  ///
+  /// In en, this message translates to:
+  /// **'Live Markets'**
+  String get liveMarkets;
+
   /// No description provided for @analysisPreparation.
   ///
   /// In en, this message translates to:
@@ -847,6 +943,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Beginner Mode'**
   String get beginnerMode;
+
+  /// No description provided for @proMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Pro Mode'**
+  String get proMode;
 
   /// No description provided for @aiConfidence.
   ///
@@ -1027,6 +1129,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Additional Notes'**
   String get additionalNotes;
+
+  /// No description provided for @decisionGuardrails.
+  ///
+  /// In en, this message translates to:
+  /// **'Decision guardrails'**
+  String get decisionGuardrails;
+
+  /// No description provided for @guardrailHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This is a soft warning. Pause and reassess before continuing.'**
+  String get guardrailHint;
+
+  /// No description provided for @guardrailRevenge.
+  ///
+  /// In en, this message translates to:
+  /// **'A loss occurred {minutes} minutes ago. Avoid revenge trading.'**
+  String guardrailRevenge(String minutes);
+
+  /// No description provided for @guardrailOvertrading.
+  ///
+  /// In en, this message translates to:
+  /// **'You made {count} analyses; the current limit is {limit}.'**
+  String guardrailOvertrading(String count, String limit);
+
+  /// No description provided for @guardrailHighRisk.
+  ///
+  /// In en, this message translates to:
+  /// **'{event} is expected in about {minutes} minutes.'**
+  String guardrailHighRisk(String event, String minutes);
+
+  /// No description provided for @guardrailUnusualHour.
+  ///
+  /// In en, this message translates to:
+  /// **'This trading hour ({hour}:00 UTC) is unusual for your history.'**
+  String guardrailUnusualHour(String hour);
+
+  /// No description provided for @guardrailCoolingOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Cooling-off period: about {minutes} minutes remaining.'**
+  String guardrailCoolingOff(String minutes);
+
+  /// No description provided for @guardrailGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'A risk pattern was detected.'**
+  String get guardrailGeneric;
 
   /// No description provided for @additionalNotesDescription.
   ///
@@ -2005,6 +2155,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Why it matters: This event may affect sentiment and volatility for {instrument}.'**
   String genericEventExplanation(String instrument);
+
+  /// No description provided for @savedFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved filters'**
+  String get savedFilters;
+
+  /// No description provided for @saveCurrentFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Save current filter'**
+  String get saveCurrentFilter;
+
+  /// No description provided for @presetName.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter name'**
+  String get presetName;
+
+  /// No description provided for @noSavedFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved filters yet.'**
+  String get noSavedFilters;
+
+  /// No description provided for @filterPresetSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter saved.'**
+  String get filterPresetSaved;
+
+  /// No description provided for @filterPresetFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved filters could not be updated.'**
+  String get filterPresetFailed;
+
+  /// No description provided for @recentMarkets.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently analyzed'**
+  String get recentMarkets;
+
+  /// No description provided for @favoriteMarkets.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite markets'**
+  String get favoriteMarkets;
+
+  /// No description provided for @outcomeSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'30-day outcome summary'**
+  String get outcomeSummary;
+
+  /// No description provided for @targetHitRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Target hit rate'**
+  String get targetHitRate;
+
+  /// No description provided for @stopHitRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Risk-limit hit rate'**
+  String get stopHitRate;
+
+  /// No description provided for @resolvedSample.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} resolved analyses'**
+  String resolvedSample(int count);
 }
 
 class _AppLocalizationsDelegate

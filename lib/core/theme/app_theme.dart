@@ -18,6 +18,7 @@ class AppTheme {
     mutedForeground: AppColors.lightMutedForeground,
     border: AppColors.lightBorder,
     destructive: AppColors.lightDestructive,
+    bullish: AppColors.bullishLight,
   );
 
   static ThemeData get dark => _build(
@@ -33,6 +34,7 @@ class AppTheme {
     mutedForeground: AppColors.darkMutedForeground,
     border: AppColors.darkBorder,
     destructive: AppColors.darkDestructive,
+    bullish: AppColors.bullishDark,
   );
 
   static ThemeData _build({
@@ -48,6 +50,7 @@ class AppTheme {
     required Color mutedForeground,
     required Color border,
     required Color destructive,
+    required Color bullish,
   }) {
     final colorScheme =
         ColorScheme.fromSeed(
@@ -58,8 +61,19 @@ class AppTheme {
           onPrimary: primaryForeground,
           secondary: secondary,
           onSecondary: secondaryForeground,
+          secondaryContainer: secondary,
+          onSecondaryContainer: secondaryForeground,
+          primaryContainer: secondary,
+          onPrimaryContainer: primary,
+          tertiary: bullish,
+          onTertiary: AppColors.destructiveForeground,
           error: destructive,
-          onError: Colors.white,
+          onError: AppColors.destructiveForeground,
+          errorContainer: Color.alphaBlend(
+            destructive.withValues(alpha: 0.15),
+            surface,
+          ),
+          onErrorContainer: destructive,
           surface: surface,
           onSurface: text,
           onSurfaceVariant: mutedForeground,
@@ -70,6 +84,7 @@ class AppTheme {
           surfaceContainerHighest: muted,
           outline: border,
           outlineVariant: border,
+          surfaceTint: Colors.transparent,
         );
 
     final baseTextTheme = brightness == Brightness.dark
@@ -116,6 +131,7 @@ class AppTheme {
       brightness: brightness,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: background,
+      canvasColor: background,
       appBarTheme: AppBarTheme(
         backgroundColor: background,
         foregroundColor: text,
@@ -139,13 +155,13 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppColors.radius),
-          side: BorderSide(color: border.withValues(alpha: 0.8)),
+          side: BorderSide(color: border),
         ),
       ),
       dividerTheme: DividerThemeData(color: border, thickness: 1),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: muted,
+        fillColor: Colors.transparent,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 14,
@@ -182,6 +198,18 @@ class AppTheme {
           elevation: 0,
         ),
       ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: primary,
+          foregroundColor: primaryForeground,
+          minimumSize: const Size(48, 54),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+        ),
+      ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: text,
@@ -199,23 +227,30 @@ class AppTheme {
       chipTheme: ChipThemeData(
         backgroundColor: muted,
         labelStyle: TextStyle(color: text, fontSize: 13),
+        secondaryLabelStyle: TextStyle(color: primaryForeground, fontSize: 13),
         selectedColor: primary,
         secondarySelectedColor: primary,
+        checkmarkColor: primaryForeground,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(999),
           side: BorderSide(color: border),
         ),
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: surface,
+        backgroundColor: background,
         selectedItemColor: primary,
         unselectedItemColor: mutedForeground,
         type: BottomNavigationBarType.fixed,
         elevation: 0,
       ),
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: surface,
-        indicatorColor: secondary,
+        backgroundColor: background,
+        indicatorColor: Color.alphaBlend(
+          primary.withValues(
+            alpha: brightness == Brightness.dark ? 0.20 : 0.10,
+          ),
+          background,
+        ),
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         height: 74,
@@ -248,6 +283,40 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppColors.radius),
         ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: surface,
+        surfaceTintColor: Colors.transparent,
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: surface,
+        modalBackgroundColor: surface,
+        surfaceTintColor: Colors.transparent,
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: surface,
+        surfaceTintColor: Colors.transparent,
+      ),
+      checkboxTheme: CheckboxThemeData(
+        fillColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected) ? primary : null,
+        ),
+        checkColor: WidgetStatePropertyAll(primaryForeground),
+      ),
+      radioTheme: RadioThemeData(fillColor: WidgetStatePropertyAll(primary)),
+      switchTheme: SwitchThemeData(
+        trackColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected) ? primary : muted,
+        ),
+        thumbColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? primaryForeground
+              : mutedForeground,
+        ),
+      ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: primary,
+        foregroundColor: primaryForeground,
       ),
       progressIndicatorTheme: ProgressIndicatorThemeData(color: primary),
       textTheme: textTheme,

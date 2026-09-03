@@ -24,6 +24,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get analysis => 'Analisis';
 
   @override
+  String get reanalyze => 'Analisis ulang';
+
+  @override
   String get history => 'Riwayat';
 
   @override
@@ -79,6 +82,15 @@ class AppLocalizationsId extends AppLocalizations {
   String get securityQuestion => 'Pertanyaan Keamanan';
 
   @override
+  String get changeSecurityQuestion => 'Ubah Pertanyaan Keamanan';
+
+  @override
+  String get newSecurityAnswer => 'Jawaban keamanan baru';
+
+  @override
+  String get securityQuestionUpdated => 'Pertanyaan keamanan berhasil diubah.';
+
+  @override
   String get notAvailable => 'Tidak tersedia';
 
   @override
@@ -122,6 +134,17 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get traderMirrorDescription => 'Refleksi kebiasaan berbasis data';
+
+  @override
+  String get traderMindset => 'Mindset Trader';
+
+  @override
+  String get traderMindsetDescription =>
+      'Pelajaran singkat untuk keputusan disiplin';
+
+  @override
+  String get mindsetDisclaimer =>
+      'Materi edukasi saja. Bukan nasihat finansial atau psikologis.';
 
   @override
   String get signOut => 'Keluar';
@@ -178,6 +201,16 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get profileUpdated => 'Profil berhasil diperbarui.';
+
+  @override
+  String get changePhoto => 'Ganti foto';
+
+  @override
+  String get avatarRequirements =>
+      'Gunakan gambar JPG, PNG, WebP, atau GIF maksimal 5 MB.';
+
+  @override
+  String get avatarUploadFailed => 'Foto profil gagal diunggah.';
 
   @override
   String get passwordChanged => 'Password berhasil diubah.';
@@ -291,6 +324,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get answerRequired => 'Jawaban wajib diisi';
 
   @override
+  String get registerConsent => 'Dengan mendaftar, kamu menyetujui:';
+
+  @override
+  String get andLabel => 'dan';
+
+  @override
   String get passwordResetSuccess => 'Password berhasil diubah. Silakan masuk.';
 
   @override
@@ -357,6 +396,19 @@ class AppLocalizationsId extends AppLocalizations {
   String get wantMarketAnalysis => 'Ingin analisis pasar?';
 
   @override
+  String get getStarted => 'Mulai menggunakan Trade Pilot';
+
+  @override
+  String get onboardingSteps =>
+      'Pilih pasar, periksa konteks live, lalu buat analisis pertama. Hasil adalah alat bantu keputusan—bukan instruksi trading.';
+
+  @override
+  String get gotIt => 'Mengerti';
+
+  @override
+  String get liveMarkets => 'Pasar Live';
+
+  @override
   String get analysisPreparation =>
       'Tinjau harga, sesi pasar, grafik, indikator, dan kalender ekonomi sebelum meminta analisis AI.';
 
@@ -398,6 +450,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get beginnerMode => 'Mode Pemula';
+
+  @override
+  String get proMode => 'Mode Pro';
 
   @override
   String get aiConfidence => 'Keyakinan AI';
@@ -506,6 +561,41 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get additionalNotes => 'Catatan Tambahan';
+
+  @override
+  String get decisionGuardrails => 'Guardrail keputusan';
+
+  @override
+  String get guardrailHint =>
+      'Ini peringatan lunak. Jeda dan evaluasi ulang sebelum lanjut.';
+
+  @override
+  String guardrailRevenge(String minutes) {
+    return 'Kerugian terjadi $minutes menit lalu. Hindari revenge trading.';
+  }
+
+  @override
+  String guardrailOvertrading(String count, String limit) {
+    return 'Kamu membuat $count analisis; batas saat ini $limit.';
+  }
+
+  @override
+  String guardrailHighRisk(String event, String minutes) {
+    return '$event diperkirakan berlangsung sekitar $minutes menit lagi.';
+  }
+
+  @override
+  String guardrailUnusualHour(String hour) {
+    return 'Jam trading ini ($hour:00 UTC) tidak biasa dalam riwayat kamu.';
+  }
+
+  @override
+  String guardrailCoolingOff(String minutes) {
+    return 'Masa cooling-off tersisa sekitar $minutes menit.';
+  }
+
+  @override
+  String get guardrailGeneric => 'Pola risiko terdeteksi.';
 
   @override
   String get additionalNotesDescription =>
@@ -1057,5 +1147,43 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String genericEventExplanation(String instrument) {
     return 'Mengapa penting: peristiwa ini dapat memengaruhi sentimen dan volatilitas $instrument.';
+  }
+
+  @override
+  String get savedFilters => 'Filter tersimpan';
+
+  @override
+  String get saveCurrentFilter => 'Simpan filter saat ini';
+
+  @override
+  String get presetName => 'Nama filter';
+
+  @override
+  String get noSavedFilters => 'Belum ada filter tersimpan.';
+
+  @override
+  String get filterPresetSaved => 'Filter berhasil disimpan.';
+
+  @override
+  String get filterPresetFailed => 'Filter tersimpan tidak dapat diperbarui.';
+
+  @override
+  String get recentMarkets => 'Terakhir dianalisis';
+
+  @override
+  String get favoriteMarkets => 'Market favorit';
+
+  @override
+  String get outcomeSummary => 'Ringkasan outcome 30 hari';
+
+  @override
+  String get targetHitRate => 'Target tercapai';
+
+  @override
+  String get stopHitRate => 'Batas risiko tersentuh';
+
+  @override
+  String resolvedSample(int count) {
+    return '$count analisis terselesaikan';
   }
 }

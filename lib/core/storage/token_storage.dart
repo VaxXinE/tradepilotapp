@@ -8,9 +8,9 @@ import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 /// tapi memakai flutter_secure_storage, bukan AsyncStorage.
 class TokenStorage {
   TokenStorage()
-      : _storage = const FlutterSecureStorage(
-          aOptions: AndroidOptions(encryptedSharedPreferences: true),
-        );
+    : _storage = const FlutterSecureStorage(
+        aOptions: AndroidOptions(encryptedSharedPreferences: true),
+      );
 
   final FlutterSecureStorage _storage;
 
@@ -40,15 +40,15 @@ class TokenStorage {
   }
 
   Map<String, dynamic> _userToMap(User user) => {
-        'id': user.id,
-        'email': user.email,
-        'displayName': user.displayName,
-        'avatarUrl': user.avatarUrl,
-        'role': user.role.name,
-        'selectedMode': user.selectedMode.name,
-        'themePreference': user.themePreference.name,
-        'securityQuestion': user.securityQuestion,
-        'onboardingCompleted': user.onboardingCompleted,
-        'createdAt': user.createdAt?.toIso8601String(),
-      };
+    'id': user.id,
+    'email': user.email,
+    'displayName': user.displayName,
+    'avatarUrl': user.avatarUrl,
+    'role': user.role.name,
+    'selectedMode': user.selectedMode.name,
+    'themePreference': user.themePreference.name,
+    'securityQuestion': user.securityQuestion,
+    'onboardingCompleted': user.onboardingCompleted,
+    'createdAt': user.createdAt?.toIso8601String(),
+  };
 }

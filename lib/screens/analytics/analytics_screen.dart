@@ -96,16 +96,82 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   'Bulan ini': '${data.totalThisMonth}',
                   'Minggu ini': '${data.totalThisWeek}',
                   'Feedback diberikan': '${data.feedbackCount}',
+                  'Mode dominan': data.dominantMode ?? '—',
+                  'Akurasi outcome': data.accuracyRate == null
+                      ? '—'
+                      : '${(data.accuracyRate! * 100).round()}%',
                 },
               ),
               if (data.topInstruments.isNotEmpty) ...[
                 const SizedBox(height: 14),
                 Card(
-                  child: ListTile(
-                    leading: const Icon(Icons.query_stats_rounded),
-                    title: const Text('Instrumen paling sering dianalisis'),
-                    subtitle: Text(
-                      '${data.topInstruments.first.instrument} · ${data.topInstruments.first.count} analisis',
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Peringkat instrumen',
+                          style: TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                        const SizedBox(height: 8),
+                        ...data.topInstruments.map(
+                          (item) => ListTile(
+                            dense: true,
+                            contentPadding: EdgeInsets.zero,
+                            leading: const Icon(Icons.query_stats_rounded),
+                            title: Text(item.instrument),
+                            trailing: Text('${item.count} analisis'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+              if (data.weeklyData.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Aktivitas mingguan',
+                          style: TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                        const SizedBox(height: 12),
+                        ...data.weeklyData.map(
+                          (item) => Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: Row(
+                              children: [
+                                SizedBox(width: 92, child: Text(item.week)),
+                                Expanded(
+                                  child: LinearProgressIndicator(
+                                    value: item.count == 0
+                                        ? 0
+                                        : item.count /
+                                              data.weeklyData
+                                                  .map((entry) => entry.count)
+                                                  .reduce(
+                                                    (a, b) => a > b ? a : b,
+                                                  ),
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: 36,
+                                  child: Text(
+                                    '${item.count}',
+                                    textAlign: TextAlign.end,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

@@ -150,10 +150,33 @@ class _DailySummaryScreenState extends State<DailySummaryScreen> {
                   ),
                   const Divider(),
                   if (data.today case final today?) ...[
-                    Text(
-                      today.digestDate,
-                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            today.digestDate,
+                            style: const TextStyle(fontWeight: FontWeight.w800),
+                          ),
+                        ),
+                        Chip(
+                          label: Text(
+                            today.kind == DailySummaryTodayKindEnum.full
+                                ? 'Full digest'
+                                : 'Quota only',
+                          ),
+                        ),
+                      ],
                     ),
+                    if (today.instruments.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Wrap(
+                          spacing: 6,
+                          children: today.instruments
+                              .map((value) => Chip(label: Text(value)))
+                              .toList(),
+                        ),
+                      ),
                     const SizedBox(height: 8),
                     Card(
                       child: Padding(
@@ -167,18 +190,64 @@ class _DailySummaryScreenState extends State<DailySummaryScreen> {
                     const SizedBox(height: 8),
                     ...today.analyses.map(
                       (analysis) => Card(
-                        child: ListTile(
-                          title: Text(
-                            '${analysis.instrument} · ${analysis.timeframe}',
-                          ),
-                          subtitle: const Text(
-                            'Buka analisis untuk melihat konteks lengkap.',
-                          ),
-                          trailing: const Icon(Icons.chevron_right),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
                           onTap: () => Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (_) =>
                                   AnalysisDetailScreen(analysisId: analysis.id),
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        '${analysis.instrument} · ${analysis.timeframe}',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                    ),
+                                    const Icon(Icons.chevron_right),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 6,
+                                  children: [
+                                    if (analysis.tradingBias != null)
+                                      Chip(label: Text(analysis.tradingBias!)),
+                                    if (analysis.confidenceMin != null &&
+                                        analysis.confidenceMax != null)
+                                      Chip(
+                                        label: Text(
+                                          '${analysis.confidenceMin}–${analysis.confidenceMax}%',
+                                        ),
+                                      ),
+                                    if (analysis.preferredSide != null)
+                                      Chip(
+                                        label: Text(
+                                          'Side: ${analysis.preferredSide}',
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                                if (analysis.mainScenario?.trim().isNotEmpty ==
+                                    true) ...[
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    analysis.mainScenario!,
+                                    maxLines: 4,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ],
                             ),
                           ),
                         ),

@@ -50,6 +50,7 @@ void main() {
           email: 'release-test@example.com',
           password: 'secure-password',
           displayName: 'Release Test',
+          securityQuestion: 'Nama hewan peliharaan pertama kamu?',
           securityAnswer: 'answer',
           mode: RegisterBodySelectedModeEnum.beginner,
         ),

@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/localization/locale_controller.dart';
 import '../../core/theme/app_colors.dart';
 import '../../l10n/l10n.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/error_banner.dart';
+import '../../widgets/language_menu_button.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -21,7 +24,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _securityAnswerController = TextEditingController();
   bool _obscurePassword = true;
+  bool _obscureAnswer = true;
   RegisterBodySelectedModeEnum _mode = RegisterBodySelectedModeEnum.beginner;
+  String _securityQuestion = _securityQuestions.first;
+
+  static const _securityQuestions = [
+    'Nama hewan peliharaan pertama kamu?',
+    'Nama kota tempat kamu lahir?',
+    'Nama ibu kandung kamu?',
+    'Nama sekolah dasar kamu?',
+    'Nama teman terbaik masa kecil kamu?',
+  ];
 
   @override
   void dispose() {
@@ -41,6 +54,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       password: _passwordController.text,
       displayName: _nameController.text.trim(),
       securityAnswer: _securityAnswerController.text.trim(),
+      securityQuestion: _securityQuestion,
       mode: _mode,
     );
     if (ok && mounted) Navigator.of(context).pop();
@@ -56,7 +70,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final l10n = context.l10n;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.createAccount)),
+      appBar: AppBar(
+        title: Text(l10n.createAccount),
+        actions: const [LanguageMenuButton(), SizedBox(width: 8)],
+      ),
       body: SafeArea(
         child: Consumer<AuthProvider>(
           builder: (context, auth, _) {
@@ -196,22 +213,46 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          Text(
-                            l10n.firstPetQuestion,
-                            style: TextStyle(
-                              color: muted,
-                              fontSize: 13,
-                              fontStyle: FontStyle.italic,
+                          DropdownButtonFormField<String>(
+                            isExpanded: true,
+                            initialValue: _securityQuestion,
+                            items: List.generate(
+                              _securityQuestions.length,
+                              (index) => DropdownMenuItem(
+                                value: _securityQuestions[index],
+                                child: Text(
+                                  _securityQuestionLabel(
+                                    context
+                                        .watch<LocaleController>()
+                                        .locale
+                                        .languageCode,
+                                    index,
+                                  ),
+                                ),
+                              ),
                             ),
+                            onChanged: (value) =>
+                                setState(() => _securityQuestion = value!),
                           ),
                           const SizedBox(height: 8),
                           TextFormField(
                             controller: _securityAnswerController,
+                            obscureText: _obscureAnswer,
                             textInputAction: TextInputAction.done,
                             onFieldSubmitted: (_) => _submit(),
                             decoration: InputDecoration(
                               labelText: l10n.answer,
                               prefixIcon: const Icon(Icons.shield_outlined),
+                              suffixIcon: IconButton(
+                                onPressed: () => setState(
+                                  () => _obscureAnswer = !_obscureAnswer,
+                                ),
+                                icon: Icon(
+                                  _obscureAnswer
+                                      ? Icons.visibility_off_rounded
+                                      : Icons.visibility_rounded,
+                                ),
+                              ),
                             ),
                             validator: (v) => (v == null || v.trim().isEmpty)
                                 ? l10n.answerRequired
@@ -231,6 +272,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   )
                                 : Text(l10n.createAccount),
                           ),
+                          const SizedBox(height: 12),
+                          Text(
+                            l10n.registerConsent,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: muted, fontSize: 11),
+                          ),
+                          Wrap(
+                            alignment: WrapAlignment.center,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              TextButton(
+                                onPressed: () => _openLegal('/terms'),
+                                child: Text(l10n.termsOfService),
+                              ),
+                              Text(l10n.andLabel),
+                              TextButton(
+                                onPressed: () => _openLegal('/privacy'),
+                                child: Text(l10n.privacyPolicy),
+                              ),
+                            ],
+                          ),
                           const SizedBox(height: 24),
                         ],
                       ),
@@ -243,5 +305,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _openLegal(String path) => launchUrl(
+    Uri.parse('https://tradepilot.id$path'),
+    mode: LaunchMode.externalApplication,
+  );
+
+  String _securityQuestionLabel(String languageCode, int index) {
+    if (languageCode == 'id') return _securityQuestions[index];
+    return const [
+      'Name of your first pet?',
+      'City where you were born?',
+      "Your mother's maiden name?",
+      'Name of your elementary school?',
+      'Name of your childhood best friend?',
+    ][index];
   }
 }

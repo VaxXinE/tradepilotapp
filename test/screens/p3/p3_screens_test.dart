@@ -78,7 +78,10 @@ void main() {
 
     await tester.tap(find.text('Tambah'));
     await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextFormField), 'XAU/USD');
+    await tester.enterText(
+      find.byKey(const Key('journal-instrument-field')),
+      'XAU/USD',
+    );
     await tester.tap(find.widgetWithText(FilledButton, 'Simpan'));
     await tester.pump();
     await tester.runAsync(() => Future<void>.delayed(Duration.zero));

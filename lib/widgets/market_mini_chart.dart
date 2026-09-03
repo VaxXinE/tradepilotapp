@@ -95,11 +95,25 @@ class MarketMiniChart extends StatelessWidget {
         SizedBox(
           height: 240,
           child: LayoutBuilder(
-            builder: (context, constraints) => _CandlePlot(
+            builder: (context, constraints) => CandlestickPlot(
               candles: visible,
-              support: support,
-              resistance: resistance,
-              currentPrice: latest,
+              levels: [
+                MarketChartLevel(
+                  value: resistance,
+                  label: 'Resistance',
+                  color: colors.onSurfaceVariant.withValues(alpha: 0.82),
+                ),
+                MarketChartLevel(
+                  value: support,
+                  label: 'Support',
+                  color: colors.onSurfaceVariant.withValues(alpha: 0.62),
+                ),
+                MarketChartLevel(
+                  value: latest,
+                  label: l10n.currentPrice(''),
+                  color: colors.primary,
+                ),
+              ],
               width: constraints.maxWidth,
               height: constraints.maxHeight,
             ),
@@ -124,54 +138,130 @@ class MarketMiniChart extends StatelessWidget {
   }
 }
 
-class _CandlePlot extends StatelessWidget {
-  const _CandlePlot({
+class MarketChartLevel {
+  const MarketChartLevel({
+    required this.value,
+    required this.label,
+    required this.color,
+    this.dashed = false,
+  });
+
+  final double value;
+  final String label;
+  final Color color;
+  final bool dashed;
+}
+
+class CandlestickPlot extends StatefulWidget {
+  const CandlestickPlot({
+    super.key,
     required this.candles,
-    required this.support,
-    required this.resistance,
-    required this.currentPrice,
+    required this.levels,
     required this.width,
     required this.height,
+    this.cutoffIndex,
   });
 
   final List<MarketCandle> candles;
-  final double support;
-  final double resistance;
-  final double currentPrice;
+  final List<MarketChartLevel> levels;
   final double width;
   final double height;
+  final int? cutoffIndex;
+
+  @override
+  State<CandlestickPlot> createState() => _CandlestickPlotState();
+}
+
+class _CandlestickPlotState extends State<CandlestickPlot> {
+  int? _selectedIndex;
 
   @override
   Widget build(BuildContext context) {
+    final candles = widget.candles;
+    final levels = widget.levels;
+    final width = widget.width;
+    final height = widget.height;
     final colors = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final chartWidth = math.max(width - 98, 1.0);
-    final plotMin = math.min(support, currentPrice);
-    final plotMax = math.max(resistance, currentPrice);
+    final chartText = isDark
+        ? AppColors.chartTextDark
+        : AppColors.chartTextLight;
+    final chartGrid = isDark
+        ? AppColors.chartGridDark
+        : AppColors.chartGridLight;
+    final railWidth = width < 340 ? 100.0 : 108.0;
+    final chartWidth = math.max(width - railWidth - 8, 1.0);
+    const axisHeight = 20.0;
+    const labelHeight = 22.0;
+    var plotMin = candles.map((item) => item.low).reduce(math.min);
+    var plotMax = candles.map((item) => item.high).reduce(math.max);
+    for (final level in levels) {
+      plotMin = math.min(plotMin, level.value);
+      plotMax = math.max(plotMax, level.value);
+    }
+    final rawRange = math.max(plotMax - plotMin, 0.000001);
+    plotMin -= rawRange * .06;
+    plotMax += rawRange * .06;
     final range = math.max(plotMax - plotMin, 0.000001);
     final slotWidth = chartWidth / candles.length;
     final bodyWidth = math.max(math.min(slotWidth * 0.58, 8.0), 2.0);
     double topFor(double value) =>
-        ((plotMax - value) / range * (height - 32)) + 8;
+        ((plotMax - value) / range * (height - axisHeight - 16)) + 8;
 
-    return ClipRect(
+    final lineTops = levels.map((item) => topFor(item.value)).toList();
+    final labelTops = _spreadLabelTops(
+      lineTops,
+      height - axisHeight,
+      labelHeight,
+    );
+
+    final plot = ClipRect(
       child: Stack(
         children: [
-          _ReferenceLine(
-            top: topFor(resistance),
-            label: 'Resistance ${_formatPrice(resistance)}',
-            color: colors.onSurfaceVariant.withValues(alpha: 0.82),
+          Positioned(
+            top: 0,
+            right: 0,
+            bottom: axisHeight,
+            width: railWidth,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: colors.surfaceContainerHighest.withValues(alpha: .32),
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
           ),
-          _ReferenceLine(
-            top: topFor(support),
-            label: 'Support ${_formatPrice(support)}',
-            color: colors.onSurfaceVariant.withValues(alpha: 0.62),
-          ),
-          _ReferenceLine(
-            top: topFor(currentPrice),
-            label: context.l10n.currentPrice(_formatPrice(currentPrice)),
-            color: colors.primary,
-          ),
+          for (var grid = 1; grid < 5; grid++)
+            Positioned(
+              top: grid * (height - axisHeight) / 5,
+              left: 0,
+              width: chartWidth,
+              child: Divider(
+                height: 1,
+                color: chartGrid.withValues(alpha: .08),
+              ),
+            ),
+          for (var grid = 1; grid < 4; grid++)
+            Positioned(
+              left: grid * chartWidth / 4,
+              top: 4,
+              bottom: axisHeight,
+              child: VerticalDivider(
+                width: 1,
+                color: chartGrid.withValues(alpha: .08),
+              ),
+            ),
+          if (widget.cutoffIndex != null)
+            Positioned(
+              left:
+                  (widget.cutoffIndex!.clamp(0, candles.length - 1) + .5) *
+                  slotWidth,
+              top: 4,
+              bottom: axisHeight,
+              child: Container(
+                width: 1,
+                color: chartText.withValues(alpha: .55),
+              ),
+            ),
           for (var index = 0; index < candles.length; index++)
             Positioned(
               left: index * slotWidth + (slotWidth - bodyWidth) / 2,
@@ -188,14 +278,235 @@ class _CandlePlot extends StatelessWidget {
                 candle: candles[index],
                 topFor: topFor,
                 plotTop: topFor(candles[index].high),
-                bullishColor: isDark
-                    ? AppColors.bullishDark
-                    : AppColors.bullishLight,
-                bearishColor: isDark
-                    ? AppColors.bearishDark
-                    : AppColors.bearishLight,
+                bullishColor: AppColors.takeProfit,
+                bearishColor: AppColors.stopLoss,
               ),
             ),
+          for (var index = 0; index < levels.length; index++) ...[
+            Positioned(
+              top: lineTops[index],
+              left: 0,
+              width: chartWidth,
+              child: _ChartLine(
+                color: levels[index].color,
+                dashed: levels[index].dashed,
+              ),
+            ),
+            Positioned(
+              top: labelTops[index],
+              right: 0,
+              width: railWidth,
+              child: _LevelBadge(height: labelHeight, level: levels[index]),
+            ),
+          ],
+          Positioned(
+            left: 0,
+            right: railWidth + 8,
+            bottom: 0,
+            height: axisHeight,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _AxisLabel(candles.first.date),
+                _AxisLabel(candles[candles.length ~/ 2].date),
+                _AxisLabel(candles.last.date),
+              ],
+            ),
+          ),
+          if (_selectedIndex case final selected?) ...[
+            Positioned(
+              left: (selected + .5) * slotWidth,
+              top: 4,
+              bottom: axisHeight,
+              child: Container(
+                width: 1,
+                color: chartText.withValues(alpha: .55),
+              ),
+            ),
+            Positioned(
+              left: 0,
+              top: topFor(candles[selected].close),
+              width: chartWidth,
+              child: Divider(
+                height: 1,
+                thickness: 1,
+                color: chartText.withValues(alpha: .4),
+              ),
+            ),
+            Positioned(
+              left: math.min(
+                math.max((selected + .5) * slotWidth - 62, 4),
+                math.max(chartWidth - 128, 4),
+              ),
+              top: math.max(topFor(candles[selected].high) - 54, 4),
+              width: 124,
+              child: _CandleTooltip(candle: candles[selected]),
+            ),
+          ],
+        ],
+      ),
+    );
+
+    void select(Offset position) {
+      if (position.dx < 0 || position.dx > chartWidth) return;
+      final index = (position.dx / slotWidth).floor().clamp(
+        0,
+        candles.length - 1,
+      );
+      if (_selectedIndex != index) setState(() => _selectedIndex = index);
+    }
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onLongPressStart: (details) => select(details.localPosition),
+      onLongPressMoveUpdate: (details) => select(details.localPosition),
+      onLongPressEnd: (_) => setState(() => _selectedIndex = null),
+      child: plot,
+    );
+  }
+
+  List<double> _spreadLabelTops(
+    List<double> lineTops,
+    double chartHeight,
+    double labelHeight,
+  ) {
+    final result = List<double>.filled(lineTops.length, 0);
+    final order = List<int>.generate(lineTops.length, (index) => index)
+      ..sort((a, b) => lineTops[a].compareTo(lineTops[b]));
+    var next = 0.0;
+    for (final index in order) {
+      final top = math.max(lineTops[index] - labelHeight / 2, next);
+      result[index] = top;
+      next = top + labelHeight + 2;
+    }
+    final overflow = next - 1 - chartHeight;
+    if (overflow > 0) {
+      for (final index in order) {
+        result[index] = math.max(0, result[index] - overflow);
+      }
+    }
+    return result;
+  }
+}
+
+class _LevelBadge extends StatelessWidget {
+  const _LevelBadge({required this.height, required this.level});
+
+  final double height;
+  final MarketChartLevel level;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final price = _formatPrice(level.value);
+
+    return Semantics(
+      label: '${level.label} $price',
+      child: Container(
+        height: height,
+        padding: const EdgeInsets.fromLTRB(7, 0, 6, 0),
+        decoration: BoxDecoration(
+          color: Color.alphaBlend(
+            level.color.withValues(alpha: .2),
+            colors.surfaceContainerHighest,
+          ),
+          border: Border(left: BorderSide(color: level.color, width: 3)),
+          borderRadius: BorderRadius.circular(5),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                level.label.trim(),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: level.color,
+                  fontSize: 8.5,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+            const SizedBox(width: 3),
+            Text(
+              price,
+              style: TextStyle(
+                color: colors.onSurface,
+                fontSize: 8.5,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AxisLabel extends StatelessWidget {
+  const _AxisLabel(this.date);
+
+  final DateTime date;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Text(
+      '${date.day}/${date.month}',
+      style: TextStyle(
+        color: isDark ? AppColors.chartTextDark : AppColors.chartTextLight,
+        fontSize: 9,
+        fontWeight: FontWeight.w600,
+      ),
+    );
+  }
+}
+
+class _CandleTooltip extends StatelessWidget {
+  const _CandleTooltip({required this.candle});
+
+  final MarketCandle candle;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Container(
+      key: const ValueKey('chart-price-tooltip'),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: colors.inverseSurface,
+        borderRadius: BorderRadius.circular(7),
+        boxShadow: const [
+          BoxShadow(
+            color: AppColors.chartShadow,
+            blurRadius: 8,
+            offset: Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${candle.date.day}/${candle.date.month}/${candle.date.year}',
+            style: TextStyle(
+              color: colors.onInverseSurface.withValues(alpha: .72),
+              fontSize: 8,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'O ${_formatPrice(candle.open)}  H ${_formatPrice(candle.high)}\n'
+            'L ${_formatPrice(candle.low)}  C ${_formatPrice(candle.close)}',
+            style: TextStyle(
+              color: colors.onInverseSurface,
+              fontSize: 9,
+              height: 1.35,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
         ],
       ),
     );
@@ -246,42 +557,26 @@ class _Candle extends StatelessWidget {
   }
 }
 
-class _ReferenceLine extends StatelessWidget {
-  const _ReferenceLine({
-    required this.top,
-    required this.label,
-    required this.color,
-  });
-
-  final double top;
-  final String label;
+class _ChartLine extends StatelessWidget {
+  const _ChartLine({required this.color, required this.dashed});
   final Color color;
+  final bool dashed;
 
   @override
-  Widget build(BuildContext context) {
-    return Positioned(
-      top: top,
-      left: 0,
-      right: 0,
-      child: Row(
-        children: [
-          Expanded(child: Divider(height: 1, color: color)),
-          const SizedBox(width: 4),
-          SizedBox(
-            width: 94,
-            child: Text(
-              label,
-              style: TextStyle(
+  Widget build(BuildContext context) => dashed
+      ? Row(
+          children: List.generate(
+            24,
+            (_) => Expanded(
+              child: Container(
+                height: 1.5,
+                margin: const EdgeInsets.only(right: 3),
                 color: color,
-                fontSize: 9,
-                fontWeight: FontWeight.w700,
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
+        )
+      : Divider(height: 1.5, thickness: 1.5, color: color);
 }
 
 String _formatPrice(double value) {

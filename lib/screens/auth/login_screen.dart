@@ -7,6 +7,7 @@ import '../../core/theme/app_colors.dart';
 import '../../l10n/l10n.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/error_banner.dart';
+import '../../widgets/language_menu_button.dart';
 import 'forgot_password_screen.dart';
 import 'register_screen.dart';
 
@@ -142,6 +143,10 @@ class _LoginScreenState extends State<LoginScreen> {
     final l10n = context.l10n;
 
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        actions: const [LanguageMenuButton(), SizedBox(width: 8)],
+      ),
       body: SafeArea(
         child: Consumer<AuthProvider>(
           builder: (context, auth, _) {
@@ -167,7 +172,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Image.asset(
-                                'assets/images/trade_pilot_logo.png',
+                                'assets/images/trade_pilot_app_icon.png',
                                 fit: BoxFit.contain,
                                 filterQuality: FilterQuality.high,
                                 semanticLabel: l10n.tradePilotLogo,

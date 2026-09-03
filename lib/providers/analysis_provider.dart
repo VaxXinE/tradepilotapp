@@ -1194,6 +1194,30 @@ class AnalysisProvider extends ChangeNotifier {
   }
 
   // ===========================================================================
+  // FUNDAMENTAL SNAPSHOT
+  // ===========================================================================
+
+  Future<RefreshFundamentalsResponse?> refreshFundamentals(
+    int analysisId,
+  ) async {
+    if (_authProvider.status != AuthStatus.authenticated) return null;
+
+    final epoch = _sessionEpoch;
+    try {
+      final response = await _client.analyses.refreshFundamentals(
+        id: analysisId,
+      );
+      return _isSessionCurrent(epoch) ? response.data : null;
+    } catch (error) {
+      if (_isSessionCurrent(epoch)) {
+        errorMessage = _friendlyError(error);
+        notifyListeners();
+      }
+      return null;
+    }
+  }
+
+  // ===========================================================================
   // FEEDBACK
   // ===========================================================================
 

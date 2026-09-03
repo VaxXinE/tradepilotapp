@@ -44,7 +44,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         onOpenHistory: _openHistoryFromDashboard,
       ),
       const AnalyzeTab(),
-      const HistoryTab(),
+      HistoryTab(onReanalyze: _openAnalyzeFromHistory),
       const ProfileTab(),
     ];
 
@@ -347,6 +347,16 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
 
   void _openHistoryFromDashboard() {
     _onTabSelected(2);
+  }
+
+  void _openAnalyzeFromHistory(String instrument, String timeframe) {
+    unawaited(
+      context.read<MarketProvider>().selectInstrument(
+        instrument,
+        timeframe: timeframe,
+      ),
+    );
+    _onTabSelected(1);
   }
 
   // ===========================================================================

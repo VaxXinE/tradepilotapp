@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:one_of/one_of.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
 import '../../providers/auth_provider.dart';
 import '../analysis/analysis_detail_screen.dart';
 
 class TradeJournalScreen extends StatefulWidget {
-  const TradeJournalScreen({super.key});
+  const TradeJournalScreen({super.key, this.analysis});
+
+  final Analysis? analysis;
 
   @override
   State<TradeJournalScreen> createState() => _TradeJournalScreenState();
@@ -15,6 +18,8 @@ class TradeJournalScreen extends StatefulWidget {
 
 class _TradeJournalScreenState extends State<TradeJournalScreen> {
   List<JournalEntry> _entries = const [];
+  JournalStats? _stats;
+  String? _outcomeFilter;
   bool _loading = true;
   bool _mutating = false;
   String? _error;
@@ -25,6 +30,9 @@ class _TradeJournalScreenState extends State<TradeJournalScreen> {
   void initState() {
     super.initState();
     _load();
+    if (widget.analysis != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _openForm());
+    }
   }
 
   bool _sameUser(int? userId) {
@@ -40,12 +48,21 @@ class _TradeJournalScreenState extends State<TradeJournalScreen> {
     _ownerUserId ??= userId;
     final requestId = ++_requestId;
     try {
-      final response = await auth.client.tradeJournal.listJournalEntries(
+      final entriesFuture = auth.client.tradeJournal.listJournalEntries(
         limit: 100,
+        outcome: _outcomeFilter,
       );
+      final response = await entriesFuture;
+      JournalStats? stats;
+      try {
+        stats = (await auth.client.tradeJournal.getJournalStats()).data;
+      } catch (_) {
+        // Statistik bersifat tambahan; daftar jurnal tetap harus bisa dipakai.
+      }
       if (!_sameUser(userId) || requestId != _requestId) return;
       setState(() {
         _entries = response.data?.entries.toList() ?? const [];
+        _stats = stats;
         _error = null;
       });
     } catch (_) {
@@ -63,7 +80,10 @@ class _TradeJournalScreenState extends State<TradeJournalScreen> {
     if (_mutating) return;
     final result = await showDialog<_JournalDraft>(
       context: context,
-      builder: (_) => _JournalDialog(entry: entry),
+      builder: (_) => _JournalDialog(
+        entry: entry,
+        initialInstrument: widget.analysis?.instrument,
+      ),
     );
     if (result == null || !mounted) return;
 
@@ -75,8 +95,9 @@ class _TradeJournalScreenState extends State<TradeJournalScreen> {
       final JournalEntry? saved;
       if (entry == null) {
         final response = await auth.client.tradeJournal.createJournalEntry(
-          createJournalEntryBody: CreateJournalEntryBody(
-            (builder) => builder
+          createJournalEntryBody: CreateJournalEntryBody((builder) {
+            builder
+              ..analysisId = widget.analysis?.id
               ..instrument = result.instrument
               ..side = result.side == 'buy'
                   ? CreateJournalEntryBodySideEnum.buy
@@ -86,15 +107,21 @@ class _TradeJournalScreenState extends State<TradeJournalScreen> {
               )
               ..mood = result.mood
               ..note = result.note
-              ..tradedAt = DateTime.now().toUtc(),
-          ),
+              ..tradedAt = result.tradedAt.toUtc();
+            _setDecimals(
+              builder,
+              result.entryPrice,
+              result.exitPrice,
+              result.quantity,
+            );
+          }),
         );
         saved = response.data;
       } else {
         final response = await auth.client.tradeJournal.updateJournalEntry(
           id: entry.id,
-          updateJournalEntryBody: UpdateJournalEntryBody(
-            (builder) => builder
+          updateJournalEntryBody: UpdateJournalEntryBody((builder) {
+            builder
               ..instrument = result.instrument
               ..side = result.side == 'buy'
                   ? UpdateJournalEntryBodySideEnum.buy
@@ -103,8 +130,15 @@ class _TradeJournalScreenState extends State<TradeJournalScreen> {
                 result.outcome,
               )
               ..mood = result.mood
-              ..note = result.note,
-          ),
+              ..note = result.note
+              ..tradedAt = result.tradedAt.toUtc();
+            _setUpdateDecimals(
+              builder,
+              result.entryPrice,
+              result.exitPrice,
+              result.quantity,
+            );
+          }),
         );
         saved = response.data;
       }
@@ -238,23 +272,75 @@ class _TradeJournalScreenState extends State<TradeJournalScreen> {
                 itemCount: _entries.length + 1,
                 itemBuilder: (context, index) {
                   if (index == 0) {
-                    return const Padding(
-                      padding: EdgeInsets.only(bottom: 10),
-                      child: Text(
-                        'Maksimum 100 entri terbaru dari server. Data ini bersifat pribadi.',
-                        style: TextStyle(fontSize: 12),
-                      ),
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (_stats case final stats?)
+                          _JournalStatsCard(stats: stats),
+                        DropdownButtonFormField<String?>(
+                          initialValue: _outcomeFilter,
+                          decoration: const InputDecoration(
+                            labelText: 'Filter outcome',
+                            prefixIcon: Icon(Icons.filter_alt_outlined),
+                          ),
+                          items: const [
+                            DropdownMenuItem(value: null, child: Text('Semua')),
+                            DropdownMenuItem(
+                              value: 'open',
+                              child: Text('Terbuka'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'win',
+                              child: Text('Positif'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'loss',
+                              child: Text('Negatif'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'breakeven',
+                              child: Text('Impas'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'skipped',
+                              child: Text('Tidak diambil'),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            setState(() => _outcomeFilter = value);
+                            _load();
+                          },
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 10),
+                          child: Text(
+                            'Maksimum 100 entri terbaru dari server. Data ini bersifat pribadi.',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      ],
                     );
                   }
                   final entry = _entries[index - 1];
+                  final details = <String>[
+                    _outcome(entry.outcome),
+                    DateFormat(
+                      'dd MMM yyyy, HH:mm',
+                    ).format(entry.tradedAt.toLocal()),
+                    if (entry.entryPrice != null) 'Entry ${entry.entryPrice}',
+                    if (entry.exitPrice != null) 'Exit ${entry.exitPrice}',
+                    if (entry.quantity != null) 'Qty ${entry.quantity}',
+                    if (entry.pnlAmount != null) 'P/L ${entry.pnlAmount}',
+                    if (entry.pnlPercent != null) '${entry.pnlPercent}%',
+                    if (entry.mood?.trim().isNotEmpty == true) entry.mood!,
+                  ];
                   return Card(
                     child: ListTile(
                       title: Text(
                         '${entry.instrument} · ${entry.side.name.toUpperCase()}',
                       ),
                       subtitle: Text(
-                        '${_outcome(entry.outcome)} · ${DateFormat('dd MMM yyyy, HH:mm').format(entry.tradedAt.toLocal())}'
-                        '${entry.note?.trim().isNotEmpty == true ? '\n${entry.note}' : ''}',
+                        '${details.join(' · ')}${entry.note?.trim().isNotEmpty == true ? '\n${entry.note}' : ''}',
                         maxLines: 4,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -292,17 +378,26 @@ class _JournalDraft {
     this.outcome,
     this.mood,
     this.note,
+    this.entryPrice,
+    this.exitPrice,
+    this.quantity,
+    this.tradedAt,
   );
   final String instrument;
   final String side;
   final String outcome;
   final String? mood;
   final String? note;
+  final String? entryPrice;
+  final String? exitPrice;
+  final String? quantity;
+  final DateTime tradedAt;
 }
 
 class _JournalDialog extends StatefulWidget {
-  const _JournalDialog({this.entry});
+  const _JournalDialog({this.entry, this.initialInstrument});
   final JournalEntry? entry;
+  final String? initialInstrument;
 
   @override
   State<_JournalDialog> createState() => _JournalDialogState();
@@ -313,15 +408,25 @@ class _JournalDialogState extends State<_JournalDialog> {
   late final TextEditingController _instrument;
   late final TextEditingController _mood;
   late final TextEditingController _note;
+  late final TextEditingController _entryPrice;
+  late final TextEditingController _exitPrice;
+  late final TextEditingController _quantity;
+  late DateTime _tradedAt;
   late String _side;
   late String _outcome;
 
   @override
   void initState() {
     super.initState();
-    _instrument = TextEditingController(text: widget.entry?.instrument ?? '');
+    _instrument = TextEditingController(
+      text: widget.entry?.instrument ?? widget.initialInstrument ?? '',
+    );
     _mood = TextEditingController(text: widget.entry?.mood ?? '');
     _note = TextEditingController(text: widget.entry?.note ?? '');
+    _entryPrice = TextEditingController(text: widget.entry?.entryPrice ?? '');
+    _exitPrice = TextEditingController(text: widget.entry?.exitPrice ?? '');
+    _quantity = TextEditingController(text: widget.entry?.quantity ?? '');
+    _tradedAt = widget.entry?.tradedAt.toLocal() ?? DateTime.now();
     _side = widget.entry?.side.name ?? 'buy';
     _outcome = widget.entry?.outcome.name ?? 'open';
   }
@@ -331,6 +436,9 @@ class _JournalDialogState extends State<_JournalDialog> {
     _instrument.dispose();
     _mood.dispose();
     _note.dispose();
+    _entryPrice.dispose();
+    _exitPrice.dispose();
+    _quantity.dispose();
     super.dispose();
   }
 
@@ -345,6 +453,7 @@ class _JournalDialogState extends State<_JournalDialog> {
             mainAxisSize: MainAxisSize.min,
             children: [
               TextFormField(
+                key: const Key('journal-instrument-field'),
                 controller: _instrument,
                 maxLength: 32,
                 decoration: const InputDecoration(labelText: 'Instrumen'),
@@ -390,6 +499,30 @@ class _JournalDialogState extends State<_JournalDialog> {
                 ],
                 onChanged: (value) => _outcome = value!,
               ),
+              Row(
+                children: [
+                  Expanded(
+                    child: _NumberField(
+                      controller: _entryPrice,
+                      label: 'Entry',
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _NumberField(controller: _exitPrice, label: 'Exit'),
+                  ),
+                ],
+              ),
+              _NumberField(controller: _quantity, label: 'Quantity'),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.schedule_outlined),
+                title: const Text('Waktu transaksi'),
+                subtitle: Text(
+                  DateFormat('dd MMM yyyy, HH:mm').format(_tradedAt),
+                ),
+                onTap: _pickDateTime,
+              ),
               TextField(
                 controller: _mood,
                 maxLength: 100,
@@ -426,6 +559,10 @@ class _JournalDialogState extends State<_JournalDialog> {
                 _outcome,
                 _mood.text.trim().isEmpty ? null : _mood.text.trim(),
                 _note.text.trim().isEmpty ? null : _note.text.trim(),
+                _optional(_entryPrice.text),
+                _optional(_exitPrice.text),
+                _optional(_quantity.text),
+                _tradedAt,
               ),
             );
           },
@@ -434,4 +571,137 @@ class _JournalDialogState extends State<_JournalDialog> {
       ],
     );
   }
+
+  Future<void> _pickDateTime() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: _tradedAt,
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+    );
+    if (date == null || !mounted) return;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_tradedAt),
+    );
+    if (time == null) return;
+    setState(
+      () => _tradedAt = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        time.hour,
+        time.minute,
+      ),
+    );
+  }
+
+  String? _optional(String value) => value.trim().isEmpty ? null : value.trim();
+}
+
+CreateJournalEntryBodyEntryPrice? _decimal(String? value) {
+  if (value == null) return null;
+  final parsed = num.tryParse(value);
+  if (parsed == null) return null;
+  return CreateJournalEntryBodyEntryPrice(
+    (builder) => builder.oneOf = OneOf.fromValue2<String, num>(value: parsed),
+  );
+}
+
+void _setDecimals(
+  CreateJournalEntryBodyBuilder builder,
+  String? entry,
+  String? exit,
+  String? quantity,
+) {
+  final entryValue = _decimal(entry);
+  final exitValue = _decimal(exit);
+  final quantityValue = _decimal(quantity);
+  if (entryValue != null) builder.entryPrice.replace(entryValue);
+  if (exitValue != null) builder.exitPrice.replace(exitValue);
+  if (quantityValue != null) builder.quantity.replace(quantityValue);
+}
+
+void _setUpdateDecimals(
+  UpdateJournalEntryBodyBuilder builder,
+  String? entry,
+  String? exit,
+  String? quantity,
+) {
+  final entryValue = _decimal(entry);
+  final exitValue = _decimal(exit);
+  final quantityValue = _decimal(quantity);
+  if (entryValue != null) builder.entryPrice.replace(entryValue);
+  if (exitValue != null) builder.exitPrice.replace(exitValue);
+  if (quantityValue != null) builder.quantity.replace(quantityValue);
+}
+
+class _NumberField extends StatelessWidget {
+  const _NumberField({required this.controller, required this.label});
+  final TextEditingController controller;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => TextFormField(
+    controller: controller,
+    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+    decoration: InputDecoration(labelText: label),
+    validator: (value) =>
+        value == null || value.trim().isEmpty || num.tryParse(value) != null
+        ? null
+        : 'Masukkan angka yang valid.',
+  );
+}
+
+class _JournalStatsCard extends StatelessWidget {
+  const _JournalStatsCard({required this.stats});
+  final JournalStats stats;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Wrap(
+        spacing: 24,
+        runSpacing: 12,
+        children: [
+          _Stat('Entri', '${stats.totals.entries}'),
+          _Stat(
+            'Win rate',
+            stats.winRate == null ? '—' : '${(stats.winRate! * 100).round()}%',
+          ),
+          _Stat('Menang', '${stats.totals.wins}'),
+          _Stat('Kalah', '${stats.totals.losses}'),
+          _Stat('Terbuka', '${stats.totals.open}'),
+          _Stat(
+            'Avg P/L',
+            stats.avgPnlPercent == null
+                ? '—'
+                : '${stats.avgPnlPercent!.toStringAsFixed(2)}%',
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class _Stat extends StatelessWidget {
+  const _Stat(this.label, this.value);
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    width: 80,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          value,
+          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+        ),
+        Text(label, style: const TextStyle(fontSize: 11)),
+      ],
+    ),
+  );
 }

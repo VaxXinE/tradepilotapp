@@ -211,6 +211,25 @@ class BeginnerTechnicalSnapshot {
     required this.sellCount,
     required this.neutralCount,
     required this.overallSignal,
+    this.dataPoints = 0,
+    this.change20dPercent = 0,
+    this.macdValue,
+    this.macdSignal,
+    this.macdHistogram,
+    this.stochasticK,
+    this.stochasticD,
+    this.stochasticSignal = 'Neutral',
+    this.bollingerUpper,
+    this.bollingerMiddle,
+    this.bollingerLower,
+    this.bollingerSignal = 'Neutral',
+    this.oscillatorBuyCount = 0,
+    this.oscillatorSellCount = 0,
+    this.oscillatorNeutralCount = 0,
+    this.movingAverageBuyCount = 0,
+    this.movingAverageSellCount = 0,
+    this.movingAverageNeutralCount = 0,
+    this.movingAverages = const [],
   });
 
   final double? lastClose;
@@ -227,6 +246,25 @@ class BeginnerTechnicalSnapshot {
   final int neutralCount;
 
   final String overallSignal;
+  final int dataPoints;
+  final double change20dPercent;
+  final double? macdValue;
+  final double? macdSignal;
+  final double? macdHistogram;
+  final double? stochasticK;
+  final double? stochasticD;
+  final String stochasticSignal;
+  final double? bollingerUpper;
+  final double? bollingerMiddle;
+  final double? bollingerLower;
+  final String bollingerSignal;
+  final int oscillatorBuyCount;
+  final int oscillatorSellCount;
+  final int oscillatorNeutralCount;
+  final int movingAverageBuyCount;
+  final int movingAverageSellCount;
+  final int movingAverageNeutralCount;
+  final List<TechnicalMovingAverage> movingAverages;
 
   int get totalSignals {
     return buyCount + sellCount + neutralCount;
@@ -250,6 +288,11 @@ class BeginnerTechnicalSnapshot {
     final rsi = marketMap(json['rsi14']);
 
     final macd = marketMap(json['macd']);
+    final stochastic = marketMap(json['stochastic']);
+    final bollinger = marketMap(json['bollinger']);
+    final oscillator = marketMap(json['oscillatorSummary']);
+    final movingAverage = marketMap(json['maSummary']);
+    final movingAverages = json['movingAverages'];
 
     return BeginnerTechnicalSnapshot(
       lastClose: marketDouble(json['lastClose']),
@@ -261,6 +304,53 @@ class BeginnerTechnicalSnapshot {
       sellCount: marketInt(overall['sell']) ?? 0,
       neutralCount: marketInt(overall['neutral']) ?? 0,
       overallSignal: overall['signal']?.toString() ?? 'Neutral',
+      dataPoints: marketInt(json['dataPoints']) ?? 0,
+      change20dPercent: marketDouble(json['change20dPct']) ?? 0,
+      macdValue: marketDouble(macd['macd']),
+      macdSignal: marketDouble(macd['signal']),
+      macdHistogram: marketDouble(macd['histogram']),
+      stochasticK: marketDouble(stochastic['k']),
+      stochasticD: marketDouble(stochastic['d']),
+      stochasticSignal: stochastic['signal']?.toString() ?? 'Neutral',
+      bollingerUpper: marketDouble(bollinger['upper']),
+      bollingerMiddle: marketDouble(bollinger['middle']),
+      bollingerLower: marketDouble(bollinger['lower']),
+      bollingerSignal: bollinger['signal']?.toString() ?? 'Neutral',
+      oscillatorBuyCount: marketInt(oscillator['buy']) ?? 0,
+      oscillatorSellCount: marketInt(oscillator['sell']) ?? 0,
+      oscillatorNeutralCount: marketInt(oscillator['neutral']) ?? 0,
+      movingAverageBuyCount: marketInt(movingAverage['buy']) ?? 0,
+      movingAverageSellCount: marketInt(movingAverage['sell']) ?? 0,
+      movingAverageNeutralCount: marketInt(movingAverage['neutral']) ?? 0,
+      movingAverages: movingAverages is List
+          ? movingAverages
+                .map((item) => TechnicalMovingAverage.fromJson(marketMap(item)))
+                .where((item) => item.value != null)
+                .toList(growable: false)
+          : const [],
+    );
+  }
+}
+
+class TechnicalMovingAverage {
+  const TechnicalMovingAverage({
+    required this.period,
+    required this.type,
+    required this.value,
+    required this.signal,
+  });
+
+  final int period;
+  final String type;
+  final double? value;
+  final String signal;
+
+  factory TechnicalMovingAverage.fromJson(Map<String, dynamic> json) {
+    return TechnicalMovingAverage(
+      period: marketInt(json['period']) ?? 0,
+      type: json['type']?.toString() ?? 'MA',
+      value: marketDouble(json['value']),
+      signal: json['signal']?.toString() ?? 'Neutral',
     );
   }
 }

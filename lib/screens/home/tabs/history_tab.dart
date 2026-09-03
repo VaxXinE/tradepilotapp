@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../l10n/l10n.dart';
@@ -10,6 +11,7 @@ import '../../../core/history/history_statistics.dart';
 import '../../../models/history_filters.dart';
 import '../../../models/history_sort.dart';
 import '../../../providers/analysis_provider.dart';
+import '../../../providers/auth_provider.dart';
 import '../../../providers/market_provider.dart';
 import '../../../widgets/error_banner.dart';
 import '../../../widgets/history/history_analysis_card.dart';
@@ -17,7 +19,9 @@ import '../../../widgets/history/history_summary_card.dart';
 import '../../analysis/analysis_detail_screen.dart';
 
 class HistoryTab extends StatefulWidget {
-  const HistoryTab({super.key});
+  const HistoryTab({super.key, this.onReanalyze});
+
+  final void Function(String instrument, String timeframe)? onReanalyze;
 
   @override
   State<HistoryTab> createState() => _HistoryTabState();
@@ -29,6 +33,8 @@ class _HistoryTabState extends State<HistoryTab> {
   final TextEditingController _searchController = TextEditingController();
 
   Timer? _searchDebounce;
+  List<FilterPreset> _presets = const [];
+  bool _loadingPresets = false;
 
   @override
   void initState() {
@@ -44,7 +50,165 @@ class _HistoryTabState extends State<HistoryTab> {
       final filters = context.read<AnalysisProvider>().historyFilters;
 
       _searchController.text = filters.query;
+      unawaited(_loadPresets());
     });
+  }
+
+  Future<void> _loadPresets() async {
+    if (_loadingPresets) return;
+    setState(() => _loadingPresets = true);
+    try {
+      final response = await context
+          .read<AuthProvider>()
+          .client
+          .filterPresets
+          .listFilterPresets();
+      if (mounted) {
+        setState(() => _presets = response.data?.presets.toList() ?? const []);
+      }
+    } catch (_) {
+      if (mounted) _showPresetError();
+    } finally {
+      if (mounted) setState(() => _loadingPresets = false);
+    }
+  }
+
+  Future<void> _savePreset() async {
+    final controller = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(context.l10n.saveCurrentFilter),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          maxLength: 60,
+          decoration: InputDecoration(labelText: context.l10n.presetName),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(context.l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () =>
+                Navigator.pop(dialogContext, controller.text.trim()),
+            child: Text(context.l10n.save),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (name == null || name.isEmpty || !mounted) return;
+    final filters = context
+        .read<AnalysisProvider>()
+        .historyFilters
+        .normalized();
+    try {
+      await context
+          .read<AuthProvider>()
+          .client
+          .filterPresets
+          .createFilterPreset(
+            createFilterPresetBody: CreateFilterPresetBody((builder) {
+              builder
+                ..name = name
+                ..filters.mode = switch (filters.mode) {
+                  HistoryModeFilter.beginner =>
+                    FilterPresetFiltersModeEnum.beginner,
+                  HistoryModeFilter.pro => FilterPresetFiltersModeEnum.pro,
+                  HistoryModeFilter.all => FilterPresetFiltersModeEnum.empty,
+                }
+                ..filters.instruments.addAll(filters.instruments)
+                ..filters.timeframes.addAll(filters.timeframes)
+                ..filters.from = filters.from == null
+                    ? ''
+                    : DateFormat('yyyy-MM-dd').format(filters.from!)
+                ..filters.to = filters.to == null
+                    ? ''
+                    : DateFormat('yyyy-MM-dd').format(filters.to!)
+                ..filters.q = filters.query;
+            }),
+          );
+      if (!mounted) return;
+      await _loadPresets();
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(context.l10n.filterPresetSaved)));
+      }
+    } catch (_) {
+      if (mounted) _showPresetError();
+    }
+  }
+
+  Future<void> _showPresets() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(title: Text(context.l10n.savedFilters)),
+            if (_presets.isEmpty)
+              ListTile(title: Text(context.l10n.noSavedFilters))
+            else
+              ..._presets.map(
+                (preset) => ListTile(
+                  title: Text(preset.name),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _applyPreset(preset);
+                  },
+                  trailing: IconButton(
+                    tooltip: context.l10n.delete,
+                    icon: const Icon(Icons.delete_outline_rounded),
+                    onPressed: () async {
+                      try {
+                        await context
+                            .read<AuthProvider>()
+                            .client
+                            .filterPresets
+                            .deleteFilterPreset(id: preset.id);
+                        if (!mounted || !sheetContext.mounted) return;
+                        Navigator.pop(sheetContext);
+                        await _loadPresets();
+                      } catch (_) {
+                        if (mounted) _showPresetError();
+                      }
+                    },
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _applyPreset(FilterPreset preset) async {
+    final saved = preset.filters;
+    final filters = HistoryFilters(
+      query: saved.q,
+      mode: saved.mode == FilterPresetFiltersModeEnum.beginner
+          ? HistoryModeFilter.beginner
+          : saved.mode == FilterPresetFiltersModeEnum.pro
+          ? HistoryModeFilter.pro
+          : HistoryModeFilter.all,
+      instruments: saved.instruments.toList(),
+      timeframes: saved.timeframes.toList(),
+      from: DateTime.tryParse(saved.from),
+      to: DateTime.tryParse(saved.to),
+    );
+    _searchController.text = saved.q;
+    await context.read<AnalysisProvider>().applyHistoryFilters(filters);
+  }
+
+  void _showPresetError() {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(context.l10n.filterPresetFailed)));
   }
 
   @override
@@ -241,6 +405,27 @@ class _HistoryTabState extends State<HistoryTab> {
             ),
           ),
 
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _loadingPresets ? null : _showPresets,
+                    icon: const Icon(Icons.bookmarks_outlined),
+                    label: Text(l10n.savedFilters),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton.outlined(
+                  tooltip: l10n.saveCurrentFilter,
+                  onPressed: _loadingPresets ? null : _savePreset,
+                  icon: const Icon(Icons.bookmark_add_outlined),
+                ),
+              ],
+            ),
+          ),
+
           if (filters.isActive)
             _ActiveFilters(
               filters: filters,
@@ -371,6 +556,12 @@ class _HistoryTabState extends State<HistoryTab> {
 
         return HistoryAnalysisCard(
           analysis: analysis,
+          onReanalyze: widget.onReanalyze == null
+              ? null
+              : () => widget.onReanalyze!(
+                  analysis.instrument,
+                  analysis.timeframe,
+                ),
           onTap: () {
             Navigator.of(context).push(
               MaterialPageRoute(

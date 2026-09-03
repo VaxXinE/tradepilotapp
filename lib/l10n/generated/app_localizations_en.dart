@@ -24,6 +24,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get analysis => 'Analysis';
 
   @override
+  String get reanalyze => 'Analyze again';
+
+  @override
   String get history => 'History';
 
   @override
@@ -79,6 +82,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get securityQuestion => 'Security Question';
 
   @override
+  String get changeSecurityQuestion => 'Change Security Question';
+
+  @override
+  String get newSecurityAnswer => 'New security answer';
+
+  @override
+  String get securityQuestionUpdated => 'Security question updated.';
+
+  @override
   String get notAvailable => 'Not available';
 
   @override
@@ -122,6 +134,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get traderMirrorDescription => 'Data-driven habit reflection';
+
+  @override
+  String get traderMindset => 'Trader\'s Mindset';
+
+  @override
+  String get traderMindsetDescription =>
+      'Short lessons for disciplined decisions';
+
+  @override
+  String get mindsetDisclaimer =>
+      'Educational material only. It is not financial or psychological advice.';
 
   @override
   String get signOut => 'Sign Out';
@@ -179,6 +202,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileUpdated => 'Profile updated successfully.';
+
+  @override
+  String get changePhoto => 'Change photo';
+
+  @override
+  String get avatarRequirements =>
+      'Use a JPG, PNG, WebP, or GIF image up to 5 MB.';
+
+  @override
+  String get avatarUploadFailed => 'Profile photo could not be uploaded.';
 
   @override
   String get passwordChanged => 'Password changed successfully.';
@@ -294,6 +327,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get answerRequired => 'Answer is required';
 
   @override
+  String get registerConsent => 'By registering, you agree to:';
+
+  @override
+  String get andLabel => 'and';
+
+  @override
   String get passwordResetSuccess =>
       'Password changed successfully. Please sign in.';
 
@@ -361,6 +400,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wantMarketAnalysis => 'Want a market analysis?';
 
   @override
+  String get getStarted => 'Get started with Trade Pilot';
+
+  @override
+  String get onboardingSteps =>
+      'Choose a market, review the live context, then create your first analysis. Results are decision support—not trading orders.';
+
+  @override
+  String get gotIt => 'Got it';
+
+  @override
+  String get liveMarkets => 'Live Markets';
+
+  @override
   String get analysisPreparation =>
       'Review prices, market sessions, charts, indicators, and the economic calendar before requesting AI analysis.';
 
@@ -402,6 +454,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get beginnerMode => 'Beginner Mode';
+
+  @override
+  String get proMode => 'Pro Mode';
 
   @override
   String get aiConfidence => 'AI Confidence';
@@ -511,6 +566,41 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get additionalNotes => 'Additional Notes';
+
+  @override
+  String get decisionGuardrails => 'Decision guardrails';
+
+  @override
+  String get guardrailHint =>
+      'This is a soft warning. Pause and reassess before continuing.';
+
+  @override
+  String guardrailRevenge(String minutes) {
+    return 'A loss occurred $minutes minutes ago. Avoid revenge trading.';
+  }
+
+  @override
+  String guardrailOvertrading(String count, String limit) {
+    return 'You made $count analyses; the current limit is $limit.';
+  }
+
+  @override
+  String guardrailHighRisk(String event, String minutes) {
+    return '$event is expected in about $minutes minutes.';
+  }
+
+  @override
+  String guardrailUnusualHour(String hour) {
+    return 'This trading hour ($hour:00 UTC) is unusual for your history.';
+  }
+
+  @override
+  String guardrailCoolingOff(String minutes) {
+    return 'Cooling-off period: about $minutes minutes remaining.';
+  }
+
+  @override
+  String get guardrailGeneric => 'A risk pattern was detected.';
 
   @override
   String get additionalNotesDescription =>
@@ -1061,5 +1151,43 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String genericEventExplanation(String instrument) {
     return 'Why it matters: This event may affect sentiment and volatility for $instrument.';
+  }
+
+  @override
+  String get savedFilters => 'Saved filters';
+
+  @override
+  String get saveCurrentFilter => 'Save current filter';
+
+  @override
+  String get presetName => 'Filter name';
+
+  @override
+  String get noSavedFilters => 'No saved filters yet.';
+
+  @override
+  String get filterPresetSaved => 'Filter saved.';
+
+  @override
+  String get filterPresetFailed => 'Saved filters could not be updated.';
+
+  @override
+  String get recentMarkets => 'Recently analyzed';
+
+  @override
+  String get favoriteMarkets => 'Favorite markets';
+
+  @override
+  String get outcomeSummary => '30-day outcome summary';
+
+  @override
+  String get targetHitRate => 'Target hit rate';
+
+  @override
+  String get stopHitRate => 'Risk-limit hit rate';
+
+  @override
+  String resolvedSample(int count) {
+    return '$count resolved analyses';
   }
 }

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../l10n/l10n.dart';
 import '../../widgets/error_banner.dart';
+import '../../widgets/language_menu_button.dart';
 
 /// Alur lupa password 3 langkah, setara `forgot-password.tsx` di web app:
 /// 1) masukkan email -> ambil pertanyaan keamanan
@@ -87,7 +88,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final l10n = context.l10n;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.forgotPasswordTitle)),
+      appBar: AppBar(
+        title: Text(l10n.forgotPasswordTitle),
+        actions: const [LanguageMenuButton(), SizedBox(width: 8)],
+      ),
       body: SafeArea(
         child: Consumer<AuthProvider>(
           builder: (context, auth, _) {

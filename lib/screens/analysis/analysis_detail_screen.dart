@@ -4,14 +4,53 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../l10n/l10n.dart';
 import '../../models/market_models.dart';
 import '../../providers/analysis_provider.dart';
 import '../../providers/market_provider.dart';
 import '../../widgets/analysis_levels_chart.dart';
 import '../../widgets/analysis_note_card.dart';
 import '../../widgets/price_alert/price_alert_sheet.dart';
+import '../journal/trade_journal_screen.dart';
+
+const _analysisTimeframes = ['1m', '5m', '15m', '30m', '1h', '4h', '1D', '1W'];
+
+const _tradingViewSymbols = <String, String>{
+  'XAU/USD': 'OANDA:XAUUSD',
+  'XAG/USD': 'OANDA:XAGUSD',
+  'BRENT': 'BLACKBULL:BRENT',
+  'HSI': 'VANTAGE:HK50',
+  'NIKKEI': 'SPREADEX:NIKKEI',
+  'DJIA': 'TVC:DJI',
+  'NASDAQ': 'TVC:NDX',
+  'DXY': 'TVC:DXY',
+  'USD/IDR': 'FX_IDC:USDIDR',
+  'BTC/USD': 'BINANCE:BTCUSDT',
+  'ETH/USD': 'BINANCE:ETHUSDT',
+  'SOL/USD': 'BINANCE:SOLUSDT',
+  'BNB/USD': 'BINANCE:BNBUSDT',
+  'XRP/USD': 'BINANCE:XRPUSDT',
+};
+
+String _tradingViewSymbol(String instrument) {
+  final normalized = instrument.trim().toUpperCase();
+  return _tradingViewSymbols[normalized] ??
+      'OANDA:${normalized.replaceAll(RegExp(r'[\s/]+'), '')}';
+}
+
+CreateAnalysisBodyTimeframeEnum _timeframeEnum(String value) => switch (value) {
+  '1m' => CreateAnalysisBodyTimeframeEnum.n1m,
+  '5m' => CreateAnalysisBodyTimeframeEnum.n5m,
+  '15m' => CreateAnalysisBodyTimeframeEnum.n15m,
+  '30m' => CreateAnalysisBodyTimeframeEnum.n30m,
+  '4h' => CreateAnalysisBodyTimeframeEnum.n4h,
+  '1D' => CreateAnalysisBodyTimeframeEnum.n1d,
+  '1W' => CreateAnalysisBodyTimeframeEnum.n1w,
+  _ => CreateAnalysisBodyTimeframeEnum.n1h,
+};
 
 class AnalysisDetailScreen extends StatefulWidget {
   const AnalysisDetailScreen({
@@ -31,12 +70,17 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
   Analysis? _analysis;
 
   List<MarketCandle> _candles = const [];
+  BeginnerTechnicalSnapshot? _technical;
+  RefreshFundamentalsResponse? _fundamentalRefresh;
 
   bool _loading = true;
   bool _submittingFeedback = false;
   bool _detailRequestInFlight = false;
   bool _marketRequestInFlight = false;
   bool _marketLoading = false;
+  bool _reanalyzing = false;
+  bool _refreshingFundamentals = false;
+  String? _selectedTimeframe;
 
   String? _marketError;
 
@@ -164,11 +208,20 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
     try {
       final provider = context.read<MarketProvider>();
 
-      final candles = await provider.getCandlesFor(
-        analysis.instrument,
-        analysis.timeframe,
-        force: force,
-      );
+      final results = await Future.wait<Object?>([
+        provider.getCandlesFor(
+          analysis.instrument,
+          analysis.timeframe,
+          force: force,
+        ),
+        provider.getTechnicalFor(
+          analysis.instrument,
+          analysis.timeframe,
+          force: force,
+        ),
+      ]);
+      final candles = results[0] as List<MarketCandle>;
+      final technical = results[1] as BeginnerTechnicalSnapshot?;
 
       // Price alert membutuhkan quote live,
       // tetapi kegagalan quote tidak boleh
@@ -181,6 +234,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
 
       setState(() {
         _candles = candles;
+        _technical = technical;
       });
     } catch (_) {
       if (!mounted) {
@@ -198,6 +252,68 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
           _marketLoading = false;
         });
       }
+    }
+  }
+
+  Future<void> _reanalyze([String? timeframe]) async {
+    final analysis = _analysis;
+    if (analysis == null || _reanalyzing) return;
+    final selected = timeframe ?? analysis.timeframe;
+    setState(() {
+      _reanalyzing = true;
+      _selectedTimeframe = selected;
+    });
+    final created = await context.read<AnalysisProvider>().createAnalysis(
+      instrument: analysis.instrument,
+      timeframe: _timeframeEnum(selected),
+      mode: analysis.mode == AnalysisModeEnum.pro
+          ? CreateAnalysisBodyModeEnum.pro
+          : CreateAnalysisBodyModeEnum.beginner,
+      userInputContext: analysis.userInputContext,
+    );
+    if (!mounted) return;
+    setState(() => _reanalyzing = false);
+    if (created == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Analisis baru gagal dibuat.')),
+      );
+      return;
+    }
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) =>
+            AnalysisDetailScreen(analysisId: created.id, preloaded: created),
+      ),
+    );
+  }
+
+  Future<void> _refreshFundamentals() async {
+    if (_refreshingFundamentals) return;
+    setState(() => _refreshingFundamentals = true);
+    final result = await context.read<AnalysisProvider>().refreshFundamentals(
+      widget.analysisId,
+    );
+    if (!mounted) return;
+    setState(() {
+      _fundamentalRefresh = result;
+      _refreshingFundamentals = false;
+    });
+    if (result != null) await _load(silent: true);
+  }
+
+  Future<void> _openExternalUrl(String rawUrl) async {
+    final uri = Uri.tryParse(rawUrl);
+    if (uri == null || !{'https', 'http'}.contains(uri.scheme)) return;
+    var opened = false;
+    try {
+      opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      opened = false;
+    }
+    if (!opened && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tautan tidak dapat dibuka.')),
+      );
     }
   }
 
@@ -262,7 +378,76 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
   // FEEDBACK
   // ===========================================================================
 
-  Future<void> _sendFeedback(FeedbackBodyFeedbackTypeEnum type) async {
+  Future<void> _openFeedback(FeedbackBodyFeedbackTypeEnum type) async {
+    var outcome = FeedbackBodyOutcomeEnum.unknown;
+    final noteController = TextEditingController();
+    final result = await showDialog<(FeedbackBodyOutcomeEnum, String?)>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Feedback analisis'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Bagaimana hasil analisis ini?'),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 7,
+                children: [
+                  for (final item in const [
+                    (FeedbackBodyOutcomeEnum.correct, 'Benar'),
+                    (FeedbackBodyOutcomeEnum.wrong, 'Salah'),
+                    (FeedbackBodyOutcomeEnum.unknown, 'Belum tahu'),
+                  ])
+                    ChoiceChip(
+                      label: Text(item.$2),
+                      selected: outcome == item.$1,
+                      onSelected: (_) =>
+                          setDialogState(() => outcome = item.$1),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: noteController,
+                maxLength: 1000,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'Catatan feedback (opsional)',
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Batal'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, (
+                outcome,
+                noteController.text.trim().isEmpty
+                    ? null
+                    : noteController.text.trim(),
+              )),
+              child: const Text('Kirim'),
+            ),
+          ],
+        ),
+      ),
+    );
+    noteController.dispose();
+    if (result != null && mounted) {
+      await _sendFeedback(type, outcome: result.$1, note: result.$2);
+    }
+  }
+
+  Future<void> _sendFeedback(
+    FeedbackBodyFeedbackTypeEnum type, {
+    FeedbackBodyOutcomeEnum? outcome,
+    String? note,
+  }) async {
     if (_submittingFeedback) {
       return;
     }
@@ -274,6 +459,8 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
     final ok = await context.read<AnalysisProvider>().submitFeedback(
       analysisId: widget.analysisId,
       type: type,
+      outcome: outcome,
+      note: note,
     );
 
     if (!mounted) {
@@ -353,26 +540,53 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
 
     final bias = (analysis.tradingBias ?? '').toLowerCase();
 
-    final biasColor =
-        bias.contains('bull') || bias == 'buy' || bias == 'strong_buy'
+    final isPro = analysis.mode == AnalysisModeEnum.pro;
+    final isBullish =
+        bias.contains('bull') || bias == 'buy' || bias == 'strong_buy';
+    final isBearish =
+        bias.contains('bear') || bias == 'sell' || bias == 'strong_sell';
+
+    final biasColor = isBullish
         ? (isDark ? AppColors.bullishDark : AppColors.bullishLight)
-        : bias.contains('bear') || bias == 'sell' || bias == 'strong_sell'
+        : isBearish
         ? (isDark ? AppColors.bearishDark : AppColors.bearishLight)
         : (isDark ? AppColors.neutralDark : AppColors.neutralLight);
 
-    final biasLabel =
-        bias.contains('bull') || bias == 'buy' || bias == 'strong_buy'
-        ? 'Bullish'
-        : bias.contains('bear') || bias == 'sell' || bias == 'strong_sell'
-        ? 'Bearish'
-        : 'Netral';
+    final biasLabel = isPro
+        ? (isBullish
+              ? 'Bullish'
+              : isBearish
+              ? 'Bearish'
+              : 'Neutral')
+        : (isBullish
+              ? 'Cenderung Naik'
+              : isBearish
+              ? 'Cenderung Turun'
+              : 'Tunggu Dulu');
 
     final isExpired = analysis.validUntil.isBefore(DateTime.now());
+    final mainScenario = isPro ? analysis.baseCase : analysis.mainScenario;
+    final alternativeScenario = isPro
+        ? (isBearish ? analysis.bullishScenario : analysis.bearishScenario)
+        : analysis.alternativeScenario;
+    final invalidation = isPro
+        ? analysis.invalidationConditions
+        : analysis.failureConditions;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(analysis.instrument),
         actions: [
+          IconButton(
+            tooltip: 'Analisis ulang',
+            onPressed: _reanalyzing ? null : _reanalyze,
+            icon: _reanalyzing
+                ? const SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.refresh_rounded),
+          ),
           IconButton(
             tooltip: 'Buat Price Alert',
             onPressed: _openPriceAlert,
@@ -392,15 +606,28 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
               biasLabel: biasLabel,
               isExpired: isExpired,
               muted: muted,
+              isPro: isPro,
             ),
 
             const SizedBox(height: 14),
 
-            _BeginnerMeaningCard(
-              analysis: analysis,
-              biasLabel: biasLabel,
-              biasColor: biasColor,
+            _TimeframeCard(
+              current: analysis.timeframe,
+              selected: _selectedTimeframe,
+              loading: _reanalyzing,
+              onSelect: (value) => setState(() => _selectedTimeframe = value),
+              onAnalyze: () =>
+                  _reanalyze(_selectedTimeframe ?? analysis.timeframe),
             ),
+
+            if (!isPro) ...[
+              const SizedBox(height: 14),
+              _BeginnerMeaningCard(
+                analysis: analysis,
+                biasLabel: biasLabel,
+                biasColor: biasColor,
+              ),
+            ],
 
             if (analysis.outcomeStatus != null) ...[
               const SizedBox(height: 14),
@@ -409,7 +636,21 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
 
             const SizedBox(height: 14),
 
-            _RiskCard(analysis: analysis),
+            _RiskCard(analysis: analysis, isPro: isPro),
+
+            if ((isPro ? analysis.uncertaintyNotes : analysis.whyReason)
+                    ?.trim()
+                    .isNotEmpty ==
+                true) ...[
+              const SizedBox(height: 14),
+              _ConfidenceReasonCard(
+                analysis: analysis,
+                reason: (isPro
+                    ? analysis.uncertaintyNotes!
+                    : analysis.whyReason!),
+                onOpenUrl: _openExternalUrl,
+              ),
+            ],
 
             const SizedBox(height: 14),
 
@@ -422,47 +663,21 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
               candles: _candles,
               isLoading: _marketLoading,
               error: _marketError,
+              onOpenTradingView: () => _openExternalUrl(
+                Uri.https('www.tradingview.com', '/chart/', {
+                  'symbol': _tradingViewSymbol(analysis.instrument),
+                }).toString(),
+              ),
             ),
 
-            if (analysis.mainScenario?.trim().isNotEmpty == true) ...[
+            if (analysis.fundamentalContext != null) ...[
               const SizedBox(height: 14),
-              _SectionCard(
-                title: 'Skenario Utama',
-                body: analysis.mainScenario!,
-                icon: Icons.route_outlined,
-              ),
-            ],
-
-            if (analysis.alternativeScenario?.trim().isNotEmpty == true) ...[
-              const SizedBox(height: 12),
-              _SectionCard(
-                title: 'Skenario Alternatif',
-                body: analysis.alternativeScenario!,
-                icon: Icons.alt_route_rounded,
-              ),
-            ],
-
-            if (analysis.whyReason?.trim().isNotEmpty == true) ...[
-              const SizedBox(height: 12),
-              _SectionCard(
-                title: 'Kenapa AI melihat kondisi ini?',
-                body: analysis.whyReason!,
-                icon: Icons.psychology_outlined,
-              ),
-            ],
-
-            if ((analysis.failureConditions ?? analysis.invalidationConditions)
-                    ?.trim()
-                    .isNotEmpty ==
-                true) ...[
-              const SizedBox(height: 12),
-              _SectionCard(
-                title: 'Kapan analisis ini tidak lagi valid?',
-                body:
-                    (analysis.failureConditions ??
-                    analysis.invalidationConditions)!,
-                icon: Icons.warning_amber_rounded,
-                isWarning: true,
+              _FundamentalSnapshotCard(
+                analysis: analysis,
+                refreshed: _fundamentalRefresh,
+                refreshing: _refreshingFundamentals,
+                onRefresh: _refreshFundamentals,
+                onOpenUrl: _openExternalUrl,
               ),
             ],
 
@@ -481,17 +696,24 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
               _TradePlanCard(plan: analysis.tradePlan!, isDark: isDark),
             ],
 
-            if (analysis.fundamentalContext != null) ...[
-              const SizedBox(height: 14),
-              _FundamentalSnapshotCard(analysis: analysis),
-            ],
-
             const SizedBox(height: 22),
 
             OutlinedButton.icon(
               onPressed: _openPriceAlert,
               icon: const Icon(Icons.notifications_active_outlined),
               label: const Text('Buat Price Alert'),
+            ),
+
+            const SizedBox(height: 14),
+
+            OutlinedButton.icon(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => TradeJournalScreen(analysis: analysis),
+                ),
+              ),
+              icon: const Icon(Icons.menu_book_outlined),
+              label: const Text('Catat trade ini'),
             ),
 
             const SizedBox(height: 14),
@@ -503,6 +725,97 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
                 onSave: _saveNote,
               ),
             ),
+
+            if (_technical != null) ...[
+              const SizedBox(height: 14),
+              _TechnicalIndicatorsCard(
+                technical: _technical!,
+                timeframe: analysis.timeframe,
+                showRawSignals: isPro,
+              ),
+            ],
+
+            if (analysis.userInputContext?.trim().isNotEmpty == true) ...[
+              const SizedBox(height: 14),
+              _SectionCard(
+                title: 'Konteks yang kamu berikan',
+                body: analysis.userInputContext!,
+                icon: Icons.chat_bubble_outline,
+              ),
+            ],
+
+            if (invalidation?.trim().isNotEmpty == true) ...[
+              const SizedBox(height: 14),
+              _SectionCard(
+                title: 'Analisis ini batal jika',
+                body: invalidation!,
+                icon: Icons.report_gmailerrorred_outlined,
+                isWarning: true,
+              ),
+            ],
+
+            if (analysis.opportunity?.trim().isNotEmpty == true ||
+                analysis.risk?.trim().isNotEmpty == true) ...[
+              const SizedBox(height: 14),
+              _OpportunityRiskCard(analysis: analysis),
+            ],
+
+            if (mainScenario?.trim().isNotEmpty == true) ...[
+              const SizedBox(height: 14),
+              _SectionCard(
+                title: 'Skenario A — Utama',
+                body: mainScenario!,
+                icon: Icons.route_outlined,
+              ),
+            ],
+
+            if (alternativeScenario?.trim().isNotEmpty == true) ...[
+              const SizedBox(height: 12),
+              _SectionCard(
+                title: 'Skenario B — Alternatif',
+                body: alternativeScenario!,
+                icon: Icons.alt_route_rounded,
+              ),
+            ],
+
+            const SizedBox(height: 12),
+            const _SectionCard(
+              title: 'Skenario C — Tunggu / Tanpa Posisi',
+              body:
+                  'Jika konfirmasi belum kuat atau kondisi pembatal mendekat, menunggu setup yang lebih bersih adalah pilihan paling konservatif.',
+              icon: Icons.hourglass_empty_rounded,
+            ),
+
+            if (isPro) ...[
+              if (analysis.keyDriversTechnical?.trim().isNotEmpty == true) ...[
+                const SizedBox(height: 12),
+                _SectionCard(
+                  title: 'Penggerak Teknikal',
+                  body: analysis.keyDriversTechnical!,
+                  icon: Icons.query_stats_rounded,
+                ),
+              ],
+              if (analysis.keyDriversFundamental?.trim().isNotEmpty ==
+                  true) ...[
+                const SizedBox(height: 12),
+                _SectionCard(
+                  title: 'Penggerak Fundamental',
+                  body: analysis.keyDriversFundamental!,
+                  icon: Icons.newspaper_outlined,
+                ),
+              ],
+              if (analysis.marketContext?.trim().isNotEmpty == true) ...[
+                const SizedBox(height: 12),
+                _SectionCard(
+                  title: 'Konteks Pasar',
+                  body: analysis.marketContext!,
+                  icon: Icons.public_rounded,
+                ),
+              ],
+            ],
+
+            const SizedBox(height: 12),
+            _ExecutionInsightCard(analysis: analysis),
 
             const SizedBox(height: 24),
 
@@ -520,7 +833,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
                     onPressed: _submittingFeedback
                         ? null
                         : () {
-                            _sendFeedback(FeedbackBodyFeedbackTypeEnum.useful);
+                            _openFeedback(FeedbackBodyFeedbackTypeEnum.useful);
                           },
                     icon: const Icon(Icons.thumb_up_alt_outlined, size: 18),
                     label: const Text('Membantu'),
@@ -534,7 +847,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
                     onPressed: _submittingFeedback
                         ? null
                         : () {
-                            _sendFeedback(
+                            _openFeedback(
                               FeedbackBodyFeedbackTypeEnum.notUseful,
                             );
                           },
@@ -566,6 +879,76 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
 // HEADER
 // =============================================================================
 
+class _TimeframeCard extends StatelessWidget {
+  const _TimeframeCard({
+    required this.current,
+    required this.selected,
+    required this.loading,
+    required this.onSelect,
+    required this.onAnalyze,
+  });
+
+  final String current;
+  final String? selected;
+  final bool loading;
+  final ValueChanged<String> onSelect;
+  final VoidCallback onAnalyze;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Ganti Timeframe',
+              style: TextStyle(fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Instrumen sama, timeframe berbeda — buat analisis baru tanpa keluar dari halaman ini.',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 11,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _analysisTimeframes
+                  .map((timeframe) {
+                    final active = (selected ?? current) == timeframe;
+                    return ChoiceChip(
+                      label: Text(timeframe),
+                      selected: active,
+                      onSelected: loading ? null : (_) => onSelect(timeframe),
+                    );
+                  })
+                  .toList(growable: false),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: loading ? null : onAnalyze,
+                child: loading
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Analisis timeframe ini'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _HeaderCard extends StatelessWidget {
   const _HeaderCard({
     required this.analysis,
@@ -573,6 +956,7 @@ class _HeaderCard extends StatelessWidget {
     required this.biasLabel,
     required this.isExpired,
     required this.muted,
+    required this.isPro,
   });
 
   final Analysis analysis;
@@ -580,6 +964,7 @@ class _HeaderCard extends StatelessWidget {
   final String biasLabel;
   final bool isExpired;
   final Color muted;
+  final bool isPro;
 
   @override
   Widget build(BuildContext context) {
@@ -611,6 +996,27 @@ class _HeaderCard extends StatelessWidget {
                 ),
 
                 const Spacer(),
+
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    isPro ? context.l10n.proMode : context.l10n.beginnerMode,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 8),
 
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -739,6 +1145,12 @@ class _BeginnerMeaningCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final muted = Theme.of(context).colorScheme.onSurfaceVariant;
+    final bias = (analysis.tradingBias ?? '').toLowerCase();
+    final direction = bias.contains('bull') || bias == 'buy'
+        ? 'lebih condong naik'
+        : bias.contains('bear') || bias == 'sell'
+        ? 'lebih condong turun'
+        : 'belum mempunyai arah dominan';
 
     final preferred = analysis.tradePlan?.preferredSide;
 
@@ -793,11 +1205,7 @@ class _BeginnerMeaningCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     'Bias $biasLabel berarti AI melihat kecenderungan market '
-                    '${biasLabel == 'Bullish'
-                        ? 'lebih condong naik'
-                        : biasLabel == 'Bearish'
-                        ? 'lebih condong turun'
-                        : 'belum mempunyai arah dominan'}.',
+                    '$direction.',
                     style: const TextStyle(fontSize: 12.5, height: 1.45),
                   ),
                 ),
@@ -822,9 +1230,10 @@ class _BeginnerMeaningCard extends StatelessWidget {
 // =============================================================================
 
 class _RiskCard extends StatelessWidget {
-  const _RiskCard({required this.analysis});
+  const _RiskCard({required this.analysis, required this.isPro});
 
   final Analysis analysis;
+  final bool isPro;
 
   @override
   Widget build(BuildContext context) {
@@ -839,8 +1248,9 @@ class _RiskCard extends StatelessWidget {
     if (risk.contains('high') || risk.contains('tinggi')) {
       color = isDark ? AppColors.bearishDark : AppColors.bearishLight;
       label = 'Risiko Tinggi';
-      guidance =
-          'Pergerakan dapat lebih agresif. Untuk pemula, hindari ukuran posisi besar dan jangan mengabaikan Stop Loss.';
+      guidance = isPro
+          ? 'Volatilitas tinggi. Batasi eksposur dan gunakan level invalidasi sebagai batas risiko.'
+          : 'Pergerakan dapat lebih agresif. Hindari ukuran posisi besar dan jangan mengabaikan Stop Loss.';
     } else if (risk.contains('low') || risk.contains('rendah')) {
       color = isDark ? AppColors.bullishDark : AppColors.bullishLight;
       label = 'Risiko Relatif Rendah';
@@ -857,8 +1267,6 @@ class _RiskCard extends StatelessWidget {
 
     final details = [
       if (analysis.risk?.trim().isNotEmpty == true) analysis.risk!.trim(),
-      if (analysis.uncertaintyNotes?.trim().isNotEmpty == true)
-        analysis.uncertaintyNotes!.trim(),
     ];
 
     return Card(
@@ -982,30 +1390,6 @@ class _MarketSnapshotCard extends StatelessWidget {
                 ],
               ),
             ],
-
-            if (analysis.keyDriversTechnical?.trim().isNotEmpty == true) ...[
-              const SizedBox(height: 14),
-              _SnapshotText(
-                title: 'Faktor Teknikal',
-                value: analysis.keyDriversTechnical!,
-              ),
-            ],
-
-            if (analysis.marketContext?.trim().isNotEmpty == true) ...[
-              const SizedBox(height: 12),
-              _SnapshotText(
-                title: 'Market Context',
-                value: analysis.marketContext!,
-              ),
-            ],
-
-            if (analysis.keyDriversFundamental?.trim().isNotEmpty == true) ...[
-              const SizedBox(height: 12),
-              _SnapshotText(
-                title: 'Faktor Fundamental',
-                value: analysis.keyDriversFundamental!,
-              ),
-            ],
           ],
         ),
       ),
@@ -1049,30 +1433,6 @@ class _CountTile extends StatelessWidget {
   }
 }
 
-class _SnapshotText extends StatelessWidget {
-  const _SnapshotText({required this.title, required this.value});
-
-  final String title;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final muted = Theme.of(context).colorScheme.onSurfaceVariant;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800),
-        ),
-        const SizedBox(height: 4),
-        Text(value, style: TextStyle(color: muted, fontSize: 12, height: 1.45)),
-      ],
-    );
-  }
-}
-
 // =============================================================================
 // CHART
 // =============================================================================
@@ -1083,6 +1443,7 @@ class _ChartCard extends StatelessWidget {
     required this.candles,
     required this.isLoading,
     required this.error,
+    required this.onOpenTradingView,
   });
 
   final Analysis analysis;
@@ -1090,6 +1451,7 @@ class _ChartCard extends StatelessWidget {
 
   final bool isLoading;
   final String? error;
+  final VoidCallback onOpenTradingView;
 
   @override
   Widget build(BuildContext context) {
@@ -1099,28 +1461,54 @@ class _ChartCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(
+            Row(
               children: [
-                Icon(Icons.show_chart_rounded, size: 19),
-                SizedBox(width: 8),
-                Text(
-                  'Chart & Reference Level',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: .12),
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                  child: Icon(
+                    Icons.candlestick_chart_rounded,
+                    size: 19,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Grafik Harga',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${analysis.instrument} • ${analysis.timeframe}',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Lihat chart lengkap di TradingView',
+                  onPressed: onOpenTradingView,
+                  icon: const Icon(Icons.open_in_new_rounded, size: 19),
                 ),
               ],
             ),
-
-            const SizedBox(height: 5),
-
-            Text(
-              '${analysis.instrument} • ${analysis.timeframe}',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                fontSize: 11,
-              ),
-            ),
-
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
 
             if (error != null && candles.isEmpty)
               Text(
@@ -1134,7 +1522,7 @@ class _ChartCard extends StatelessWidget {
               AnalysisLevelsChart(
                 candles: candles,
                 tradePlan: analysis.tradePlan,
-                analysisCreatedAt: analysis.createdAt,
+                tradingBias: analysis.tradingBias,
                 isLoading: isLoading,
               ),
           ],
@@ -1149,9 +1537,19 @@ class _ChartCard extends StatelessWidget {
 // =============================================================================
 
 class _FundamentalSnapshotCard extends StatelessWidget {
-  const _FundamentalSnapshotCard({required this.analysis});
+  const _FundamentalSnapshotCard({
+    required this.analysis,
+    required this.refreshed,
+    required this.refreshing,
+    required this.onRefresh,
+    required this.onOpenUrl,
+  });
 
   final Analysis analysis;
+  final RefreshFundamentalsResponse? refreshed;
+  final bool refreshing;
+  final VoidCallback onRefresh;
+  final ValueChanged<String> onOpenUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -1163,7 +1561,7 @@ class _FundamentalSnapshotCard extends StatelessWidget {
 
     final news = contextData.newsItems.take(3).toList();
 
-    final events = contextData.calendarEvents.take(3).toList();
+    final events = contextData.calendarEvents.take(5).toList();
 
     if (news.isEmpty && events.isEmpty) {
       return const SizedBox.shrink();
@@ -1177,13 +1575,25 @@ class _FundamentalSnapshotCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(
+            Row(
               children: [
-                Icon(Icons.newspaper_outlined, size: 19),
-                SizedBox(width: 8),
-                Text(
-                  'Fundamental yang Dilihat AI',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+                const Icon(Icons.newspaper_outlined, size: 19),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'Konteks Fundamental',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Refresh fundamental',
+                  onPressed: refreshing ? null : onRefresh,
+                  icon: refreshing
+                      ? const SizedBox.square(
+                          dimension: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.refresh_rounded, size: 20),
                 ),
               ],
             ),
@@ -1191,9 +1601,27 @@ class _FundamentalSnapshotCard extends StatelessWidget {
             const SizedBox(height: 5),
 
             Text(
-              'Ini adalah snapshot berita dan kalender saat analisis dibuat.',
+              'Berita dan event ekonomi yang dilihat AI saat membuat analisis ini.',
               style: TextStyle(color: muted, fontSize: 11),
             ),
+
+            if (refreshed != null) ...[
+              const SizedBox(height: 10),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  refreshed!.drift.missingCitations.isEmpty
+                      ? 'Fundamental terbaru masih mendukung seluruh sumber awal.'
+                      : '${refreshed!.drift.missingCitations.length} dari ${refreshed!.drift.totalCitations} sumber awal tidak lagi ada di window terbaru.',
+                  style: const TextStyle(fontSize: 11.5),
+                ),
+              ),
+            ],
 
             if (news.isNotEmpty) ...[
               const SizedBox(height: 14),
@@ -1209,6 +1637,7 @@ class _FundamentalSnapshotCard extends StatelessWidget {
                       '${item.source_} • '
                       '${DateFormat('d MMM HH:mm').format(item.publishedAt.toLocal())}',
                   icon: Icons.article_outlined,
+                  onTap: () => onOpenUrl(item.url),
                 ),
                 const SizedBox(height: 9),
               ],
@@ -1245,38 +1674,48 @@ class _FundamentalRow extends StatelessWidget {
     required this.title,
     required this.meta,
     required this.icon,
+    this.onTap,
   });
 
   final String title;
   final String meta;
   final IconData icon;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final muted = Theme.of(context).colorScheme.onSurfaceVariant;
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 16, color: muted),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w700,
-                ),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, size: 16, color: muted),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(meta, style: TextStyle(color: muted, fontSize: 10)),
+                ],
               ),
-              const SizedBox(height: 2),
-              Text(meta, style: TextStyle(color: muted, fontSize: 10)),
-            ],
-          ),
+            ),
+            if (onTap != null) const Icon(Icons.open_in_new_rounded, size: 15),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
@@ -1413,6 +1852,645 @@ class _OutcomeCard extends StatelessWidget {
       ),
     );
   }
+}
+
+Color _signalColor(BuildContext context, String signal) {
+  final value = signal.toLowerCase();
+  final dark = Theme.of(context).brightness == Brightness.dark;
+  if (value.contains('buy') || value.contains('bull')) {
+    return dark ? AppColors.bullishDark : AppColors.bullishLight;
+  }
+  if (value.contains('sell') || value.contains('bear')) {
+    return dark ? AppColors.bearishDark : AppColors.bearishLight;
+  }
+  return Theme.of(context).colorScheme.onSurfaceVariant;
+}
+
+String _number(double? value, {int decimals = 2}) =>
+    value == null ? '—' : value.toStringAsFixed(decimals);
+
+String _summarySignal(int buy, int neutral, int sell) {
+  if (buy > sell && buy > neutral) return 'Bullish';
+  if (sell > buy && sell > neutral) return 'Bearish';
+  return 'Neutral';
+}
+
+class _ConfidenceReasonCard extends StatelessWidget {
+  const _ConfidenceReasonCard({
+    required this.analysis,
+    required this.reason,
+    required this.onOpenUrl,
+  });
+
+  final Analysis analysis;
+  final String reason;
+  final ValueChanged<String> onOpenUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final citations = analysis.fundamentalCitations;
+    final news = analysis.fundamentalContext?.newsItems;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.help_outline_rounded, size: 18),
+                SizedBox(width: 7),
+                Expanded(
+                  child: Text(
+                    'Kenapa keyakinan tidak lebih tinggi?',
+                    style: TextStyle(fontWeight: FontWeight.w900),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 9),
+            Text(reason, style: const TextStyle(height: 1.45)),
+            if (citations != null &&
+                (citations.newsTitles.isNotEmpty ||
+                    citations.calendarEvents.isNotEmpty)) ...[
+              const SizedBox(height: 12),
+              const Text(
+                'Sumber yang dirujuk',
+                style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 7,
+                runSpacing: 7,
+                children: [
+                  for (final title in citations.newsTitles)
+                    ActionChip(
+                      avatar: const Icon(Icons.article_outlined, size: 15),
+                      label: Text(title, overflow: TextOverflow.ellipsis),
+                      onPressed: () {
+                        for (final item
+                            in news ?? const <FundamentalNewsItem>[]) {
+                          if (item.title == title) {
+                            onOpenUrl(item.url);
+                            return;
+                          }
+                        }
+                      },
+                    ),
+                  for (final event in citations.calendarEvents)
+                    Chip(
+                      avatar: const Icon(Icons.event_outlined, size: 15),
+                      label: Text(event, overflow: TextOverflow.ellipsis),
+                    ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TechnicalIndicatorsCard extends StatelessWidget {
+  const _TechnicalIndicatorsCard({
+    required this.technical,
+    required this.timeframe,
+    required this.showRawSignals,
+  });
+
+  final BeginnerTechnicalSnapshot technical;
+  final String timeframe;
+  final bool showRawSignals;
+
+  @override
+  Widget build(BuildContext context) {
+    final movingAverages = [...technical.movingAverages]
+      ..sort((a, b) {
+        final byType = a.type.compareTo(b.type);
+        return byType != 0 ? byType : a.period.compareTo(b.period);
+      });
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Indikator Teknikal Live',
+              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              'Data terbaru; dapat berbeda dari snapshot saat analisis dibuat.',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 11,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _MetricChip(
+                  label: 'Harga',
+                  value: _number(technical.lastClose),
+                ),
+                _MetricChip(
+                  label: 'Bar terakhir',
+                  value: '${technical.change1dPercent.toStringAsFixed(2)}%',
+                ),
+                _MetricChip(
+                  label: '20 bar',
+                  value: '${technical.change20dPercent.toStringAsFixed(2)}%',
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            _SignalSummary(
+              title: 'Ringkasan sinyal',
+              signal: technical.overallSignal,
+              buy: technical.buyCount,
+              neutral: technical.neutralCount,
+              sell: technical.sellCount,
+              showRawSignal: showRawSignals,
+            ),
+            const SizedBox(height: 8),
+            _SignalSummary(
+              title: 'Oscillator',
+              signal: _summarySignal(
+                technical.oscillatorBuyCount,
+                technical.oscillatorNeutralCount,
+                technical.oscillatorSellCount,
+              ),
+              buy: technical.oscillatorBuyCount,
+              neutral: technical.oscillatorNeutralCount,
+              sell: technical.oscillatorSellCount,
+              showRawSignal: showRawSignals,
+            ),
+            const SizedBox(height: 8),
+            _SignalSummary(
+              title: 'Moving Average',
+              signal: _summarySignal(
+                technical.movingAverageBuyCount,
+                technical.movingAverageNeutralCount,
+                technical.movingAverageSellCount,
+              ),
+              buy: technical.movingAverageBuyCount,
+              neutral: technical.movingAverageNeutralCount,
+              sell: technical.movingAverageSellCount,
+              showRawSignal: showRawSignals,
+            ),
+            const Divider(height: 28),
+            ExpansionTile(
+              key: const ValueKey('oscillator-indicators'),
+              tilePadding: EdgeInsets.zero,
+              childrenPadding: EdgeInsets.zero,
+              shape: const Border(),
+              collapsedShape: const Border(),
+              title: Text(
+                'Oscillator — $timeframe',
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+              subtitle: Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: _SignalScaleBar(
+                  buy: technical.oscillatorBuyCount,
+                  neutral: technical.oscillatorNeutralCount,
+                  sell: technical.oscillatorSellCount,
+                ),
+              ),
+              children: [
+                _IndicatorRow(
+                  label: 'RSI (14)',
+                  value: _number(technical.rsi),
+                  signal: technical.rsiSignal,
+                  showSignal: showRawSignals,
+                ),
+                _IndicatorRow(
+                  label: 'MACD (12,26)',
+                  value: _number(technical.macdValue, decimals: 4),
+                  signal: technical.macdAction,
+                  showSignal: showRawSignals,
+                ),
+                _IndicatorRow(
+                  label: 'Stochastic %K',
+                  value: _number(technical.stochasticK),
+                  signal: technical.stochasticSignal,
+                  showSignal: showRawSignals,
+                ),
+                _IndicatorRow(
+                  label: 'Bollinger',
+                  value:
+                      '${_number(technical.bollingerLower)}–${_number(technical.bollingerUpper)}',
+                  signal: technical.bollingerSignal,
+                  showSignal: showRawSignals,
+                ),
+              ],
+            ),
+            if (movingAverages.isNotEmpty) ...[
+              const Divider(height: 28),
+              ExpansionTile(
+                key: const ValueKey('moving-average-indicators'),
+                tilePadding: EdgeInsets.zero,
+                childrenPadding: EdgeInsets.zero,
+                shape: const Border(),
+                collapsedShape: const Border(),
+                title: const Text(
+                  'Moving Averages',
+                  style: TextStyle(fontWeight: FontWeight.w800),
+                ),
+                subtitle: Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: _SignalScaleBar(
+                    buy: technical.movingAverageBuyCount,
+                    neutral: technical.movingAverageNeutralCount,
+                    sell: technical.movingAverageSellCount,
+                  ),
+                ),
+                children: [
+                  for (final average in movingAverages)
+                    _IndicatorRow(
+                      label:
+                          '${average.type.toUpperCase()} (${average.period})',
+                      value: _number(average.value),
+                      signal: average.signal,
+                      showSignal: showRawSignals,
+                    ),
+                ],
+              ),
+            ],
+            if (technical.dataPoints > 0) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Data $timeframe • ${technical.dataPoints} candle',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 10.5,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MetricChip extends StatelessWidget {
+  const _MetricChip({required this.label, required this.value});
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    constraints: const BoxConstraints(minWidth: 92),
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+    decoration: BoxDecoration(
+      border: Border.all(color: Theme.of(context).dividerColor),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 10.5)),
+        const SizedBox(height: 2),
+        Text(value, style: const TextStyle(fontWeight: FontWeight.w800)),
+      ],
+    ),
+  );
+}
+
+class _SignalSummary extends StatelessWidget {
+  const _SignalSummary({
+    required this.title,
+    required this.signal,
+    required this.buy,
+    required this.neutral,
+    required this.sell,
+    required this.showRawSignal,
+  });
+  final String title;
+  final String signal;
+  final int buy;
+  final int neutral;
+  final int sell;
+  final bool showRawSignal;
+
+  @override
+  Widget build(BuildContext context) {
+    final normalized = signal.toLowerCase();
+    final displaySignal = showRawSignal
+        ? signal
+        : normalized.contains('buy') || normalized.contains('bull')
+        ? 'Cenderung Naik'
+        : normalized.contains('sell') || normalized.contains('bear')
+        ? 'Cenderung Turun'
+        : 'Netral / Tunggu';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: _signalColor(context, signal).withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: _signalColor(context, signal).withValues(alpha: 0.35),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(fontSize: 11)),
+          Text(
+            displaySignal,
+            style: TextStyle(
+              color: _signalColor(context, signal),
+              fontWeight: FontWeight.w900,
+              fontSize: 17,
+            ),
+          ),
+          const SizedBox(height: 10),
+          _SignalScaleBar(buy: buy, neutral: neutral, sell: sell),
+        ],
+      ),
+    );
+  }
+}
+
+class _SignalScaleBar extends StatelessWidget {
+  const _SignalScaleBar({
+    required this.buy,
+    required this.neutral,
+    required this.sell,
+  });
+
+  final int buy;
+  final int neutral;
+  final int sell;
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final bullish = dark ? AppColors.bullishDark : AppColors.bullishLight;
+    final bearish = dark ? AppColors.bearishDark : AppColors.bearishLight;
+    final neutralColor = Theme.of(context).colorScheme.onSurfaceVariant;
+    final total = buy + neutral + sell;
+    final position = total == 0 ? 0.5 : ((buy - sell) / total + 1) / 2;
+
+    return Semantics(
+      label: '$sell Bearish, $neutral Netral, $buy Bullish',
+      child: Column(
+        children: [
+          LayoutBuilder(
+            builder: (context, constraints) => SizedBox(
+              key: const ValueKey('signal-scale-bar'),
+              height: 18,
+              child: Stack(
+                children: [
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    top: 5,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(999),
+                      child: SizedBox(
+                        height: 8,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(child: ColoredBox(color: bearish)),
+                            Expanded(
+                              child: ColoredBox(
+                                color: bearish.withValues(alpha: 0.45),
+                              ),
+                            ),
+                            Expanded(
+                              child: ColoredBox(
+                                color: neutralColor.withValues(alpha: 0.35),
+                              ),
+                            ),
+                            Expanded(
+                              child: ColoredBox(
+                                color: bullish.withValues(alpha: 0.45),
+                              ),
+                            ),
+                            Expanded(child: ColoredBox(color: bullish)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    left: (constraints.maxWidth - 14) * position,
+                    top: 2,
+                    child: Container(
+                      width: 14,
+                      height: 14,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surface,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Bearish ($sell)',
+                style: TextStyle(color: bearish, fontSize: 10.5),
+              ),
+              Text(
+                'Netral ($neutral)',
+                style: TextStyle(color: neutralColor, fontSize: 10.5),
+              ),
+              Text(
+                'Bullish ($buy)',
+                style: TextStyle(color: bullish, fontSize: 10.5),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _IndicatorRow extends StatelessWidget {
+  const _IndicatorRow({
+    required this.label,
+    required this.value,
+    required this.signal,
+    required this.showSignal,
+  });
+  final String label;
+  final String value;
+  final String signal;
+  final bool showSignal;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _signalColor(context, signal);
+    return Semantics(
+      label: '$label, $value, $signal',
+      excludeSemantics: true,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 7),
+        child: Row(
+          children: [
+            Container(
+              key: ValueKey('indicator-signal-$label'),
+              width: 7,
+              height: 7,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            ),
+            const SizedBox(width: 7),
+            Expanded(child: Text(label, style: const TextStyle(fontSize: 12))),
+            Text(
+              value,
+              style: TextStyle(color: color, fontWeight: FontWeight.w700),
+            ),
+            if (showSignal) ...[
+              const SizedBox(width: 8),
+              Text(
+                signal,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _OpportunityRiskCard extends StatelessWidget {
+  const _OpportunityRiskCard({required this.analysis});
+  final Analysis analysis;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final cards = <Widget>[
+        if (analysis.opportunity?.trim().isNotEmpty == true)
+          _InfoPanel(
+            title: 'Peluang',
+            body: analysis.opportunity!,
+            color: Theme.of(context).colorScheme.tertiary,
+            icon: Icons.adjust_rounded,
+          ),
+        if (analysis.risk?.trim().isNotEmpty == true)
+          _InfoPanel(
+            title: 'Risiko',
+            body: analysis.risk!,
+            color: Theme.of(context).colorScheme.primary,
+            icon: Icons.shield_outlined,
+          ),
+      ];
+      if (constraints.maxWidth >= 620 && cards.length == 2) {
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: cards[0]),
+            const SizedBox(width: 12),
+            Expanded(child: cards[1]),
+          ],
+        );
+      }
+      return Column(
+        children: [
+          for (var index = 0; index < cards.length; index++) ...[
+            cards[index],
+            if (index < cards.length - 1) const SizedBox(height: 12),
+          ],
+        ],
+      );
+    },
+  );
+}
+
+class _InfoPanel extends StatelessWidget {
+  const _InfoPanel({
+    required this.title,
+    required this.body,
+    required this.color,
+    required this.icon,
+  });
+  final String title;
+  final String body;
+  final Color color;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    child: Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        border: Border(left: BorderSide(color: color, width: 4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: color, size: 19),
+              const SizedBox(width: 7),
+              Text(
+                title,
+                style: TextStyle(color: color, fontWeight: FontWeight.w900),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(body, style: const TextStyle(height: 1.45)),
+        ],
+      ),
+    ),
+  );
+}
+
+class _ExecutionInsightCard extends StatelessWidget {
+  const _ExecutionInsightCard({required this.analysis});
+  final Analysis analysis;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    child: ExpansionTile(
+      leading: const Icon(Icons.lightbulb_outline_rounded),
+      title: const Text(
+        'Lihat Wawasan Eksekusi',
+        style: TextStyle(fontWeight: FontWeight.w800),
+      ),
+      subtitle: const Text(
+        'Cara menyikapi skenario tanpa menganggapnya sebagai perintah transaksi.',
+      ),
+      childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      children: [
+        Text(
+          'Tunggu konfirmasi price action, tentukan risiko maksimum sebelum entry, dan batalkan rencana ketika kondisi invalidasi terpenuhi. Jangan mengejar harga di luar area rencana.',
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            height: 1.45,
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 // =============================================================================

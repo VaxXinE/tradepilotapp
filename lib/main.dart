@@ -1,7 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:in_app_update/in_app_update.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:upgrader/upgrader.dart';
 
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_controller.dart';
@@ -110,8 +113,42 @@ class TradePilotApp extends StatelessWidget {
   }
 }
 
-class _TradePilotMaterialApp extends StatelessWidget {
+class _TradePilotMaterialApp extends StatefulWidget {
   const _TradePilotMaterialApp();
+
+  @override
+  State<_TradePilotMaterialApp> createState() => _TradePilotMaterialAppState();
+}
+
+class _TradePilotMaterialAppState extends State<_TradePilotMaterialApp> {
+  late final Upgrader _upgrader;
+
+  @override
+  void initState() {
+    super.initState();
+    _upgrader = Upgrader(countryCode: 'ID');
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _updateAndroid());
+    }
+  }
+
+  Future<void> _updateAndroid() async {
+    try {
+      final update = await InAppUpdate.checkForUpdate();
+      if (update.updateAvailability == UpdateAvailability.updateAvailable &&
+          update.immediateUpdateAllowed) {
+        await InAppUpdate.performImmediateUpdate();
+      }
+    } catch (error) {
+      debugPrint('Google Play update check failed: $error');
+    }
+  }
+
+  @override
+  void dispose() {
+    _upgrader.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -132,7 +169,16 @@ class _TradePilotMaterialApp extends StatelessWidget {
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: theme.mode,
-      home: const SplashScreen(),
+      home: defaultTargetPlatform == TargetPlatform.iOS
+          ? UpgradeAlert(
+              upgrader: _upgrader,
+              barrierDismissible: false,
+              showIgnore: false,
+              showLater: false,
+              shouldPopScope: () => false,
+              child: const SplashScreen(),
+            )
+          : const SplashScreen(),
     );
   }
 }

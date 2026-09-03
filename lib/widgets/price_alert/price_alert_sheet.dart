@@ -224,12 +224,12 @@ class _PriceAlertSheetState extends State<_PriceAlertSheet> {
                 child: ElevatedButton.icon(
                   onPressed: _submitting ? null : _create,
                   icon: _submitting
-                      ? const SizedBox(
+                      ? SizedBox(
                           width: 17,
                           height: 17,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.onPrimary,
                           ),
                         )
                       : const Icon(Icons.notifications_active_outlined),

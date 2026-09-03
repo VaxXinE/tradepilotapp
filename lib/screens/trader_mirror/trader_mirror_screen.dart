@@ -102,7 +102,11 @@ class _TraderMirrorScreenState extends State<TraderMirrorScreen> {
                       (highlight) => Card(
                         child: ListTile(
                           leading: const Icon(Icons.auto_awesome_outlined),
-                          title: Text(highlight.idText),
+                          title: Text(
+                            Localizations.localeOf(context).languageCode == 'id'
+                                ? highlight.idText
+                                : highlight.en,
+                          ),
                         ),
                       ),
                     ),
@@ -175,17 +179,54 @@ class _GateRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      dense: true,
-      leading: Icon(
-        insight.gated ? Icons.lock_clock_outlined : Icons.check_circle_outline,
-      ),
-      title: Text(label),
-      subtitle: Text(
-        insight.gated
-            ? 'Perlu ${insight.need ?? 'lebih banyak'} data; tersedia ${insight.have ?? 0}.'
-            : 'Data cukup. Sorotan terverifikasi ditampilkan di atas.',
+    final data = insight.data;
+    return Card(
+      child: ExpansionTile(
+        leading: Icon(
+          insight.gated
+              ? Icons.lock_clock_outlined
+              : Icons.check_circle_outline,
+        ),
+        title: Text(label),
+        subtitle: Text(
+          insight.gated
+              ? 'Perlu ${insight.need ?? 'lebih banyak'} data; tersedia ${insight.have ?? 0}.'
+              : 'Data cukup untuk menampilkan rincian.',
+        ),
+        children: insight.gated || data == null
+            ? const []
+            : data.entries
+                  .map(
+                    (entry) => ListTile(
+                      dense: true,
+                      title: Text(_label(entry.key)),
+                      subtitle: Text(_summary(entry.value?.value)),
+                    ),
+                  )
+                  .toList(),
       ),
     );
+  }
+
+  static String _label(String value) {
+    final normalized = value.replaceAll('_', ' ');
+    return normalized.isEmpty
+        ? normalized
+        : '${normalized[0].toUpperCase()}${normalized.substring(1)}';
+  }
+
+  static String _summary(Object? value) {
+    if (value is Map) {
+      final key = value['key'];
+      final rate = value['winRate'];
+      final total = value['total'];
+      if (key != null && rate is num) {
+        return '$key · ${(rate * 100).round()}% · ${total ?? 0} sampel';
+      }
+      return value.entries
+          .map((entry) => '${_label('${entry.key}')}: ${entry.value}')
+          .join(' · ');
+    }
+    return value?.toString() ?? '—';
   }
 }

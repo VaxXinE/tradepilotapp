@@ -20,6 +20,10 @@ enum NotificationPreferenceKey {
   signalFlip,
   dormancyNudge,
   onboarding,
+  guardrailRevenge,
+  guardrailOvertrading,
+  guardrailHighRisk,
+  coolingOff,
 }
 
 class NotificationsProvider extends ChangeNotifier {
@@ -403,6 +407,18 @@ class NotificationsProvider extends ChangeNotifier {
 
           case NotificationPreferenceKey.onboarding:
             builder.pushOnboarding = enabled;
+            break;
+          case NotificationPreferenceKey.guardrailRevenge:
+            builder.guardrailRevenge = enabled;
+            break;
+          case NotificationPreferenceKey.guardrailOvertrading:
+            builder.guardrailOvertrading = enabled;
+            break;
+          case NotificationPreferenceKey.guardrailHighRisk:
+            builder.guardrailHighRisk = enabled;
+            break;
+          case NotificationPreferenceKey.coolingOff:
+            builder.coolingOffEnabled = enabled;
             break;
         }
       });

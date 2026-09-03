@@ -14,6 +14,7 @@ import '../../../providers/market_provider.dart';
 import '../../../providers/notifications_provider.dart';
 import '../../../providers/watchlist_provider.dart';
 import '../../../widgets/analysis_card.dart';
+import '../../../widgets/calendar/economic_calendar_card.dart';
 import '../../../widgets/market/market_overview_card.dart';
 import '../../../widgets/market/market_session_card.dart';
 import '../../../widgets/price_alert/price_alert_sheet.dart';
@@ -39,6 +40,27 @@ class DashboardTab extends StatefulWidget {
 }
 
 class _DashboardTabState extends State<DashboardTab> {
+  AnalysisOutcomesSummary? _outcomes;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadOutcomes());
+  }
+
+  Future<void> _loadOutcomes() async {
+    try {
+      final response = await context
+          .read<AuthProvider>()
+          .client
+          .analyses
+          .getAnalysisOutcomesSummary();
+      if (mounted) setState(() => _outcomes = response.data);
+    } catch (_) {
+      // Statistik tambahan tidak boleh menghalangi dashboard utama.
+    }
+  }
+
   Future<void> _openWatchlistManager() async {
     final watchlist = context.read<WatchlistProvider>();
 
@@ -76,6 +98,7 @@ class _DashboardTabState extends State<DashboardTab> {
       watchlist.loadWatchlist(),
       market.loadQuotes(force: true),
       notifications.load(silent: true),
+      _loadOutcomes(),
     ]);
   }
 
@@ -210,6 +233,13 @@ class _DashboardTabState extends State<DashboardTab> {
 
             const SizedBox(height: 18),
 
+            if (user?.onboardingCompleted != true) ...[
+              _OnboardingCard(
+                onDone: () => context.read<AuthProvider>().completeOnboarding(),
+              ),
+              const SizedBox(height: 16),
+            ],
+
             MarketOverviewCard(
               quote: market.selectedQuote,
               isLoading: market.isLoadingQuotes,
@@ -226,6 +256,17 @@ class _DashboardTabState extends State<DashboardTab> {
             const SizedBox(height: 16),
 
             MarketSessionCard(instrument: market.selectedInstrument),
+
+            const SizedBox(height: 16),
+
+            EconomicCalendarCard(
+              instrument: market.selectedInstrument,
+              events: market.selectedCalendar,
+              isLoading: market.isLoadingSelectedMarket,
+              hasError: market.marketError != null,
+              onRetry: () =>
+                  unawaited(market.loadSelectedMarketData(force: true)),
+            ),
 
             const SizedBox(height: 16),
 
@@ -251,6 +292,13 @@ class _DashboardTabState extends State<DashboardTab> {
               onManageWatchlist: _openWatchlistManager,
             ),
 
+            const SizedBox(height: 16),
+
+            _AllMarketsCard(
+              quotes: market.quotes.values.toList(),
+              onOpenInstrument: widget.onOpenAnalyze,
+            ),
+
             const SizedBox(height: 20),
 
             if ((analysisProvider.isLoadingSummary ||
@@ -268,6 +316,11 @@ class _DashboardTabState extends State<DashboardTab> {
               _StatsRow(summary: summary),
 
               const SizedBox(height: 14),
+
+              if (_outcomes case final outcomes?) ...[
+                _OutcomeSummaryCard(outcomes: outcomes),
+                const SizedBox(height: 14),
+              ],
 
               // -------------------------------------------------------------
               // QUOTA
@@ -348,6 +401,84 @@ class _DashboardTabState extends State<DashboardTab> {
 // NOTIFICATION ICON
 // =============================================================================
 
+class _OnboardingCard extends StatelessWidget {
+  const _OnboardingCard({required this.onDone});
+  final Future<bool> Function() onDone;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            context.l10n.getStarted,
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+          ),
+          const SizedBox(height: 8),
+          Text(context.l10n.onboardingSteps),
+          const SizedBox(height: 12),
+          FilledButton(
+            onPressed: () => onDone(),
+            child: Text(context.l10n.gotIt),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class _AllMarketsCard extends StatelessWidget {
+  const _AllMarketsCard({required this.quotes, required this.onOpenInstrument});
+  final List<LiveMarketQuote> quotes;
+  final void Function(String? instrument) onOpenInstrument;
+
+  @override
+  Widget build(BuildContext context) {
+    final visible = quotes.take(10).toList();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    if (visible.isEmpty) return const SizedBox.shrink();
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              context.l10n.liveMarkets,
+              style: const TextStyle(fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 8),
+            ...visible.map(
+              (quote) => ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                title: Text(quote.instrument),
+                subtitle: Text(_formatPrice(quote.instrument, quote.price)),
+                trailing: Text(
+                  '${quote.changePercent >= 0 ? '+' : ''}${quote.changePercent.toStringAsFixed(2)}%',
+                  style: TextStyle(
+                    color: quote.changePercent >= 0
+                        ? (isDark
+                              ? AppColors.bullishDark
+                              : AppColors.bullishLight)
+                        : (isDark
+                              ? AppColors.bearishDark
+                              : AppColors.bearishLight),
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                onTap: () => onOpenInstrument(quote.instrument),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _NotificationIcon extends StatelessWidget {
   const _NotificationIcon({required this.unreadCount});
 
@@ -374,8 +505,8 @@ class _NotificationIcon extends StatelessWidget {
               alignment: Alignment.center,
               child: Text(
                 unreadCount > 99 ? '99+' : '$unreadCount',
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onError,
                   fontSize: 8.5,
                   fontWeight: FontWeight.w900,
                 ),
@@ -722,6 +853,102 @@ class _EmptyWatchlist extends StatelessWidget {
 // =============================================================================
 // STATS
 // =============================================================================
+
+class _OutcomeSummaryCard extends StatelessWidget {
+  const _OutcomeSummaryCard({required this.outcomes});
+
+  final AnalysisOutcomesSummary outcomes;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              context.l10n.outcomeSummary,
+              style: const TextStyle(fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _RateTile(
+                    label: context.l10n.targetHitRate,
+                    rate: outcomes.tpHitRate,
+                    count: outcomes.tp1Hit + outcomes.tp2Hit,
+                    total: outcomes.scored,
+                    color: isDark
+                        ? AppColors.bullishDark
+                        : AppColors.bullishLight,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _RateTile(
+                    label: context.l10n.stopHitRate,
+                    rate: outcomes.slHitRate,
+                    count: outcomes.slHit,
+                    total: outcomes.scored,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              context.l10n.resolvedSample(outcomes.scored),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RateTile extends StatelessWidget {
+  const _RateTile({
+    required this.label,
+    required this.rate,
+    required this.count,
+    required this.total,
+    required this.color,
+  });
+
+  final String label;
+  final num? rate;
+  final int count;
+  final int total;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: color.withValues(alpha: .1),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: TextStyle(color: color, fontSize: 11)),
+        Text(
+          '${((rate ?? 0) * 100).round()}%',
+          style: TextStyle(
+            color: color,
+            fontWeight: FontWeight.w900,
+            fontSize: 20,
+          ),
+        ),
+        Text('$count / $total', style: Theme.of(context).textTheme.bodySmall),
+      ],
+    ),
+  );
+}
 
 class _StatsRow extends StatelessWidget {
   const _StatsRow({required this.summary});

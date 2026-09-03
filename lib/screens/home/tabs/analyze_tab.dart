@@ -74,6 +74,8 @@ class AnalyzeTab extends StatefulWidget {
 
 class _AnalyzeTabState extends State<AnalyzeTab> {
   final TextEditingController _contextController = TextEditingController();
+  String? _guardrailInstrument;
+  List<Map<String, dynamic>> _guardrails = const [];
 
   @override
   void initState() {
@@ -216,6 +218,10 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
 
     final note = _contextController.text.trim();
 
+    for (final signal in _guardrails) {
+      unawaited(_logGuardrailProceed(auth, signal, market.selectedInstrument));
+    }
+
     final result = await analysisProvider.createAnalysis(
       instrument: market.selectedInstrument,
       timeframe: _analysisTimeframe(market.selectedTimeframe),
@@ -248,8 +254,29 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
     final analysis = context.watch<AnalysisProvider>();
 
     final market = context.watch<MarketProvider>();
+    final watchlist = context.watch<WatchlistProvider>();
+    final isPro =
+        context.watch<AuthProvider>().user?.selectedMode ==
+        UserSelectedModeEnum.pro;
+
+    final recentInstruments = analysis.history
+        .map((item) => item.instrument)
+        .toSet()
+        .take(5)
+        .toList();
+    final favoriteInstruments = watchlist.items
+        .map((item) => item.instrument)
+        .take(5)
+        .toList();
 
     final instrument = market.selectedInstrument;
+
+    if (_guardrailInstrument != instrument) {
+      _guardrailInstrument = instrument;
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _loadGuardrails(instrument),
+      );
+    }
 
     final timeframe = market.selectedTimeframe;
 
@@ -286,7 +313,7 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
                       : AppColors.lightSecondary,
                 ),
                 child: Text(
-                  l10n.beginnerMode,
+                  isPro ? l10n.proMode : l10n.beginnerMode,
                   style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
@@ -309,9 +336,9 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
               ErrorBanner(message: market.marketError),
 
               // ---------------------------------------------------------------
-              // BEGINNER INTRO
+              // MODE INTRO
               // ---------------------------------------------------------------
-              _BeginnerIntroCard(muted: muted),
+              _ModeIntroCard(muted: muted, isPro: isPro),
 
               const SizedBox(height: 20),
 
@@ -322,6 +349,26 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
                 title: l10n.selectInstrument,
                 subtitle: l10n.selectMarketDescription,
               ),
+
+              if (recentInstruments.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                _InstrumentShortcuts(
+                  title: l10n.recentMarkets,
+                  instruments: recentInstruments,
+                  selected: instrument,
+                  onSelected: market.selectInstrument,
+                ),
+              ],
+
+              if (favoriteInstruments.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                _InstrumentShortcuts(
+                  title: l10n.favoriteMarkets,
+                  instruments: favoriteInstruments,
+                  selected: instrument,
+                  onSelected: market.selectInstrument,
+                ),
+              ],
 
               const SizedBox(height: 10),
 
@@ -486,18 +533,23 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
                 const SizedBox(height: 14),
               ],
 
+              if (_guardrails.isNotEmpty) ...[
+                _GuardrailCard(signals: _guardrails),
+                const SizedBox(height: 14),
+              ],
+
               // ---------------------------------------------------------------
               // CTA
               // ---------------------------------------------------------------
               ElevatedButton.icon(
                 onPressed: analysis.isSubmitting ? null : _submit,
                 icon: analysis.isSubmitting
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 18,
                         height: 18,
                         child: CircularProgressIndicator(
                           strokeWidth: 2.2,
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.onPrimary,
                         ),
                       )
                     : const Icon(Icons.auto_awesome_rounded, size: 18),
@@ -535,16 +587,164 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
       ),
     );
   }
+
+  Future<void> _loadGuardrails(String instrument) async {
+    try {
+      final response = await context
+          .read<AuthProvider>()
+          .client
+          .dio
+          .get<Object?>(
+            '/analyses/guardrails',
+            queryParameters: {'instrument': instrument},
+          );
+      final data = response.data;
+      if (!mounted || _guardrailInstrument != instrument || data is! Map) {
+        return;
+      }
+      final rawSignals = data['signals'];
+      if (rawSignals is! List) return;
+      setState(() {
+        _guardrails = rawSignals
+            .whereType<Map>()
+            .map((item) => Map<String, dynamic>.from(item))
+            .where((item) => item['kind'] is String)
+            .toList();
+      });
+    } catch (_) {
+      if (mounted && _guardrailInstrument == instrument) {
+        setState(() => _guardrails = const []);
+      }
+    }
+  }
+
+  Future<void> _logGuardrailProceed(
+    AuthProvider auth,
+    Map<String, dynamic> signal,
+    String instrument,
+  ) async {
+    try {
+      await auth.client.dio.post<void>(
+        '/analyses/guardrails/telemetry',
+        data: {
+          'kind': signal['kind'],
+          'instrument': instrument,
+          'proceeded': true,
+        },
+      );
+    } catch (_) {
+      // Telemetry tidak boleh memblokir pembuatan analisis.
+    }
+  }
+}
+
+class _InstrumentShortcuts extends StatelessWidget {
+  const _InstrumentShortcuts({
+    required this.title,
+    required this.instruments,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final String title;
+  final List<String> instruments;
+  final String selected;
+  final Future<void> Function(String) onSelected;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(title, style: Theme.of(context).textTheme.labelMedium),
+      const SizedBox(height: 6),
+      Wrap(
+        spacing: 8,
+        runSpacing: 6,
+        children: instruments
+            .map(
+              (item) => ChoiceChip(
+                label: Text(item),
+                selected: item == selected,
+                onSelected: (_) => unawaited(onSelected(item)),
+              ),
+            )
+            .toList(),
+      ),
+    ],
+  );
+}
+
+class _GuardrailCard extends StatelessWidget {
+  const _GuardrailCard({required this.signals});
+  final List<Map<String, dynamic>> signals;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: .35),
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.shield_outlined),
+              const SizedBox(width: 8),
+              Text(
+                context.l10n.decisionGuardrails,
+                style: const TextStyle(fontWeight: FontWeight.w900),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ...signals.map(
+            (signal) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Text('• ${_message(context, signal)}'),
+            ),
+          ),
+          Text(
+            context.l10n.guardrailHint,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      ),
+    ),
+  );
+
+  static String _message(BuildContext context, Map<String, dynamic> signal) {
+    return switch (signal['kind']) {
+      'revenge' => context.l10n.guardrailRevenge(
+        '${signal['minutesSinceLoss'] ?? '—'}',
+      ),
+      'overtrading' => context.l10n.guardrailOvertrading(
+        '${signal['count'] ?? '—'}',
+        '${signal['limit'] ?? '—'}',
+      ),
+      'high_risk_window' => context.l10n.guardrailHighRisk(
+        '${(signal['event'] as Map?)?['name'] ?? '—'}',
+        '${signal['minutesUntil'] ?? '—'}',
+      ),
+      'unusual_hour' => context.l10n.guardrailUnusualHour(
+        '${signal['hourUtc'] ?? '—'}',
+      ),
+      'cooling_off' => context.l10n.guardrailCoolingOff(
+        '${signal['minutesRemaining'] ?? '—'}',
+      ),
+      _ => context.l10n.guardrailGeneric,
+    };
+  }
 }
 
 // =============================================================================
-// BEGINNER INTRO
+// MODE INTRO
 // =============================================================================
 
-class _BeginnerIntroCard extends StatelessWidget {
-  const _BeginnerIntroCard({required this.muted});
+class _ModeIntroCard extends StatelessWidget {
+  const _ModeIntroCard({required this.muted, required this.isPro});
 
   final Color muted;
+  final bool isPro;
 
   @override
   Widget build(BuildContext context) {
@@ -554,14 +754,19 @@ class _BeginnerIntroCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(Icons.school_outlined, size: 22),
+            Icon(
+              isPro ? Icons.query_stats_rounded : Icons.school_outlined,
+              size: 22,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    context.l10n.understandMarketBeforeEntry,
+                    isPro
+                        ? context.l10n.proMode
+                        : context.l10n.understandMarketBeforeEntry,
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w800,
@@ -569,7 +774,9 @@ class _BeginnerIntroCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    context.l10n.beginnerAnalysisIntro,
+                    isPro
+                        ? context.l10n.proModeHelp
+                        : context.l10n.beginnerAnalysisIntro,
                     style: TextStyle(
                       color: muted,
                       fontSize: 12.5,

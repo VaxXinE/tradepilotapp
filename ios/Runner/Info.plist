@@ -28,6 +28,8 @@
 	<true/>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Gunakan Face ID untuk masuk dengan aman ke Trade Pilot.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Pilih foto profil untuk akun Trade Pilot Anda.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
