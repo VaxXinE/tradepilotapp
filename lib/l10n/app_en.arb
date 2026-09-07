@@ -78,7 +78,7 @@
   "invalidEmail": "Enter a valid email address",
   "password": "Password",
   "passwordRequired": "Password is required",
-  "rememberMe": "Remember me",
+  "rememberMe": "Remember my email",
   "forgotPassword": "Forgot password?",
   "signIn": "Sign In",
   "or": "or",
@@ -108,7 +108,11 @@
   "forgotPasswordTitle": "Forgot Password",
   "stepOfThree": "Step {step} of 3",
   "@stepOfThree": {
-    "placeholders": {"step": {"type": "int"}}
+    "placeholders": {
+      "step": {
+        "type": "int"
+      }
+    }
   },
   "findYourAccount": "Find your account",
   "findAccountDescription": "Enter your account email to start password recovery.",
@@ -137,7 +141,13 @@
   "manageWatchlist": "Manage watchlist",
   "watchlistDescription": "Track your favorite markets without opening another page.",
   "pricesUpdatedAt": "Prices updated at {time}",
-  "@pricesUpdatedAt": {"placeholders": {"time": {"type": "String"}}},
+  "@pricesUpdatedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "livePriceUnavailable": "Live price is unavailable",
   "createPriceAlert": "Create price alert",
   "openAnalysis": "Open analysis",
@@ -154,25 +164,67 @@
   "noAnalyses": "No analyses yet",
   "createFirstAnalysis": "Create your first analysis",
   "priceAlertCreated": "Price alert for {instrument} was created.",
-  "@priceAlertCreated": {"placeholders": {"instrument": {"type": "String"}}},
+  "@priceAlertCreated": {
+    "placeholders": {
+      "instrument": {
+        "type": "String"
+      }
+    }
+  },
   "instrumentAddedToWatchlist": "{instrument} was added to your watchlist.",
-  "@instrumentAddedToWatchlist": {"placeholders": {"instrument": {"type": "String"}}},
+  "@instrumentAddedToWatchlist": {
+    "placeholders": {
+      "instrument": {
+        "type": "String"
+      }
+    }
+  },
   "instrumentAlreadyInWatchlist": "{instrument} is already in your watchlist.",
-  "@instrumentAlreadyInWatchlist": {"placeholders": {"instrument": {"type": "String"}}},
+  "@instrumentAlreadyInWatchlist": {
+    "placeholders": {
+      "instrument": {
+        "type": "String"
+      }
+    }
+  },
   "removeFromWatchlist": "Remove from watchlist?",
   "removeInstrumentConfirmation": "Remove {instrument} from your watchlist?",
-  "@removeInstrumentConfirmation": {"placeholders": {"instrument": {"type": "String"}}},
+  "@removeInstrumentConfirmation": {
+    "placeholders": {
+      "instrument": {
+        "type": "String"
+      }
+    }
+  },
   "remove": "Remove",
   "instrumentRemovedFromWatchlist": "{instrument} was removed from your watchlist.",
-  "@instrumentRemovedFromWatchlist": {"placeholders": {"instrument": {"type": "String"}}},
+  "@instrumentRemovedFromWatchlist": {
+    "placeholders": {
+      "instrument": {
+        "type": "String"
+      }
+    }
+  },
   "removeInstrumentFailed": "Failed to remove {instrument}.",
-  "@removeInstrumentFailed": {"placeholders": {"instrument": {"type": "String"}}},
+  "@removeInstrumentFailed": {
+    "placeholders": {
+      "instrument": {
+        "type": "String"
+      }
+    }
+  },
   "selectMarketsForDashboard": "Select the markets you want to track on the Dashboard.",
   "close": "Close",
   "tryAgain": "Try again",
   "watchlistUpdateFailed": "Failed to update the watchlist.",
   "watchlistUpdated": "Watchlist updated for {instrument}.",
-  "@watchlistUpdated": {"placeholders": {"instrument": {"type": "String"}}},
+  "@watchlistUpdated": {
+    "placeholders": {
+      "instrument": {
+        "type": "String"
+      }
+    }
+  },
   "alertNeedsLivePrice": "A price alert requires a live price. A live price is not available for this instrument.",
   "aiAnalysis": "AI Analysis",
   "selectInstrument": "Select Instrument",
@@ -186,22 +238,64 @@
   "decisionGuardrails": "Decision guardrails",
   "guardrailHint": "This is a soft warning. Pause and reassess before continuing.",
   "guardrailRevenge": "A loss occurred {minutes} minutes ago. Avoid revenge trading.",
-  "@guardrailRevenge": {"placeholders": {"minutes": {"type": "String"}}},
+  "@guardrailRevenge": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
   "guardrailOvertrading": "You made {count} analyses; the current limit is {limit}.",
-  "@guardrailOvertrading": {"placeholders": {"count": {"type": "String"}, "limit": {"type": "String"}}},
+  "@guardrailOvertrading": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
   "guardrailHighRisk": "{event} is expected in about {minutes} minutes.",
-  "@guardrailHighRisk": {"placeholders": {"event": {"type": "String"}, "minutes": {"type": "String"}}},
+  "@guardrailHighRisk": {
+    "placeholders": {
+      "event": {
+        "type": "String"
+      },
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
   "guardrailUnusualHour": "This trading hour ({hour}:00 UTC) is unusual for your history.",
-  "@guardrailUnusualHour": {"placeholders": {"hour": {"type": "String"}}},
+  "@guardrailUnusualHour": {
+    "placeholders": {
+      "hour": {
+        "type": "String"
+      }
+    }
+  },
   "guardrailCoolingOff": "Cooling-off period: about {minutes} minutes remaining.",
-  "@guardrailCoolingOff": {"placeholders": {"minutes": {"type": "String"}}},
+  "@guardrailCoolingOff": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
   "guardrailGeneric": "A risk pattern was detected.",
   "additionalNotesDescription": "Optional. Describe the position or condition you want the AI to consider.",
   "additionalNotesHint": "Example: I do not have a position yet and want to wait for a safer entry...",
   "analyzingMarket": "Analyzing the market...",
   "getAiAnalysis": "Get AI Analysis",
   "analysesRemainingToday": "{count} analyses remaining today",
-  "@analysesRemainingToday": {"placeholders": {"count": {"type": "int"}}},
+  "@analysesRemainingToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "aiAnalysisDisclaimer": "AI analysis is a decision-support tool, not a guarantee of profit. Always consider the risks before opening a position.",
   "understandMarketBeforeEntry": "Understand the market before entering",
   "beginnerAnalysisIntro": "Trade Pilot helps explain price, momentum, market sessions, and important events in simpler language.",
@@ -216,13 +310,37 @@
   "sessionOverlap": "Session overlap • liquidity is usually higher",
   "marketSessionActive": "Market session active",
   "sessionOpensIn": "{session} opens in {duration}",
-  "@sessionOpensIn": {"placeholders": {"session": {"type": "String"}, "duration": {"type": "String"}}},
+  "@sessionOpensIn": {
+    "placeholders": {
+      "session": {
+        "type": "String"
+      },
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
   "sessionClosesIn": "{session} closes in {duration}",
-  "@sessionClosesIn": {"placeholders": {"session": {"type": "String"}, "duration": {"type": "String"}}},
+  "@sessionClosesIn": {
+    "placeholders": {
+      "session": {
+        "type": "String"
+      },
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
   "highImpactEventSoon": "A high-impact event is coming soon",
   "highImpactRisk": "Prices may move quickly and spreads may widen.",
   "eventStartsInMinutes": " • in about {minutes} min",
-  "@eventStartsInMinutes": {"placeholders": {"minutes": {"type": "int"}}},
+  "@eventStartsInMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "searchInstrumentOrNote": "Search instruments or notes",
   "clearSearch": "Clear search",
   "filter": "Filter",
@@ -233,11 +351,29 @@
   "modeBeginner": "Mode: Beginner",
   "modePro": "Mode: Pro",
   "outcomeLabel": "Outcome: {outcome}",
-  "@outcomeLabel": {"placeholders": {"outcome": {"type": "String"}}},
+  "@outcomeLabel": {
+    "placeholders": {
+      "outcome": {
+        "type": "String"
+      }
+    }
+  },
   "confidenceAtLeast": "Confidence ≥ {confidence}%",
-  "@confidenceAtLeast": {"placeholders": {"confidence": {"type": "int"}}},
+  "@confidenceAtLeast": {
+    "placeholders": {
+      "confidence": {
+        "type": "int"
+      }
+    }
+  },
   "resultCount": "{count} results",
-  "@resultCount": {"placeholders": {"count": {"type": "int"}}},
+  "@resultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "reset": "Reset",
   "positive": "Positive",
   "negative": "Negative",
@@ -250,12 +386,30 @@
   "evaluated": "Evaluated",
   "averageConfidence": "Average confidence",
   "positiveEvaluatedSummary": "{rate}% positive outcomes from evaluated analyses.",
-  "@positiveEvaluatedSummary": {"placeholders": {"rate": {"type": "int"}}},
+  "@positiveEvaluatedSummary": {
+    "placeholders": {
+      "rate": {
+        "type": "int"
+      }
+    }
+  },
   "hasJournalNote": "Has a journal note",
   "confidenceValue": "Confidence {value}",
-  "@confidenceValue": {"placeholders": {"value": {"type": "String"}}},
+  "@confidenceValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "riskValue": "Risk {value}",
-  "@riskValue": {"placeholders": {"value": {"type": "String"}}},
+  "@riskValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "strongBullish": "Strong bullish",
   "strongBearish": "Strong bearish",
   "biasUnavailable": "Bias unavailable",
@@ -299,7 +453,19 @@
   "lowUppercase": "LOW",
   "sessionOverlapActivity": "Session overlaps usually have higher market activity.",
   "sessionTransition": "{session} {action} in {duration}",
-  "@sessionTransition": {"placeholders": {"session": {"type": "String"}, "action": {"type": "String"}, "duration": {"type": "String"}}},
+  "@sessionTransition": {
+    "placeholders": {
+      "session": {
+        "type": "String"
+      },
+      "action": {
+        "type": "String"
+      },
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
   "opens": "opens",
   "closes": "closes",
   "technicalSummary": "Technical Summary",
@@ -326,9 +492,21 @@
   "waitingForUpdate": "Waiting for an update...",
   "updatedJustNow": "Updated just now",
   "updatedSecondsAgo": "Updated {seconds} seconds ago",
-  "@updatedSecondsAgo": {"placeholders": {"seconds": {"type": "int"}}},
+  "@updatedSecondsAgo": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "updatedAt": "Updated at {time}",
-  "@updatedAt": {"placeholders": {"time": {"type": "String"}}},
+  "@updatedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "chartDataUnavailable": "Chart data is unavailable.",
   "high": "High",
   "medium": "Medium",
@@ -339,24 +517,60 @@
   "historicalLevelsDisclaimer": "Chart levels are historical references, not transaction recommendations.",
   "candlestickHelp": "Candlesticks: green = price rose, red = price fell.",
   "movementRisk": "Movement risk: {risk}. Support and resistance are reference levels from the visible data.",
-  "@movementRisk": {"placeholders": {"risk": {"type": "String"}}},
+  "@movementRisk": {
+    "placeholders": {
+      "risk": {
+        "type": "String"
+      }
+    }
+  },
   "currentPrice": "Current {price}",
-  "@currentPrice": {"placeholders": {"price": {"type": "String"}}},
+  "@currentPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "addInstrument": "Add instrument",
   "searchInstrument": "Search instruments",
   "delete": "Delete",
   "addedOn": "Added: {date}",
-  "@addedOn": {"placeholders": {"date": {"type": "String"}}},
+  "@addedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "noPreviousAnalysis": "No previous analysis",
   "lastAnalysis": "Last analysis: {date}",
-  "@lastAnalysis": {"placeholders": {"date": {"type": "String"}}},
+  "@lastAnalysis": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "invalidTargetPrice": "Enter a valid target price.",
   "noteMaximumCharacters": "Notes can contain up to 200 characters.",
   "priceAlertCreateFailed": "Failed to create the price alert.",
   "priceAlertTitle": "{instrument} Price Alert",
-  "@priceAlertTitle": {"placeholders": {"instrument": {"type": "String"}}},
+  "@priceAlertTitle": {
+    "placeholders": {
+      "instrument": {
+        "type": "String"
+      }
+    }
+  },
   "currentMarketPrice": "Current price {price}",
-  "@currentMarketPrice": {"placeholders": {"price": {"type": "String"}}},
+  "@currentMarketPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "notifyWhenPrice": "Notify me when the price...",
   "risesAbove": "Rises above",
   "fallsBelow": "Falls below",
@@ -377,20 +591,77 @@
   "previous": "Previous",
   "goldEventExplanation": "Why it matters: USD data often affects Gold and may increase XAU/USD volatility.",
   "currencyEventExplanation": "Why it matters: {currency} events directly relate to {instrument} and may increase volatility.",
-  "@currencyEventExplanation": {"placeholders": {"currency": {"type": "String"}, "instrument": {"type": "String"}}},
+  "@currencyEventExplanation": {
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      },
+      "instrument": {
+        "type": "String"
+      }
+    }
+  },
   "genericEventExplanation": "Why it matters: This event may affect sentiment and volatility for {instrument}.",
-  "@genericEventExplanation": {"placeholders": {"instrument": {"type": "String"}}},
+  "@genericEventExplanation": {
+    "placeholders": {
+      "instrument": {
+        "type": "String"
+      }
+    }
+  },
   "savedFilters": "Saved filters",
   "saveCurrentFilter": "Save current filter",
   "presetName": "Filter name",
   "noSavedFilters": "No saved filters yet.",
   "filterPresetSaved": "Filter saved.",
-  "filterPresetFailed": "Saved filters could not be updated."
-  ,"recentMarkets": "Recently analyzed"
-  ,"favoriteMarkets": "Favorite markets"
-  ,"outcomeSummary": "30-day outcome summary"
-  ,"targetHitRate": "Target hit rate"
-  ,"stopHitRate": "Risk-limit hit rate"
-  ,"resolvedSample": "{count} resolved analyses"
-  ,"@resolvedSample": {"placeholders": {"count": {"type": "int"}}}
+  "filterPresetFailed": "Saved filters could not be updated.",
+  "recentMarkets": "Recently analyzed",
+  "favoriteMarkets": "Favorite markets",
+  "outcomeSummary": "30-day outcome summary",
+  "targetHitRate": "Target hit rate",
+  "stopHitRate": "Risk-limit hit rate",
+  "resolvedSample": "{count} resolved analyses",
+  "@resolvedSample": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "appLocked": "Trade Pilot is locked",
+  "@appLocked": {
+    "description": "Title on the biometric app-lock screen"
+  },
+  "appLockedDescription": "Your session is still active. Verify your identity to continue.",
+  "@appLockedDescription": {
+    "description": "Explains that the session survived and only needs unlocking"
+  },
+  "unlock": "Unlock",
+  "@unlock": {
+    "description": "Button that starts the biometric prompt on the lock screen"
+  },
+  "biometricUnlockReason": "Verify your identity to unlock Trade Pilot",
+  "@biometricUnlockReason": {
+    "description": "System biometric prompt reason when unlocking an existing session"
+  },
+  "unlockFailed": "Could not verify your identity. Try again or sign out.",
+  "@unlockFailed": {
+    "description": "Shown when biometric verification fails on the lock screen"
+  },
+  "biometricLock": "Biometric lock",
+  "@biometricLock": {
+    "description": "Profile setting that gates the app behind biometrics"
+  },
+  "biometricLockOn": "Ask for fingerprint or face each time the app opens",
+  "@biometricLockOn": {
+    "description": "Subtitle when the biometric lock setting is on"
+  },
+  "biometricLockOff": "Open straight to your dashboard",
+  "@biometricLockOff": {
+    "description": "Subtitle when the biometric lock setting is off"
+  },
+  "biometricLockUnavailable": "No fingerprint or face unlock is set up on this device.",
+  "@biometricLockUnavailable": {
+    "description": "Shown when the device has no enrolled biometrics"
+  }
 }

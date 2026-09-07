@@ -123,12 +123,43 @@ class _TradePilotMaterialApp extends StatefulWidget {
 class _TradePilotMaterialAppState extends State<_TradePilotMaterialApp> {
   late final Upgrader _upgrader;
 
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+
+  late final AuthProvider _auth;
+
+  AuthStatus? _previousAuthStatus;
+
   @override
   void initState() {
     super.initState();
     _upgrader = Upgrader(countryCode: 'ID');
+
+    _auth = context.read<AuthProvider>();
+    _previousAuthStatus = _auth.status;
+    _auth.addListener(_handleAuthStatusChanged);
+
     if (defaultTargetPlatform == TargetPlatform.android) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _updateAndroid());
+    }
+  }
+
+  /// Clears the navigation stack when a session ends.
+  ///
+  /// [SplashScreen] is this app's `home`, so it swaps itself to
+  /// [LoginScreen] on its own as soon as the status changes. Routes pushed on
+  /// top of it — analysis detail, journal, alerts — sit *above* `home` in the
+  /// navigator and would happily stay there, covering the login form with a
+  /// screen whose data is backed by a token that no longer works.
+  ///
+  /// Handles both a forced logout (expired token) and a manual one.
+  void _handleAuthStatusChanged() {
+    final previous = _previousAuthStatus;
+    final current = _auth.status;
+    _previousAuthStatus = current;
+
+    if (previous == AuthStatus.authenticated &&
+        current == AuthStatus.unauthenticated) {
+      _navigatorKey.currentState?.popUntil((route) => route.isFirst);
     }
   }
 
@@ -146,6 +177,7 @@ class _TradePilotMaterialAppState extends State<_TradePilotMaterialApp> {
 
   @override
   void dispose() {
+    _auth.removeListener(_handleAuthStatusChanged);
     _upgrader.dispose();
     super.dispose();
   }
@@ -156,6 +188,7 @@ class _TradePilotMaterialAppState extends State<_TradePilotMaterialApp> {
     final locale = context.watch<LocaleController>();
 
     return MaterialApp(
+      navigatorKey: _navigatorKey,
       onGenerateTitle: (context) => context.l10n.appTitle,
       debugShowCheckedModeBanner: false,
       locale: locale.locale,

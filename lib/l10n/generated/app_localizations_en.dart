@@ -252,7 +252,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordRequired => 'Password is required';
 
   @override
-  String get rememberMe => 'Remember me';
+  String get rememberMe => 'Remember my email';
 
   @override
   String get forgotPassword => 'Forgot password?';
@@ -1190,4 +1190,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String resolvedSample(int count) {
     return '$count resolved analyses';
   }
+
+  @override
+  String get appLocked => 'Trade Pilot is locked';
+
+  @override
+  String get appLockedDescription =>
+      'Your session is still active. Verify your identity to continue.';
+
+  @override
+  String get unlock => 'Unlock';
+
+  @override
+  String get biometricUnlockReason =>
+      'Verify your identity to unlock Trade Pilot';
+
+  @override
+  String get unlockFailed =>
+      'Could not verify your identity. Try again or sign out.';
+
+  @override
+  String get biometricLock => 'Biometric lock';
+
+  @override
+  String get biometricLockOn =>
+      'Ask for fingerprint or face each time the app opens';
+
+  @override
+  String get biometricLockOff => 'Open straight to your dashboard';
+
+  @override
+  String get biometricLockUnavailable =>
+      'No fingerprint or face unlock is set up on this device.';
 }

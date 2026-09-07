@@ -52,7 +52,7 @@
   "invalidEmail": "Masukkan alamat email yang valid",
   "password": "Password",
   "passwordRequired": "Password wajib diisi",
-  "rememberMe": "Ingat saya",
+  "rememberMe": "Ingat email saya",
   "forgotPassword": "Lupa password?",
   "signIn": "Masuk",
   "or": "atau",
@@ -78,15 +78,51 @@
   "decisionGuardrails": "Guardrail keputusan",
   "guardrailHint": "Ini peringatan lunak. Jeda dan evaluasi ulang sebelum lanjut.",
   "guardrailRevenge": "Kerugian terjadi {minutes} menit lalu. Hindari revenge trading.",
-  "@guardrailRevenge": {"placeholders": {"minutes": {"type": "String"}}},
+  "@guardrailRevenge": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
   "guardrailOvertrading": "Kamu membuat {count} analisis; batas saat ini {limit}.",
-  "@guardrailOvertrading": {"placeholders": {"count": {"type": "String"}, "limit": {"type": "String"}}},
+  "@guardrailOvertrading": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
   "guardrailHighRisk": "{event} diperkirakan berlangsung sekitar {minutes} menit lagi.",
-  "@guardrailHighRisk": {"placeholders": {"event": {"type": "String"}, "minutes": {"type": "String"}}},
+  "@guardrailHighRisk": {
+    "placeholders": {
+      "event": {
+        "type": "String"
+      },
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
   "guardrailUnusualHour": "Jam trading ini ({hour}:00 UTC) tidak biasa dalam riwayat kamu.",
-  "@guardrailUnusualHour": {"placeholders": {"hour": {"type": "String"}}},
+  "@guardrailUnusualHour": {
+    "placeholders": {
+      "hour": {
+        "type": "String"
+      }
+    }
+  },
   "guardrailCoolingOff": "Masa cooling-off tersisa sekitar {minutes} menit.",
-  "@guardrailCoolingOff": {"placeholders": {"minutes": {"type": "String"}}},
+  "@guardrailCoolingOff": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
   "guardrailGeneric": "Pola risiko terdeteksi.",
   "getAiAnalysis": "Dapatkan Analisis AI",
   "marketOverview": "Ringkasan Pasar",
@@ -108,12 +144,30 @@
   "evaluated": "Dievaluasi",
   "averageConfidence": "Keyakinan rata-rata",
   "positiveEvaluatedSummary": "{rate}% outcome positif dari analisis yang sudah dievaluasi.",
-  "@positiveEvaluatedSummary": {"placeholders": {"rate": {"type": "int"}}},
+  "@positiveEvaluatedSummary": {
+    "placeholders": {
+      "rate": {
+        "type": "int"
+      }
+    }
+  },
   "hasJournalNote": "Memiliki catatan jurnal",
   "confidenceValue": "Keyakinan {value}",
-  "@confidenceValue": {"placeholders": {"value": {"type": "String"}}},
+  "@confidenceValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "riskValue": "Risiko {value}",
-  "@riskValue": {"placeholders": {"value": {"type": "String"}}},
+  "@riskValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "strongBullish": "Bullish kuat",
   "strongBearish": "Bearish kuat",
   "biasUnavailable": "Bias belum tersedia",
@@ -144,7 +198,13 @@
   "manageWatchlist": "Kelola watchlist",
   "watchlistDescription": "Pantau pasar favoritmu tanpa membuka halaman lain.",
   "pricesUpdatedAt": "Harga diperbarui pukul {time}",
-  "@pricesUpdatedAt": {"placeholders": {"time": {"type": "String"}}},
+  "@pricesUpdatedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "livePriceUnavailable": "Harga live tidak tersedia",
   "createPriceAlert": "Buat price alert",
   "openAnalysis": "Buka analisis",
@@ -161,22 +221,64 @@
   "noAnalyses": "Belum ada analisis",
   "createFirstAnalysis": "Buat analisis pertamamu",
   "priceAlertCreated": "Price alert untuk {instrument} berhasil dibuat.",
-  "@priceAlertCreated": {"placeholders": {"instrument": {"type": "String"}}},
+  "@priceAlertCreated": {
+    "placeholders": {
+      "instrument": {
+        "type": "String"
+      }
+    }
+  },
   "instrumentAddedToWatchlist": "{instrument} ditambahkan ke watchlist.",
-  "@instrumentAddedToWatchlist": {"placeholders": {"instrument": {"type": "String"}}},
+  "@instrumentAddedToWatchlist": {
+    "placeholders": {
+      "instrument": {
+        "type": "String"
+      }
+    }
+  },
   "instrumentAlreadyInWatchlist": "{instrument} sudah ada di watchlist.",
-  "@instrumentAlreadyInWatchlist": {"placeholders": {"instrument": {"type": "String"}}},
+  "@instrumentAlreadyInWatchlist": {
+    "placeholders": {
+      "instrument": {
+        "type": "String"
+      }
+    }
+  },
   "removeFromWatchlist": "Hapus dari watchlist?",
   "removeInstrumentConfirmation": "Hapus {instrument} dari watchlist?",
-  "@removeInstrumentConfirmation": {"placeholders": {"instrument": {"type": "String"}}},
+  "@removeInstrumentConfirmation": {
+    "placeholders": {
+      "instrument": {
+        "type": "String"
+      }
+    }
+  },
   "instrumentRemovedFromWatchlist": "{instrument} dihapus dari watchlist.",
-  "@instrumentRemovedFromWatchlist": {"placeholders": {"instrument": {"type": "String"}}},
+  "@instrumentRemovedFromWatchlist": {
+    "placeholders": {
+      "instrument": {
+        "type": "String"
+      }
+    }
+  },
   "removeInstrumentFailed": "Gagal menghapus {instrument}.",
-  "@removeInstrumentFailed": {"placeholders": {"instrument": {"type": "String"}}},
+  "@removeInstrumentFailed": {
+    "placeholders": {
+      "instrument": {
+        "type": "String"
+      }
+    }
+  },
   "selectMarketsForDashboard": "Pilih pasar yang ingin kamu pantau di Beranda.",
   "watchlistUpdateFailed": "Gagal memperbarui watchlist.",
   "watchlistUpdated": "Watchlist diperbarui untuk {instrument}.",
-  "@watchlistUpdated": {"placeholders": {"instrument": {"type": "String"}}},
+  "@watchlistUpdated": {
+    "placeholders": {
+      "instrument": {
+        "type": "String"
+      }
+    }
+  },
   "alertNeedsLivePrice": "Price alert memerlukan harga live. Harga live tidak tersedia untuk instrumen ini.",
   "aiAnalysis": "Analisis AI",
   "selectMarketDescription": "Pilih pasar yang ingin kamu pahami.",
@@ -188,7 +290,13 @@
   "additionalNotesHint": "Contoh: Saya belum memiliki posisi dan ingin menunggu entry yang lebih aman...",
   "analyzingMarket": "Menganalisis pasar...",
   "analysesRemainingToday": "Sisa {count} analisis hari ini",
-  "@analysesRemainingToday": {"placeholders": {"count": {"type": "int"}}},
+  "@analysesRemainingToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "aiAnalysisDisclaimer": "Analisis AI adalah alat bantu pengambilan keputusan, bukan jaminan profit. Selalu pertimbangkan risiko sebelum membuka posisi.",
   "understandMarketBeforeEntry": "Pahami pasar sebelum masuk",
   "beginnerAnalysisIntro": "Trade Pilot membantu menjelaskan harga, momentum, sesi pasar, dan peristiwa penting dengan bahasa yang lebih sederhana.",
@@ -203,13 +311,37 @@
   "sessionOverlap": "Sesi tumpang tindih • likuiditas biasanya lebih tinggi",
   "marketSessionActive": "Sesi pasar aktif",
   "sessionOpensIn": "{session} dibuka dalam {duration}",
-  "@sessionOpensIn": {"placeholders": {"session": {"type": "String"}, "duration": {"type": "String"}}},
+  "@sessionOpensIn": {
+    "placeholders": {
+      "session": {
+        "type": "String"
+      },
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
   "sessionClosesIn": "{session} ditutup dalam {duration}",
-  "@sessionClosesIn": {"placeholders": {"session": {"type": "String"}, "duration": {"type": "String"}}},
+  "@sessionClosesIn": {
+    "placeholders": {
+      "session": {
+        "type": "String"
+      },
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
   "highImpactEventSoon": "Peristiwa berdampak tinggi akan segera berlangsung",
   "highImpactRisk": "Harga dapat bergerak cepat dan spread dapat melebar.",
   "eventStartsInMinutes": " • sekitar {minutes} menit lagi",
-  "@eventStartsInMinutes": {"placeholders": {"minutes": {"type": "int"}}},
+  "@eventStartsInMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "cryptoMarket247": "Pasar Kripto 24/7",
   "marketClosed": "Pasar tutup",
   "activeUppercase": "AKTIF",
@@ -222,7 +354,19 @@
   "lowUppercase": "RENDAH",
   "sessionOverlapActivity": "Sesi yang tumpang tindih biasanya memiliki aktivitas pasar lebih tinggi.",
   "sessionTransition": "{session} {action} dalam {duration}",
-  "@sessionTransition": {"placeholders": {"session": {"type": "String"}, "action": {"type": "String"}, "duration": {"type": "String"}}},
+  "@sessionTransition": {
+    "placeholders": {
+      "session": {
+        "type": "String"
+      },
+      "action": {
+        "type": "String"
+      },
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
   "opens": "dibuka",
   "closes": "ditutup",
   "indicatorEducationDisclaimer": "Kami menyederhanakan indikator agar lebih mudah dipahami. Ini bukan sinyal atau rekomendasi trading.",
@@ -245,23 +389,59 @@
   "waitingForUpdate": "Menunggu pembaruan...",
   "updatedJustNow": "Baru saja diperbarui",
   "updatedSecondsAgo": "Diperbarui {seconds} detik lalu",
-  "@updatedSecondsAgo": {"placeholders": {"seconds": {"type": "int"}}},
+  "@updatedSecondsAgo": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "updatedAt": "Diperbarui pukul {time}",
-  "@updatedAt": {"placeholders": {"time": {"type": "String"}}},
+  "@updatedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "chartDataUnavailable": "Data grafik tidak tersedia.",
   "bullishBias": "Bias bullish",
   "bearishBias": "Bias bearish",
   "historicalLevelsDisclaimer": "Level grafik adalah referensi historis, bukan rekomendasi transaksi.",
   "candlestickHelp": "Candlestick: hijau = harga naik, merah = harga turun.",
   "movementRisk": "Risiko pergerakan: {risk}. Support dan resistance adalah level referensi dari data yang terlihat.",
-  "@movementRisk": {"placeholders": {"risk": {"type": "String"}}},
+  "@movementRisk": {
+    "placeholders": {
+      "risk": {
+        "type": "String"
+      }
+    }
+  },
   "currentPrice": "Harga saat ini {price}",
-  "@currentPrice": {"placeholders": {"price": {"type": "String"}}},
+  "@currentPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "addedOn": "Ditambahkan: {date}",
-  "@addedOn": {"placeholders": {"date": {"type": "String"}}},
+  "@addedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "noPreviousAnalysis": "Belum ada analisis sebelumnya",
   "lastAnalysis": "Analisis terakhir: {date}",
-  "@lastAnalysis": {"placeholders": {"date": {"type": "String"}}},
+  "@lastAnalysis": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "tradePilotLogo": "Logo Trade Pilot",
   "aiTradingAssistant": "Analisis trading bertenaga AI",
   "permanentAction": "Tindakan ini bersifat permanen",
@@ -302,7 +482,13 @@
   "passwordResetSuccess": "Password berhasil diubah. Silakan masuk.",
   "forgotPasswordTitle": "Lupa Password",
   "stepOfThree": "Langkah {step} dari 3",
-  "@stepOfThree": {"placeholders": {"step": {"type": "int"}}},
+  "@stepOfThree": {
+    "placeholders": {
+      "step": {
+        "type": "int"
+      }
+    }
+  },
   "findYourAccount": "Temukan akunmu",
   "findAccountDescription": "Masukkan email akun untuk memulai pemulihan password.",
   "continueLabel": "Lanjutkan",
@@ -322,11 +508,29 @@
   "modeBeginner": "Mode: Pemula",
   "modePro": "Mode: Pro",
   "outcomeLabel": "Outcome: {outcome}",
-  "@outcomeLabel": {"placeholders": {"outcome": {"type": "String"}}},
+  "@outcomeLabel": {
+    "placeholders": {
+      "outcome": {
+        "type": "String"
+      }
+    }
+  },
   "confidenceAtLeast": "Keyakinan ≥ {confidence}%",
-  "@confidenceAtLeast": {"placeholders": {"confidence": {"type": "int"}}},
+  "@confidenceAtLeast": {
+    "placeholders": {
+      "confidence": {
+        "type": "int"
+      }
+    }
+  },
   "resultCount": "{count} hasil",
-  "@resultCount": {"placeholders": {"count": {"type": "int"}}},
+  "@resultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "reset": "Atur ulang",
   "negative": "Negatif",
   "all": "Semua",
@@ -351,9 +555,21 @@
   "noteMaximumCharacters": "Catatan maksimal 200 karakter.",
   "priceAlertCreateFailed": "Gagal membuat price alert.",
   "priceAlertTitle": "Price Alert {instrument}",
-  "@priceAlertTitle": {"placeholders": {"instrument": {"type": "String"}}},
+  "@priceAlertTitle": {
+    "placeholders": {
+      "instrument": {
+        "type": "String"
+      }
+    }
+  },
   "currentMarketPrice": "Harga pasar saat ini {price}",
-  "@currentMarketPrice": {"placeholders": {"price": {"type": "String"}}},
+  "@currentMarketPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "notifyWhenPrice": "Beri tahu saya ketika harga...",
   "risesAbove": "Naik di atas",
   "fallsBelow": "Turun di bawah",
@@ -374,21 +590,51 @@
   "previous": "Sebelumnya",
   "goldEventExplanation": "Mengapa penting: data USD sering memengaruhi Emas dan dapat meningkatkan volatilitas XAU/USD.",
   "currencyEventExplanation": "Mengapa penting: peristiwa {currency} berkaitan langsung dengan {instrument} dan dapat meningkatkan volatilitas.",
-  "@currencyEventExplanation": {"placeholders": {"currency": {"type": "String"}, "instrument": {"type": "String"}}},
+  "@currencyEventExplanation": {
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      },
+      "instrument": {
+        "type": "String"
+      }
+    }
+  },
   "genericEventExplanation": "Mengapa penting: peristiwa ini dapat memengaruhi sentimen dan volatilitas {instrument}.",
-  "@genericEventExplanation": {"placeholders": {"instrument": {"type": "String"}}},
+  "@genericEventExplanation": {
+    "placeholders": {
+      "instrument": {
+        "type": "String"
+      }
+    }
+  },
   "searchInstrumentOrNote": "Cari instrumen atau catatan",
   "savedFilters": "Filter tersimpan",
   "saveCurrentFilter": "Simpan filter saat ini",
   "presetName": "Nama filter",
   "noSavedFilters": "Belum ada filter tersimpan.",
   "filterPresetSaved": "Filter berhasil disimpan.",
-  "filterPresetFailed": "Filter tersimpan tidak dapat diperbarui."
-  ,"recentMarkets": "Terakhir dianalisis"
-  ,"favoriteMarkets": "Market favorit"
-  ,"outcomeSummary": "Ringkasan outcome 30 hari"
-  ,"targetHitRate": "Target tercapai"
-  ,"stopHitRate": "Batas risiko tersentuh"
-  ,"resolvedSample": "{count} analisis terselesaikan"
-  ,"@resolvedSample": {"placeholders": {"count": {"type": "int"}}}
+  "filterPresetFailed": "Filter tersimpan tidak dapat diperbarui.",
+  "recentMarkets": "Terakhir dianalisis",
+  "favoriteMarkets": "Market favorit",
+  "outcomeSummary": "Ringkasan outcome 30 hari",
+  "targetHitRate": "Target tercapai",
+  "stopHitRate": "Batas risiko tersentuh",
+  "resolvedSample": "{count} analisis terselesaikan",
+  "@resolvedSample": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "appLocked": "Trade Pilot terkunci",
+  "appLockedDescription": "Sesimu masih aktif. Verifikasi identitasmu untuk melanjutkan.",
+  "unlock": "Buka Kunci",
+  "biometricUnlockReason": "Verifikasi identitasmu untuk membuka Trade Pilot",
+  "unlockFailed": "Identitasmu tidak bisa diverifikasi. Coba lagi atau keluar.",
+  "biometricLock": "Kunci biometrik",
+  "biometricLockOn": "Minta sidik jari atau wajah setiap app dibuka",
+  "biometricLockOff": "Langsung terbuka ke dashboard",
+  "biometricLockUnavailable": "Belum ada sidik jari atau face unlock di perangkat ini."
 }

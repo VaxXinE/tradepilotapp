@@ -5,6 +5,7 @@ import '../providers/auth_provider.dart';
 import '../l10n/l10n.dart';
 import 'auth/login_screen.dart';
 import 'home/home_shell.dart';
+import 'lock_screen.dart';
 
 /// Splash + auth-gate: menunggu AuthProvider selesai memuat sesi
 /// tersimpan lalu mengarahkan ke Home atau Login.
@@ -19,7 +20,9 @@ class SplashScreen extends StatelessWidget {
           case AuthStatus.unknown:
             return const _SplashBody();
           case AuthStatus.authenticated:
-            return const HomeShell();
+            // A restored session may still be behind the biometric lock. A
+            // fresh sign-in never is: the user just proved who they are.
+            return auth.isLocked ? const LockScreen() : const HomeShell();
           case AuthStatus.unauthenticated:
             return const LoginScreen();
         }

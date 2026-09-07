@@ -249,7 +249,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get passwordRequired => 'Password wajib diisi';
 
   @override
-  String get rememberMe => 'Ingat saya';
+  String get rememberMe => 'Ingat email saya';
 
   @override
   String get forgotPassword => 'Lupa password?';
@@ -1186,4 +1186,35 @@ class AppLocalizationsId extends AppLocalizations {
   String resolvedSample(int count) {
     return '$count analisis terselesaikan';
   }
+
+  @override
+  String get appLocked => 'Trade Pilot terkunci';
+
+  @override
+  String get appLockedDescription =>
+      'Sesimu masih aktif. Verifikasi identitasmu untuk melanjutkan.';
+
+  @override
+  String get unlock => 'Buka Kunci';
+
+  @override
+  String get biometricUnlockReason =>
+      'Verifikasi identitasmu untuk membuka Trade Pilot';
+
+  @override
+  String get unlockFailed =>
+      'Identitasmu tidak bisa diverifikasi. Coba lagi atau keluar.';
+
+  @override
+  String get biometricLock => 'Kunci biometrik';
+
+  @override
+  String get biometricLockOn => 'Minta sidik jari atau wajah setiap app dibuka';
+
+  @override
+  String get biometricLockOff => 'Langsung terbuka ke dashboard';
+
+  @override
+  String get biometricLockUnavailable =>
+      'Belum ada sidik jari atau face unlock di perangkat ini.';
 }

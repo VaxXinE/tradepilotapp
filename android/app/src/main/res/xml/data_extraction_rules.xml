@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Android 12+ (API 31+) backup/transfer rules.
+
+     Trade Pilot stores an authentication session on device. None of it should
+     leave the device it was created on, so both extraction paths are fully
+     excluded:
+
+       - cloud-backup    already blocked by android:allowBackup="false", repeated
+                         here so the intent survives if that attribute is changed.
+       - device-transfer NOT covered by allowBackup — it has to be opted out of
+                         explicitly, or a phone-to-phone migration carries the
+                         encrypted session across without its Keystore key.
+
+     An <exclude> with no sibling <include> excludes only the listed domains, so
+     every domain the app can write to is named individually.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root" />
+        <exclude domain="file" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="external" />
+        <exclude domain="device_root" />
+        <exclude domain="device_file" />
+        <exclude domain="device_database" />
+        <exclude domain="device_sharedpref" />
+    </cloud-backup>
+
+    <device-transfer>
+        <exclude domain="root" />
+        <exclude domain="file" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="external" />
+        <exclude domain="device_root" />
+        <exclude domain="device_file" />
+        <exclude domain="device_database" />
+        <exclude domain="device_sharedpref" />
+    </device-transfer>
+</data-extraction-rules>

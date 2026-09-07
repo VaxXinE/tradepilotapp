@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
@@ -15,6 +17,9 @@ class AuthProvider extends ChangeNotifier {
     _client = TradePilotClient(
       baseUrl: ApiConfig.baseUrl,
       getToken: () async => _token,
+    );
+    _client.dio.interceptors.add(
+      InterceptorsWrapper(onError: _handleUnauthorized),
     );
     _restoreSession();
   }
@@ -40,7 +45,97 @@ class AuthProvider extends ChangeNotifier {
   int _profileRequestId = 0;
   int _passwordRequestId = 0;
 
+  // ===========================================================================
+  // FORCED LOGOUT ON EXPIRED SESSION
+  // ===========================================================================
+
+  /// Endpoints where a 401 means "the credentials you just typed are wrong",
+  /// not "your session died".
+  ///
+  /// Login/register/forgot-password answer 401 for a bad email, password, or
+  /// security answer — the user is not logged in yet, so there is no session to
+  /// end. `/auth/password`, `/auth/security-question` and `/auth/account` all
+  /// re-challenge for the *current* password and answer 401 when it is wrong;
+  /// ejecting the user there would be a bug, not a safety measure.
+  ///
+  /// Everything else — `/auth/me`, `/auth/profile`, `/analyses/*`,
+  /// `/notifications/*`, and the rest — can only answer 401 because the bearer
+  /// token is no longer valid.
+  static const Set<String> _credentialChallengePaths = {
+    '/auth/login',
+    '/auth/register',
+    '/auth/logout',
+    '/auth/password',
+    '/auth/account',
+    '/auth/security-question',
+    '/auth/forgot-password/question',
+    '/auth/forgot-password/verify',
+    '/auth/forgot-password/reset',
+  };
+
+  void _handleUnauthorized(
+    DioException error,
+    ErrorInterceptorHandler handler,
+  ) {
+    if (error.response?.statusCode == 401 &&
+        _endsSession(error.requestOptions.path)) {
+      unawaited(forceLogout());
+    }
+
+    // Always let the error continue: callers still need to render their own
+    // message for this request. This interceptor only closes the session.
+    handler.next(error);
+  }
+
+  bool _endsSession(String requestPath) {
+    // `path` is normally relative ("/auth/me"), but tolerate a full URL too.
+    final path = Uri.parse(requestPath).path;
+    return !_credentialChallengePaths.any(path.endsWith);
+  }
+
+  /// Closes the local session after the server rejected our token.
+  ///
+  /// No `/auth/logout` call here — the token the server would need to
+  /// authenticate that request is exactly the one it just refused.
+  @visibleForTesting
+  Future<void> forceLogout() async {
+    // Concurrent 401s (a dashboard fires several requests at once) all land
+    // here. Status flips before the first await, so the rest bail out.
+    if (status != AuthStatus.authenticated) return;
+
+    _sessionEpoch++;
+    _profileRequestId++;
+    _passwordRequestId++;
+    isBusy = false;
+    isUpdatingProfile = false;
+    isChangingPassword = false;
+    isDeletingAccount = false;
+    profileError = null;
+    errorMessage = null;
+    _token = null;
+    user = null;
+    isLocked = false;
+    status = AuthStatus.unauthenticated;
+
+    try {
+      await _storage.clear();
+    } catch (_) {
+      // Session is already closed in memory; a storage failure must not keep
+      // the user on a screen backed by a dead token.
+    }
+
+    notifyListeners();
+  }
+
   Future<void> _restoreSession() async {
+    // Drop any plaintext password a pre-1.0.2 build left behind, before doing
+    // anything that could fail and skip it.
+    try {
+      await _storage.purgeLegacyCredentials();
+    } catch (_) {
+      // Retried on the next launch.
+    }
+
     final token = await _storage.readToken();
     if (token == null) {
       status = AuthStatus.unauthenticated;
@@ -52,12 +147,42 @@ class AuthProvider extends ChangeNotifier {
       final response = await _client.auth.getMe();
       user = response.data;
       status = AuthStatus.authenticated;
+      isLocked = await _storage.readBiometricLockEnabled();
     } catch (_) {
       // Token kadaluarsa/invalid — bersihkan sesi lokal.
       await _storage.clear();
       _token = null;
       status = AuthStatus.unauthenticated;
     }
+    notifyListeners();
+  }
+
+  // ===========================================================================
+  // BIOMETRIC APP LOCK
+  // ===========================================================================
+
+  /// Whether a restored session is waiting behind a biometric prompt.
+  ///
+  /// This is intentionally *not* an [AuthStatus] value. The session really is
+  /// authenticated — the token is valid and requests would succeed — so every
+  /// `status != authenticated` guard in the app keeps its current meaning. The
+  /// lock is a presentation gate, and only [SplashScreen] reads it.
+  ///
+  /// It exists because the token outlives the app process: without it, anyone
+  /// holding an unlocked phone opens Trade Pilot straight into the owner's
+  /// positions and history.
+  bool isLocked = false;
+
+  Future<bool> get biometricLockEnabled => _storage.readBiometricLockEnabled();
+
+  Future<void> setBiometricLockEnabled(bool enabled) async {
+    await _storage.setBiometricLockEnabled(enabled);
+    notifyListeners();
+  }
+
+  void unlockSession() {
+    if (!isLocked) return;
+    isLocked = false;
     notifyListeners();
   }
 
@@ -104,6 +229,7 @@ class AuthProvider extends ChangeNotifier {
     }
     _token = data.token;
     user = data.user;
+    isLocked = false;
     _sessionEpoch++;
     _profileRequestId++;
     _passwordRequestId++;
@@ -153,6 +279,7 @@ class AuthProvider extends ChangeNotifier {
     await _storage.clear();
     _token = null;
     user = null;
+    isLocked = false;
     status = AuthStatus.unauthenticated;
     notifyListeners();
   }
@@ -393,6 +520,7 @@ class AuthProvider extends ChangeNotifier {
       isDeletingAccount = false;
       _token = null;
       user = null;
+      isLocked = false;
       status = AuthStatus.unauthenticated;
       try {
         await _storage.clear();
