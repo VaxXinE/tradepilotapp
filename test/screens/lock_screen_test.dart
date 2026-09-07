@@ -53,11 +53,29 @@ void main() {
     );
   });
 
+  testWidgets('a cancelled prompt keeps the session locked', (tester) async {
+    final auth = await _lockedSession(tester);
+    final localAuth = _FakeLocalAuthentication(
+      exceptionCode: LocalAuthExceptionCode.userCanceled,
+    );
+
+    await _pumpLockScreen(tester, auth, localAuth);
+    await tester.pumpAndSettle();
+
+    expect(auth.isLocked, isTrue);
+    expect(
+      find.text('Could not verify your identity. Try again or sign out.'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('a device without working biometrics is not left stranded', (
     tester,
   ) async {
     final auth = await _lockedSession(tester);
-    final localAuth = _FakeLocalAuthentication(throws: true);
+    final localAuth = _FakeLocalAuthentication(
+      exceptionCode: LocalAuthExceptionCode.noBiometricHardware,
+    );
 
     await _pumpLockScreen(tester, auth, localAuth);
     await tester.pumpAndSettle();
@@ -155,10 +173,10 @@ Widget _app(AuthProvider auth, Widget home) {
 }
 
 class _FakeLocalAuthentication extends LocalAuthentication {
-  _FakeLocalAuthentication({this.result = true, this.throws = false});
+  _FakeLocalAuthentication({this.result = true, this.exceptionCode});
 
   final bool result;
-  final bool throws;
+  final LocalAuthExceptionCode? exceptionCode;
   int authenticateCalls = 0;
 
   @override
@@ -175,10 +193,8 @@ class _FakeLocalAuthentication extends LocalAuthentication {
     bool persistAcrossBackgrounding = false,
   }) async {
     authenticateCalls++;
-    if (throws) {
-      throw LocalAuthException(
-        code: LocalAuthExceptionCode.noBiometricHardware,
-      );
+    if (exceptionCode case final code?) {
+      throw LocalAuthException(code: code);
     }
     return result;
   }

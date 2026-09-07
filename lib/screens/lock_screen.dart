@@ -58,11 +58,20 @@ class _LockScreenState extends State<LockScreen> {
         return;
       }
       setState(() => _failed = true);
-    } on LocalAuthException {
-      // Sensor missing, disabled, or no enrolled biometrics. Leaving the user
-      // stranded would be worse than dropping the lock for this launch.
+    } on LocalAuthException catch (error) {
       if (!mounted) return;
-      context.read<AuthProvider>().unlockSession();
+      switch (error.code) {
+        case LocalAuthExceptionCode.noCredentialsSet:
+        case LocalAuthExceptionCode.noBiometricsEnrolled:
+        case LocalAuthExceptionCode.noBiometricHardware:
+          // The lock preference may outlive enrolled biometrics. In that case
+          // the release test plan deliberately permits this valid session.
+          context.read<AuthProvider>().unlockSession();
+        default:
+          // Cancellation, failed verification, and transient sensor errors
+          // must never be interpreted as successful authentication.
+          setState(() => _failed = true);
+      }
     } finally {
       if (mounted) setState(() => _isAuthenticating = false);
     }

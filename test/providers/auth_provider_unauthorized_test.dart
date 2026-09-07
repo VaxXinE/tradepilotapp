@@ -98,6 +98,20 @@ void main() {
     expect(deletedKeys, isNot(contains('trade_pilot_token')));
   });
 
+  test('wrong security answer has a specific validation message', () async {
+    final auth = await _authenticatedUser();
+    auth.client.dio.httpClientAdapter = _UnauthorizedAdapter();
+
+    final result = await auth.verifySecurityAnswer(
+      email: 'user@example.com',
+      answer: 'wrong-answer',
+    );
+
+    expect(result, isNull);
+    expect(auth.errorMessage, 'Jawaban keamanan tidak sesuai.');
+    expect(auth.status, AuthStatus.authenticated);
+  });
+
   test('the rejected request still surfaces its error to the caller', () async {
     final auth = await _authenticatedUser();
     auth.client.dio.httpClientAdapter = _UnauthorizedAdapter();

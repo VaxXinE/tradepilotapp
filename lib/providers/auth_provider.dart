@@ -263,6 +263,8 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> logout() async {
+    final token = _token;
+
     _sessionEpoch++;
     _profileRequestId++;
     _passwordRequestId++;
@@ -270,18 +272,26 @@ class AuthProvider extends ChangeNotifier {
     isChangingPassword = false;
     isDeletingAccount = false;
     profileError = null;
-
-    try {
-      await _client.auth.logout();
-    } catch (_) {
-      // tetap logout lokal walau request gagal (mis. tidak ada koneksi)
-    }
-    await _storage.clear();
+    errorMessage = null;
     _token = null;
     user = null;
     isLocked = false;
     status = AuthStatus.unauthenticated;
     notifyListeners();
+
+    try {
+      await _storage.clear();
+    } catch (_) {
+      // Sesi sudah ditutup di memori; kegagalan storage tidak boleh membukanya.
+    }
+
+    if (token != null && token.isNotEmpty) {
+      try {
+        await _client.auth.logout(headers: {'Authorization': 'Bearer $token'});
+      } catch (_) {
+        // Tetap logout lokal walau request server gagal.
+      }
+    }
   }
 
   Future<bool> updateDisplayName(String value) async {
@@ -674,6 +684,11 @@ class AuthProvider extends ChangeNotifier {
         return 'Tidak bisa terhubung ke server. Periksa koneksi internet kamu.';
       }
       if (e.response?.statusCode == 401) {
+        if (Uri.parse(
+          e.requestOptions.path,
+        ).path.endsWith('/auth/forgot-password/verify')) {
+          return 'Jawaban keamanan tidak sesuai.';
+        }
         return 'Email atau password tidak sesuai.';
       }
       if (e.response?.statusCode == 429) {
