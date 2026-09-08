@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -242,6 +243,8 @@ class ProfileTab extends StatelessWidget {
                   _Section(
                     title: l10n.security,
                     children: [
+                      const _BiometricLockTile(),
+                      const Divider(height: 1),
                       ListTile(
                         leading: const Icon(Icons.lock_outline_rounded),
                         title: Text(l10n.changePassword),
@@ -529,6 +532,92 @@ class _Section extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Toggle for the biometric app lock.
+///
+/// Reads its own state rather than taking it from [AuthProvider] because the
+/// value lives in secure storage and only this tile needs it. Hidden entirely
+/// on devices with nothing enrolled — offering a lock that cannot engage would
+/// just be a switch that silently does nothing.
+class _BiometricLockTile extends StatefulWidget {
+  const _BiometricLockTile();
+
+  @override
+  State<_BiometricLockTile> createState() => _BiometricLockTileState();
+}
+
+class _BiometricLockTileState extends State<_BiometricLockTile> {
+  bool? _enabled;
+  bool _available = false;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final auth = context.read<AuthProvider>();
+    try {
+      final enrolled = await LocalAuthentication().getAvailableBiometrics();
+      final enabled = await auth.biometricLockEnabled;
+      if (!mounted) return;
+      setState(() {
+        _available = enrolled.isNotEmpty;
+        _enabled = enabled;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _available = false;
+        _enabled = false;
+      });
+    }
+  }
+
+  Future<void> _toggle(bool value) async {
+    if (_isSaving) return;
+    setState(() => _isSaving = true);
+    try {
+      await context.read<AuthProvider>().setBiometricLockEnabled(value);
+      if (mounted) setState(() => _enabled = value);
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final enabled = _enabled;
+
+    if (enabled == null) {
+      return ListTile(
+        leading: const Icon(Icons.fingerprint_rounded),
+        title: Text(l10n.biometricLock),
+      );
+    }
+
+    if (!_available) {
+      return ListTile(
+        enabled: false,
+        leading: const Icon(Icons.fingerprint_rounded),
+        title: Text(l10n.biometricLock),
+        subtitle: Text(l10n.biometricLockUnavailable),
+      );
+    }
+
+    return SwitchListTile(
+      key: const Key('biometric-lock-switch'),
+      secondary: const Icon(Icons.fingerprint_rounded),
+      value: enabled,
+      onChanged: _isSaving ? null : _toggle,
+      title: Text(l10n.biometricLock),
+      subtitle: Text(enabled ? l10n.biometricLockOn : l10n.biometricLockOff),
     );
   }
 }

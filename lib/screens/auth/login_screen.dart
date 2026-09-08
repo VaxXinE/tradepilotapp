@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -12,9 +11,7 @@ import 'forgot_password_screen.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key, this.localAuthentication});
-
-  final LocalAuthentication? localAuthentication;
+  const LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -22,25 +19,18 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   static const _rememberedEmailKey = 'remembered_login_email';
-  static const _rememberedPasswordKey = 'remembered_login_password';
 
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _storage = const FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
-  );
-  late final LocalAuthentication _localAuthentication;
+  final _storage = const FlutterSecureStorage(aOptions: AndroidOptions());
   bool _obscurePassword = true;
   bool _rememberMe = false;
-  bool _biometricsAvailable = false;
-  bool _isAuthenticatingBiometric = false;
 
   @override
   void initState() {
     super.initState();
-    _localAuthentication = widget.localAuthentication ?? LocalAuthentication();
-    _restoreRememberedCredentials();
+    _restoreRememberedEmail();
   }
 
   @override
@@ -63,73 +53,43 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       if (rememberMe) {
         await _storage.write(key: _rememberedEmailKey, value: email);
-        await _storage.write(key: _rememberedPasswordKey, value: password);
       } else {
-        await _clearRememberedCredentials();
+        await _storage.delete(key: _rememberedEmailKey);
       }
     } catch (_) {
       // Login tetap berhasil jika secure storage perangkat bermasalah.
     }
   }
 
-  Future<void> _restoreRememberedCredentials() async {
+  /// Restores the email only.
+  ///
+  /// Builds up to 1.0.1 also persisted the password here and typed it back into
+  /// the form, which meant a stolen unlocked phone handed over a credential
+  /// that — unlike a session token — the server cannot revoke, and that one tap
+  /// on the reveal icon would show in plain text. The password is now never
+  /// written; [TokenStorage.purgeLegacyCredentials] deletes whatever older
+  /// builds left behind.
+  Future<void> _restoreRememberedEmail() async {
     try {
       final email = await _storage.read(key: _rememberedEmailKey);
-      final password = await _storage.read(key: _rememberedPasswordKey);
-      if (!mounted || email == null || password == null) return;
+      if (!mounted || email == null) return;
 
       _emailController.text = email;
-      _passwordController.text = password;
-      final biometrics = await _localAuthentication.getAvailableBiometrics();
-      if (!mounted) return;
-      setState(() {
-        _rememberMe = true;
-        _biometricsAvailable = biometrics.isNotEmpty;
-      });
+      setState(() => _rememberMe = true);
     } catch (_) {
-      // Form tetap bisa dipakai tanpa kredensial tersimpan.
+      // Form tetap bisa dipakai tanpa email tersimpan.
     }
   }
 
   Future<void> _setRememberMe(bool? value) async {
     final enabled = value ?? false;
-    setState(() {
-      _rememberMe = enabled;
-      if (!enabled) _biometricsAvailable = false;
-    });
+    setState(() => _rememberMe = enabled);
     if (!enabled) {
       try {
-        await _clearRememberedCredentials();
+        await _storage.delete(key: _rememberedEmailKey);
       } catch (_) {
         // Penghapusan akan dicoba lagi saat login berikutnya.
       }
-    }
-  }
-
-  Future<void> _clearRememberedCredentials() async {
-    await _storage.delete(key: _rememberedEmailKey);
-    await _storage.delete(key: _rememberedPasswordKey);
-  }
-
-  Future<void> _loginWithBiometrics() async {
-    if (_isAuthenticatingBiometric) return;
-    setState(() => _isAuthenticatingBiometric = true);
-
-    try {
-      final authenticated = await _localAuthentication.authenticate(
-        localizedReason: context.l10n.biometricReason,
-        biometricOnly: true,
-        persistAcrossBackgrounding: true,
-      );
-      if (authenticated && mounted) await _submit();
-    } on LocalAuthException {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.biometricUnavailable)),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isAuthenticatingBiometric = false);
     }
   }
 
@@ -291,30 +251,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                   )
                                 : Text(l10n.signIn),
                           ),
-                          if (_biometricsAvailable) ...[
-                            const SizedBox(height: 16),
-                            Row(
-                              children: [
-                                const Expanded(child: Divider(endIndent: 12)),
-                                Text(l10n.or, style: TextStyle(color: muted)),
-                                const Expanded(child: Divider(indent: 12)),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            OutlinedButton.icon(
-                              key: const Key('biometric-login-button'),
-                              onPressed:
-                                  auth.isBusy || _isAuthenticatingBiometric
-                                  ? null
-                                  : _loginWithBiometrics,
-                              icon: const Icon(Icons.fingerprint_rounded),
-                              label: Text(
-                                _isAuthenticatingBiometric
-                                    ? l10n.verifying
-                                    : l10n.signInWithBiometrics,
-                              ),
-                            ),
-                          ],
+                          // No biometric button here on purpose. Biometrics can
+                          // only unlock a session that already exists, and a
+                          // user who has one never reaches this screen — they
+                          // land on LockScreen instead. The only thing a button
+                          // here could unlock is a stored password, which is
+                          // exactly what this app no longer keeps.
                           const SizedBox(height: 22),
                           Wrap(
                             alignment: WrapAlignment.center,

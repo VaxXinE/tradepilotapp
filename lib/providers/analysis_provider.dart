@@ -55,6 +55,8 @@ class AnalysisProvider extends ChangeNotifier {
 
   String? errorMessage;
 
+  String? historyError;
+
   List<Analysis> history = [];
 
   int historyTotal = 0;
@@ -146,7 +148,7 @@ class AnalysisProvider extends ChangeNotifier {
   String? get visibleHistoryError {
     return historyFilters.hasServerFilters
         ? filteredHistoryError
-        : errorMessage;
+        : historyError;
   }
 
   // ===========================================================================
@@ -309,6 +311,8 @@ class AnalysisProvider extends ChangeNotifier {
     quota = null;
 
     errorMessage = null;
+
+    historyError = null;
   }
 
   // ===========================================================================
@@ -586,6 +590,8 @@ class AnalysisProvider extends ChangeNotifier {
     _historyRequestInFlight = true;
 
     if (!silent) {
+      historyError = null;
+
       if (isLoadMore) {
         isLoadingMoreHistory = true;
       } else {
@@ -628,9 +634,11 @@ class AnalysisProvider extends ChangeNotifier {
       }
 
       historyTotal = data.total;
+
+      historyError = null;
     } catch (error) {
       if (_isSessionCurrent(epoch) && !silent) {
-        errorMessage = _friendlyError(error);
+        historyError = _friendlyError(error);
       }
     } finally {
       if (requestId == _historyRequestId) {

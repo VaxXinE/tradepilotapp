@@ -134,6 +134,15 @@ void main() {
     expect(provider.historyFilters.query, 'new');
   });
 
+  test('analysis creation errors never leak into History', () async {
+    final auth = await _authenticatedUser(1);
+    final provider = AnalysisProvider(auth)
+      ..errorMessage = 'Analisis gagal. Silakan coba lagi.';
+    addTearDown(provider.dispose);
+
+    expect(provider.visibleHistoryError, isNull);
+  });
+
   test(
     'restores allowed preferences and ignores corrupted stored data',
     () async {

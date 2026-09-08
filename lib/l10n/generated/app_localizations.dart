@@ -569,7 +569,7 @@ abstract class AppLocalizations {
   /// No description provided for @rememberMe.
   ///
   /// In en, this message translates to:
-  /// **'Remember me'**
+  /// **'Remember my email'**
   String get rememberMe;
 
   /// No description provided for @forgotPassword.
@@ -2227,6 +2227,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} resolved analyses'**
   String resolvedSample(int count);
+
+  /// Title on the biometric app-lock screen
+  ///
+  /// In en, this message translates to:
+  /// **'Trade Pilot is locked'**
+  String get appLocked;
+
+  /// Explains that the session survived and only needs unlocking
+  ///
+  /// In en, this message translates to:
+  /// **'Your session is still active. Verify your identity to continue.'**
+  String get appLockedDescription;
+
+  /// Button that starts the biometric prompt on the lock screen
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get unlock;
+
+  /// System biometric prompt reason when unlocking an existing session
+  ///
+  /// In en, this message translates to:
+  /// **'Verify your identity to unlock Trade Pilot'**
+  String get biometricUnlockReason;
+
+  /// Shown when biometric verification fails on the lock screen
+  ///
+  /// In en, this message translates to:
+  /// **'Could not verify your identity. Try again or sign out.'**
+  String get unlockFailed;
+
+  /// Profile setting that gates the app behind biometrics
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric lock'**
+  String get biometricLock;
+
+  /// Subtitle when the biometric lock setting is on
+  ///
+  /// In en, this message translates to:
+  /// **'Ask for fingerprint or face each time the app opens'**
+  String get biometricLockOn;
+
+  /// Subtitle when the biometric lock setting is off
+  ///
+  /// In en, this message translates to:
+  /// **'Open straight to your dashboard'**
+  String get biometricLockOff;
+
+  /// Shown when the device has no enrolled biometrics
+  ///
+  /// In en, this message translates to:
+  /// **'No fingerprint or face unlock is set up on this device.'**
+  String get biometricLockUnavailable;
 }
 
 class _AppLocalizationsDelegate

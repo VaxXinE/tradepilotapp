@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tradepilotapp/core/localization/locale_controller.dart';
@@ -48,23 +47,24 @@ void main() {
     expect(find.text('Password is required'), findsOneWidget);
   });
 
-  testWidgets('login restores remembered credentials from secure storage', (
+  testWidgets('login restores the remembered email but never a password', (
     tester,
   ) async {
-    final localAuthentication = _FakeLocalAuthentication();
+    // Stands in for a device upgraded from 1.0.1, which stored the plaintext
+    // password and typed it back into the form. Storage still hands one over;
+    // the screen must refuse it.
+    final readKeys = <String>[];
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(storageChannel, (call) async {
           if (call.method != 'read') return null;
-          final key = (call.arguments as Map)['key'];
+          final key = (call.arguments as Map)['key'] as String;
+          readKeys.add(key);
           return key == 'remembered_login_email'
               ? 'trader@example.com'
               : 'secure-password';
         });
 
-    await _pumpAuthScreen(
-      tester,
-      LoginScreen(localAuthentication: localAuthentication),
-    );
+    await _pumpAuthScreen(tester, const LoginScreen());
     await tester.pumpAndSettle();
 
     expect(find.text('trader@example.com'), findsOneWidget);
@@ -76,19 +76,31 @@ void main() {
           .value,
       isTrue,
     );
+
+    expect(
+      readKeys,
+      isNot(contains('remembered_login_password')),
+      reason: 'the password key must not be read back at all',
+    );
     expect(
       tester
           .widget<TextFormField>(find.byType(TextFormField).at(1))
           .controller
           ?.text,
-      'secure-password',
+      isEmpty,
+      reason: 'a prefilled password is readable by anyone holding the phone',
     );
+  });
 
-    final biometricButton = find.byKey(const Key('biometric-login-button'));
-    await tester.ensureVisible(biometricButton);
-    await tester.tap(biometricButton);
-    await tester.pump();
-    expect(localAuthentication.authenticateCalls, 1);
+  testWidgets('login offers no biometric shortcut into a stored password', (
+    tester,
+  ) async {
+    await _pumpAuthScreen(tester, const LoginScreen());
+    await tester.pumpAndSettle();
+
+    // Biometrics unlock an existing session on LockScreen. Reaching the login
+    // screen means there is no session, so there is nothing to unlock.
+    expect(find.byKey(const Key('biometric-login-button')), findsNothing);
   });
 
   testWidgets('register uses accessible mode selection and validates input', (
@@ -127,27 +139,6 @@ void main() {
 
     expect(find.text('Enter a valid email address'), findsOneWidget);
   });
-}
-
-class _FakeLocalAuthentication extends LocalAuthentication {
-  int authenticateCalls = 0;
-
-  @override
-  Future<List<BiometricType>> getAvailableBiometrics() async => [
-    BiometricType.face,
-  ];
-
-  @override
-  Future<bool> authenticate({
-    required String localizedReason,
-    Iterable<Object> authMessages = const [],
-    bool biometricOnly = false,
-    bool sensitiveTransaction = true,
-    bool persistAcrossBackgrounding = false,
-  }) async {
-    authenticateCalls++;
-    return false;
-  }
 }
 
 Future<void> _pumpAuthScreen(WidgetTester tester, Widget screen) async {

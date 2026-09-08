@@ -2,7 +2,7 @@ name: tradepilotapp
 description: "Trade Pilot — AI Trading Assistant (Flutter mobile app)."
 publish_to: 'none'
 
-version: 1.0.1+3
+version: 1.0.2+4
 
 environment:
   sdk: ^3.10.4
@@ -26,7 +26,13 @@ dependencies:
   provider: ^6.1.2
 
   # Local/secure storage for session token + cached user
-  flutter_secure_storage: ^9.2.2
+  # Pinned to 10.x on purpose — do NOT jump straight to 11.
+  # v11 removed the EncryptedSharedPreferences backend outright; upgrading
+  # 9.x -> 11 makes every already-stored session token unreadable. v10 still
+  # reads the old backend and migrates it to the new cipher storage on first
+  # access, so it is the required stepping stone. Move to 11 only in a later
+  # release, once 10.x has field adoption.
+  flutter_secure_storage: ^10.3.1
   in_app_update: ^4.2.5
   local_auth: ^3.0.2
   shared_preferences: ^2.3.3
