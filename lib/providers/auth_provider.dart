@@ -8,6 +8,7 @@ import 'package:trade_pilot_api_client/trade_pilot_client.dart';
 import '../core/api/api_config.dart';
 import '../core/storage/token_storage.dart';
 import '../services/telemetry_service.dart';
+import '../l10n/app_messages.dart';
 
 enum AuthStatus { unknown, authenticated, unauthenticated }
 
@@ -228,7 +229,7 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> _applyAuthResponse(AuthResponse? data) async {
     if (data == null || data.token == null) {
-      throw Exception('Respons server tidak valid.');
+      throw Exception(AppMessages.l10n.errInvalidServerResponse);
     }
     _token = data.token;
     user = data.user;
@@ -301,8 +302,9 @@ class AuthProvider extends ChangeNotifier {
     final displayName = value.trim();
 
     if (displayName.length < 2 || displayName.length > maxDisplayNameLength) {
-      profileError =
-          'Nama harus terdiri dari 2–$maxDisplayNameLength karakter.';
+      profileError = AppMessages.l10n.errDisplayNameLength(
+        maxDisplayNameLength,
+      );
       notifyListeners();
       return false;
     }
@@ -405,7 +407,7 @@ class AuthProvider extends ChangeNotifier {
 
       final updated = response.data;
       if (updated == null) {
-        profileError = 'Respons profil dari server tidak valid.';
+        profileError = AppMessages.l10n.errInvalidProfileResponse;
         return false;
       }
 
@@ -565,40 +567,40 @@ class AuthProvider extends ChangeNotifier {
     if (error is DioException) {
       if (error.response?.statusCode == 401) {
         return passwordOperation
-            ? 'Password saat ini tidak sesuai.'
-            : 'Sesi login berakhir. Silakan masuk kembali.';
+            ? AppMessages.l10n.errCurrentPasswordWrong
+            : AppMessages.l10n.errSessionExpiredRelogin;
       }
       if (error.response?.statusCode == 400 ||
           error.response?.statusCode == 422) {
         return passwordOperation
-            ? 'Password belum memenuhi persyaratan keamanan.'
-            : 'Data profil belum valid. Periksa kembali isian kamu.';
+            ? AppMessages.l10n.errPasswordTooWeak
+            : AppMessages.l10n.errProfileInvalid;
       }
       if (error.type == DioExceptionType.connectionError ||
           error.type == DioExceptionType.connectionTimeout) {
-        return 'Tidak bisa terhubung ke server. Periksa koneksi internet kamu.';
+        return AppMessages.l10n.errNoConnection;
       }
     }
 
     return passwordOperation
-        ? 'Gagal mengubah password. Silakan coba lagi.'
-        : 'Gagal memperbarui profil. Silakan coba lagi.';
+        ? AppMessages.l10n.errChangePasswordFailed
+        : AppMessages.l10n.errUpdateProfileFailed;
   }
 
   String _deleteAccountFriendlyError(Object error) {
     if (error is DioException) {
       if (error.response?.statusCode == 401) {
-        return 'Password saat ini tidak sesuai.';
+        return AppMessages.l10n.errCurrentPasswordWrong;
       }
       if (error.response?.statusCode == 429) {
-        return 'Terlalu banyak percobaan. Tunggu sebentar lalu coba lagi.';
+        return AppMessages.l10n.errTooManyAttempts;
       }
       if (error.type == DioExceptionType.connectionError ||
           error.type == DioExceptionType.connectionTimeout) {
-        return 'Tidak bisa terhubung ke server. Periksa koneksi internet kamu.';
+        return AppMessages.l10n.errNoConnection;
       }
     }
-    return 'Gagal menghapus akun. Silakan coba lagi.';
+    return AppMessages.l10n.errDeleteAccountFailed;
   }
 
   /// Step 1 lupa password: ambil pertanyaan keamanan berdasar email.
@@ -684,18 +686,18 @@ class AuthProvider extends ChangeNotifier {
     if (e is DioException) {
       if (e.type == DioExceptionType.connectionError ||
           e.type == DioExceptionType.connectionTimeout) {
-        return 'Tidak bisa terhubung ke server. Periksa koneksi internet kamu.';
+        return AppMessages.l10n.errNoConnection;
       }
       if (e.response?.statusCode == 401) {
         if (Uri.parse(
           e.requestOptions.path,
         ).path.endsWith('/auth/forgot-password/verify')) {
-          return 'Jawaban keamanan tidak sesuai.';
+          return AppMessages.l10n.errSecurityAnswerWrong;
         }
-        return 'Email atau password tidak sesuai.';
+        return AppMessages.l10n.errCredentialsWrong;
       }
       if (e.response?.statusCode == 429) {
-        return 'Terlalu banyak percobaan. Tunggu sebentar lalu coba lagi.';
+        return AppMessages.l10n.errTooManyAttempts;
       }
       final responseData = e.response?.data;
       final responseMessage = responseData is Map<String, dynamic>
@@ -706,8 +708,8 @@ class AuthProvider extends ChangeNotifier {
           responseMessage.isNotEmpty) {
         return responseMessage;
       }
-      return 'Terjadi kesalahan. Silakan coba lagi.';
+      return AppMessages.l10n.errGeneric;
     }
-    return 'Terjadi kesalahan. Silakan coba lagi.';
+    return AppMessages.l10n.errGeneric;
   }
 }

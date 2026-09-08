@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
+import '../../l10n/l10n.dart';
 import '../../providers/auth_provider.dart';
 
 class PerformanceScreen extends StatefulWidget {
@@ -62,10 +63,10 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
-      title: const Text('Kinerja AI Publik'),
+      title: Text(context.l10n.publicAiPerformance),
       actions: [
         IconButton(
-          tooltip: 'Metodologi',
+          tooltip: context.l10n.performanceMethodology,
           onPressed: _showMethodology,
           icon: const Icon(Icons.info_outline_rounded),
         ),
@@ -77,15 +78,21 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),
         children: [
-          const Text(
-            'Rekam jejak anonim seluruh analisis AI Trade Pilot. Ini bukan statistik akun pribadi.',
-            style: TextStyle(fontSize: 12.5),
+          Text(
+            context.l10n.performanceDescription,
+            style: const TextStyle(fontSize: 12.5),
           ),
           const SizedBox(height: 12),
           SegmentedButton<int>(
-            segments: const [
-              ButtonSegment(value: 30, label: Text('30 hari')),
-              ButtonSegment(value: 90, label: Text('90 hari')),
+            segments: [
+              ButtonSegment(
+                value: 30,
+                label: Text(context.l10n.performanceDays(30)),
+              ),
+              ButtonSegment(
+                value: 90,
+                label: Text(context.l10n.performanceDays(90)),
+              ),
             ],
             selected: {_window},
             onSelectionChanged: (value) => _selectWindow(value.first),
@@ -112,8 +119,10 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Text(
-              'Data belum cukup untuk ditampilkan secara bertanggung jawab. '
-              'Butuh ${summary.minSamples.overall} hasil; saat ini ${summary.overall.total}.',
+              context.l10n.performanceInsufficient(
+                summary.minSamples.overall,
+                summary.overall.total,
+              ),
             ),
           ),
         ),
@@ -125,31 +134,31 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
       _OverallCard(summary: summary),
       const SizedBox(height: 10),
       _SegmentCard(
-        title: 'Per instrumen',
+        title: context.l10n.performanceByInstrument,
         icon: Icons.show_chart,
         segment: summary.byInstrument,
       ),
       const SizedBox(height: 10),
       _SegmentCard(
-        title: 'Per sesi pasar',
+        title: context.l10n.performanceBySession,
         icon: Icons.schedule,
         segment: summary.bySession,
       ),
       const SizedBox(height: 10),
       _SegmentCard(
-        title: 'Per kondisi pasar',
+        title: context.l10n.performanceByCondition,
         icon: Icons.calendar_today_outlined,
         segment: summary.byCondition,
       ),
       const SizedBox(height: 10),
       _SegmentCard(
-        title: 'Per volatilitas',
+        title: context.l10n.performanceByVolatility,
         icon: Icons.monitor_heart_outlined,
         segment: summary.byVolatility,
       ),
       const SizedBox(height: 10),
       _SegmentCard(
-        title: 'Aktivitas berita',
+        title: context.l10n.performanceNewsActivity,
         icon: Icons.newspaper_outlined,
         segment: summary.byNewsActivity,
       ),
@@ -160,36 +169,36 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
     context: context,
     showDragHandle: true,
     isScrollControlled: true,
-    builder: (context) => const SafeArea(
+    builder: (context) => SafeArea(
       child: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(20, 4, 20, 24),
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Metodologi kinerja',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+              context.l10n.performanceMethodologyTitle,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
             ),
-            SizedBox(height: 14),
+            const SizedBox(height: 14),
             _Method(
-              'Apa yang dihitung',
-              'Hanya analisis yang hasilnya sudah terselesaikan. Data pengguna dianonimkan dan digabung.',
-            ),
-            _Method(
-              'Win rate dan hit rate',
-              'Win rate membandingkan menang dengan kalah pada trade yang terpicu. Hit rate juga memasukkan analisis kedaluwarsa.',
+              context.l10n.performanceMethodWhatTitle,
+              context.l10n.performanceMethodWhatBody,
             ),
             _Method(
-              'Batas sampel',
-              'Segmen dengan sampel kecil disembunyikan agar tidak menyesatkan atau membocorkan aktivitas kelompok kecil.',
+              context.l10n.performanceMethodRatesTitle,
+              context.l10n.performanceMethodRatesBody,
             ),
             _Method(
-              'Yang tidak termasuk',
-              'Angka tidak memperhitungkan ukuran posisi, spread, slippage, biaya, pajak, atau keputusan eksekusi pengguna.',
+              context.l10n.performanceMethodSampleTitle,
+              context.l10n.performanceMethodSampleBody,
+            ),
+            _Method(
+              context.l10n.performanceMethodExcludedTitle,
+              context.l10n.performanceMethodExcludedBody,
             ),
             Text(
-              'Kinerja masa lalu tidak menjamin hasil berikutnya.',
-              style: TextStyle(fontWeight: FontWeight.w800),
+              context.l10n.performancePastDisclaimer,
+              style: const TextStyle(fontWeight: FontWeight.w800),
             ),
           ],
         ),
@@ -211,10 +220,10 @@ class _HonestyBanner extends StatelessWidget {
         ? const Color(0xFFF59E0B)
         : const Color(0xFF10B981);
     final title = severity == 'warn'
-        ? 'Kinerja terbaru menurun'
+        ? context.l10n.performanceDeclining
         : severity == 'watch'
-        ? 'Kinerja terbaru perlu dipantau'
-        : 'Kinerja terbaru stabil';
+        ? context.l10n.performanceWatch
+        : context.l10n.performanceStable;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -237,8 +246,11 @@ class _HonestyBanner extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  '${banner.recentDays} hari terbaru: ${_percent(banner.recentHitRate)} · '
-                  'baseline: ${_percent(banner.baselineHitRate)}.',
+                  context.l10n.performanceRecentBaseline(
+                    banner.recentDays,
+                    _percent(banner.recentHitRate),
+                    _percent(banner.baselineHitRate),
+                  ),
                 ),
               ],
             ),
@@ -263,7 +275,11 @@ class _OverallCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Ringkasan $_windowLabel',
+              context.l10n.performanceSummary(
+                summary.windowDays == PerformanceSummaryWindowDaysEnum.number90
+                    ? 90
+                    : 30,
+              ),
               style: const TextStyle(fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: 12),
@@ -271,14 +287,14 @@ class _OverallCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: _BigMetric(
-                    label: 'Win rate',
+                    label: context.l10n.winRate,
                     value: _percent(overall.winRate),
                     color: const Color(0xFF10B981),
                   ),
                 ),
                 Expanded(
                   child: _BigMetric(
-                    label: 'Hit rate',
+                    label: context.l10n.hitRate,
                     value: _percent(overall.hitRate),
                   ),
                 ),
@@ -292,11 +308,18 @@ class _OverallCard extends StatelessWidget {
             ),
             const SizedBox(height: 7),
             Text(
-              '${overall.wins} menang · ${overall.losses} kalah · ${overall.expired} kedaluwarsa · ${overall.total} sampel',
+              context.l10n.performanceTotals(
+                overall.wins,
+                overall.losses,
+                overall.expired,
+                overall.total,
+              ),
               style: Theme.of(context).textTheme.labelSmall,
             ),
             Text(
-              'Sejak ${DateFormat('d MMM yyyy').format(summary.windowStart.toLocal())}',
+              context.l10n.sinceDate(
+                DateFormat('d MMM yyyy').format(summary.windowStart.toLocal()),
+              ),
               style: Theme.of(context).textTheme.labelSmall,
             ),
           ],
@@ -304,11 +327,6 @@ class _OverallCard extends StatelessWidget {
       ),
     );
   }
-
-  String get _windowLabel =>
-      summary.windowDays == PerformanceSummaryWindowDaysEnum.number90
-      ? '90 hari'
-      : '30 hari';
 }
 
 class _SegmentCard extends StatelessWidget {
@@ -337,7 +355,12 @@ class _SegmentCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           if (segment.gated)
-            Text('Data belum cukup: ${segment.have}/${segment.need} sampel.')
+            Text(
+              context.l10n.performanceSegmentInsufficient(
+                segment.have,
+                segment.need,
+              ),
+            )
           else
             ...segment.buckets.map(
               (bucket) => Padding(
@@ -349,7 +372,7 @@ class _SegmentCard extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            _bucketLabel(bucket.key),
+                            _bucketLabel(context, bucket.key),
                             style: const TextStyle(fontWeight: FontWeight.w700),
                           ),
                         ),
@@ -367,7 +390,11 @@ class _SegmentCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${bucket.wins} menang · ${bucket.losses} kalah · ${bucket.expired} kedaluwarsa',
+                      context.l10n.performanceBucketTotals(
+                        bucket.wins,
+                        bucket.losses,
+                        bucket.expired,
+                      ),
                       style: Theme.of(context).textTheme.labelSmall,
                     ),
                   ],
@@ -454,8 +481,8 @@ class _ErrorCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          const Text('Data kinerja belum dapat dimuat.'),
-          TextButton(onPressed: onRetry, child: const Text('Coba lagi')),
+          Text(context.l10n.performanceLoadFailed),
+          TextButton(onPressed: onRetry, child: Text(context.l10n.tryAgain)),
         ],
       ),
     ),
@@ -484,18 +511,18 @@ class _Method extends StatelessWidget {
 String _percent(num? value) =>
     value == null ? '—' : '${(value * 100).round()}%';
 
-String _bucketLabel(String value) => switch (value) {
+String _bucketLabel(BuildContext context, String value) => switch (value) {
   'asia' => 'Asia',
   'london' => 'London',
   'newyork' => 'New York',
-  'off_session' => 'Di luar sesi utama',
-  'trending_up' => 'Tren naik',
-  'trending_down' => 'Tren turun',
-  'ranging' => 'Ranging',
-  'volatile' => 'Volatil',
+  'off_session' => context.l10n.offMainSession,
+  'trending_up' => context.l10n.uptrend,
+  'trending_down' => context.l10n.downtrend,
+  'ranging' => context.l10n.rangingMarket,
+  'volatile' => context.l10n.volatileMarket,
   'trending' => 'Trending',
-  'choppy' => 'Choppy',
-  'news_week' => 'Minggu aktif berita',
-  'quiet_week' => 'Minggu tenang',
+  'choppy' => context.l10n.choppyMarket,
+  'news_week' => context.l10n.activeNewsWeek,
+  'quiet_week' => context.l10n.quietWeek,
   _ => value,
 };

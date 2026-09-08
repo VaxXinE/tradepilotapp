@@ -24,6 +24,266 @@ class AppLocalizationsId extends AppLocalizations {
   String get analysis => 'Analisis';
 
   @override
+  String get analysisNotFound => 'Analisis tidak ditemukan';
+
+  @override
+  String get analysisCreateFailed => 'Analisis baru gagal dibuat.';
+
+  @override
+  String get analysisFeedbackTitle => 'Feedback analisis';
+
+  @override
+  String get analysisFeedbackQuestion => 'Bagaimana hasil analisis ini?';
+
+  @override
+  String get feedbackCorrect => 'Benar';
+
+  @override
+  String get feedbackWrong => 'Salah';
+
+  @override
+  String get feedbackUnknown => 'Belum tahu';
+
+  @override
+  String get feedbackNoteOptional => 'Catatan feedback (opsional)';
+
+  @override
+  String get send => 'Kirim';
+
+  @override
+  String get feedbackThanks => 'Terima kasih atas feedback kamu!';
+
+  @override
+  String get feedbackSendFailed => 'Gagal mengirim feedback.';
+
+  @override
+  String get noteSaved => 'Catatan tersimpan.';
+
+  @override
+  String get noteDeleted => 'Catatan dihapus.';
+
+  @override
+  String get noteSaveFailed => 'Catatan gagal disimpan.';
+
+  @override
+  String get tradingPlanTitle => 'Rencana Trading';
+
+  @override
+  String get tradingPlanDisclaimer =>
+      'Gunakan level berikut sebagai struktur risiko, bukan jaminan harga akan bergerak sesuai skenario.';
+
+  @override
+  String get marketEvidence => 'Bukti pasar';
+
+  @override
+  String get marketEvidenceDescription =>
+      'Snapshot market dan konteks fundamental.';
+
+  @override
+  String get technicalDetails => 'Detail teknikal';
+
+  @override
+  String get technicalDetailsDescription =>
+      'Ringkasan sinyal live dan indikator mentah.';
+
+  @override
+  String get providedContext => 'Konteks yang kamu berikan';
+
+  @override
+  String get analysisInvalidationTitle => 'Analisis ini batal jika';
+
+  @override
+  String get mainScenario => 'Skenario A — Utama';
+
+  @override
+  String get alternativeScenario => 'Skenario B — Alternatif';
+
+  @override
+  String get waitScenario => 'Skenario C — Tunggu / Tanpa Posisi';
+
+  @override
+  String get waitScenarioBody =>
+      'Jika konfirmasi belum kuat atau kondisi pembatal mendekat, menunggu setup yang lebih bersih adalah pilihan paling konservatif.';
+
+  @override
+  String get technicalDrivers => 'Penggerak Teknikal';
+
+  @override
+  String get fundamentalDrivers => 'Penggerak Fundamental';
+
+  @override
+  String get analysisHelpfulQuestion => 'Apakah analisis ini membantu?';
+
+  @override
+  String get helpful => 'Membantu';
+
+  @override
+  String get notHelpful => 'Kurang Membantu';
+
+  @override
+  String get analysisSafetyDisclaimer =>
+      'Trade Pilot adalah alat bantu analisis. Selalu batasi risiko dan hindari membuka posisi hanya berdasarkan satu indikator.';
+
+  @override
+  String get journalCreateForTrade => 'Catat trade ini';
+
+  @override
+  String get journalEntryForTrade => 'Catatan trade saya';
+
+  @override
+  String get journalReflectionHint =>
+      'Simpan keputusan dan hasil trade untuk refleksi.';
+
+  @override
+  String get priceLevelAlerts => 'Alert harga';
+
+  @override
+  String get priceLevelAlertsDescription =>
+      'Dapatkan notifikasi saat harga menyentuh level Entry, Stop Loss, atau Take Profit dari AI.';
+
+  @override
+  String priceLevelAlertsOn(int count) {
+    return 'Alert: AKTIF · $count level dipantau';
+  }
+
+  @override
+  String get priceLevelAlertsOff => 'Alert: NONAKTIF';
+
+  @override
+  String get changeTimeframe => 'Ganti Timeframe';
+
+  @override
+  String get changeTimeframeDescription =>
+      'Instrumen sama, timeframe berbeda — buat analisis baru tanpa keluar dari halaman ini.';
+
+  @override
+  String get analyzeThisTimeframe => 'Analisis timeframe ini';
+
+  @override
+  String get priceChart => 'Grafik Harga';
+
+  @override
+  String get openFullChart => 'Lihat chart lengkap di TradingView';
+
+  @override
+  String get fundamentalContext => 'Konteks Fundamental';
+
+  @override
+  String get refreshFundamentals => 'Refresh fundamental';
+
+  @override
+  String get fundamentalContextDescription =>
+      'Berita dan event ekonomi yang dilihat AI saat membuat analisis ini.';
+
+  @override
+  String get liveTechnicalIndicators => 'Indikator Teknikal Live';
+
+  @override
+  String get liveTechnicalDisclaimer =>
+      'Data terbaru; dapat berbeda dari snapshot saat analisis dibuat.';
+
+  @override
+  String get lastBar => 'Bar terakhir';
+
+  @override
+  String get twentyBars => '20 bar';
+
+  @override
+  String get signalSummary => 'Ringkasan sinyal';
+
+  @override
+  String technicalDataPoints(String timeframe, int count) {
+    return 'Data $timeframe · $count candle';
+  }
+
+  @override
+  String get beginnerBullish => 'Cenderung Naik';
+
+  @override
+  String get beginnerBearish => 'Cenderung Turun';
+
+  @override
+  String get beginnerWait => 'Tunggu Dulu';
+
+  @override
+  String biasMeaning(String bias, String direction) {
+    return 'Bias $bias berarti AI melihat kecenderungan market yang $direction.';
+  }
+
+  @override
+  String get directionUp => 'lebih condong naik';
+
+  @override
+  String get directionDown => 'lebih condong turun';
+
+  @override
+  String get directionNeutral => 'belum mempunyai arah dominan';
+
+  @override
+  String get beginnerBuyAction =>
+      'Struktur analisis lebih mendukung skenario Buy, tetapi entry tetap harus menunggu area dan kondisi yang dijelaskan di rencana trading.';
+
+  @override
+  String get beginnerSellAction =>
+      'Struktur analisis lebih mendukung skenario Sell, tetapi entry tetap harus mengikuti area dan batas risiko yang sudah ditentukan.';
+
+  @override
+  String get beginnerWaitAction =>
+      'AI belum melihat entry yang cukup kuat. Untuk pemula, menunggu konfirmasi adalah keputusan yang valid.';
+
+  @override
+  String get analysisSnapshotTitle => 'Konteks Saat Analisis Dibuat';
+
+  @override
+  String get analysisSnapshotDescription =>
+      'Bagian ini adalah snapshot data yang AI gunakan saat membuat analisis.';
+
+  @override
+  String get buy => 'Buy';
+
+  @override
+  String get sell => 'Sell';
+
+  @override
+  String get opportunity => 'Peluang';
+
+  @override
+  String get executionInsight => 'Lihat Wawasan Eksekusi';
+
+  @override
+  String get executionInsightDescription =>
+      'Cara menyikapi skenario tanpa menganggapnya sebagai perintah transaksi.';
+
+  @override
+  String get executionInsightBody =>
+      'Tunggu konfirmasi price action, tentukan risiko maksimum sebelum entry, dan batalkan rencana ketika kondisi invalidasi terpenuhi. Jangan mengejar harga di luar area rencana.';
+
+  @override
+  String get riskHighLabel => 'Risiko Tinggi';
+
+  @override
+  String get riskLowLabel => 'Risiko Relatif Rendah';
+
+  @override
+  String get riskModerateLabel => 'Risiko Sedang';
+
+  @override
+  String get riskHighProGuidance =>
+      'Volatilitas tinggi. Batasi eksposur dan gunakan level invalidasi sebagai batas risiko.';
+
+  @override
+  String get riskHighBeginnerGuidance =>
+      'Pergerakan dapat lebih agresif. Hindari ukuran posisi besar dan jangan mengabaikan Stop Loss.';
+
+  @override
+  String get riskLowGuidance =>
+      'Kondisi terlihat lebih stabil, tetapi risiko tetap ada. Tetap gunakan batas kerugian.';
+
+  @override
+  String get riskModerateGuidance =>
+      'Ada peluang sekaligus ketidakpastian. Tunggu setup yang jelas dan gunakan ukuran posisi yang terukur.';
+
+  @override
   String get reanalyze => 'Analisis ulang';
 
   @override
@@ -118,10 +378,243 @@ class AppLocalizationsId extends AppLocalizations {
   String get tradeJournal => 'Jurnal Trading';
 
   @override
+  String get journalLoadFailed => 'Jurnal belum dapat dimuat. Coba lagi.';
+
+  @override
+  String get journalSaveFailed => 'Entri jurnal gagal disimpan.';
+
+  @override
+  String get journalDeleteTitle => 'Hapus entri jurnal?';
+
+  @override
+  String get journalDeleteWarning => 'Tindakan ini tidak dapat dibatalkan.';
+
+  @override
+  String get journalDeleteFailed => 'Entri jurnal gagal dihapus.';
+
+  @override
+  String get journalSessionChanged => 'Sesi berubah. Buka kembali halaman ini.';
+
+  @override
+  String get add => 'Tambah';
+
+  @override
+  String get noJournalEntries => 'Belum ada entri jurnal.';
+
+  @override
+  String get journalOutcomeFilter => 'Filter outcome';
+
+  @override
+  String get open => 'Terbuka';
+
+  @override
+  String get breakeven => 'Impas';
+
+  @override
+  String get skippedTrade => 'Tidak diambil';
+
+  @override
+  String get journalPrivateLimit =>
+      'Maksimum 100 entri terbaru dari server. Data ini bersifat pribadi.';
+
+  @override
+  String get edit => 'Edit';
+
+  @override
+  String get addJournal => 'Tambah jurnal';
+
+  @override
+  String get editJournal => 'Edit jurnal';
+
+  @override
+  String get instrumentRequired => 'Instrumen wajib diisi.';
+
+  @override
+  String get side => 'Sisi';
+
+  @override
+  String get buyJournalSide => 'Buy (catatan transaksi)';
+
+  @override
+  String get sellJournalSide => 'Sell (catatan transaksi)';
+
+  @override
+  String get retrospectiveStatus => 'Status retrospektif';
+
+  @override
+  String get tradeTime => 'Waktu transaksi';
+
+  @override
+  String get moodOptional => 'Kondisi diri (opsional)';
+
+  @override
+  String get reflectionOptional => 'Refleksi (opsional)';
+
+  @override
+  String get enterValidNumber => 'Masukkan angka yang valid.';
+
+  @override
+  String get entries => 'Entri';
+
+  @override
+  String get wins => 'Menang';
+
+  @override
+  String get losses => 'Kalah';
+
+  @override
+  String get averageProfitLoss => 'Rata-rata P/L';
+
+  @override
+  String get quantity => 'Jumlah';
+
+  @override
   String get tradeJournalDescription => 'Catatan dan refleksi trading pribadi';
 
   @override
   String get analytics => 'Analitik';
+
+  @override
+  String get publicAiPerformance => 'Kinerja AI Publik';
+
+  @override
+  String get performanceMethodology => 'Metodologi';
+
+  @override
+  String get performanceDescription =>
+      'Rekam jejak anonim seluruh analisis AI Trade Pilot. Ini bukan statistik akun pribadi.';
+
+  @override
+  String performanceDays(int count) {
+    return '$count hari';
+  }
+
+  @override
+  String performanceInsufficient(int need, int have) {
+    return 'Data belum cukup untuk ditampilkan secara bertanggung jawab. Butuh $need hasil; saat ini $have.';
+  }
+
+  @override
+  String get performanceByInstrument => 'Per instrumen';
+
+  @override
+  String get performanceBySession => 'Per sesi pasar';
+
+  @override
+  String get performanceByCondition => 'Per kondisi pasar';
+
+  @override
+  String get performanceByVolatility => 'Per volatilitas';
+
+  @override
+  String get performanceNewsActivity => 'Aktivitas berita';
+
+  @override
+  String get performanceMethodologyTitle => 'Metodologi kinerja';
+
+  @override
+  String get performanceMethodWhatTitle => 'Apa yang dihitung';
+
+  @override
+  String get performanceMethodWhatBody =>
+      'Hanya analisis yang hasilnya sudah terselesaikan. Data pengguna dianonimkan dan digabung.';
+
+  @override
+  String get performanceMethodRatesTitle => 'Win rate dan hit rate';
+
+  @override
+  String get performanceMethodRatesBody =>
+      'Win rate membandingkan menang dengan kalah pada trade yang terpicu. Hit rate juga memasukkan analisis kedaluwarsa.';
+
+  @override
+  String get performanceMethodSampleTitle => 'Batas sampel';
+
+  @override
+  String get performanceMethodSampleBody =>
+      'Segmen dengan sampel kecil disembunyikan agar tidak menyesatkan atau membocorkan aktivitas kelompok kecil.';
+
+  @override
+  String get performanceMethodExcludedTitle => 'Yang tidak termasuk';
+
+  @override
+  String get performanceMethodExcludedBody =>
+      'Angka tidak memperhitungkan ukuran posisi, spread, slippage, biaya, pajak, atau keputusan eksekusi pengguna.';
+
+  @override
+  String get performancePastDisclaimer =>
+      'Kinerja masa lalu tidak menjamin hasil berikutnya.';
+
+  @override
+  String get performanceDeclining => 'Kinerja terbaru menurun';
+
+  @override
+  String get performanceWatch => 'Kinerja terbaru perlu dipantau';
+
+  @override
+  String get performanceStable => 'Kinerja terbaru stabil';
+
+  @override
+  String performanceRecentBaseline(int days, String recent, String baseline) {
+    return '$days hari terbaru: $recent · baseline: $baseline.';
+  }
+
+  @override
+  String performanceSummary(int days) {
+    return 'Ringkasan $days hari';
+  }
+
+  @override
+  String get winRate => 'Win rate';
+
+  @override
+  String get hitRate => 'Hit rate';
+
+  @override
+  String performanceTotals(int wins, int losses, int expired, int total) {
+    return '$wins menang · $losses kalah · $expired kedaluwarsa · $total sampel';
+  }
+
+  @override
+  String sinceDate(String date) {
+    return 'Sejak $date';
+  }
+
+  @override
+  String performanceSegmentInsufficient(int have, int need) {
+    return 'Data belum cukup: $have/$need sampel.';
+  }
+
+  @override
+  String performanceBucketTotals(int wins, int losses, int expired) {
+    return '$wins menang · $losses kalah · $expired kedaluwarsa';
+  }
+
+  @override
+  String get performanceLoadFailed => 'Data kinerja belum dapat dimuat.';
+
+  @override
+  String get offMainSession => 'Di luar sesi utama';
+
+  @override
+  String get uptrend => 'Tren naik';
+
+  @override
+  String get downtrend => 'Tren turun';
+
+  @override
+  String get activeNewsWeek => 'Minggu aktif berita';
+
+  @override
+  String get quietWeek => 'Minggu tenang';
+
+  @override
+  String get rangingMarket => 'Ranging';
+
+  @override
+  String get volatileMarket => 'Volatil';
+
+  @override
+  String get choppyMarket => 'Choppy';
 
   @override
   String get analyticsDescription => 'Pola aktivitas dan hasil evaluasi';
@@ -571,6 +1064,178 @@ class AppLocalizationsId extends AppLocalizations {
   String get notifications => 'Notifikasi';
 
   @override
+  String get markAllRead => 'Baca semua';
+
+  @override
+  String get realtimeActive => 'Realtime terhubung';
+
+  @override
+  String get realtimeConnecting => 'Menghubungkan realtime…';
+
+  @override
+  String get notificationInbox => 'Kotak Masuk';
+
+  @override
+  String notificationUnreadCount(int count) {
+    return '$count belum dibaca';
+  }
+
+  @override
+  String get notificationAnalysisUnavailable =>
+      'Analisis tidak tersedia atau kamu tidak memiliki akses.';
+
+  @override
+  String get mobilePush => 'Push Mobile';
+
+  @override
+  String get pushUpdatingDevice => 'Memperbarui pengaturan perangkat…';
+
+  @override
+  String get pushDeviceRegistered => 'Perangkat terdaftar untuk push.';
+
+  @override
+  String pushDeviceRegisteredLastReceived(String date) {
+    return 'Perangkat terdaftar untuk push. Terakhir diterima $date.';
+  }
+
+  @override
+  String get pushPermissionDenied =>
+      'Izin ditolak. Aktifkan kembali melalui pengaturan perangkat.';
+
+  @override
+  String get pushReceiveWhenInactive =>
+      'Terima push saat aplikasi tidak aktif.';
+
+  @override
+  String get notificationPreferences => 'Preferensi Notifikasi';
+
+  @override
+  String get notificationPreferencesDescription =>
+      'Pilih jenis pemberitahuan yang ingin kamu terima.';
+
+  @override
+  String get notificationPreferencesLoadFailed =>
+      'Preferensi notifikasi belum dapat dimuat.';
+
+  @override
+  String get notificationExpiryTitle => 'Analisis kedaluwarsa';
+
+  @override
+  String get notificationExpiryDescription =>
+      'Peringatan ketika masa berlaku analisis hampir selesai.';
+
+  @override
+  String get notificationBroadcastTitle => 'Pengumuman';
+
+  @override
+  String get notificationBroadcastDescription =>
+      'Informasi dan broadcast penting dari Trade Pilot.';
+
+  @override
+  String get notificationDailyTitle => 'Ringkasan harian';
+
+  @override
+  String get notificationDailyDescription =>
+      'Ringkasan aktivitas dan market harian.';
+
+  @override
+  String get notificationNewsTitle => 'Berita market';
+
+  @override
+  String get notificationNewsDescription =>
+      'Berita penting yang relevan dengan market.';
+
+  @override
+  String get notificationCalendarTitle => 'Kalender ekonomi';
+
+  @override
+  String get notificationCalendarDescription =>
+      'Pengingat event ekonomi berdampak tinggi.';
+
+  @override
+  String get notificationPriceTitle => 'Pergerakan harga';
+
+  @override
+  String get notificationPriceDescription =>
+      'Anomali dan perubahan harga yang signifikan.';
+
+  @override
+  String get notificationSignalTitle => 'Perubahan sinyal';
+
+  @override
+  String get notificationSignalDescription =>
+      'Ketika bias AI berubah secara bermakna.';
+
+  @override
+  String get notificationWeeklyTitle => 'Rekap mingguan';
+
+  @override
+  String get notificationWeeklyDescription =>
+      'Ringkasan aktivitas trading setiap minggu.';
+
+  @override
+  String get notificationGuardrails => 'Guardrail keputusan';
+
+  @override
+  String get notificationRevengeTitle => 'Peringatan revenge trading';
+
+  @override
+  String get notificationRevengeDescription =>
+      'Peringatan lunak setelah kerugian terbaru.';
+
+  @override
+  String get notificationOvertradingTitle => 'Peringatan overtrading';
+
+  @override
+  String get notificationOvertradingDescription =>
+      'Peringatan saat jumlah analisis terlalu rapat.';
+
+  @override
+  String get notificationHighRiskTitle => 'Peringatan risiko tinggi';
+
+  @override
+  String get notificationHighRiskDescription =>
+      'Peringatan event high-impact dalam 30 menit.';
+
+  @override
+  String get notificationCoolingOffTitle => 'Cooling-off 30 menit';
+
+  @override
+  String get notificationCoolingOffDescription =>
+      'Jeda opsional setelah kerugian signifikan.';
+
+  @override
+  String get notificationSessionReminders => 'Pengingat Sesi Market';
+
+  @override
+  String get quietHours => 'Waktu tenang';
+
+  @override
+  String get quietHoursDescription =>
+      'Tahan notifikasi non-darurat selama jam istirahat.';
+
+  @override
+  String get quietHoursStart => 'Mulai';
+
+  @override
+  String get quietHoursEnd => 'Selesai';
+
+  @override
+  String get notificationTimezone => 'Zona waktu';
+
+  @override
+  String get quietHoursSecurityNotice =>
+      'Notifikasi keamanan tetap dapat dikirim selama waktu tenang.';
+
+  @override
+  String notificationAutoPaused(String category) {
+    return 'Sebagian notifikasi ‘$category’ otomatis dijeda karena lama tidak dibuka.';
+  }
+
+  @override
+  String get noNotifications => 'Belum ada notifikasi';
+
+  @override
   String get trader => 'Trader';
 
   @override
@@ -931,6 +1596,21 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get expired => 'Kedaluwarsa';
+
+  @override
+  String analysisWindowActiveUntil(String date) {
+    return 'Jendela analisis aktif hingga $date';
+  }
+
+  @override
+  String analysisWindowExpiredAt(String date) {
+    return 'Jendela analisis berakhir pada $date';
+  }
+
+  @override
+  String analysisCreatedAt(String date) {
+    return 'Dibuat $date';
+  }
 
   @override
   String get historySummary => 'Ringkasan riwayat';
@@ -1693,4 +2373,595 @@ class AppLocalizationsId extends AppLocalizations {
   String topUpRequestedCredits(int credits) {
     return '$credits credit';
   }
+
+  @override
+  String get errSessionExpiredRelogin =>
+      'Sesi login sudah berakhir. Silakan login kembali.';
+
+  @override
+  String get errSessionExpired => 'Sesi login sudah berakhir.';
+
+  @override
+  String get errSignInAgain => 'Silakan login kembali.';
+
+  @override
+  String get errNoConnection =>
+      'Tidak bisa terhubung ke server. Periksa koneksi internet kamu.';
+
+  @override
+  String get errServerUnreachable => 'Tidak dapat terhubung ke server.';
+
+  @override
+  String get errGeneric => 'Terjadi kesalahan. Silakan coba lagi.';
+
+  @override
+  String get errServerProblem =>
+      'Server sedang bermasalah. Coba lagi sebentar lagi.';
+
+  @override
+  String get errConnectionTimeout => 'Koneksi timeout. Silakan coba lagi.';
+
+  @override
+  String get errRequestCancelled => 'Permintaan dibatalkan.';
+
+  @override
+  String get errInstrumentRequired => 'Instrumen tidak boleh kosong.';
+
+  @override
+  String get errInstrumentUnsupported => 'Instrumen tidak didukung.';
+
+  @override
+  String get errTimeframeUnsupported => 'Timeframe tidak didukung.';
+
+  @override
+  String get errInvalidServerResponse => 'Respons server tidak valid.';
+
+  @override
+  String get errInvalidProfileResponse =>
+      'Respons profil dari server tidak valid.';
+
+  @override
+  String errDisplayNameLength(int max) {
+    return 'Nama harus terdiri dari 2–$max karakter.';
+  }
+
+  @override
+  String get errCurrentPasswordWrong => 'Password saat ini tidak sesuai.';
+
+  @override
+  String get errPasswordTooWeak =>
+      'Password belum memenuhi persyaratan keamanan.';
+
+  @override
+  String get errProfileInvalid =>
+      'Data profil belum valid. Periksa kembali isian kamu.';
+
+  @override
+  String get errChangePasswordFailed =>
+      'Gagal mengubah password. Silakan coba lagi.';
+
+  @override
+  String get errUpdateProfileFailed =>
+      'Gagal memperbarui profil. Silakan coba lagi.';
+
+  @override
+  String get errTooManyAttempts =>
+      'Terlalu banyak percobaan. Tunggu sebentar lalu coba lagi.';
+
+  @override
+  String get errDeleteAccountFailed =>
+      'Gagal menghapus akun. Silakan coba lagi.';
+
+  @override
+  String get errSecurityAnswerWrong => 'Jawaban keamanan tidak sesuai.';
+
+  @override
+  String get errCredentialsWrong => 'Email atau password tidak sesuai.';
+
+  @override
+  String get errQuotaReached =>
+      'Batas kuota analisis tercapai. Coba lagi nanti.';
+
+  @override
+  String get errAiTimeout =>
+      'AI butuh waktu lebih lama dari biasanya untuk menganalisis. Silakan coba lagi.';
+
+  @override
+  String get errAnalysisFailed => 'Analisis gagal. Silakan coba lagi.';
+
+  @override
+  String get errAnalysisSlowSync =>
+      'Koneksi ke AI lama meresponsnya. Analisis mungkin tetap berhasil dibuat — data akan disinkronkan otomatis.';
+
+  @override
+  String get errDateRangeInvalid =>
+      'Tanggal awal tidak boleh melewati tanggal akhir.';
+
+  @override
+  String get errNoteTooLong5000 => 'Catatan maksimal 5.000 karakter.';
+
+  @override
+  String get errNoteNotSaved =>
+      'Catatan belum tersimpan. Periksa koneksi lalu coba lagi.';
+
+  @override
+  String get errNoteSaveFailed =>
+      'Catatan belum dapat disimpan. Silakan coba lagi.';
+
+  @override
+  String get errBalanceLoadFailed => 'Saldo credit gagal dimuat.';
+
+  @override
+  String get errTopupConfigLoadFailed => 'Konfigurasi top-up gagal dimuat.';
+
+  @override
+  String get errTopupHistoryLoadFailed =>
+      'Riwayat top-up gagal dimuat. Tarik untuk mencoba lagi.';
+
+  @override
+  String get errTopupSubmitFailed => 'Permintaan top-up gagal dikirim.';
+
+  @override
+  String get errTopupAmountPositive =>
+      'Nominal top-up harus lebih besar dari 0.';
+
+  @override
+  String get errLivePricesFailed => 'Gagal memuat harga live.';
+
+  @override
+  String get errMarketDataPartial => 'Sebagian data pasar belum tersedia.';
+
+  @override
+  String get errTechnicalDataFailed => 'Gagal memuat data teknikal.';
+
+  @override
+  String get errPriceAlertsLoadFailed => 'Gagal memuat price alert.';
+
+  @override
+  String get errPriceAlertCreateFailed => 'Gagal membuat price alert.';
+
+  @override
+  String get errPriceAlertDeleteFailed => 'Gagal menghapus price alert.';
+
+  @override
+  String get errTargetPricePositive => 'Target harga harus lebih besar dari 0.';
+
+  @override
+  String get errNoteTooLong200 => 'Catatan maksimal 200 karakter.';
+
+  @override
+  String get errWatchlistLoadFailed => 'Gagal memuat watchlist.';
+
+  @override
+  String get errWatchlistUpdateFailed => 'Gagal memperbarui watchlist.';
+
+  @override
+  String get errNotificationsLoadFailed =>
+      'Notifikasi belum dapat dimuat. Tarik untuk mencoba lagi.';
+
+  @override
+  String get errNotificationPrefsLoadFailed =>
+      'Gagal memuat preferensi notifikasi.';
+
+  @override
+  String get errNotificationPrefsSaveFailed =>
+      'Gagal menyimpan preferensi notifikasi.';
+
+  @override
+  String get errMarketSessionReminderSaveFailed =>
+      'Gagal menyimpan pengingat sesi market.';
+
+  @override
+  String get errQuietHoursSaveFailed =>
+      'Gagal menyimpan waktu tenang notifikasi.';
+
+  @override
+  String get errPushPermissionSystem =>
+      'Izin notifikasi belum diberikan di pengaturan sistem.';
+
+  @override
+  String get errPushEnableFailed => 'Push notification belum dapat diaktifkan.';
+
+  @override
+  String get errPushPrefsSaveFailed =>
+      'Preferensi mobile push belum dapat disimpan.';
+
+  @override
+  String get errPushTokenUnavailable =>
+      'Token push belum tersedia pada perangkat ini.';
+
+  @override
+  String get errPushRegisterFailed =>
+      'Server belum dapat mendaftarkan perangkat push.';
+
+  @override
+  String get errPushTokenSyncFailed => 'Token push belum dapat disinkronkan.';
+
+  @override
+  String get appErrInstrumentUnsupported =>
+      'Instrumen ini belum mendukung Adaptive Position Plan.';
+
+  @override
+  String get appErrNoStandardPlan =>
+      'Standard Plan atau TP Standard Trading Rules tidak tersedia.';
+
+  @override
+  String get appErrFundsPositive => 'Dana trading tersedia harus lebih dari 0.';
+
+  @override
+  String get appErrMaxLossPositive => 'Batas rugi maksimum harus lebih dari 0.';
+
+  @override
+  String get appErrMaxLossExceedsFunds =>
+      'Batas rugi maksimum tidak boleh melebihi dana tersedia.';
+
+  @override
+  String get appErrExposureNegative => 'Eksposur berjalan tidak boleh negatif.';
+
+  @override
+  String get appErrTpRulesInvalid =>
+      'TP Standard Trading Rules tidak cocok atau tidak valid.';
+
+  @override
+  String get appErrLevelsInvalid =>
+      'Level Entry dan Stop Loss Standard Plan tidak valid.';
+
+  @override
+  String get appErrSnapshotConflict =>
+      'Snapshot teknikal berkonflik dengan arah pasar.';
+
+  @override
+  String get appErrBelowMinimumLot =>
+      'Dana atau batas rugi belum cukup untuk lot minimum tier ini.';
+
+  @override
+  String get mindsetPacingTitle => 'Jeda evaluasi';
+
+  @override
+  String get mindsetPacingBody =>
+      'Beberapa analisis dibuat dalam waktu berdekatan. Pertimbangkan memberi waktu untuk mengevaluasi analisis sebelumnya.';
+
+  @override
+  String get mindsetConcentrationTitle => 'Fokus instrumen';
+
+  @override
+  String mindsetConcentrationBody(int count, int total, String instrument) {
+    return '$count dari $total analisis yang sedang dihitung berfokus pada $instrument.';
+  }
+
+  @override
+  String get mindsetPendingTitle => 'Analisis masih menunggu';
+
+  @override
+  String mindsetPendingBody(int count) {
+    return '$count analisis yang sedang dihitung belum selesai dievaluasi. Gunakan hasil berikutnya sebagai bahan refleksi, bukan kepastian.';
+  }
+
+  @override
+  String get mindsetJournalTitle => 'Konsistensi catatan';
+
+  @override
+  String get mindsetJournalBody =>
+      'Catatan pribadi masih jarang digunakan. Menulis alasan awal dapat membantu refleksi setelah evaluasi tersedia.';
+
+  @override
+  String get localTraderSentiment => 'Sentimen trader lokal';
+
+  @override
+  String journalSentimentGated(int entries, int traders) {
+    return 'Data disembunyikan sampai minimal $entries entri dari $traders trader tersedia.';
+  }
+
+  @override
+  String journalSentimentSample(int entries, int days) {
+    return '$entries entri · $days hari';
+  }
+
+  @override
+  String get journalSentimentDisclaimer =>
+      'Agregat anonim jurnal komunitas, bukan sinyal trading.';
+
+  @override
+  String get personalNote => 'Catatan Pribadi';
+
+  @override
+  String get addNote => 'Tambah catatan';
+
+  @override
+  String get notePrivateHint =>
+      'Tersimpan privat di akunmu dan tidak dikirim ke AI.';
+
+  @override
+  String get noteHint => 'Tulis alasan, observasi, atau pelajaranmu…';
+
+  @override
+  String get deleteNote => 'Hapus catatan';
+
+  @override
+  String get noNoteYet => 'Belum ada catatan untuk analisis ini.';
+
+  @override
+  String get newsLinkFailed => 'Tautan berita tidak dapat dibuka.';
+
+  @override
+  String get newsLoadFailed => 'Berita belum dapat dimuat.';
+
+  @override
+  String get newsEmpty => 'Belum ada berita terbaru.';
+
+  @override
+  String get newsDisclaimer =>
+      'Berita bersifat informasi dan bukan rekomendasi investasi.';
+
+  @override
+  String get newsSourceFallback => 'Sumber berita';
+
+  @override
+  String get publicAiPerformanceSubtitle =>
+      'Rekam jejak anonim seluruh analisis Trade Pilot';
+
+  @override
+  String get analyticsLoadFailed => 'Analytics belum dapat dimuat. Coba lagi.';
+
+  @override
+  String get sessionChangedReopen => 'Sesi berubah. Buka kembali halaman ini.';
+
+  @override
+  String get analyticsDisclaimer =>
+      'Statistik ini menjelaskan kebiasaan analisis, bukan hasil profit trading.';
+
+  @override
+  String get metricAllAnalyses => 'Semua analisis';
+
+  @override
+  String get metricThisMonth => 'Bulan ini';
+
+  @override
+  String get metricThisWeek => 'Minggu ini';
+
+  @override
+  String get metricFeedbackGiven => 'Feedback diberikan';
+
+  @override
+  String get metricDominantMode => 'Mode dominan';
+
+  @override
+  String get metricOutcomeAccuracy => 'Akurasi outcome';
+
+  @override
+  String get instrumentRanking => 'Peringkat instrumen';
+
+  @override
+  String countAnalyses(int count) {
+    return '$count analisis';
+  }
+
+  @override
+  String get loadedResults => 'Hasil yang sedang dimuat';
+
+  @override
+  String analyticsPartialScope(int loaded, int total) {
+    return 'Hanya menghitung $loaded dari $total analisis. Muat lebih banyak di History untuk memperluas ringkasan.';
+  }
+
+  @override
+  String analyticsFullScope(int loaded) {
+    return 'Menghitung semua $loaded analisis yang tersedia di perangkat saat ini.';
+  }
+
+  @override
+  String get metricEvaluated => 'Dievaluasi';
+
+  @override
+  String get metricPending => 'Menunggu';
+
+  @override
+  String get metricPositiveOutcomes => 'Outcome positif';
+
+  @override
+  String get metricNegativeOutcomes => 'Outcome negatif';
+
+  @override
+  String get metricHasNote => 'Punya catatan';
+
+  @override
+  String get metricAverageConfidence => 'Rata-rata keyakinan';
+
+  @override
+  String get metricTopTimeframe => 'Timeframe teratas';
+
+  @override
+  String get metricTopInstrument => 'Instrumen teratas';
+
+  @override
+  String get traderMirrorLoadFailed => 'Trader Mirror belum dapat dimuat.';
+
+  @override
+  String get traderMirrorDisclaimer =>
+      'Cermin kebiasaan ini bersifat retrospektif dan tidak memberikan instruksi trading.';
+
+  @override
+  String get traderMirrorNoHighlights =>
+      'Belum cukup data untuk membuat sorotan.';
+
+  @override
+  String traderMirrorCoverage(int days, int resolved) {
+    return 'Cakupan $days hari · $resolved evaluasi selesai';
+  }
+
+  @override
+  String get traderMirrorSessions => 'Sesi pasar';
+
+  @override
+  String get traderMirrorInstruments => 'Konsentrasi instrumen';
+
+  @override
+  String get traderMirrorTiming => 'Waktu analisis';
+
+  @override
+  String traderMirrorBasedOn(int count) {
+    return 'Berdasarkan $count analisis yang sedang dimuat di perangkat.';
+  }
+
+  @override
+  String get traderMirrorNeedMore =>
+      'Butuh sedikitnya 3 analisis untuk refleksi yang cukup hati-hati.';
+
+  @override
+  String traderMirrorGated(String need, int have) {
+    return 'Perlu $need data; tersedia $have.';
+  }
+
+  @override
+  String get traderMirrorUngated => 'Data cukup untuk menampilkan rincian.';
+
+  @override
+  String get traderMirrorNeedMoreGeneric => 'lebih banyak';
+
+  @override
+  String get dailySummaryLoadFailed => 'Ringkasan harian belum dapat dimuat.';
+
+  @override
+  String get dailySummarySaveFailed => 'Pengaturan ringkasan gagal disimpan.';
+
+  @override
+  String get dailySummaryEmpty => 'Belum ada ringkasan untuk hari ini.';
+
+  @override
+  String dailySummaryTimezone(String timezone) {
+    return 'Zona waktu: $timezone';
+  }
+
+  @override
+  String get dailySummaryDeliveryTime => 'Waktu pengiriman';
+
+  @override
+  String get marketChartUnavailable => 'Chart market belum tersedia.';
+
+  @override
+  String get journalCheckFailed => 'Jurnal belum dapat diperiksa.';
+
+  @override
+  String get alertStatusLoadFailed => 'Status alert belum dapat dimuat.';
+
+  @override
+  String get alertNeedsNotificationPermission =>
+      'Aktifkan izin notifikasi agar alert harga dapat digunakan.';
+
+  @override
+  String get alertEnableFailed =>
+      'Alert gagal diaktifkan. Pastikan notifikasi aktif dan instrumen memiliki feed harga live.';
+
+  @override
+  String get alertDisableFailed =>
+      'Alert gagal dinonaktifkan. Coba lagi sebentar.';
+
+  @override
+  String get fundamentalDriftNone =>
+      'Fundamental terbaru masih mendukung seluruh sumber awal.';
+
+  @override
+  String fundamentalDriftSome(int missing, int total) {
+    return '$missing dari $total sumber awal tidak lagi ada di window terbaru.';
+  }
+
+  @override
+  String get outcomePendingLabel => 'Menunggu hasil';
+
+  @override
+  String get outcomePendingBody =>
+      'Market masih berjalan dan sistem sedang mengevaluasi apakah level TP atau SL tersentuh.';
+
+  @override
+  String get outcomeTp1Label => 'TP1 Tercapai';
+
+  @override
+  String get outcomeTp1Body =>
+      'Harga sudah mencapai target profit pertama dari skenario analysis.';
+
+  @override
+  String get outcomeTp2Label => 'TP2 Tercapai';
+
+  @override
+  String get outcomeTp2Body =>
+      'Harga sudah mencapai target profit kedua dari skenario analysis.';
+
+  @override
+  String get outcomeSlLabel => 'Stop Loss Tersentuh';
+
+  @override
+  String get outcomeSlBody =>
+      'Harga mencapai batas risiko terlebih dahulu. Ini contoh kenapa Stop Loss penting dalam setiap setup.';
+
+  @override
+  String get outcomeExpiredLabel => 'Kedaluwarsa';
+
+  @override
+  String get outcomeExpiredBody =>
+      'Masa berlaku analysis selesai tanpa target utama terkonfirmasi.';
+
+  @override
+  String get outcomeInvalidatedLabel => 'Analisis Tidak Valid';
+
+  @override
+  String get outcomeInvalidatedBody =>
+      'Setup tidak lagi memenuhi struktur analysis awal.';
+
+  @override
+  String get outcomeUnknownLabel => 'Status belum tersedia';
+
+  @override
+  String get outcomeUnknownBody => 'Outcome belum dapat dievaluasi.';
+
+  @override
+  String get whyNotHigherConfidence => 'Kenapa keyakinan tidak lebih tinggi?';
+
+  @override
+  String get citedSources => 'Sumber yang dirujuk';
+
+  @override
+  String get awaitConfirmationNotice =>
+      'Tunggu konfirmasi — AI belum merekomendasikan Buy atau Sell saat ini.';
+
+  @override
+  String get instrumentRulesUnavailable => 'Aturan instrumen tidak tersedia.';
+
+  @override
+  String get tradingRulesLoadFailed => 'Aturan trading belum dapat dimuat.';
+
+  @override
+  String get tradingRulesUnavailable => 'Aturan trading tidak tersedia.';
+
+  @override
+  String get adaptivePlanIntro =>
+      'Ubah Standard Plan menjadi ukuran posisi sesuai dana dan batas rugi.';
+
+  @override
+  String get adaptivePlanDisclaimer =>
+      'Kalkulator ini tidak mengubah level AI dan tidak mengirim order. Isi dana bebas yang sudah dikurangi margin posisi lain.';
+
+  @override
+  String get availableTradingFunds => 'Dana trading tersedia';
+
+  @override
+  String get maxLossLimit => 'Batas rugi maksimum';
+
+  @override
+  String get buildPositionPlan => 'Buat rencana posisi';
+
+  @override
+  String get notRecommended => 'Tidak direkomendasikan';
+
+  @override
+  String get adaptivePlanFootnote =>
+      'Day trading only. Estimasi tidak memasukkan spread, slippage, fee, VAT, rollover, atau auto-liquidation broker.';
+
+  @override
+  String get lossToSl => 'Rugi ke SL';
+
+  @override
+  String get entryZone => 'Zona Entry';
+
+  @override
+  String get primaryScenario => 'Skenario Utama';
 }

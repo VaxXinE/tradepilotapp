@@ -128,6 +128,474 @@ abstract class AppLocalizations {
   /// **'Analysis'**
   String get analysis;
 
+  /// No description provided for @analysisNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Analysis not found'**
+  String get analysisNotFound;
+
+  /// No description provided for @analysisCreateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'A new analysis could not be created.'**
+  String get analysisCreateFailed;
+
+  /// No description provided for @analysisFeedbackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Analysis feedback'**
+  String get analysisFeedbackTitle;
+
+  /// No description provided for @analysisFeedbackQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'How did this analysis turn out?'**
+  String get analysisFeedbackQuestion;
+
+  /// No description provided for @feedbackCorrect.
+  ///
+  /// In en, this message translates to:
+  /// **'Correct'**
+  String get feedbackCorrect;
+
+  /// No description provided for @feedbackWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong'**
+  String get feedbackWrong;
+
+  /// No description provided for @feedbackUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Not sure yet'**
+  String get feedbackUnknown;
+
+  /// No description provided for @feedbackNoteOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Feedback note (optional)'**
+  String get feedbackNoteOptional;
+
+  /// No description provided for @send.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get send;
+
+  /// No description provided for @feedbackThanks.
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks for your feedback!'**
+  String get feedbackThanks;
+
+  /// No description provided for @feedbackSendFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Feedback could not be sent.'**
+  String get feedbackSendFailed;
+
+  /// No description provided for @noteSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Note saved.'**
+  String get noteSaved;
+
+  /// No description provided for @noteDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Note deleted.'**
+  String get noteDeleted;
+
+  /// No description provided for @noteSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Note could not be saved.'**
+  String get noteSaveFailed;
+
+  /// No description provided for @tradingPlanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Trading Plan'**
+  String get tradingPlanTitle;
+
+  /// No description provided for @tradingPlanDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Use these levels as a risk structure, not as a guarantee that price will follow the scenario.'**
+  String get tradingPlanDisclaimer;
+
+  /// No description provided for @marketEvidence.
+  ///
+  /// In en, this message translates to:
+  /// **'Market evidence'**
+  String get marketEvidence;
+
+  /// No description provided for @marketEvidenceDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Market snapshot and fundamental context.'**
+  String get marketEvidenceDescription;
+
+  /// No description provided for @technicalDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Technical details'**
+  String get technicalDetails;
+
+  /// No description provided for @technicalDetailsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Live signal summaries and raw indicators.'**
+  String get technicalDetailsDescription;
+
+  /// No description provided for @providedContext.
+  ///
+  /// In en, this message translates to:
+  /// **'Context you provided'**
+  String get providedContext;
+
+  /// No description provided for @analysisInvalidationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This analysis is cancelled if'**
+  String get analysisInvalidationTitle;
+
+  /// No description provided for @mainScenario.
+  ///
+  /// In en, this message translates to:
+  /// **'Scenario A — Main'**
+  String get mainScenario;
+
+  /// No description provided for @alternativeScenario.
+  ///
+  /// In en, this message translates to:
+  /// **'Scenario B — Alternative'**
+  String get alternativeScenario;
+
+  /// No description provided for @waitScenario.
+  ///
+  /// In en, this message translates to:
+  /// **'Scenario C — Wait / No Position'**
+  String get waitScenario;
+
+  /// No description provided for @waitScenarioBody.
+  ///
+  /// In en, this message translates to:
+  /// **'If confirmation is weak or an invalidation condition is approaching, waiting for a cleaner setup is the most conservative option.'**
+  String get waitScenarioBody;
+
+  /// No description provided for @technicalDrivers.
+  ///
+  /// In en, this message translates to:
+  /// **'Technical drivers'**
+  String get technicalDrivers;
+
+  /// No description provided for @fundamentalDrivers.
+  ///
+  /// In en, this message translates to:
+  /// **'Fundamental drivers'**
+  String get fundamentalDrivers;
+
+  /// No description provided for @analysisHelpfulQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Was this analysis helpful?'**
+  String get analysisHelpfulQuestion;
+
+  /// No description provided for @helpful.
+  ///
+  /// In en, this message translates to:
+  /// **'Helpful'**
+  String get helpful;
+
+  /// No description provided for @notHelpful.
+  ///
+  /// In en, this message translates to:
+  /// **'Not helpful'**
+  String get notHelpful;
+
+  /// No description provided for @analysisSafetyDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Trade Pilot is an analysis aid. Always limit risk and avoid opening a position based on a single indicator.'**
+  String get analysisSafetyDisclaimer;
+
+  /// No description provided for @journalCreateForTrade.
+  ///
+  /// In en, this message translates to:
+  /// **'Journal this trade'**
+  String get journalCreateForTrade;
+
+  /// No description provided for @journalEntryForTrade.
+  ///
+  /// In en, this message translates to:
+  /// **'My trade journal'**
+  String get journalEntryForTrade;
+
+  /// No description provided for @journalReflectionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Save your decision and trade result for reflection.'**
+  String get journalReflectionHint;
+
+  /// No description provided for @priceLevelAlerts.
+  ///
+  /// In en, this message translates to:
+  /// **'Price alerts'**
+  String get priceLevelAlerts;
+
+  /// No description provided for @priceLevelAlertsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Get notified when price reaches an AI Entry, Stop Loss, or Take Profit level.'**
+  String get priceLevelAlertsDescription;
+
+  /// No description provided for @priceLevelAlertsOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Alerts: ON · {count} levels monitored'**
+  String priceLevelAlertsOn(int count);
+
+  /// No description provided for @priceLevelAlertsOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Alerts: OFF'**
+  String get priceLevelAlertsOff;
+
+  /// No description provided for @changeTimeframe.
+  ///
+  /// In en, this message translates to:
+  /// **'Change timeframe'**
+  String get changeTimeframe;
+
+  /// No description provided for @changeTimeframeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Same instrument, different timeframe — create a new analysis without leaving this page.'**
+  String get changeTimeframeDescription;
+
+  /// No description provided for @analyzeThisTimeframe.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyze this timeframe'**
+  String get analyzeThisTimeframe;
+
+  /// No description provided for @priceChart.
+  ///
+  /// In en, this message translates to:
+  /// **'Price Chart'**
+  String get priceChart;
+
+  /// No description provided for @openFullChart.
+  ///
+  /// In en, this message translates to:
+  /// **'Open full chart in TradingView'**
+  String get openFullChart;
+
+  /// No description provided for @fundamentalContext.
+  ///
+  /// In en, this message translates to:
+  /// **'Fundamental Context'**
+  String get fundamentalContext;
+
+  /// No description provided for @refreshFundamentals.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh fundamentals'**
+  String get refreshFundamentals;
+
+  /// No description provided for @fundamentalContextDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'News and economic events used by the AI when creating this analysis.'**
+  String get fundamentalContextDescription;
+
+  /// No description provided for @liveTechnicalIndicators.
+  ///
+  /// In en, this message translates to:
+  /// **'Live Technical Indicators'**
+  String get liveTechnicalIndicators;
+
+  /// No description provided for @liveTechnicalDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest data; it may differ from the snapshot used for this analysis.'**
+  String get liveTechnicalDisclaimer;
+
+  /// No description provided for @lastBar.
+  ///
+  /// In en, this message translates to:
+  /// **'Last bar'**
+  String get lastBar;
+
+  /// No description provided for @twentyBars.
+  ///
+  /// In en, this message translates to:
+  /// **'20 bars'**
+  String get twentyBars;
+
+  /// No description provided for @signalSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Signal summary'**
+  String get signalSummary;
+
+  /// No description provided for @technicalDataPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'{timeframe} data · {count} candles'**
+  String technicalDataPoints(String timeframe, int count);
+
+  /// No description provided for @beginnerBullish.
+  ///
+  /// In en, this message translates to:
+  /// **'Leaning Bullish'**
+  String get beginnerBullish;
+
+  /// No description provided for @beginnerBearish.
+  ///
+  /// In en, this message translates to:
+  /// **'Leaning Bearish'**
+  String get beginnerBearish;
+
+  /// No description provided for @beginnerWait.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait for confirmation'**
+  String get beginnerWait;
+
+  /// No description provided for @biasMeaning.
+  ///
+  /// In en, this message translates to:
+  /// **'A {bias} bias means the AI sees a market that is {direction}.'**
+  String biasMeaning(String bias, String direction);
+
+  /// No description provided for @directionUp.
+  ///
+  /// In en, this message translates to:
+  /// **'leaning upward'**
+  String get directionUp;
+
+  /// No description provided for @directionDown.
+  ///
+  /// In en, this message translates to:
+  /// **'leaning downward'**
+  String get directionDown;
+
+  /// No description provided for @directionNeutral.
+  ///
+  /// In en, this message translates to:
+  /// **'without a dominant direction'**
+  String get directionNeutral;
+
+  /// No description provided for @beginnerBuyAction.
+  ///
+  /// In en, this message translates to:
+  /// **'The analysis structure favors a Buy scenario, but entry should still wait for the area and conditions in the trading plan.'**
+  String get beginnerBuyAction;
+
+  /// No description provided for @beginnerSellAction.
+  ///
+  /// In en, this message translates to:
+  /// **'The analysis structure favors a Sell scenario, but entry should still follow the defined area and risk limits.'**
+  String get beginnerSellAction;
+
+  /// No description provided for @beginnerWaitAction.
+  ///
+  /// In en, this message translates to:
+  /// **'The AI does not see a strong enough entry yet. Waiting for confirmation is a valid decision for beginners.'**
+  String get beginnerWaitAction;
+
+  /// No description provided for @analysisSnapshotTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Context When Analysis Was Created'**
+  String get analysisSnapshotTitle;
+
+  /// No description provided for @analysisSnapshotDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'This is a snapshot of the data used by the AI when creating the analysis.'**
+  String get analysisSnapshotDescription;
+
+  /// No description provided for @buy.
+  ///
+  /// In en, this message translates to:
+  /// **'Buy'**
+  String get buy;
+
+  /// No description provided for @sell.
+  ///
+  /// In en, this message translates to:
+  /// **'Sell'**
+  String get sell;
+
+  /// No description provided for @opportunity.
+  ///
+  /// In en, this message translates to:
+  /// **'Opportunity'**
+  String get opportunity;
+
+  /// No description provided for @executionInsight.
+  ///
+  /// In en, this message translates to:
+  /// **'View Execution Insight'**
+  String get executionInsight;
+
+  /// No description provided for @executionInsightDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'How to approach the scenario without treating it as a trade instruction.'**
+  String get executionInsightDescription;
+
+  /// No description provided for @executionInsightBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait for price-action confirmation, define maximum risk before entry, and cancel the plan when an invalidation condition occurs. Do not chase price outside the planned area.'**
+  String get executionInsightBody;
+
+  /// No description provided for @riskHighLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'High Risk'**
+  String get riskHighLabel;
+
+  /// No description provided for @riskLowLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Relatively Low Risk'**
+  String get riskLowLabel;
+
+  /// No description provided for @riskModerateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate Risk'**
+  String get riskModerateLabel;
+
+  /// No description provided for @riskHighProGuidance.
+  ///
+  /// In en, this message translates to:
+  /// **'High volatility. Limit exposure and use the invalidation level as the risk boundary.'**
+  String get riskHighProGuidance;
+
+  /// No description provided for @riskHighBeginnerGuidance.
+  ///
+  /// In en, this message translates to:
+  /// **'Movement may be aggressive. Avoid large position sizes and do not ignore the Stop Loss.'**
+  String get riskHighBeginnerGuidance;
+
+  /// No description provided for @riskLowGuidance.
+  ///
+  /// In en, this message translates to:
+  /// **'Conditions appear more stable, but risk remains. Keep a loss limit.'**
+  String get riskLowGuidance;
+
+  /// No description provided for @riskModerateGuidance.
+  ///
+  /// In en, this message translates to:
+  /// **'Opportunity and uncertainty are both present. Wait for a clear setup and use a measured position size.'**
+  String get riskModerateGuidance;
+
   /// No description provided for @reanalyze.
   ///
   /// In en, this message translates to:
@@ -314,6 +782,186 @@ abstract class AppLocalizations {
   /// **'Trade Journal'**
   String get tradeJournal;
 
+  /// No description provided for @journalLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The journal could not be loaded. Try again.'**
+  String get journalLoadFailed;
+
+  /// No description provided for @journalSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The journal entry could not be saved.'**
+  String get journalSaveFailed;
+
+  /// No description provided for @journalDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete journal entry?'**
+  String get journalDeleteTitle;
+
+  /// No description provided for @journalDeleteWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This action cannot be undone.'**
+  String get journalDeleteWarning;
+
+  /// No description provided for @journalDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The journal entry could not be deleted.'**
+  String get journalDeleteFailed;
+
+  /// No description provided for @journalSessionChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The session changed. Reopen this page.'**
+  String get journalSessionChanged;
+
+  /// No description provided for @add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get add;
+
+  /// No description provided for @noJournalEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'No journal entries yet.'**
+  String get noJournalEntries;
+
+  /// No description provided for @journalOutcomeFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Outcome filter'**
+  String get journalOutcomeFilter;
+
+  /// No description provided for @open.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get open;
+
+  /// No description provided for @breakeven.
+  ///
+  /// In en, this message translates to:
+  /// **'Breakeven'**
+  String get breakeven;
+
+  /// No description provided for @skippedTrade.
+  ///
+  /// In en, this message translates to:
+  /// **'Not taken'**
+  String get skippedTrade;
+
+  /// No description provided for @journalPrivateLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to 100 latest entries from the server. This data is private.'**
+  String get journalPrivateLimit;
+
+  /// No description provided for @edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get edit;
+
+  /// No description provided for @addJournal.
+  ///
+  /// In en, this message translates to:
+  /// **'Add journal entry'**
+  String get addJournal;
+
+  /// No description provided for @editJournal.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit journal entry'**
+  String get editJournal;
+
+  /// No description provided for @instrumentRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Instrument is required.'**
+  String get instrumentRequired;
+
+  /// No description provided for @side.
+  ///
+  /// In en, this message translates to:
+  /// **'Side'**
+  String get side;
+
+  /// No description provided for @buyJournalSide.
+  ///
+  /// In en, this message translates to:
+  /// **'Buy (trade record)'**
+  String get buyJournalSide;
+
+  /// No description provided for @sellJournalSide.
+  ///
+  /// In en, this message translates to:
+  /// **'Sell (trade record)'**
+  String get sellJournalSide;
+
+  /// No description provided for @retrospectiveStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Retrospective status'**
+  String get retrospectiveStatus;
+
+  /// No description provided for @tradeTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Trade time'**
+  String get tradeTime;
+
+  /// No description provided for @moodOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'State of mind (optional)'**
+  String get moodOptional;
+
+  /// No description provided for @reflectionOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Reflection (optional)'**
+  String get reflectionOptional;
+
+  /// No description provided for @enterValidNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid number.'**
+  String get enterValidNumber;
+
+  /// No description provided for @entries.
+  ///
+  /// In en, this message translates to:
+  /// **'Entries'**
+  String get entries;
+
+  /// No description provided for @wins.
+  ///
+  /// In en, this message translates to:
+  /// **'Wins'**
+  String get wins;
+
+  /// No description provided for @losses.
+  ///
+  /// In en, this message translates to:
+  /// **'Losses'**
+  String get losses;
+
+  /// No description provided for @averageProfitLoss.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg P/L'**
+  String get averageProfitLoss;
+
+  /// No description provided for @quantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity'**
+  String get quantity;
+
   /// No description provided for @tradeJournalDescription.
   ///
   /// In en, this message translates to:
@@ -325,6 +973,246 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Analytics'**
   String get analytics;
+
+  /// No description provided for @publicAiPerformance.
+  ///
+  /// In en, this message translates to:
+  /// **'Public AI Performance'**
+  String get publicAiPerformance;
+
+  /// No description provided for @performanceMethodology.
+  ///
+  /// In en, this message translates to:
+  /// **'Methodology'**
+  String get performanceMethodology;
+
+  /// No description provided for @performanceDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'An anonymized track record of all Trade Pilot AI analyses. These are not personal account statistics.'**
+  String get performanceDescription;
+
+  /// No description provided for @performanceDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days'**
+  String performanceDays(int count);
+
+  /// No description provided for @performanceInsufficient.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough data for a responsible display. {need} results required; currently {have}.'**
+  String performanceInsufficient(int need, int have);
+
+  /// No description provided for @performanceByInstrument.
+  ///
+  /// In en, this message translates to:
+  /// **'By instrument'**
+  String get performanceByInstrument;
+
+  /// No description provided for @performanceBySession.
+  ///
+  /// In en, this message translates to:
+  /// **'By market session'**
+  String get performanceBySession;
+
+  /// No description provided for @performanceByCondition.
+  ///
+  /// In en, this message translates to:
+  /// **'By market condition'**
+  String get performanceByCondition;
+
+  /// No description provided for @performanceByVolatility.
+  ///
+  /// In en, this message translates to:
+  /// **'By volatility'**
+  String get performanceByVolatility;
+
+  /// No description provided for @performanceNewsActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'News activity'**
+  String get performanceNewsActivity;
+
+  /// No description provided for @performanceMethodologyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Performance methodology'**
+  String get performanceMethodologyTitle;
+
+  /// No description provided for @performanceMethodWhatTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What is measured'**
+  String get performanceMethodWhatTitle;
+
+  /// No description provided for @performanceMethodWhatBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Only analyses with finalized outcomes. User data is anonymized and aggregated.'**
+  String get performanceMethodWhatBody;
+
+  /// No description provided for @performanceMethodRatesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Win rate and hit rate'**
+  String get performanceMethodRatesTitle;
+
+  /// No description provided for @performanceMethodRatesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Win rate compares wins with losses for triggered trades. Hit rate also includes expired analyses.'**
+  String get performanceMethodRatesBody;
+
+  /// No description provided for @performanceMethodSampleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sample threshold'**
+  String get performanceMethodSampleTitle;
+
+  /// No description provided for @performanceMethodSampleBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Small sample segments are hidden to avoid misleading results or exposing small-group activity.'**
+  String get performanceMethodSampleBody;
+
+  /// No description provided for @performanceMethodExcludedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What is excluded'**
+  String get performanceMethodExcludedTitle;
+
+  /// No description provided for @performanceMethodExcludedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Figures exclude position size, spread, slippage, fees, taxes, and user execution decisions.'**
+  String get performanceMethodExcludedBody;
+
+  /// No description provided for @performancePastDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Past performance does not guarantee future results.'**
+  String get performancePastDisclaimer;
+
+  /// No description provided for @performanceDeclining.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent performance is declining'**
+  String get performanceDeclining;
+
+  /// No description provided for @performanceWatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent performance needs attention'**
+  String get performanceWatch;
+
+  /// No description provided for @performanceStable.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent performance is stable'**
+  String get performanceStable;
+
+  /// No description provided for @performanceRecentBaseline.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest {days} days: {recent} · baseline: {baseline}.'**
+  String performanceRecentBaseline(int days, String recent, String baseline);
+
+  /// No description provided for @performanceSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{days}-day summary'**
+  String performanceSummary(int days);
+
+  /// No description provided for @winRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Win rate'**
+  String get winRate;
+
+  /// No description provided for @hitRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Hit rate'**
+  String get hitRate;
+
+  /// No description provided for @performanceTotals.
+  ///
+  /// In en, this message translates to:
+  /// **'{wins} wins · {losses} losses · {expired} expired · {total} samples'**
+  String performanceTotals(int wins, int losses, int expired, int total);
+
+  /// No description provided for @sinceDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Since {date}'**
+  String sinceDate(String date);
+
+  /// No description provided for @performanceSegmentInsufficient.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough data: {have}/{need} samples.'**
+  String performanceSegmentInsufficient(int have, int need);
+
+  /// No description provided for @performanceBucketTotals.
+  ///
+  /// In en, this message translates to:
+  /// **'{wins} wins · {losses} losses · {expired} expired'**
+  String performanceBucketTotals(int wins, int losses, int expired);
+
+  /// No description provided for @performanceLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Performance data could not be loaded.'**
+  String get performanceLoadFailed;
+
+  /// No description provided for @offMainSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Outside main sessions'**
+  String get offMainSession;
+
+  /// No description provided for @uptrend.
+  ///
+  /// In en, this message translates to:
+  /// **'Uptrend'**
+  String get uptrend;
+
+  /// No description provided for @downtrend.
+  ///
+  /// In en, this message translates to:
+  /// **'Downtrend'**
+  String get downtrend;
+
+  /// No description provided for @activeNewsWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Active news week'**
+  String get activeNewsWeek;
+
+  /// No description provided for @quietWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Quiet week'**
+  String get quietWeek;
+
+  /// No description provided for @rangingMarket.
+  ///
+  /// In en, this message translates to:
+  /// **'Ranging'**
+  String get rangingMarket;
+
+  /// No description provided for @volatileMarket.
+  ///
+  /// In en, this message translates to:
+  /// **'Volatile'**
+  String get volatileMarket;
+
+  /// No description provided for @choppyMarket.
+  ///
+  /// In en, this message translates to:
+  /// **'Choppy'**
+  String get choppyMarket;
 
   /// No description provided for @analyticsDescription.
   ///
@@ -1130,6 +2018,300 @@ abstract class AppLocalizations {
   /// **'Notifications'**
   String get notifications;
 
+  /// No description provided for @markAllRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all as read'**
+  String get markAllRead;
+
+  /// No description provided for @realtimeActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Realtime connected'**
+  String get realtimeActive;
+
+  /// No description provided for @realtimeConnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting realtime…'**
+  String get realtimeConnecting;
+
+  /// No description provided for @notificationInbox.
+  ///
+  /// In en, this message translates to:
+  /// **'Inbox'**
+  String get notificationInbox;
+
+  /// No description provided for @notificationUnreadCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} unread'**
+  String notificationUnreadCount(int count);
+
+  /// No description provided for @notificationAnalysisUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This analysis is unavailable or you do not have access.'**
+  String get notificationAnalysisUnavailable;
+
+  /// No description provided for @mobilePush.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile Push'**
+  String get mobilePush;
+
+  /// No description provided for @pushUpdatingDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Updating device settings…'**
+  String get pushUpdatingDevice;
+
+  /// No description provided for @pushDeviceRegistered.
+  ///
+  /// In en, this message translates to:
+  /// **'Device registered for push.'**
+  String get pushDeviceRegistered;
+
+  /// No description provided for @pushDeviceRegisteredLastReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Device registered for push. Last received {date}.'**
+  String pushDeviceRegisteredLastReceived(String date);
+
+  /// No description provided for @pushPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Permission denied. Enable it again in device settings.'**
+  String get pushPermissionDenied;
+
+  /// No description provided for @pushReceiveWhenInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'Receive push notifications while the app is inactive.'**
+  String get pushReceiveWhenInactive;
+
+  /// No description provided for @notificationPreferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification preferences'**
+  String get notificationPreferences;
+
+  /// No description provided for @notificationPreferencesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which notifications you want to receive.'**
+  String get notificationPreferencesDescription;
+
+  /// No description provided for @notificationPreferencesLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification preferences could not be loaded.'**
+  String get notificationPreferencesLoadFailed;
+
+  /// No description provided for @notificationExpiryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Analysis expiry'**
+  String get notificationExpiryTitle;
+
+  /// No description provided for @notificationExpiryDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder when an analysis window is about to end.'**
+  String get notificationExpiryDescription;
+
+  /// No description provided for @notificationBroadcastTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Announcements'**
+  String get notificationBroadcastTitle;
+
+  /// No description provided for @notificationBroadcastDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Important information and broadcasts from Trade Pilot.'**
+  String get notificationBroadcastDescription;
+
+  /// No description provided for @notificationDailyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily summary'**
+  String get notificationDailyTitle;
+
+  /// No description provided for @notificationDailyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily activity and market summary.'**
+  String get notificationDailyDescription;
+
+  /// No description provided for @notificationNewsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Market news'**
+  String get notificationNewsTitle;
+
+  /// No description provided for @notificationNewsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Important news relevant to the market.'**
+  String get notificationNewsDescription;
+
+  /// No description provided for @notificationCalendarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Economic calendar'**
+  String get notificationCalendarTitle;
+
+  /// No description provided for @notificationCalendarDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders for high-impact economic events.'**
+  String get notificationCalendarDescription;
+
+  /// No description provided for @notificationPriceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Price movement'**
+  String get notificationPriceTitle;
+
+  /// No description provided for @notificationPriceDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Significant price changes and anomalies.'**
+  String get notificationPriceDescription;
+
+  /// No description provided for @notificationSignalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Signal changes'**
+  String get notificationSignalTitle;
+
+  /// No description provided for @notificationSignalDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'When the AI bias changes meaningfully.'**
+  String get notificationSignalDescription;
+
+  /// No description provided for @notificationWeeklyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly recap'**
+  String get notificationWeeklyTitle;
+
+  /// No description provided for @notificationWeeklyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly trading activity summary.'**
+  String get notificationWeeklyDescription;
+
+  /// No description provided for @notificationGuardrails.
+  ///
+  /// In en, this message translates to:
+  /// **'Decision guardrails'**
+  String get notificationGuardrails;
+
+  /// No description provided for @notificationRevengeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Revenge trading warning'**
+  String get notificationRevengeTitle;
+
+  /// No description provided for @notificationRevengeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'A gentle warning after a recent loss.'**
+  String get notificationRevengeDescription;
+
+  /// No description provided for @notificationOvertradingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Overtrading warning'**
+  String get notificationOvertradingTitle;
+
+  /// No description provided for @notificationOvertradingDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'A warning when analyses are created too close together.'**
+  String get notificationOvertradingDescription;
+
+  /// No description provided for @notificationHighRiskTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'High-risk warning'**
+  String get notificationHighRiskTitle;
+
+  /// No description provided for @notificationHighRiskDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'A warning for high-impact events within 30 minutes.'**
+  String get notificationHighRiskDescription;
+
+  /// No description provided for @notificationCoolingOffTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'30-minute cooling-off'**
+  String get notificationCoolingOffTitle;
+
+  /// No description provided for @notificationCoolingOffDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'An optional pause after a significant loss.'**
+  String get notificationCoolingOffDescription;
+
+  /// No description provided for @notificationSessionReminders.
+  ///
+  /// In en, this message translates to:
+  /// **'Market session reminders'**
+  String get notificationSessionReminders;
+
+  /// No description provided for @quietHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Quiet hours'**
+  String get quietHours;
+
+  /// No description provided for @quietHoursDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold non-urgent notifications during rest hours.'**
+  String get quietHoursDescription;
+
+  /// No description provided for @quietHoursStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get quietHoursStart;
+
+  /// No description provided for @quietHoursEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'End'**
+  String get quietHoursEnd;
+
+  /// No description provided for @notificationTimezone.
+  ///
+  /// In en, this message translates to:
+  /// **'Time zone'**
+  String get notificationTimezone;
+
+  /// No description provided for @quietHoursSecurityNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Security notifications may still be delivered during quiet hours.'**
+  String get quietHoursSecurityNotice;
+
+  /// No description provided for @notificationAutoPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Some ‘{category}’ notifications were paused because they have not been opened recently.'**
+  String notificationAutoPaused(String category);
+
+  /// No description provided for @noNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'No notifications yet'**
+  String get noNotifications;
+
   /// No description provided for @trader.
   ///
   /// In en, this message translates to:
@@ -1741,6 +2923,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Expired'**
   String get expired;
+
+  /// No description provided for @analysisWindowActiveUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Analysis window active until {date}'**
+  String analysisWindowActiveUntil(String date);
+
+  /// No description provided for @analysisWindowExpiredAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Analysis window expired at {date}'**
+  String analysisWindowExpiredAt(String date);
+
+  /// No description provided for @analysisCreatedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Created {date}'**
+  String analysisCreatedAt(String date);
 
   /// No description provided for @historySummary.
   ///
@@ -3091,6 +4291,1020 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{credits} credit'**
   String topUpRequestedCredits(int credits);
+
+  /// No description provided for @errSessionExpiredRelogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Your session has ended. Please sign in again.'**
+  String get errSessionExpiredRelogin;
+
+  /// No description provided for @errSessionExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Your session has ended.'**
+  String get errSessionExpired;
+
+  /// No description provided for @errSignInAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Please sign in again.'**
+  String get errSignInAgain;
+
+  /// No description provided for @errNoConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach the server. Check your internet connection.'**
+  String get errNoConnection;
+
+  /// No description provided for @errServerUnreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach the server.'**
+  String get errServerUnreachable;
+
+  /// No description provided for @errGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Please try again.'**
+  String get errGeneric;
+
+  /// No description provided for @errServerProblem.
+  ///
+  /// In en, this message translates to:
+  /// **'The server is having trouble. Try again shortly.'**
+  String get errServerProblem;
+
+  /// No description provided for @errConnectionTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'The connection timed out. Please try again.'**
+  String get errConnectionTimeout;
+
+  /// No description provided for @errRequestCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'The request was cancelled.'**
+  String get errRequestCancelled;
+
+  /// No description provided for @errInstrumentRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Instrument cannot be empty.'**
+  String get errInstrumentRequired;
+
+  /// No description provided for @errInstrumentUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Instrument is not supported.'**
+  String get errInstrumentUnsupported;
+
+  /// No description provided for @errTimeframeUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Timeframe is not supported.'**
+  String get errTimeframeUnsupported;
+
+  /// No description provided for @errInvalidServerResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'The server response was not valid.'**
+  String get errInvalidServerResponse;
+
+  /// No description provided for @errInvalidProfileResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'The profile response from the server was not valid.'**
+  String get errInvalidProfileResponse;
+
+  /// No description provided for @errDisplayNameLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Name must be 2 to {max} characters.'**
+  String errDisplayNameLength(int max);
+
+  /// No description provided for @errCurrentPasswordWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Your current password is incorrect.'**
+  String get errCurrentPasswordWrong;
+
+  /// No description provided for @errPasswordTooWeak.
+  ///
+  /// In en, this message translates to:
+  /// **'Password does not meet the security requirements.'**
+  String get errPasswordTooWeak;
+
+  /// No description provided for @errProfileInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile data is not valid. Check your entries.'**
+  String get errProfileInvalid;
+
+  /// No description provided for @errChangePasswordFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not change your password. Please try again.'**
+  String get errChangePasswordFailed;
+
+  /// No description provided for @errUpdateProfileFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not update your profile. Please try again.'**
+  String get errUpdateProfileFailed;
+
+  /// No description provided for @errTooManyAttempts.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Wait a moment and try again.'**
+  String get errTooManyAttempts;
+
+  /// No description provided for @errDeleteAccountFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete your account. Please try again.'**
+  String get errDeleteAccountFailed;
+
+  /// No description provided for @errSecurityAnswerWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'That security answer is incorrect.'**
+  String get errSecurityAnswerWrong;
+
+  /// No description provided for @errCredentialsWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'That email or password is incorrect.'**
+  String get errCredentialsWrong;
+
+  /// No description provided for @errQuotaReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Analysis quota reached. Try again later.'**
+  String get errQuotaReached;
+
+  /// No description provided for @errAiTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'The AI is taking longer than usual to analyze. Please try again.'**
+  String get errAiTimeout;
+
+  /// No description provided for @errAnalysisFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Analysis failed. Please try again.'**
+  String get errAnalysisFailed;
+
+  /// No description provided for @errAnalysisSlowSync.
+  ///
+  /// In en, this message translates to:
+  /// **'The AI took a long time to respond. The analysis may still have been created — data will sync automatically.'**
+  String get errAnalysisSlowSync;
+
+  /// No description provided for @errDateRangeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The start date cannot be later than the end date.'**
+  String get errDateRangeInvalid;
+
+  /// No description provided for @errNoteTooLong5000.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes are limited to 5,000 characters.'**
+  String get errNoteTooLong5000;
+
+  /// No description provided for @errNoteNotSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'The note was not saved. Check your connection and try again.'**
+  String get errNoteNotSaved;
+
+  /// No description provided for @errNoteSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The note could not be saved. Please try again.'**
+  String get errNoteSaveFailed;
+
+  /// No description provided for @errBalanceLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit balance could not be loaded.'**
+  String get errBalanceLoadFailed;
+
+  /// No description provided for @errTopupConfigLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Top-up configuration could not be loaded.'**
+  String get errTopupConfigLoadFailed;
+
+  /// No description provided for @errTopupHistoryLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Top-up history could not be loaded. Pull to try again.'**
+  String get errTopupHistoryLoadFailed;
+
+  /// No description provided for @errTopupSubmitFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The top-up request could not be sent.'**
+  String get errTopupSubmitFailed;
+
+  /// No description provided for @errTopupAmountPositive.
+  ///
+  /// In en, this message translates to:
+  /// **'The top-up amount must be greater than 0.'**
+  String get errTopupAmountPositive;
+
+  /// No description provided for @errLivePricesFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load live prices.'**
+  String get errLivePricesFailed;
+
+  /// No description provided for @errMarketDataPartial.
+  ///
+  /// In en, this message translates to:
+  /// **'Some market data is not available yet.'**
+  String get errMarketDataPartial;
+
+  /// No description provided for @errTechnicalDataFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load technical data.'**
+  String get errTechnicalDataFailed;
+
+  /// No description provided for @errPriceAlertsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load price alerts.'**
+  String get errPriceAlertsLoadFailed;
+
+  /// No description provided for @errPriceAlertCreateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create the price alert.'**
+  String get errPriceAlertCreateFailed;
+
+  /// No description provided for @errPriceAlertDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete the price alert.'**
+  String get errPriceAlertDeleteFailed;
+
+  /// No description provided for @errTargetPricePositive.
+  ///
+  /// In en, this message translates to:
+  /// **'Target price must be greater than 0.'**
+  String get errTargetPricePositive;
+
+  /// No description provided for @errNoteTooLong200.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes are limited to 200 characters.'**
+  String get errNoteTooLong200;
+
+  /// No description provided for @errWatchlistLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load your watchlist.'**
+  String get errWatchlistLoadFailed;
+
+  /// No description provided for @errWatchlistUpdateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not update your watchlist.'**
+  String get errWatchlistUpdateFailed;
+
+  /// No description provided for @errNotificationsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications could not be loaded. Pull to try again.'**
+  String get errNotificationsLoadFailed;
+
+  /// No description provided for @errNotificationPrefsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load notification preferences.'**
+  String get errNotificationPrefsLoadFailed;
+
+  /// No description provided for @errNotificationPrefsSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save notification preferences.'**
+  String get errNotificationPrefsSaveFailed;
+
+  /// No description provided for @errMarketSessionReminderSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the market session reminder.'**
+  String get errMarketSessionReminderSaveFailed;
+
+  /// No description provided for @errQuietHoursSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save notification quiet hours.'**
+  String get errQuietHoursSaveFailed;
+
+  /// No description provided for @errPushPermissionSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification permission has not been granted in system settings.'**
+  String get errPushPermissionSystem;
+
+  /// No description provided for @errPushEnableFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Push notifications could not be enabled.'**
+  String get errPushEnableFailed;
+
+  /// No description provided for @errPushPrefsSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile push preferences could not be saved.'**
+  String get errPushPrefsSaveFailed;
+
+  /// No description provided for @errPushTokenUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'A push token is not available on this device.'**
+  String get errPushTokenUnavailable;
+
+  /// No description provided for @errPushRegisterFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The server could not register this device for push.'**
+  String get errPushRegisterFailed;
+
+  /// No description provided for @errPushTokenSyncFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The push token could not be synced.'**
+  String get errPushTokenSyncFailed;
+
+  /// No description provided for @appErrInstrumentUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This instrument does not support the Adaptive Position Plan.'**
+  String get appErrInstrumentUnsupported;
+
+  /// No description provided for @appErrNoStandardPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'The Standard Plan or Standard Trading Rules TP is not available.'**
+  String get appErrNoStandardPlan;
+
+  /// No description provided for @appErrFundsPositive.
+  ///
+  /// In en, this message translates to:
+  /// **'Available trading funds must be greater than 0.'**
+  String get appErrFundsPositive;
+
+  /// No description provided for @appErrMaxLossPositive.
+  ///
+  /// In en, this message translates to:
+  /// **'The maximum loss limit must be greater than 0.'**
+  String get appErrMaxLossPositive;
+
+  /// No description provided for @appErrMaxLossExceedsFunds.
+  ///
+  /// In en, this message translates to:
+  /// **'The maximum loss limit cannot exceed available funds.'**
+  String get appErrMaxLossExceedsFunds;
+
+  /// No description provided for @appErrExposureNegative.
+  ///
+  /// In en, this message translates to:
+  /// **'Running exposure cannot be negative.'**
+  String get appErrExposureNegative;
+
+  /// No description provided for @appErrTpRulesInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The Standard Trading Rules TP does not match or is not valid.'**
+  String get appErrTpRulesInvalid;
+
+  /// No description provided for @appErrLevelsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The Standard Plan Entry and Stop Loss levels are not valid.'**
+  String get appErrLevelsInvalid;
+
+  /// No description provided for @appErrSnapshotConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'The technical snapshot conflicts with the market direction.'**
+  String get appErrSnapshotConflict;
+
+  /// No description provided for @appErrBelowMinimumLot.
+  ///
+  /// In en, this message translates to:
+  /// **'Funds or loss limit are not enough for this tier\'s minimum lot.'**
+  String get appErrBelowMinimumLot;
+
+  /// No description provided for @mindsetPacingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Evaluation pause'**
+  String get mindsetPacingTitle;
+
+  /// No description provided for @mindsetPacingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Several analyses were created close together. Consider leaving time to evaluate the previous one.'**
+  String get mindsetPacingBody;
+
+  /// No description provided for @mindsetConcentrationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Instrument focus'**
+  String get mindsetConcentrationTitle;
+
+  /// No description provided for @mindsetConcentrationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} of {total} analyses currently loaded focus on {instrument}.'**
+  String mindsetConcentrationBody(int count, int total, String instrument);
+
+  /// No description provided for @mindsetPendingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyses still pending'**
+  String get mindsetPendingTitle;
+
+  /// No description provided for @mindsetPendingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} analyses currently loaded have not finished evaluating. Use the next result as reflection, not certainty.'**
+  String mindsetPendingBody(int count);
+
+  /// No description provided for @mindsetJournalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Note consistency'**
+  String get mindsetJournalTitle;
+
+  /// No description provided for @mindsetJournalBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal notes are still rare. Writing your initial reasoning helps reflection once an evaluation arrives.'**
+  String get mindsetJournalBody;
+
+  /// No description provided for @localTraderSentiment.
+  ///
+  /// In en, this message translates to:
+  /// **'Local trader sentiment'**
+  String get localTraderSentiment;
+
+  /// No description provided for @journalSentimentGated.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden until at least {entries} entries from {traders} traders are available.'**
+  String journalSentimentGated(int entries, int traders);
+
+  /// No description provided for @journalSentimentSample.
+  ///
+  /// In en, this message translates to:
+  /// **'{entries} entries · {days} days'**
+  String journalSentimentSample(int entries, int days);
+
+  /// No description provided for @journalSentimentDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'An anonymous aggregate of community journals, not a trading signal.'**
+  String get journalSentimentDisclaimer;
+
+  /// No description provided for @personalNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal note'**
+  String get personalNote;
+
+  /// No description provided for @addNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Add note'**
+  String get addNote;
+
+  /// No description provided for @notePrivateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Stored privately in your account and never sent to the AI.'**
+  String get notePrivateHint;
+
+  /// No description provided for @noteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write your reasoning, observations, or lessons…'**
+  String get noteHint;
+
+  /// No description provided for @deleteNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete note'**
+  String get deleteNote;
+
+  /// No description provided for @noNoteYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No note for this analysis yet.'**
+  String get noNoteYet;
+
+  /// No description provided for @newsLinkFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'That news link could not be opened.'**
+  String get newsLinkFailed;
+
+  /// No description provided for @newsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'News could not be loaded.'**
+  String get newsLoadFailed;
+
+  /// No description provided for @newsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No recent news yet.'**
+  String get newsEmpty;
+
+  /// No description provided for @newsDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'News is informational and not an investment recommendation.'**
+  String get newsDisclaimer;
+
+  /// No description provided for @newsSourceFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'News source'**
+  String get newsSourceFallback;
+
+  /// No description provided for @publicAiPerformanceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'An anonymous track record of every Trade Pilot analysis'**
+  String get publicAiPerformanceSubtitle;
+
+  /// No description provided for @analyticsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Analytics could not be loaded. Please try again.'**
+  String get analyticsLoadFailed;
+
+  /// No description provided for @sessionChangedReopen.
+  ///
+  /// In en, this message translates to:
+  /// **'Your session changed. Please reopen this page.'**
+  String get sessionChangedReopen;
+
+  /// No description provided for @analyticsDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'These statistics describe analysis habits, not trading profit.'**
+  String get analyticsDisclaimer;
+
+  /// No description provided for @metricAllAnalyses.
+  ///
+  /// In en, this message translates to:
+  /// **'All analyses'**
+  String get metricAllAnalyses;
+
+  /// No description provided for @metricThisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'This month'**
+  String get metricThisMonth;
+
+  /// No description provided for @metricThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get metricThisWeek;
+
+  /// No description provided for @metricFeedbackGiven.
+  ///
+  /// In en, this message translates to:
+  /// **'Feedback given'**
+  String get metricFeedbackGiven;
+
+  /// No description provided for @metricDominantMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Dominant mode'**
+  String get metricDominantMode;
+
+  /// No description provided for @metricOutcomeAccuracy.
+  ///
+  /// In en, this message translates to:
+  /// **'Outcome accuracy'**
+  String get metricOutcomeAccuracy;
+
+  /// No description provided for @instrumentRanking.
+  ///
+  /// In en, this message translates to:
+  /// **'Instrument ranking'**
+  String get instrumentRanking;
+
+  /// No description provided for @countAnalyses.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} analyses'**
+  String countAnalyses(int count);
+
+  /// No description provided for @loadedResults.
+  ///
+  /// In en, this message translates to:
+  /// **'Results currently loaded'**
+  String get loadedResults;
+
+  /// No description provided for @analyticsPartialScope.
+  ///
+  /// In en, this message translates to:
+  /// **'Counting only {loaded} of {total} analyses. Load more in History to widen this summary.'**
+  String analyticsPartialScope(int loaded, int total);
+
+  /// No description provided for @analyticsFullScope.
+  ///
+  /// In en, this message translates to:
+  /// **'Counting all {loaded} analyses currently available on this device.'**
+  String analyticsFullScope(int loaded);
+
+  /// No description provided for @metricEvaluated.
+  ///
+  /// In en, this message translates to:
+  /// **'Evaluated'**
+  String get metricEvaluated;
+
+  /// No description provided for @metricPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get metricPending;
+
+  /// No description provided for @metricPositiveOutcomes.
+  ///
+  /// In en, this message translates to:
+  /// **'Positive outcomes'**
+  String get metricPositiveOutcomes;
+
+  /// No description provided for @metricNegativeOutcomes.
+  ///
+  /// In en, this message translates to:
+  /// **'Negative outcomes'**
+  String get metricNegativeOutcomes;
+
+  /// No description provided for @metricHasNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Has a note'**
+  String get metricHasNote;
+
+  /// No description provided for @metricAverageConfidence.
+  ///
+  /// In en, this message translates to:
+  /// **'Average confidence'**
+  String get metricAverageConfidence;
+
+  /// No description provided for @metricTopTimeframe.
+  ///
+  /// In en, this message translates to:
+  /// **'Top timeframe'**
+  String get metricTopTimeframe;
+
+  /// No description provided for @metricTopInstrument.
+  ///
+  /// In en, this message translates to:
+  /// **'Top instrument'**
+  String get metricTopInstrument;
+
+  /// No description provided for @traderMirrorLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Trader Mirror could not be loaded.'**
+  String get traderMirrorLoadFailed;
+
+  /// No description provided for @traderMirrorDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'This habit mirror is retrospective and gives no trading instructions.'**
+  String get traderMirrorDisclaimer;
+
+  /// No description provided for @traderMirrorNoHighlights.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough data to build highlights yet.'**
+  String get traderMirrorNoHighlights;
+
+  /// No description provided for @traderMirrorCoverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Covering {days} days · {resolved} completed evaluations'**
+  String traderMirrorCoverage(int days, int resolved);
+
+  /// No description provided for @traderMirrorSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Market sessions'**
+  String get traderMirrorSessions;
+
+  /// No description provided for @traderMirrorInstruments.
+  ///
+  /// In en, this message translates to:
+  /// **'Instrument concentration'**
+  String get traderMirrorInstruments;
+
+  /// No description provided for @traderMirrorTiming.
+  ///
+  /// In en, this message translates to:
+  /// **'Analysis timing'**
+  String get traderMirrorTiming;
+
+  /// No description provided for @traderMirrorBasedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on {count} analyses currently loaded on this device.'**
+  String traderMirrorBasedOn(int count);
+
+  /// No description provided for @traderMirrorNeedMore.
+  ///
+  /// In en, this message translates to:
+  /// **'At least 3 analyses are needed for a careful reflection.'**
+  String get traderMirrorNeedMore;
+
+  /// No description provided for @traderMirrorGated.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs {need} data points; {have} available.'**
+  String traderMirrorGated(String need, int have);
+
+  /// No description provided for @traderMirrorUngated.
+  ///
+  /// In en, this message translates to:
+  /// **'Enough data to show the details.'**
+  String get traderMirrorUngated;
+
+  /// No description provided for @traderMirrorNeedMoreGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'more'**
+  String get traderMirrorNeedMoreGeneric;
+
+  /// No description provided for @dailySummaryLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The daily briefing could not be loaded.'**
+  String get dailySummaryLoadFailed;
+
+  /// No description provided for @dailySummarySaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Briefing settings could not be saved.'**
+  String get dailySummarySaveFailed;
+
+  /// No description provided for @dailySummaryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No briefing for today yet.'**
+  String get dailySummaryEmpty;
+
+  /// No description provided for @dailySummaryTimezone.
+  ///
+  /// In en, this message translates to:
+  /// **'Time zone: {timezone}'**
+  String dailySummaryTimezone(String timezone);
+
+  /// No description provided for @dailySummaryDeliveryTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery time'**
+  String get dailySummaryDeliveryTime;
+
+  /// No description provided for @marketChartUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The market chart is not available yet.'**
+  String get marketChartUnavailable;
+
+  /// No description provided for @journalCheckFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The journal could not be checked.'**
+  String get journalCheckFailed;
+
+  /// No description provided for @alertStatusLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Alert status could not be loaded.'**
+  String get alertStatusLoadFailed;
+
+  /// No description provided for @alertNeedsNotificationPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable notification permission so price alerts can work.'**
+  String get alertNeedsNotificationPermission;
+
+  /// No description provided for @alertEnableFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The alert could not be enabled. Make sure notifications are on and the instrument has a live price feed.'**
+  String get alertEnableFailed;
+
+  /// No description provided for @alertDisableFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The alert could not be disabled. Try again shortly.'**
+  String get alertDisableFailed;
+
+  /// No description provided for @fundamentalDriftNone.
+  ///
+  /// In en, this message translates to:
+  /// **'The latest fundamentals still support every original source.'**
+  String get fundamentalDriftNone;
+
+  /// No description provided for @fundamentalDriftSome.
+  ///
+  /// In en, this message translates to:
+  /// **'{missing} of {total} original sources are no longer in the latest window.'**
+  String fundamentalDriftSome(int missing, int total);
+
+  /// No description provided for @outcomePendingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting result'**
+  String get outcomePendingLabel;
+
+  /// No description provided for @outcomePendingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The market is still running and the system is evaluating whether the TP or SL level was touched.'**
+  String get outcomePendingBody;
+
+  /// No description provided for @outcomeTp1Label.
+  ///
+  /// In en, this message translates to:
+  /// **'TP1 Reached'**
+  String get outcomeTp1Label;
+
+  /// No description provided for @outcomeTp1Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Price reached the first profit target from the analysis scenario.'**
+  String get outcomeTp1Body;
+
+  /// No description provided for @outcomeTp2Label.
+  ///
+  /// In en, this message translates to:
+  /// **'TP2 Reached'**
+  String get outcomeTp2Label;
+
+  /// No description provided for @outcomeTp2Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Price reached the second profit target from the analysis scenario.'**
+  String get outcomeTp2Body;
+
+  /// No description provided for @outcomeSlLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop Loss Hit'**
+  String get outcomeSlLabel;
+
+  /// No description provided for @outcomeSlBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Price reached the risk limit first. This is why a Stop Loss matters in every setup.'**
+  String get outcomeSlBody;
+
+  /// No description provided for @outcomeExpiredLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get outcomeExpiredLabel;
+
+  /// No description provided for @outcomeExpiredBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The analysis window ended without a main target confirmed.'**
+  String get outcomeExpiredBody;
+
+  /// No description provided for @outcomeInvalidatedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Analysis Invalidated'**
+  String get outcomeInvalidatedLabel;
+
+  /// No description provided for @outcomeInvalidatedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The setup no longer matches the original analysis structure.'**
+  String get outcomeInvalidatedBody;
+
+  /// No description provided for @outcomeUnknownLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Status not available'**
+  String get outcomeUnknownLabel;
+
+  /// No description provided for @outcomeUnknownBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The outcome cannot be evaluated yet.'**
+  String get outcomeUnknownBody;
+
+  /// No description provided for @whyNotHigherConfidence.
+  ///
+  /// In en, this message translates to:
+  /// **'Why isn\'t confidence higher?'**
+  String get whyNotHigherConfidence;
+
+  /// No description provided for @citedSources.
+  ///
+  /// In en, this message translates to:
+  /// **'Cited sources'**
+  String get citedSources;
+
+  /// No description provided for @awaitConfirmationNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait for confirmation — the AI does not recommend Buy or Sell right now.'**
+  String get awaitConfirmationNotice;
+
+  /// No description provided for @instrumentRulesUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Instrument rules are not available.'**
+  String get instrumentRulesUnavailable;
+
+  /// No description provided for @tradingRulesLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Trading rules could not be loaded.'**
+  String get tradingRulesLoadFailed;
+
+  /// No description provided for @tradingRulesUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Trading rules are not available.'**
+  String get tradingRulesUnavailable;
+
+  /// No description provided for @adaptivePlanIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn the Standard Plan into a position size that fits your funds and loss limit.'**
+  String get adaptivePlanIntro;
+
+  /// No description provided for @adaptivePlanDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'This calculator does not change AI levels and does not send orders. Enter free funds after deducting margin used by other positions.'**
+  String get adaptivePlanDisclaimer;
+
+  /// No description provided for @availableTradingFunds.
+  ///
+  /// In en, this message translates to:
+  /// **'Available trading funds'**
+  String get availableTradingFunds;
+
+  /// No description provided for @maxLossLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum loss limit'**
+  String get maxLossLimit;
+
+  /// No description provided for @buildPositionPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Build position plan'**
+  String get buildPositionPlan;
+
+  /// No description provided for @notRecommended.
+  ///
+  /// In en, this message translates to:
+  /// **'Not recommended'**
+  String get notRecommended;
+
+  /// No description provided for @adaptivePlanFootnote.
+  ///
+  /// In en, this message translates to:
+  /// **'Day trading only. Estimates exclude spread, slippage, fees, VAT, rollover, and broker auto-liquidation.'**
+  String get adaptivePlanFootnote;
+
+  /// No description provided for @lossToSl.
+  ///
+  /// In en, this message translates to:
+  /// **'Loss to SL'**
+  String get lossToSl;
+
+  /// No description provided for @entryZone.
+  ///
+  /// In en, this message translates to:
+  /// **'Entry zone'**
+  String get entryZone;
+
+  /// No description provided for @primaryScenario.
+  ///
+  /// In en, this message translates to:
+  /// **'Primary scenario'**
+  String get primaryScenario;
 }
 
 class _AppLocalizationsDelegate

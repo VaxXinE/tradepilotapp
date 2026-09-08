@@ -8,6 +8,7 @@ import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 import 'package:trade_pilot_api_client/trade_pilot_client.dart';
 
 import 'auth_provider.dart';
+import '../l10n/app_messages.dart';
 
 enum NotificationPreferenceKey {
   expiry,
@@ -192,7 +193,7 @@ class NotificationsProvider extends ChangeNotifier {
       // Pertahankan cache terakhir.
       if (_isCurrentSession(epoch: epoch, userId: userId) &&
           requestId == _loadRequestId) {
-        loadError = 'Notifikasi belum dapat dimuat. Tarik untuk mencoba lagi.';
+        loadError = AppMessages.l10n.errNotificationsLoadFailed;
       }
     } finally {
       if (requestId == _loadRequestId) {
@@ -331,7 +332,7 @@ class NotificationsProvider extends ChangeNotifier {
       preferencesError = null;
     } catch (_) {
       if (_isCurrentSession(epoch: epoch, userId: userId)) {
-        preferencesError = 'Gagal memuat preferensi notifikasi.';
+        preferencesError = AppMessages.l10n.errNotificationPrefsLoadFailed;
       }
     } finally {
       if (requestId == _prefsRequestId) {
@@ -437,7 +438,7 @@ class NotificationsProvider extends ChangeNotifier {
       return true;
     } catch (_) {
       if (_isCurrentSession(epoch: epoch, userId: userId)) {
-        preferencesError = 'Gagal menyimpan preferensi notifikasi.';
+        preferencesError = AppMessages.l10n.errNotificationPrefsSaveFailed;
       }
 
       return false;
@@ -508,7 +509,7 @@ class NotificationsProvider extends ChangeNotifier {
       return true;
     } catch (_) {
       if (_isCurrentSession(epoch: epoch, userId: userId)) {
-        preferencesError = 'Gagal menyimpan pengingat sesi market.';
+        preferencesError = AppMessages.l10n.errMarketSessionReminderSaveFailed;
       }
 
       return false;
@@ -567,7 +568,7 @@ class NotificationsProvider extends ChangeNotifier {
       return preferences != null;
     } catch (_) {
       if (_isCurrentSession(epoch: epoch, userId: userId)) {
-        preferencesError = 'Gagal menyimpan waktu tenang notifikasi.';
+        preferencesError = AppMessages.l10n.errQuietHoursSaveFailed;
       }
       return false;
     } finally {

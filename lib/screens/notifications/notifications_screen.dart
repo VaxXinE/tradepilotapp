@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart' as api;
 
 import '../../core/theme/app_colors.dart';
+import '../../l10n/l10n.dart';
 import '../../models/notification_action.dart';
 import '../../providers/analysis_provider.dart';
 import '../../providers/notifications_provider.dart';
@@ -114,11 +115,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
     if (analysis == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Analisis tidak tersedia atau kamu tidak memiliki akses.',
-          ),
-        ),
+        SnackBar(content: Text(context.l10n.notificationAnalysisUnavailable)),
       );
 
       return;
@@ -144,14 +141,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final nativePush = context.watch<NativePushService?>();
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Notifikasi'),
+        title: Text(context.l10n.notifications),
         actions: [
           if (provider.unreadCount > 0)
             TextButton(
               onPressed: () {
                 unawaited(provider.markAllRead());
               },
-              child: const Text('Baca semua'),
+              child: Text(context.l10n.markAllRead),
             ),
         ],
       ),
@@ -178,8 +175,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 const SizedBox(width: 7),
                 Text(
                   provider.isRealtimeConnected
-                      ? 'Realtime aktif'
-                      : 'Menghubungkan realtime...',
+                      ? context.l10n.realtimeActive
+                      : context.l10n.realtimeConnecting,
                   style: TextStyle(color: muted, fontSize: 10.5),
                 ),
               ],
@@ -198,15 +195,18 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
             Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Kotak Masuk',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+                    context.l10n.notificationInbox,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ),
                 if (provider.unreadCount > 0)
                   Text(
-                    '${provider.unreadCount} belum dibaca',
+                    context.l10n.notificationUnreadCount(provider.unreadCount),
                     style: TextStyle(color: muted, fontSize: 10.5),
                   ),
               ],
@@ -265,20 +265,26 @@ class _NativePushCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final lastReceived = service.lastMessageReceivedAt;
     final subtitle = service.isBusy
-        ? 'Memperbarui pengaturan perangkat...'
+        ? l10n.pushUpdatingDevice
         : service.isRegistered
-        ? 'Aktif untuk perangkat ini.'
+        ? lastReceived == null
+              ? l10n.pushDeviceRegistered
+              : l10n.pushDeviceRegisteredLastReceived(
+                  DateFormat('d MMM, HH:mm').format(lastReceived),
+                )
         : service.isPermissionDenied
-        ? 'Izin ditolak. Aktifkan kembali melalui pengaturan perangkat.'
-        : service.errorMessage ?? 'Terima push saat aplikasi tidak aktif.';
+        ? l10n.pushPermissionDenied
+        : service.errorMessage ?? l10n.pushReceiveWhenInactive;
 
     return Card(
       child: SwitchListTile(
         secondary: const Icon(Icons.phone_android_rounded),
-        title: const Text(
-          'Mobile Push',
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+        title: Text(
+          l10n.mobilePush,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
         ),
         subtitle: Text(subtitle, style: const TextStyle(fontSize: 11)),
         value: service.isEnabled,
@@ -298,6 +304,7 @@ class _PreferencesCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final prefs = provider.preferences;
 
     final muted = Theme.of(context).colorScheme.onSurfaceVariant;
@@ -317,13 +324,13 @@ class _PreferencesCard extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              const Text('Preferensi notifikasi belum dapat dimuat.'),
+              Text(l10n.notificationPreferencesLoadFailed),
               const SizedBox(height: 8),
               TextButton(
                 onPressed: () {
                   unawaited(provider.loadPreferences());
                 },
-                child: const Text('Coba lagi'),
+                child: Text(l10n.tryAgain),
               ),
             ],
           ),
@@ -334,12 +341,12 @@ class _PreferencesCard extends StatelessWidget {
     return Card(
       child: ExpansionTile(
         leading: const Icon(Icons.notifications_active_outlined),
-        title: const Text(
-          'Preferensi Notifikasi',
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+        title: Text(
+          l10n.notificationPreferences,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
         ),
         subtitle: Text(
-          'Pilih jenis pemberitahuan yang ingin kamu terima.',
+          l10n.notificationPreferencesDescription,
           style: TextStyle(color: muted, fontSize: 11),
         ),
         childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 14),
@@ -359,8 +366,8 @@ class _PreferencesCard extends StatelessWidget {
           const Divider(),
 
           _PreferenceSwitch(
-            title: 'Analisis kedaluwarsa',
-            subtitle: 'Peringatan ketika masa berlaku analisis hampir selesai.',
+            title: l10n.notificationExpiryTitle,
+            subtitle: l10n.notificationExpiryDescription,
             value: prefs.pushExpiry,
             enabled: !provider.isSavingPreferences,
             onChanged: (value) {
@@ -374,8 +381,8 @@ class _PreferencesCard extends StatelessWidget {
           ),
 
           _PreferenceSwitch(
-            title: 'Pengumuman',
-            subtitle: 'Informasi dan broadcast penting dari Trade Pilot.',
+            title: l10n.notificationBroadcastTitle,
+            subtitle: l10n.notificationBroadcastDescription,
             value: prefs.pushBroadcast,
             enabled: !provider.isSavingPreferences,
             onChanged: (value) {
@@ -389,8 +396,8 @@ class _PreferencesCard extends StatelessWidget {
           ),
 
           _PreferenceSwitch(
-            title: 'Ringkasan harian',
-            subtitle: 'Ringkasan aktivitas dan market harian.',
+            title: l10n.notificationDailyTitle,
+            subtitle: l10n.notificationDailyDescription,
             value: prefs.pushDailySummary,
             enabled: !provider.isSavingPreferences,
             onChanged: (value) {
@@ -404,8 +411,8 @@ class _PreferencesCard extends StatelessWidget {
           ),
 
           _PreferenceSwitch(
-            title: 'Berita market',
-            subtitle: 'Berita penting yang relevan dengan market.',
+            title: l10n.notificationNewsTitle,
+            subtitle: l10n.notificationNewsDescription,
             value: prefs.pushMarketNews,
             enabled: !provider.isSavingPreferences,
             onChanged: (value) {
@@ -419,8 +426,8 @@ class _PreferencesCard extends StatelessWidget {
           ),
 
           _PreferenceSwitch(
-            title: 'Kalender ekonomi',
-            subtitle: 'Pengingat event ekonomi berdampak tinggi.',
+            title: l10n.notificationCalendarTitle,
+            subtitle: l10n.notificationCalendarDescription,
             value: prefs.pushCalendarEvents,
             enabled: !provider.isSavingPreferences,
             onChanged: (value) {
@@ -434,8 +441,8 @@ class _PreferencesCard extends StatelessWidget {
           ),
 
           _PreferenceSwitch(
-            title: 'Pergerakan harga',
-            subtitle: 'Anomali dan perubahan harga yang signifikan.',
+            title: l10n.notificationPriceTitle,
+            subtitle: l10n.notificationPriceDescription,
             value: prefs.pushPriceAnomaly,
             enabled: !provider.isSavingPreferences,
             onChanged: (value) {
@@ -449,8 +456,8 @@ class _PreferencesCard extends StatelessWidget {
           ),
 
           _PreferenceSwitch(
-            title: 'Perubahan sinyal',
-            subtitle: 'Ketika bias AI berubah secara bermakna.',
+            title: l10n.notificationSignalTitle,
+            subtitle: l10n.notificationSignalDescription,
             value: prefs.pushSignalFlip,
             enabled: !provider.isSavingPreferences,
             onChanged: (value) {
@@ -464,8 +471,8 @@ class _PreferencesCard extends StatelessWidget {
           ),
 
           _PreferenceSwitch(
-            title: 'Rekap mingguan',
-            subtitle: 'Ringkasan aktivitas trading setiap minggu.',
+            title: l10n.notificationWeeklyTitle,
+            subtitle: l10n.notificationWeeklyDescription,
             value: prefs.pushWeeklyRecap,
             enabled: !provider.isSavingPreferences,
             onChanged: (value) {
@@ -479,19 +486,22 @@ class _PreferencesCard extends StatelessWidget {
           ),
 
           const Divider(),
-          const Align(
+          Align(
             alignment: Alignment.centerLeft,
             child: Padding(
-              padding: EdgeInsets.fromLTRB(8, 8, 8, 4),
+              padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
               child: Text(
-                'Guardrail keputusan',
-                style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800),
+                l10n.notificationGuardrails,
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
           ),
           _PreferenceSwitch(
-            title: 'Peringatan revenge trading',
-            subtitle: 'Peringatan lunak setelah kerugian terbaru.',
+            title: l10n.notificationRevengeTitle,
+            subtitle: l10n.notificationRevengeDescription,
             value: prefs.guardrailRevenge,
             enabled: !provider.isSavingPreferences,
             onChanged: (value) => unawaited(
@@ -502,8 +512,8 @@ class _PreferencesCard extends StatelessWidget {
             ),
           ),
           _PreferenceSwitch(
-            title: 'Peringatan overtrading',
-            subtitle: 'Peringatan saat jumlah analisis terlalu rapat.',
+            title: l10n.notificationOvertradingTitle,
+            subtitle: l10n.notificationOvertradingDescription,
             value: prefs.guardrailOvertrading,
             enabled: !provider.isSavingPreferences,
             onChanged: (value) => unawaited(
@@ -514,8 +524,8 @@ class _PreferencesCard extends StatelessWidget {
             ),
           ),
           _PreferenceSwitch(
-            title: 'Peringatan risiko tinggi',
-            subtitle: 'Peringatan event high-impact dalam 30 menit.',
+            title: l10n.notificationHighRiskTitle,
+            subtitle: l10n.notificationHighRiskDescription,
             value: prefs.guardrailHighRisk,
             enabled: !provider.isSavingPreferences,
             onChanged: (value) => unawaited(
@@ -526,8 +536,8 @@ class _PreferencesCard extends StatelessWidget {
             ),
           ),
           _PreferenceSwitch(
-            title: 'Cooling-off 30 menit',
-            subtitle: 'Jeda opsional setelah kerugian signifikan.',
+            title: l10n.notificationCoolingOffTitle,
+            subtitle: l10n.notificationCoolingOffDescription,
             value: prefs.coolingOffEnabled,
             enabled: !provider.isSavingPreferences,
             onChanged: (value) => unawaited(
@@ -540,13 +550,16 @@ class _PreferencesCard extends StatelessWidget {
 
           const Divider(),
 
-          const Align(
+          Align(
             alignment: Alignment.centerLeft,
             child: Padding(
-              padding: EdgeInsets.fromLTRB(8, 8, 8, 4),
+              padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
               child: Text(
-                'Pengingat Sesi Market',
-                style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800),
+                l10n.notificationSessionReminders,
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
           ),
@@ -631,6 +644,7 @@ class _QuietHoursSettings extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final enabled = !provider.isSavingPreferences;
     final zones = {prefs.notificationTimezone, ..._timezones}.toList();
 
@@ -638,8 +652,8 @@ class _QuietHoursSettings extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _PreferenceSwitch(
-          title: 'Waktu tenang',
-          subtitle: 'Tahan notifikasi non-darurat selama jam istirahat.',
+          title: l10n.quietHours,
+          subtitle: l10n.quietHoursDescription,
           value: prefs.quietHoursEnabled,
           enabled: enabled,
           onChanged: (value) =>
@@ -652,7 +666,7 @@ class _QuietHoursSettings extends StatelessWidget {
               children: [
                 Expanded(
                   child: _HourDropdown(
-                    label: 'Mulai',
+                    label: l10n.quietHoursStart,
                     value: prefs.quietHoursStart,
                     enabled: enabled,
                     onChanged: (value) =>
@@ -662,7 +676,7 @@ class _QuietHoursSettings extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: _HourDropdown(
-                    label: 'Selesai',
+                    label: l10n.quietHoursEnd,
                     value: prefs.quietHoursEnd,
                     enabled: enabled,
                     onChanged: (value) =>
@@ -677,9 +691,9 @@ class _QuietHoursSettings extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: DropdownButtonFormField<String>(
               initialValue: prefs.notificationTimezone,
-              decoration: const InputDecoration(
-                labelText: 'Zona waktu',
-                prefixIcon: Icon(Icons.public_rounded, size: 19),
+              decoration: InputDecoration(
+                labelText: l10n.notificationTimezone,
+                prefixIcon: const Icon(Icons.public_rounded, size: 19),
               ),
               items: zones
                   .map(
@@ -695,11 +709,11 @@ class _QuietHoursSettings extends StatelessWidget {
                   : null,
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.fromLTRB(12, 7, 12, 4),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 7, 12, 4),
             child: Text(
-              'Notifikasi keamanan tetap dapat dikirim selama waktu tenang.',
-              style: TextStyle(fontSize: 10.5),
+              l10n.quietHoursSecurityNotice,
+              style: const TextStyle(fontSize: 10.5),
             ),
           ),
         ],
@@ -829,7 +843,7 @@ class _AutoPauseBanner extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Sebagian notifikasi "$category" otomatis dijeda karena lama tidak dibuka.',
+              context.l10n.notificationAutoPaused(category),
               style: const TextStyle(fontSize: 11),
             ),
           ),
@@ -952,7 +966,7 @@ class _EmptyState extends StatelessWidget {
             Icon(Icons.notifications_none_rounded, size: 40, color: muted),
             const SizedBox(height: 10),
             Text(
-              'Belum ada notifikasi',
+              context.l10n.noNotifications,
               style: TextStyle(color: muted, fontWeight: FontWeight.w700),
             ),
           ],

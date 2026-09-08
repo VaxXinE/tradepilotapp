@@ -6,6 +6,7 @@ import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
 import '../repositories/watchlist_repository.dart';
 import 'auth_provider.dart';
+import '../l10n/app_messages.dart';
 
 class WatchlistProvider extends ChangeNotifier {
   WatchlistProvider(this._authProvider, this._repository) {
@@ -63,7 +64,7 @@ class WatchlistProvider extends ChangeNotifier {
       _error = null;
     } catch (error) {
       if (_isCurrent(epoch, userId) && requestId == _loadRequestId) {
-        _error = _friendlyError(error, 'Gagal memuat watchlist.');
+        _error = _friendlyError(error, AppMessages.l10n.errWatchlistLoadFailed);
       }
     } finally {
       if (_isCurrent(epoch, userId) && requestId == _loadRequestId) {
@@ -76,7 +77,7 @@ class WatchlistProvider extends ChangeNotifier {
   Future<bool> addInstrument(String instrument) async {
     final normalized = _normalize(instrument);
     if (normalized.isEmpty) {
-      _error = 'Instrumen tidak boleh kosong.';
+      _error = AppMessages.l10n.errInstrumentRequired;
       notifyListeners();
       return false;
     }
@@ -99,7 +100,7 @@ class WatchlistProvider extends ChangeNotifier {
   Future<bool> removeInstrument(String instrument) async {
     final normalized = _normalize(instrument);
     if (normalized.isEmpty) {
-      _error = 'Instrumen tidak boleh kosong.';
+      _error = AppMessages.l10n.errInstrumentRequired;
       notifyListeners();
       return false;
     }
@@ -129,7 +130,7 @@ class WatchlistProvider extends ChangeNotifier {
   ) async {
     final userId = _currentUserId;
     if (userId == null) {
-      _error = 'Silakan login kembali.';
+      _error = AppMessages.l10n.errSignInAgain;
       notifyListeners();
       return false;
     }
@@ -153,7 +154,10 @@ class WatchlistProvider extends ChangeNotifier {
       return isCurrent();
     } catch (error) {
       if (_isCurrent(epoch, userId) && requestId == _mutationRequestId) {
-        _error = _friendlyError(error, 'Gagal memperbarui watchlist.');
+        _error = _friendlyError(
+          error,
+          AppMessages.l10n.errWatchlistUpdateFailed,
+        );
         notifyListeners();
       }
       return false;
@@ -214,7 +218,7 @@ class WatchlistProvider extends ChangeNotifier {
         }
       }
       if (error.response?.statusCode == 401) {
-        return 'Sesi login sudah berakhir.';
+        return AppMessages.l10n.errSessionExpired;
       }
     }
     return fallback;

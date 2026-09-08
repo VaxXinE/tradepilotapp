@@ -4,6 +4,7 @@ import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 import '../core/theme/app_colors.dart';
 import '../models/market_models.dart';
 import 'market_mini_chart.dart';
+import '../l10n/l10n.dart';
 
 class AnalysisLevelsChart extends StatelessWidget {
   const AnalysisLevelsChart({
@@ -36,7 +37,7 @@ class AnalysisLevelsChart extends StatelessWidget {
         height: 180,
         child: Center(
           child: Text(
-            'Data chart belum tersedia.',
+            context.l10n.chartDataUnavailable,
             style: TextStyle(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontSize: 12.5,

@@ -269,7 +269,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
       }
 
       setState(() {
-        _marketError = 'Chart market belum tersedia.';
+        _marketError = context.l10n.marketChartUnavailable;
       });
     } finally {
       _marketRequestInFlight = false;
@@ -315,7 +315,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Analisis baru gagal dibuat.')),
+        SnackBar(content: Text(context.l10n.analysisCreateFailed)),
       );
       return;
     }
@@ -373,9 +373,9 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
       opened = false;
     }
     if (!opened && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tautan tidak dapat dibuka.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.linkOpenFailed)));
     }
   }
 
@@ -439,11 +439,11 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
       if (error.response?.statusCode == 404) {
         setState(() => _journalEntry = null);
       } else {
-        setState(() => _journalError = 'Jurnal belum dapat diperiksa.');
+        setState(() => _journalError = context.l10n.journalCheckFailed);
       }
     } catch (_) {
       if (mounted) {
-        setState(() => _journalError = 'Jurnal belum dapat diperiksa.');
+        setState(() => _journalError = context.l10n.journalCheckFailed);
       }
     } finally {
       if (mounted) setState(() => _journalLoading = false);
@@ -477,7 +477,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
     setState(() {
       _alertStatus = status;
       _alertStatusLoading = false;
-      _alertError = status == null ? 'Status alert belum dapat dimuat.' : null;
+      _alertError = status == null ? context.l10n.alertStatusLoadFailed : null;
     });
   }
 
@@ -497,7 +497,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
           SnackBar(
             content: Text(
               push.errorMessage ??
-                  'Aktifkan izin notifikasi agar alert harga dapat digunakan.',
+                  context.l10n.alertNeedsNotificationPermission,
             ),
           ),
         );
@@ -520,8 +520,8 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
         SnackBar(
           content: Text(
             enabled
-                ? 'Alert gagal diaktifkan. Pastikan notifikasi aktif dan instrumen memiliki feed harga live.'
-                : 'Alert gagal dinonaktifkan. Coba lagi sebentar.',
+                ? context.l10n.alertEnableFailed
+                : context.l10n.alertDisableFailed,
           ),
         ),
       );
@@ -550,20 +550,26 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Feedback analisis'),
+          title: Text(context.l10n.analysisFeedbackTitle),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Bagaimana hasil analisis ini?'),
+              Text(context.l10n.analysisFeedbackQuestion),
               const SizedBox(height: 10),
               Wrap(
                 spacing: 7,
                 children: [
-                  for (final item in const [
-                    (FeedbackBodyOutcomeEnum.correct, 'Benar'),
-                    (FeedbackBodyOutcomeEnum.wrong, 'Salah'),
-                    (FeedbackBodyOutcomeEnum.unknown, 'Belum tahu'),
+                  for (final item in [
+                    (
+                      FeedbackBodyOutcomeEnum.correct,
+                      context.l10n.feedbackCorrect,
+                    ),
+                    (FeedbackBodyOutcomeEnum.wrong, context.l10n.feedbackWrong),
+                    (
+                      FeedbackBodyOutcomeEnum.unknown,
+                      context.l10n.feedbackUnknown,
+                    ),
                   ])
                     ChoiceChip(
                       label: Text(item.$2),
@@ -578,8 +584,8 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
                 controller: noteController,
                 maxLength: 1000,
                 maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Catatan feedback (opsional)',
+                decoration: InputDecoration(
+                  labelText: context.l10n.feedbackNoteOptional,
                 ),
               ),
             ],
@@ -587,7 +593,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Batal'),
+              child: Text(context.l10n.cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(context, (
@@ -596,7 +602,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
                     ? null
                     : noteController.text.trim(),
               )),
-              child: const Text('Kirim'),
+              child: Text(context.l10n.send),
             ),
           ],
         ),
@@ -650,7 +656,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          ok ? 'Terima kasih atas feedback kamu!' : 'Gagal mengirim feedback.',
+          ok ? context.l10n.feedbackThanks : context.l10n.feedbackSendFailed,
         ),
       ),
     );
@@ -670,7 +676,9 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            updated.hasNote == true ? 'Catatan tersimpan.' : 'Catatan dihapus.',
+            updated.hasNote == true
+                ? context.l10n.noteSaved
+                : context.l10n.noteDeleted,
           ),
         ),
       );
@@ -678,7 +686,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
     }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(provider.errorMessage ?? 'Catatan gagal disimpan.'),
+        content: Text(provider.errorMessage ?? context.l10n.noteSaveFailed),
       ),
     );
     return false;
@@ -707,7 +715,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
         appBar: AppBar(),
         body: Center(
           child: Text(
-            'Analisis tidak ditemukan',
+            context.l10n.analysisNotFound,
             style: TextStyle(color: muted),
           ),
         ),
@@ -735,10 +743,10 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
               ? 'Bearish'
               : 'Neutral')
         : (isBullish
-              ? 'Cenderung Naik'
+              ? context.l10n.beginnerBullish
               : isBearish
-              ? 'Cenderung Turun'
-              : 'Tunggu Dulu');
+              ? context.l10n.beginnerBearish
+              : context.l10n.beginnerWait);
 
     final isExpired = analysis.validUntil.isBefore(DateTime.now());
     final mainScenario = isPro ? analysis.baseCase : analysis.mainScenario;
@@ -754,7 +762,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
         title: Text(analysis.instrument),
         actions: [
           IconButton(
-            tooltip: 'Analisis ulang',
+            tooltip: context.l10n.reanalyze,
             onPressed: _reanalyzing ? null : _reanalyze,
             icon: _reanalyzing
                 ? const SizedBox.square(
@@ -789,6 +797,20 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
               onSelect: (value) => setState(() => _selectedTimeframe = value),
               onAnalyze: () =>
                   _reanalyze(_selectedTimeframe ?? analysis.timeframe),
+            ),
+
+            const SizedBox(height: 14),
+
+            _ChartCard(
+              analysis: analysis,
+              candles: _candles,
+              isLoading: _marketLoading,
+              error: _marketError,
+              onOpenTradingView: () => _openExternalUrl(
+                Uri.https('www.tradingview.com', '/chart/', {
+                  'symbol': _tradingViewSymbol(analysis.instrument),
+                }).toString(),
+              ),
             ),
 
             if (supportsRiskMap(analysis.instrument)) ...[
@@ -840,49 +862,18 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
               ),
             ],
 
-            const SizedBox(height: 14),
-
-            _MarketSnapshotCard(analysis: analysis),
-
-            const SizedBox(height: 14),
-
-            _ChartCard(
-              analysis: analysis,
-              candles: _candles,
-              isLoading: _marketLoading,
-              error: _marketError,
-              onOpenTradingView: () => _openExternalUrl(
-                Uri.https('www.tradingview.com', '/chart/', {
-                  'symbol': _tradingViewSymbol(analysis.instrument),
-                }).toString(),
-              ),
-            ),
-
-            if (analysis.fundamentalContext != null) ...[
-              const SizedBox(height: 14),
-              _FundamentalSnapshotCard(
-                analysis: analysis,
-                refreshed: _fundamentalRefresh,
-                refreshing: _refreshingFundamentals,
-                onRefresh: _refreshFundamentals,
-                onOpenUrl: _openExternalUrl,
-              ),
-              _AnalysisGuideLink(
-                onPressed: () => _openGuide(
-                  ProgressionEvidenceStartInputGuideIdEnum.technicalFundamental,
-                ),
-              ),
-            ],
-
             if (analysis.tradePlan != null) ...[
               const SizedBox(height: 20),
-              const Text(
-                'Rencana Trading',
-                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+              Text(
+                context.l10n.tradingPlanTitle,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 16,
+                ),
               ),
               const SizedBox(height: 5),
               Text(
-                'Gunakan level berikut sebagai struktur risiko, bukan jaminan harga akan bergerak sesuai skenario.',
+                context.l10n.tradingPlanDisclaimer,
                 style: TextStyle(color: muted, fontSize: 11.5, height: 1.4),
               ),
               const SizedBox(height: 12),
@@ -921,6 +912,40 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
             ],
 
             const SizedBox(height: 14),
+            Card(
+              child: ExpansionTile(
+                key: const ValueKey('analysis-market-evidence'),
+                initiallyExpanded: false,
+                leading: const Icon(Icons.query_stats_rounded),
+                title: Text(
+                  context.l10n.marketEvidence,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+                subtitle: Text(context.l10n.marketEvidenceDescription),
+                childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                children: [
+                  _MarketSnapshotCard(analysis: analysis),
+                  if (analysis.fundamentalContext != null) ...[
+                    const SizedBox(height: 12),
+                    _FundamentalSnapshotCard(
+                      analysis: analysis,
+                      refreshed: _fundamentalRefresh,
+                      refreshing: _refreshingFundamentals,
+                      onRefresh: _refreshFundamentals,
+                      onOpenUrl: _openExternalUrl,
+                    ),
+                    _AnalysisGuideLink(
+                      onPressed: () => _openGuide(
+                        ProgressionEvidenceStartInputGuideIdEnum
+                            .technicalFundamental,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 14),
 
             _AnalysisJournalCard(
               entry: _journalEntry,
@@ -942,17 +967,32 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
 
             if (_technical != null) ...[
               const SizedBox(height: 14),
-              _TechnicalIndicatorsCard(
-                technical: _technical!,
-                timeframe: analysis.timeframe,
-                showRawSignals: isPro,
+              Card(
+                child: ExpansionTile(
+                  key: const ValueKey('analysis-technical-details'),
+                  initiallyExpanded: false,
+                  leading: const Icon(Icons.analytics_outlined),
+                  title: Text(
+                    context.l10n.technicalDetails,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  subtitle: Text(context.l10n.technicalDetailsDescription),
+                  childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                  children: [
+                    _TechnicalIndicatorsCard(
+                      technical: _technical!,
+                      timeframe: analysis.timeframe,
+                      showRawSignals: isPro,
+                    ),
+                  ],
+                ),
               ),
             ],
 
             if (analysis.userInputContext?.trim().isNotEmpty == true) ...[
               const SizedBox(height: 14),
               _SectionCard(
-                title: 'Konteks yang kamu berikan',
+                title: context.l10n.providedContext,
                 body: analysis.userInputContext!,
                 icon: Icons.chat_bubble_outline,
               ),
@@ -961,7 +1001,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
             if (invalidation?.trim().isNotEmpty == true) ...[
               const SizedBox(height: 14),
               _SectionCard(
-                title: 'Analisis ini batal jika',
+                title: context.l10n.analysisInvalidationTitle,
                 body: invalidation!,
                 icon: Icons.report_gmailerrorred_outlined,
                 isWarning: true,
@@ -977,7 +1017,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
             if (mainScenario?.trim().isNotEmpty == true) ...[
               const SizedBox(height: 14),
               _SectionCard(
-                title: 'Skenario A — Utama',
+                title: context.l10n.mainScenario,
                 body: mainScenario!,
                 icon: Icons.route_outlined,
               ),
@@ -986,17 +1026,16 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
             if (alternativeScenario?.trim().isNotEmpty == true) ...[
               const SizedBox(height: 12),
               _SectionCard(
-                title: 'Skenario B — Alternatif',
+                title: context.l10n.alternativeScenario,
                 body: alternativeScenario!,
                 icon: Icons.alt_route_rounded,
               ),
             ],
 
             const SizedBox(height: 12),
-            const _SectionCard(
-              title: 'Skenario C — Tunggu / Tanpa Posisi',
-              body:
-                  'Jika konfirmasi belum kuat atau kondisi pembatal mendekat, menunggu setup yang lebih bersih adalah pilihan paling konservatif.',
+            _SectionCard(
+              title: context.l10n.waitScenario,
+              body: context.l10n.waitScenarioBody,
               icon: Icons.hourglass_empty_rounded,
             ),
 
@@ -1004,7 +1043,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
               if (analysis.keyDriversTechnical?.trim().isNotEmpty == true) ...[
                 const SizedBox(height: 12),
                 _SectionCard(
-                  title: 'Penggerak Teknikal',
+                  title: context.l10n.technicalDrivers,
                   body: analysis.keyDriversTechnical!,
                   icon: Icons.query_stats_rounded,
                 ),
@@ -1013,7 +1052,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
                   true) ...[
                 const SizedBox(height: 12),
                 _SectionCard(
-                  title: 'Penggerak Fundamental',
+                  title: context.l10n.fundamentalDrivers,
                   body: analysis.keyDriversFundamental!,
                   icon: Icons.newspaper_outlined,
                 ),
@@ -1021,7 +1060,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
               if (analysis.marketContext?.trim().isNotEmpty == true) ...[
                 const SizedBox(height: 12),
                 _SectionCard(
-                  title: 'Konteks Pasar',
+                  title: context.l10n.marketContext,
                   body: analysis.marketContext!,
                   icon: Icons.public_rounded,
                 ),
@@ -1033,9 +1072,9 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
 
             const SizedBox(height: 24),
 
-            const Text(
-              'Apakah analisis ini membantu?',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+            Text(
+              context.l10n.analysisHelpfulQuestion,
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
             ),
 
             const SizedBox(height: 10),
@@ -1050,7 +1089,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
                             _openFeedback(FeedbackBodyFeedbackTypeEnum.useful);
                           },
                     icon: const Icon(Icons.thumb_up_alt_outlined, size: 18),
-                    label: const Text('Membantu'),
+                    label: Text(context.l10n.helpful),
                   ),
                 ),
 
@@ -1066,7 +1105,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
                             );
                           },
                     icon: const Icon(Icons.thumb_down_alt_outlined, size: 18),
-                    label: const Text('Kurang Membantu'),
+                    label: Text(context.l10n.notHelpful),
                   ),
                 ),
               ],
@@ -1075,8 +1114,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
             const SizedBox(height: 14),
 
             Text(
-              'Trade Pilot adalah alat bantu analisis. '
-              'Selalu batasi risiko dan hindari membuka posisi hanya berdasarkan satu indikator.',
+              context.l10n.analysisSafetyDisclaimer,
               textAlign: TextAlign.center,
               style: TextStyle(color: muted, fontSize: 10.5, height: 1.4),
             ),
@@ -1128,7 +1166,9 @@ class _AnalysisJournalCard extends StatelessWidget {
       child: ListTile(
         leading: const Icon(Icons.menu_book_outlined),
         title: Text(
-          journal == null ? 'Catat trade ini' : 'Catatan trade saya',
+          journal == null
+              ? context.l10n.journalCreateForTrade
+              : context.l10n.journalEntryForTrade,
           style: const TextStyle(fontWeight: FontWeight.w800),
         ),
         subtitle: loading
@@ -1139,7 +1179,7 @@ class _AnalysisJournalCard extends StatelessWidget {
             : error != null
             ? Text(error!)
             : journal == null
-            ? const Text('Simpan keputusan dan hasil trade untuk refleksi.')
+            ? Text(context.l10n.journalReflectionHint)
             : Text(
                 [
                   journal.side.name.toUpperCase(),
@@ -1152,7 +1192,7 @@ class _AnalysisJournalCard extends StatelessWidget {
               ),
         trailing: error != null
             ? IconButton(
-                tooltip: 'Coba lagi',
+                tooltip: context.l10n.tryAgain,
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh_rounded),
               )
@@ -1207,17 +1247,17 @@ class _AnalysisAlertsCard extends StatelessWidget {
                   color: enabled ? colors.primary : colors.onSurfaceVariant,
                 ),
                 const SizedBox(width: 10),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Alert harga',
-                        style: TextStyle(fontWeight: FontWeight.w800),
+                        context.l10n.priceLevelAlerts,
+                        style: const TextStyle(fontWeight: FontWeight.w800),
                       ),
                       SizedBox(height: 3),
                       Text(
-                        'Dapat notifikasi saat harga menyentuh level Entry, Stop Loss, atau Take Profit dari AI.',
+                        context.l10n.priceLevelAlertsDescription,
                         style: TextStyle(fontSize: 11, height: 1.35),
                       ),
                     ],
@@ -1251,15 +1291,15 @@ class _AnalysisAlertsCard extends StatelessWidget {
                   ),
                   TextButton(
                     onPressed: onRetry,
-                    child: const Text('Coba lagi'),
+                    child: Text(context.l10n.tryAgain),
                   ),
                 ],
               )
             else ...[
               Text(
                 enabled
-                    ? 'Alert: AKTIF · ${status?.armedCount ?? 0} level dipantau'
-                    : 'Alert: NONAKTIF',
+                    ? context.l10n.priceLevelAlertsOn(status?.armedCount ?? 0)
+                    : context.l10n.priceLevelAlertsOff,
                 style: TextStyle(
                   color: enabled ? colors.primary : colors.onSurfaceVariant,
                   fontSize: 11,
@@ -1358,13 +1398,13 @@ class _TimeframeCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Ganti Timeframe',
-              style: TextStyle(fontWeight: FontWeight.w900),
+            Text(
+              context.l10n.changeTimeframe,
+              style: const TextStyle(fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: 4),
             Text(
-              'Instrumen sama, timeframe berbeda — buat analisis baru tanpa keluar dari halaman ini.',
+              context.l10n.changeTimeframeDescription,
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontSize: 11,
@@ -1395,7 +1435,7 @@ class _TimeframeCard extends StatelessWidget {
                         dimension: 18,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Analisis timeframe ini'),
+                    : Text(context.l10n.analyzeThisTimeframe),
               ),
             ),
           ],
@@ -1514,7 +1554,7 @@ class _HeaderCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Keyakinan AI',
+                    context.l10n.aiConfidence,
                     style: TextStyle(color: muted, fontSize: 12),
                   ),
                   Text(
@@ -1555,9 +1595,12 @@ class _HeaderCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     isExpired
-                        ? 'Masa berlaku analisis sudah berakhir'
-                        : 'Berlaku sampai '
-                              '${DateFormat('d MMM yyyy, HH:mm').format(analysis.validUntil.toLocal())}',
+                        ? context.l10n.analysisPeriodEnded
+                        : context.l10n.analysisWindowActiveUntil(
+                            DateFormat(
+                              'd MMM yyyy, HH:mm',
+                            ).format(analysis.validUntil.toLocal()),
+                          ),
                     style: TextStyle(
                       color: isExpired
                           ? Theme.of(context).colorScheme.error
@@ -1573,7 +1616,11 @@ class _HeaderCard extends StatelessWidget {
             const SizedBox(height: 6),
 
             Text(
-              'Dibuat ${DateFormat('d MMM yyyy, HH:mm').format(analysis.createdAt.toLocal())}',
+              context.l10n.analysisCreatedAt(
+                DateFormat(
+                  'd MMM yyyy, HH:mm',
+                ).format(analysis.createdAt.toLocal()),
+              ),
               style: TextStyle(color: muted, fontSize: 10.5),
             ),
           ],
@@ -1603,27 +1650,21 @@ class _BeginnerMeaningCard extends StatelessWidget {
     final muted = Theme.of(context).colorScheme.onSurfaceVariant;
     final bias = (analysis.tradingBias ?? '').toLowerCase();
     final direction = bias.contains('bull') || bias == 'buy'
-        ? 'lebih condong naik'
+        ? context.l10n.directionUp
         : bias.contains('bear') || bias == 'sell'
-        ? 'lebih condong turun'
-        : 'belum mempunyai arah dominan';
+        ? context.l10n.directionDown
+        : context.l10n.directionNeutral;
 
     final preferred = analysis.tradePlan?.preferredSide;
 
     late final String action;
 
     if (preferred == TradePlanPreferredSideEnum.buy) {
-      action =
-          'Struktur analisis lebih mendukung skenario Buy, '
-          'tetapi entry tetap harus menunggu area dan kondisi yang dijelaskan di rencana trading.';
+      action = context.l10n.beginnerBuyAction;
     } else if (preferred == TradePlanPreferredSideEnum.sell) {
-      action =
-          'Struktur analisis lebih mendukung skenario Sell, '
-          'tetapi entry tetap harus mengikuti area dan batas risiko yang sudah ditentukan.';
+      action = context.l10n.beginnerSellAction;
     } else {
-      action =
-          'AI belum melihat entry yang cukup kuat. '
-          'Untuk pemula, menunggu konfirmasi adalah keputusan yang valid.';
+      action = context.l10n.beginnerWaitAction;
     }
 
     return Card(
@@ -1632,13 +1673,16 @@ class _BeginnerMeaningCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(
+            Row(
               children: [
                 Icon(Icons.school_outlined, size: 19),
                 SizedBox(width: 8),
                 Text(
-                  'Apa artinya?',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+                  context.l10n.whatDoesItMean,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ],
             ),
@@ -1660,8 +1704,7 @@ class _BeginnerMeaningCard extends StatelessWidget {
                 const SizedBox(width: 9),
                 Expanded(
                   child: Text(
-                    'Bias $biasLabel berarti AI melihat kecenderungan market '
-                    '$direction.',
+                    context.l10n.biasMeaning(biasLabel, direction),
                     style: const TextStyle(fontSize: 12.5, height: 1.45),
                   ),
                 ),
@@ -1703,22 +1746,20 @@ class _RiskCard extends StatelessWidget {
 
     if (risk.contains('high') || risk.contains('tinggi')) {
       color = isDark ? AppColors.bearishDark : AppColors.bearishLight;
-      label = 'Risiko Tinggi';
+      label = context.l10n.riskHighLabel;
       guidance = isPro
-          ? 'Volatilitas tinggi. Batasi eksposur dan gunakan level invalidasi sebagai batas risiko.'
-          : 'Pergerakan dapat lebih agresif. Hindari ukuran posisi besar dan jangan mengabaikan Stop Loss.';
+          ? context.l10n.riskHighProGuidance
+          : context.l10n.riskHighBeginnerGuidance;
     } else if (risk.contains('low') || risk.contains('rendah')) {
       color = isDark ? AppColors.bullishDark : AppColors.bullishLight;
-      label = 'Risiko Relatif Rendah';
-      guidance =
-          'Kondisi terlihat lebih stabil, tetapi risiko tetap ada. Tetap gunakan batas kerugian.';
+      label = context.l10n.riskLowLabel;
+      guidance = context.l10n.riskLowGuidance;
     } else {
       color = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
       label = analysis.riskLevel?.trim().isNotEmpty == true
           ? analysis.riskLevel!
-          : 'Risiko Sedang';
-      guidance =
-          'Ada peluang sekaligus ketidakpastian. Tunggu setup yang jelas dan gunakan ukuran posisi yang terukur.';
+          : context.l10n.riskModerateLabel;
+      guidance = context.l10n.riskModerateGuidance;
     }
 
     final details = [
@@ -1798,13 +1839,16 @@ class _MarketSnapshotCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(
+            Row(
               children: [
                 Icon(Icons.analytics_outlined, size: 19),
                 SizedBox(width: 8),
                 Text(
-                  'Konteks Saat Analisis Dibuat',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+                  context.l10n.analysisSnapshotTitle,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ],
             ),
@@ -1812,7 +1856,7 @@ class _MarketSnapshotCard extends StatelessWidget {
             const SizedBox(height: 5),
 
             Text(
-              'Bagian ini adalah snapshot data yang AI gunakan saat membuat analisis.',
+              context.l10n.analysisSnapshotDescription,
               style: TextStyle(color: muted, fontSize: 11),
             ),
 
@@ -1822,7 +1866,7 @@ class _MarketSnapshotCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: _CountTile(
-                      label: 'Buy',
+                      label: context.l10n.buy,
                       value: buy ?? 0,
                       icon: Icons.north_east_rounded,
                     ),
@@ -1830,7 +1874,7 @@ class _MarketSnapshotCard extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: _CountTile(
-                      label: 'Sell',
+                      label: context.l10n.sell,
                       value: sell ?? 0,
                       icon: Icons.south_east_rounded,
                     ),
@@ -1838,7 +1882,7 @@ class _MarketSnapshotCard extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: _CountTile(
-                      label: 'Netral',
+                      label: context.l10n.neutral,
                       value: neutral ?? 0,
                       icon: Icons.remove_rounded,
                     ),
@@ -1939,9 +1983,9 @@ class _ChartCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Grafik Harga',
-                        style: TextStyle(
+                      Text(
+                        context.l10n.priceChart,
+                        style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w900,
                         ),
@@ -1958,7 +2002,7 @@ class _ChartCard extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  tooltip: 'Lihat chart lengkap di TradingView',
+                  tooltip: context.l10n.openFullChart,
                   onPressed: onOpenTradingView,
                   icon: const Icon(Icons.open_in_new_rounded, size: 19),
                 ),
@@ -2035,14 +2079,17 @@ class _FundamentalSnapshotCard extends StatelessWidget {
               children: [
                 const Icon(Icons.newspaper_outlined, size: 19),
                 const SizedBox(width: 8),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Konteks Fundamental',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+                    context.l10n.fundamentalContext,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ),
                 IconButton(
-                  tooltip: 'Refresh fundamental',
+                  tooltip: context.l10n.refreshFundamentals,
                   onPressed: refreshing ? null : onRefresh,
                   icon: refreshing
                       ? const SizedBox.square(
@@ -2057,7 +2104,7 @@ class _FundamentalSnapshotCard extends StatelessWidget {
             const SizedBox(height: 5),
 
             Text(
-              'Berita dan event ekonomi yang dilihat AI saat membuat analisis ini.',
+              context.l10n.fundamentalContextDescription,
               style: TextStyle(color: muted, fontSize: 11),
             ),
 
@@ -2072,8 +2119,11 @@ class _FundamentalSnapshotCard extends StatelessWidget {
                 ),
                 child: Text(
                   refreshed!.drift.missingCitations.isEmpty
-                      ? 'Fundamental terbaru masih mendukung seluruh sumber awal.'
-                      : '${refreshed!.drift.missingCitations.length} dari ${refreshed!.drift.totalCitations} sumber awal tidak lagi ada di window terbaru.',
+                      ? context.l10n.fundamentalDriftNone
+                      : context.l10n.fundamentalDriftSome(
+                          refreshed!.drift.missingCitations.length,
+                          refreshed!.drift.totalCitations,
+                        ),
                   style: const TextStyle(fontSize: 11.5),
                 ),
               ),
@@ -2209,44 +2259,38 @@ class _OutcomeCard extends StatelessWidget {
     late final Color color;
 
     if (status == AnalysisOutcomeStatusEnum.pending) {
-      label = 'Menunggu hasil';
-      explanation =
-          'Market masih berjalan dan sistem sedang mengevaluasi apakah level TP atau SL tersentuh.';
+      label = context.l10n.outcomePendingLabel;
+      explanation = context.l10n.outcomePendingBody;
       icon = Icons.schedule_rounded;
       color = neutral;
     } else if (status == AnalysisOutcomeStatusEnum.tp1Hit) {
-      label = 'TP1 Tercapai';
-      explanation =
-          'Harga sudah mencapai target profit pertama dari skenario analysis.';
+      label = context.l10n.outcomeTp1Label;
+      explanation = context.l10n.outcomeTp1Body;
       icon = Icons.trending_up_rounded;
       color = bullish;
     } else if (status == AnalysisOutcomeStatusEnum.tp2Hit) {
-      label = 'TP2 Tercapai';
-      explanation =
-          'Harga sudah mencapai target profit kedua dari skenario analysis.';
+      label = context.l10n.outcomeTp2Label;
+      explanation = context.l10n.outcomeTp2Body;
       icon = Icons.rocket_launch_outlined;
       color = bullish;
     } else if (status == AnalysisOutcomeStatusEnum.slHit) {
-      label = 'Stop Loss Tersentuh';
-      explanation =
-          'Harga mencapai batas risiko terlebih dahulu. '
-          'Ini contoh kenapa Stop Loss penting dalam setiap setup.';
+      label = context.l10n.outcomeSlLabel;
+      explanation = context.l10n.outcomeSlBody;
       icon = Icons.trending_down_rounded;
       color = bearish;
     } else if (status == AnalysisOutcomeStatusEnum.expired) {
-      label = 'Kedaluwarsa';
-      explanation =
-          'Masa berlaku analysis selesai tanpa target utama terkonfirmasi.';
+      label = context.l10n.outcomeExpiredLabel;
+      explanation = context.l10n.outcomeExpiredBody;
       icon = Icons.timer_off_outlined;
       color = neutral;
     } else if (status == AnalysisOutcomeStatusEnum.invalidated) {
-      label = 'Analisis Tidak Valid';
-      explanation = 'Setup tidak lagi memenuhi struktur analysis awal.';
+      label = context.l10n.outcomeInvalidatedLabel;
+      explanation = context.l10n.outcomeInvalidatedBody;
       icon = Icons.warning_amber_rounded;
       color = bearish;
     } else {
-      label = 'Status belum tersedia';
-      explanation = 'Outcome belum dapat dievaluasi.';
+      label = context.l10n.outcomeUnknownLabel;
+      explanation = context.l10n.outcomeUnknownBody;
       icon = Icons.info_outline;
       color = muted;
     }
@@ -2354,14 +2398,14 @@ class _ConfidenceReasonCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(
+            Row(
               children: [
-                Icon(Icons.help_outline_rounded, size: 18),
-                SizedBox(width: 7),
+                const Icon(Icons.help_outline_rounded, size: 18),
+                const SizedBox(width: 7),
                 Expanded(
                   child: Text(
-                    'Kenapa keyakinan tidak lebih tinggi?',
-                    style: TextStyle(fontWeight: FontWeight.w900),
+                    context.l10n.whyNotHigherConfidence,
+                    style: const TextStyle(fontWeight: FontWeight.w900),
                   ),
                 ),
               ],
@@ -2372,9 +2416,12 @@ class _ConfidenceReasonCard extends StatelessWidget {
                 (citations.newsTitles.isNotEmpty ||
                     citations.calendarEvents.isNotEmpty)) ...[
               const SizedBox(height: 12),
-              const Text(
-                'Sumber yang dirujuk',
-                style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800),
+              Text(
+                context.l10n.citedSources,
+                style: const TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
               const SizedBox(height: 6),
               Wrap(
@@ -2435,13 +2482,13 @@ class _TechnicalIndicatorsCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Indikator Teknikal Live',
-              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
+            Text(
+              context.l10n.liveTechnicalIndicators,
+              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
             ),
             const SizedBox(height: 3),
             Text(
-              'Data terbaru; dapat berbeda dari snapshot saat analisis dibuat.',
+              context.l10n.liveTechnicalDisclaimer,
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontSize: 11,
@@ -2453,22 +2500,22 @@ class _TechnicalIndicatorsCard extends StatelessWidget {
               runSpacing: 8,
               children: [
                 _MetricChip(
-                  label: 'Harga',
+                  label: context.l10n.currentPrice(''),
                   value: _number(technical.lastClose),
                 ),
                 _MetricChip(
-                  label: 'Bar terakhir',
+                  label: context.l10n.lastBar,
                   value: '${technical.change1dPercent.toStringAsFixed(2)}%',
                 ),
                 _MetricChip(
-                  label: '20 bar',
+                  label: context.l10n.twentyBars,
                   value: '${technical.change20dPercent.toStringAsFixed(2)}%',
                 ),
               ],
             ),
             const SizedBox(height: 14),
             _SignalSummary(
-              title: 'Ringkasan sinyal',
+              title: context.l10n.signalSummary,
               signal: technical.overallSignal,
               buy: technical.buyCount,
               neutral: technical.neutralCount,
@@ -2583,7 +2630,10 @@ class _TechnicalIndicatorsCard extends StatelessWidget {
             if (technical.dataPoints > 0) ...[
               const SizedBox(height: 8),
               Text(
-                'Data $timeframe • ${technical.dataPoints} candle',
+                context.l10n.technicalDataPoints(
+                  timeframe,
+                  technical.dataPoints,
+                ),
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                   fontSize: 10.5,
@@ -2643,10 +2693,10 @@ class _SignalSummary extends StatelessWidget {
     final displaySignal = showRawSignal
         ? signal
         : normalized.contains('buy') || normalized.contains('bull')
-        ? 'Cenderung Naik'
+        ? context.l10n.beginnerBullish
         : normalized.contains('sell') || normalized.contains('bear')
-        ? 'Cenderung Turun'
-        : 'Netral / Tunggu';
+        ? context.l10n.beginnerBearish
+        : context.l10n.beginnerWait;
 
     return Container(
       width: double.infinity,
@@ -2847,14 +2897,14 @@ class _OpportunityRiskCard extends StatelessWidget {
       final cards = <Widget>[
         if (analysis.opportunity?.trim().isNotEmpty == true)
           _InfoPanel(
-            title: 'Peluang',
+            title: context.l10n.opportunity,
             body: analysis.opportunity!,
             color: Theme.of(context).colorScheme.tertiary,
             icon: Icons.adjust_rounded,
           ),
         if (analysis.risk?.trim().isNotEmpty == true)
           _InfoPanel(
-            title: 'Risiko',
+            title: context.l10n.risk,
             body: analysis.risk!,
             color: Theme.of(context).colorScheme.primary,
             icon: Icons.shield_outlined,
@@ -2931,17 +2981,15 @@ class _ExecutionInsightCard extends StatelessWidget {
   Widget build(BuildContext context) => Card(
     child: ExpansionTile(
       leading: const Icon(Icons.lightbulb_outline_rounded),
-      title: const Text(
-        'Lihat Wawasan Eksekusi',
-        style: TextStyle(fontWeight: FontWeight.w800),
+      title: Text(
+        context.l10n.executionInsight,
+        style: const TextStyle(fontWeight: FontWeight.w800),
       ),
-      subtitle: const Text(
-        'Cara menyikapi skenario tanpa menganggapnya sebagai perintah transaksi.',
-      ),
+      subtitle: Text(context.l10n.executionInsightDescription),
       childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       children: [
         Text(
-          'Tunggu konfirmasi price action, tentukan risiko maksimum sebelum entry, dan batalkan rencana ketika kondisi invalidasi terpenuhi. Jangan mengejar harga di luar area rencana.',
+          context.l10n.executionInsightBody,
           style: TextStyle(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
             height: 1.45,
@@ -3046,15 +3094,15 @@ class _TradePlanCard extends StatelessWidget {
                 context,
               ).colorScheme.primary.withValues(alpha: 0.08),
             ),
-            child: const Row(
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.hourglass_top_rounded, size: 18),
-                SizedBox(width: 8),
+                const Icon(Icons.hourglass_top_rounded, size: 18),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Tunggu konfirmasi — AI belum merekomendasikan Buy atau Sell saat ini.',
-                    style: TextStyle(
+                    context.l10n.awaitConfirmationNotice,
+                    style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                       height: 1.4,
@@ -3069,7 +3117,7 @@ class _TradePlanCard extends StatelessWidget {
 
         _SideCard(
           side: plan.buy,
-          label: 'Beli',
+          label: context.l10n.buy,
           color: isDark ? AppColors.bullishDark : AppColors.bullishLight,
           icon: Icons.trending_up_rounded,
           highlighted: preferBuy,
@@ -3079,7 +3127,7 @@ class _TradePlanCard extends StatelessWidget {
 
         _SideCard(
           side: plan.sell,
-          label: 'Jual',
+          label: context.l10n.sell,
           color: isDark ? AppColors.bearishDark : AppColors.bearishLight,
           icon: Icons.trending_down_rounded,
           highlighted: preferSell,
@@ -3148,7 +3196,7 @@ class _SideCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
-                      'Skenario Utama',
+                      context.l10n.primaryScenario,
                       style: TextStyle(
                         color: color,
                         fontSize: 9.5,
@@ -3162,7 +3210,11 @@ class _SideCard extends StatelessWidget {
 
             const SizedBox(height: 12),
 
-            _LevelRow(label: 'Zona Entry', value: side.entryZone, muted: muted),
+            _LevelRow(
+              label: context.l10n.entryZone,
+              value: side.entryZone,
+              muted: muted,
+            ),
 
             _LevelRow(
               label: 'Stop Loss',

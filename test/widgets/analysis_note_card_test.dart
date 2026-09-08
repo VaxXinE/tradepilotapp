@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tradepilotapp/widgets/analysis_note_card.dart';
+import '../helpers/localized_test_app.dart';
 
 void main() {
   testWidgets('adds and clears a private note without duplicate submission', (
@@ -10,7 +11,7 @@ void main() {
     String? note;
 
     Future<void> pump() => tester.pumpWidget(
-      MaterialApp(
+      localizedTestApp(
         home: StatefulBuilder(
           builder: (context, setState) => Scaffold(
             body: AnalysisNoteCard(
@@ -28,24 +29,24 @@ void main() {
     );
 
     await pump();
-    await tester.tap(find.byTooltip('Tambah catatan'));
+    await tester.tap(find.byTooltip('Add note'));
     await tester.pump();
     await tester.enterText(find.byType(TextField), 'refleksi privat');
-    await tester.tap(find.text('Simpan'));
+    await tester.tap(find.text('Save'));
     await tester.pump();
 
     expect(saved, ['refleksi privat']);
     expect(find.text('refleksi privat'), findsOneWidget);
 
-    await tester.tap(find.text('Hapus catatan'));
+    await tester.tap(find.text('Delete note'));
     await tester.pump();
     expect(saved, ['refleksi privat', '']);
-    expect(find.text('Belum ada catatan untuk analisis ini.'), findsOneWidget);
+    expect(find.text('No note for this analysis yet.'), findsOneWidget);
   });
 
   testWidgets('saving state disables controls', (tester) async {
     await tester.pumpWidget(
-      MaterialApp(
+      localizedTestApp(
         home: Scaffold(
           body: AnalysisNoteCard(
             note: 'ada',

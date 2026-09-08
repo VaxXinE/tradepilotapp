@@ -15,6 +15,7 @@ import 'core/theme/theme_controller.dart';
 import 'core/localization/locale_controller.dart';
 import 'core/preferences/mental_checklist_controller.dart';
 import 'firebase_options.dart';
+import 'l10n/app_messages.dart';
 import 'l10n/l10n.dart';
 import 'models/notification_action.dart';
 import 'providers/analysis_provider.dart';
@@ -334,6 +335,13 @@ class _TradePilotMaterialAppState extends State<_TradePilotMaterialApp> {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: AppLocalizations.supportedLocales,
+      // Provider/service/repository tidak punya BuildContext, jadi pesan
+      // mereka diambil dari AppMessages. Sinkronkan di sini supaya bahasanya
+      // selalu mengikuti locale yang sedang aktif.
+      builder: (context, child) {
+        AppMessages.update(AppLocalizations.of(context));
+        return child ?? const SizedBox.shrink();
+      },
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: theme.mode,

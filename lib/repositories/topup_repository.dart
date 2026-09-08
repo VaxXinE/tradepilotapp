@@ -1,5 +1,6 @@
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 import 'package:trade_pilot_api_client/trade_pilot_client.dart';
+import '../l10n/app_messages.dart';
 
 /// Akses tipis ke `TopupsApi` pada generated client.
 ///
@@ -42,7 +43,7 @@ class TopupRepository {
       throw ArgumentError.value(
         amountRupiah,
         'amountRupiah',
-        'Nominal top-up harus lebih besar dari 0.',
+        AppMessages.l10n.errTopupAmountPositive,
       );
     }
 

@@ -10,6 +10,7 @@ import '../models/market_models.dart';
 import '../models/technical_summary.dart';
 import '../repositories/market_repository.dart';
 import 'auth_provider.dart';
+import '../l10n/app_messages.dart';
 
 class MarketProvider extends ChangeNotifier {
   MarketProvider(this._authProvider, this._repository) {
@@ -292,7 +293,10 @@ class MarketProvider extends ChangeNotifier {
       marketError = null;
     } catch (e) {
       if (epoch == _sessionEpoch) {
-        marketError = _friendlyError(e, fallback: 'Gagal memuat harga live.');
+        marketError = _friendlyError(
+          e,
+          fallback: AppMessages.l10n.errLivePricesFailed,
+        );
       }
     } finally {
       _quotesRequestInFlight = false;
@@ -319,7 +323,7 @@ class MarketProvider extends ChangeNotifier {
     final normalized = _normalizeInstrument(instrument);
 
     if (!supportedInstruments.contains(normalized)) {
-      marketError = 'Instrumen tidak didukung.';
+      marketError = AppMessages.l10n.errInstrumentUnsupported;
 
       notifyListeners();
       return;
@@ -328,7 +332,7 @@ class MarketProvider extends ChangeNotifier {
     final nextTimeframe = timeframe ?? selectedTimeframe;
 
     if (!supportedTimeframes.contains(nextTimeframe)) {
-      marketError = 'Timeframe tidak didukung.';
+      marketError = AppMessages.l10n.errTimeframeUnsupported;
 
       notifyListeners();
       return;
@@ -349,7 +353,7 @@ class MarketProvider extends ChangeNotifier {
 
   Future<void> selectTimeframe(String timeframe, {bool force = false}) async {
     if (!supportedTimeframes.contains(timeframe)) {
-      marketError = 'Timeframe tidak didukung.';
+      marketError = AppMessages.l10n.errTimeframeUnsupported;
 
       notifyListeners();
       return;
@@ -447,7 +451,7 @@ class MarketProvider extends ChangeNotifier {
       if (firstError != null) {
         marketError = _friendlyError(
           firstError!,
-          fallback: 'Sebagian data pasar belum tersedia.',
+          fallback: AppMessages.l10n.errMarketDataPartial,
         );
       } else {
         marketError = null;
@@ -493,7 +497,7 @@ class MarketProvider extends ChangeNotifier {
       if (generation == _selectionGeneration) {
         marketError = _friendlyError(
           e,
-          fallback: 'Gagal memuat data teknikal.',
+          fallback: AppMessages.l10n.errTechnicalDataFailed,
         );
       }
     } finally {
@@ -655,7 +659,7 @@ class MarketProvider extends ChangeNotifier {
       throw ArgumentError.value(
         instrument,
         'instrument',
-        'Instrument tidak didukung.',
+        AppMessages.l10n.errInstrumentUnsupported,
       );
     }
   }
@@ -665,7 +669,7 @@ class MarketProvider extends ChangeNotifier {
       throw ArgumentError.value(
         timeframe,
         'timeframe',
-        'Timeframe tidak didukung.',
+        AppMessages.l10n.errTimeframeUnsupported,
       );
     }
   }
@@ -691,12 +695,12 @@ class MarketProvider extends ChangeNotifier {
       }
 
       if (error.response?.statusCode == 401) {
-        return 'Sesi login sudah berakhir.';
+        return AppMessages.l10n.errSessionExpired;
       }
 
       if (error.type == DioExceptionType.connectionError ||
           error.type == DioExceptionType.connectionTimeout) {
-        return 'Tidak dapat terhubung ke server.';
+        return AppMessages.l10n.errServerUnreachable;
       }
     }
 

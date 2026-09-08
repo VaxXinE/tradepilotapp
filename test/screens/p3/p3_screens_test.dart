@@ -13,6 +13,7 @@ import 'package:tradepilotapp/screens/analytics/analytics_screen.dart';
 import 'package:tradepilotapp/screens/daily_summary/daily_summary_screen.dart';
 import 'package:tradepilotapp/screens/journal/trade_journal_screen.dart';
 import 'package:tradepilotapp/screens/trader_mirror/trader_mirror_screen.dart';
+import '../../helpers/localized_test_app.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -43,7 +44,7 @@ void main() {
 
     await _pump(tester, auth, const AnalyticsScreen(), analysis: analysis);
     expect(find.text('12'), findsOneWidget);
-    expect(find.textContaining('Hanya menghitung 1 dari 3'), findsOneWidget);
+    expect(find.textContaining('Counting only 1 of 3'), findsOneWidget);
   });
 
   testWidgets('daily summary and mirror expose safe empty/gated states', (
@@ -55,15 +56,15 @@ void main() {
     addTearDown(analysis.dispose);
 
     await _pump(tester, auth, const DailySummaryScreen());
-    expect(find.text('Belum ada ringkasan untuk hari ini.'), findsOneWidget);
+    expect(find.text('No briefing for today yet.'), findsOneWidget);
     expect(find.textContaining('Asia/Jakarta'), findsOneWidget);
 
     await _pump(tester, auth, const TraderMirrorScreen(), analysis: analysis);
     expect(
-      find.text('Belum cukup data untuk membuat sorotan.'),
+      find.text('Not enough data to build highlights yet.'),
       findsOneWidget,
     );
-    expect(find.textContaining('Perlu 5 data'), findsWidgets);
+    expect(find.textContaining('Needs 5 data points'), findsWidgets);
   });
 
   testWidgets('journal loads empty state and creates a server-backed entry', (
@@ -74,21 +75,21 @@ void main() {
     auth.client.dio.httpClientAdapter = adapter;
 
     await _pump(tester, auth, const TradeJournalScreen());
-    expect(find.text('Belum ada entri jurnal.'), findsOneWidget);
+    expect(find.text('No journal entries yet.'), findsOneWidget);
 
-    await tester.tap(find.text('Tambah'));
+    await tester.tap(find.text('Add'));
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('journal-instrument-field')),
       'XAU/USD',
     );
-    await tester.tap(find.widgetWithText(FilledButton, 'Simpan'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Save'));
     await tester.pump();
     await tester.runAsync(() => Future<void>.delayed(Duration.zero));
     await tester.pumpAndSettle();
 
     expect(adapter.journalCreates, 1);
-    expect(find.text('Entri jurnal gagal disimpan.'), findsNothing);
+    expect(find.text('The journal entry could not be saved.'), findsNothing);
     expect(find.textContaining('XAU/USD · BUY'), findsOneWidget);
   });
 }
@@ -105,7 +106,7 @@ Future<void> _pump(
         ChangeNotifierProvider.value(value: auth),
         if (analysis != null) ChangeNotifierProvider.value(value: analysis),
       ],
-      child: MaterialApp(home: home),
+      child: localizedTestApp(home: home),
     ),
   );
   await tester.pump();

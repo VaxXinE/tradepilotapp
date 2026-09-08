@@ -24,6 +24,266 @@ class AppLocalizationsEn extends AppLocalizations {
   String get analysis => 'Analysis';
 
   @override
+  String get analysisNotFound => 'Analysis not found';
+
+  @override
+  String get analysisCreateFailed => 'A new analysis could not be created.';
+
+  @override
+  String get analysisFeedbackTitle => 'Analysis feedback';
+
+  @override
+  String get analysisFeedbackQuestion => 'How did this analysis turn out?';
+
+  @override
+  String get feedbackCorrect => 'Correct';
+
+  @override
+  String get feedbackWrong => 'Wrong';
+
+  @override
+  String get feedbackUnknown => 'Not sure yet';
+
+  @override
+  String get feedbackNoteOptional => 'Feedback note (optional)';
+
+  @override
+  String get send => 'Send';
+
+  @override
+  String get feedbackThanks => 'Thanks for your feedback!';
+
+  @override
+  String get feedbackSendFailed => 'Feedback could not be sent.';
+
+  @override
+  String get noteSaved => 'Note saved.';
+
+  @override
+  String get noteDeleted => 'Note deleted.';
+
+  @override
+  String get noteSaveFailed => 'Note could not be saved.';
+
+  @override
+  String get tradingPlanTitle => 'Trading Plan';
+
+  @override
+  String get tradingPlanDisclaimer =>
+      'Use these levels as a risk structure, not as a guarantee that price will follow the scenario.';
+
+  @override
+  String get marketEvidence => 'Market evidence';
+
+  @override
+  String get marketEvidenceDescription =>
+      'Market snapshot and fundamental context.';
+
+  @override
+  String get technicalDetails => 'Technical details';
+
+  @override
+  String get technicalDetailsDescription =>
+      'Live signal summaries and raw indicators.';
+
+  @override
+  String get providedContext => 'Context you provided';
+
+  @override
+  String get analysisInvalidationTitle => 'This analysis is cancelled if';
+
+  @override
+  String get mainScenario => 'Scenario A — Main';
+
+  @override
+  String get alternativeScenario => 'Scenario B — Alternative';
+
+  @override
+  String get waitScenario => 'Scenario C — Wait / No Position';
+
+  @override
+  String get waitScenarioBody =>
+      'If confirmation is weak or an invalidation condition is approaching, waiting for a cleaner setup is the most conservative option.';
+
+  @override
+  String get technicalDrivers => 'Technical drivers';
+
+  @override
+  String get fundamentalDrivers => 'Fundamental drivers';
+
+  @override
+  String get analysisHelpfulQuestion => 'Was this analysis helpful?';
+
+  @override
+  String get helpful => 'Helpful';
+
+  @override
+  String get notHelpful => 'Not helpful';
+
+  @override
+  String get analysisSafetyDisclaimer =>
+      'Trade Pilot is an analysis aid. Always limit risk and avoid opening a position based on a single indicator.';
+
+  @override
+  String get journalCreateForTrade => 'Journal this trade';
+
+  @override
+  String get journalEntryForTrade => 'My trade journal';
+
+  @override
+  String get journalReflectionHint =>
+      'Save your decision and trade result for reflection.';
+
+  @override
+  String get priceLevelAlerts => 'Price alerts';
+
+  @override
+  String get priceLevelAlertsDescription =>
+      'Get notified when price reaches an AI Entry, Stop Loss, or Take Profit level.';
+
+  @override
+  String priceLevelAlertsOn(int count) {
+    return 'Alerts: ON · $count levels monitored';
+  }
+
+  @override
+  String get priceLevelAlertsOff => 'Alerts: OFF';
+
+  @override
+  String get changeTimeframe => 'Change timeframe';
+
+  @override
+  String get changeTimeframeDescription =>
+      'Same instrument, different timeframe — create a new analysis without leaving this page.';
+
+  @override
+  String get analyzeThisTimeframe => 'Analyze this timeframe';
+
+  @override
+  String get priceChart => 'Price Chart';
+
+  @override
+  String get openFullChart => 'Open full chart in TradingView';
+
+  @override
+  String get fundamentalContext => 'Fundamental Context';
+
+  @override
+  String get refreshFundamentals => 'Refresh fundamentals';
+
+  @override
+  String get fundamentalContextDescription =>
+      'News and economic events used by the AI when creating this analysis.';
+
+  @override
+  String get liveTechnicalIndicators => 'Live Technical Indicators';
+
+  @override
+  String get liveTechnicalDisclaimer =>
+      'Latest data; it may differ from the snapshot used for this analysis.';
+
+  @override
+  String get lastBar => 'Last bar';
+
+  @override
+  String get twentyBars => '20 bars';
+
+  @override
+  String get signalSummary => 'Signal summary';
+
+  @override
+  String technicalDataPoints(String timeframe, int count) {
+    return '$timeframe data · $count candles';
+  }
+
+  @override
+  String get beginnerBullish => 'Leaning Bullish';
+
+  @override
+  String get beginnerBearish => 'Leaning Bearish';
+
+  @override
+  String get beginnerWait => 'Wait for confirmation';
+
+  @override
+  String biasMeaning(String bias, String direction) {
+    return 'A $bias bias means the AI sees a market that is $direction.';
+  }
+
+  @override
+  String get directionUp => 'leaning upward';
+
+  @override
+  String get directionDown => 'leaning downward';
+
+  @override
+  String get directionNeutral => 'without a dominant direction';
+
+  @override
+  String get beginnerBuyAction =>
+      'The analysis structure favors a Buy scenario, but entry should still wait for the area and conditions in the trading plan.';
+
+  @override
+  String get beginnerSellAction =>
+      'The analysis structure favors a Sell scenario, but entry should still follow the defined area and risk limits.';
+
+  @override
+  String get beginnerWaitAction =>
+      'The AI does not see a strong enough entry yet. Waiting for confirmation is a valid decision for beginners.';
+
+  @override
+  String get analysisSnapshotTitle => 'Context When Analysis Was Created';
+
+  @override
+  String get analysisSnapshotDescription =>
+      'This is a snapshot of the data used by the AI when creating the analysis.';
+
+  @override
+  String get buy => 'Buy';
+
+  @override
+  String get sell => 'Sell';
+
+  @override
+  String get opportunity => 'Opportunity';
+
+  @override
+  String get executionInsight => 'View Execution Insight';
+
+  @override
+  String get executionInsightDescription =>
+      'How to approach the scenario without treating it as a trade instruction.';
+
+  @override
+  String get executionInsightBody =>
+      'Wait for price-action confirmation, define maximum risk before entry, and cancel the plan when an invalidation condition occurs. Do not chase price outside the planned area.';
+
+  @override
+  String get riskHighLabel => 'High Risk';
+
+  @override
+  String get riskLowLabel => 'Relatively Low Risk';
+
+  @override
+  String get riskModerateLabel => 'Moderate Risk';
+
+  @override
+  String get riskHighProGuidance =>
+      'High volatility. Limit exposure and use the invalidation level as the risk boundary.';
+
+  @override
+  String get riskHighBeginnerGuidance =>
+      'Movement may be aggressive. Avoid large position sizes and do not ignore the Stop Loss.';
+
+  @override
+  String get riskLowGuidance =>
+      'Conditions appear more stable, but risk remains. Keep a loss limit.';
+
+  @override
+  String get riskModerateGuidance =>
+      'Opportunity and uncertainty are both present. Wait for a clear setup and use a measured position size.';
+
+  @override
   String get reanalyze => 'Analyze again';
 
   @override
@@ -118,10 +378,243 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tradeJournal => 'Trade Journal';
 
   @override
+  String get journalLoadFailed => 'The journal could not be loaded. Try again.';
+
+  @override
+  String get journalSaveFailed => 'The journal entry could not be saved.';
+
+  @override
+  String get journalDeleteTitle => 'Delete journal entry?';
+
+  @override
+  String get journalDeleteWarning => 'This action cannot be undone.';
+
+  @override
+  String get journalDeleteFailed => 'The journal entry could not be deleted.';
+
+  @override
+  String get journalSessionChanged => 'The session changed. Reopen this page.';
+
+  @override
+  String get add => 'Add';
+
+  @override
+  String get noJournalEntries => 'No journal entries yet.';
+
+  @override
+  String get journalOutcomeFilter => 'Outcome filter';
+
+  @override
+  String get open => 'Open';
+
+  @override
+  String get breakeven => 'Breakeven';
+
+  @override
+  String get skippedTrade => 'Not taken';
+
+  @override
+  String get journalPrivateLimit =>
+      'Up to 100 latest entries from the server. This data is private.';
+
+  @override
+  String get edit => 'Edit';
+
+  @override
+  String get addJournal => 'Add journal entry';
+
+  @override
+  String get editJournal => 'Edit journal entry';
+
+  @override
+  String get instrumentRequired => 'Instrument is required.';
+
+  @override
+  String get side => 'Side';
+
+  @override
+  String get buyJournalSide => 'Buy (trade record)';
+
+  @override
+  String get sellJournalSide => 'Sell (trade record)';
+
+  @override
+  String get retrospectiveStatus => 'Retrospective status';
+
+  @override
+  String get tradeTime => 'Trade time';
+
+  @override
+  String get moodOptional => 'State of mind (optional)';
+
+  @override
+  String get reflectionOptional => 'Reflection (optional)';
+
+  @override
+  String get enterValidNumber => 'Enter a valid number.';
+
+  @override
+  String get entries => 'Entries';
+
+  @override
+  String get wins => 'Wins';
+
+  @override
+  String get losses => 'Losses';
+
+  @override
+  String get averageProfitLoss => 'Avg P/L';
+
+  @override
+  String get quantity => 'Quantity';
+
+  @override
   String get tradeJournalDescription => 'Personal trade notes and reflections';
 
   @override
   String get analytics => 'Analytics';
+
+  @override
+  String get publicAiPerformance => 'Public AI Performance';
+
+  @override
+  String get performanceMethodology => 'Methodology';
+
+  @override
+  String get performanceDescription =>
+      'An anonymized track record of all Trade Pilot AI analyses. These are not personal account statistics.';
+
+  @override
+  String performanceDays(int count) {
+    return '$count days';
+  }
+
+  @override
+  String performanceInsufficient(int need, int have) {
+    return 'Not enough data for a responsible display. $need results required; currently $have.';
+  }
+
+  @override
+  String get performanceByInstrument => 'By instrument';
+
+  @override
+  String get performanceBySession => 'By market session';
+
+  @override
+  String get performanceByCondition => 'By market condition';
+
+  @override
+  String get performanceByVolatility => 'By volatility';
+
+  @override
+  String get performanceNewsActivity => 'News activity';
+
+  @override
+  String get performanceMethodologyTitle => 'Performance methodology';
+
+  @override
+  String get performanceMethodWhatTitle => 'What is measured';
+
+  @override
+  String get performanceMethodWhatBody =>
+      'Only analyses with finalized outcomes. User data is anonymized and aggregated.';
+
+  @override
+  String get performanceMethodRatesTitle => 'Win rate and hit rate';
+
+  @override
+  String get performanceMethodRatesBody =>
+      'Win rate compares wins with losses for triggered trades. Hit rate also includes expired analyses.';
+
+  @override
+  String get performanceMethodSampleTitle => 'Sample threshold';
+
+  @override
+  String get performanceMethodSampleBody =>
+      'Small sample segments are hidden to avoid misleading results or exposing small-group activity.';
+
+  @override
+  String get performanceMethodExcludedTitle => 'What is excluded';
+
+  @override
+  String get performanceMethodExcludedBody =>
+      'Figures exclude position size, spread, slippage, fees, taxes, and user execution decisions.';
+
+  @override
+  String get performancePastDisclaimer =>
+      'Past performance does not guarantee future results.';
+
+  @override
+  String get performanceDeclining => 'Recent performance is declining';
+
+  @override
+  String get performanceWatch => 'Recent performance needs attention';
+
+  @override
+  String get performanceStable => 'Recent performance is stable';
+
+  @override
+  String performanceRecentBaseline(int days, String recent, String baseline) {
+    return 'Latest $days days: $recent · baseline: $baseline.';
+  }
+
+  @override
+  String performanceSummary(int days) {
+    return '$days-day summary';
+  }
+
+  @override
+  String get winRate => 'Win rate';
+
+  @override
+  String get hitRate => 'Hit rate';
+
+  @override
+  String performanceTotals(int wins, int losses, int expired, int total) {
+    return '$wins wins · $losses losses · $expired expired · $total samples';
+  }
+
+  @override
+  String sinceDate(String date) {
+    return 'Since $date';
+  }
+
+  @override
+  String performanceSegmentInsufficient(int have, int need) {
+    return 'Not enough data: $have/$need samples.';
+  }
+
+  @override
+  String performanceBucketTotals(int wins, int losses, int expired) {
+    return '$wins wins · $losses losses · $expired expired';
+  }
+
+  @override
+  String get performanceLoadFailed => 'Performance data could not be loaded.';
+
+  @override
+  String get offMainSession => 'Outside main sessions';
+
+  @override
+  String get uptrend => 'Uptrend';
+
+  @override
+  String get downtrend => 'Downtrend';
+
+  @override
+  String get activeNewsWeek => 'Active news week';
+
+  @override
+  String get quietWeek => 'Quiet week';
+
+  @override
+  String get rangingMarket => 'Ranging';
+
+  @override
+  String get volatileMarket => 'Volatile';
+
+  @override
+  String get choppyMarket => 'Choppy';
 
   @override
   String get analyticsDescription => 'Activity patterns and evaluation results';
@@ -576,6 +1069,178 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notifications => 'Notifications';
 
   @override
+  String get markAllRead => 'Mark all as read';
+
+  @override
+  String get realtimeActive => 'Realtime connected';
+
+  @override
+  String get realtimeConnecting => 'Connecting realtime…';
+
+  @override
+  String get notificationInbox => 'Inbox';
+
+  @override
+  String notificationUnreadCount(int count) {
+    return '$count unread';
+  }
+
+  @override
+  String get notificationAnalysisUnavailable =>
+      'This analysis is unavailable or you do not have access.';
+
+  @override
+  String get mobilePush => 'Mobile Push';
+
+  @override
+  String get pushUpdatingDevice => 'Updating device settings…';
+
+  @override
+  String get pushDeviceRegistered => 'Device registered for push.';
+
+  @override
+  String pushDeviceRegisteredLastReceived(String date) {
+    return 'Device registered for push. Last received $date.';
+  }
+
+  @override
+  String get pushPermissionDenied =>
+      'Permission denied. Enable it again in device settings.';
+
+  @override
+  String get pushReceiveWhenInactive =>
+      'Receive push notifications while the app is inactive.';
+
+  @override
+  String get notificationPreferences => 'Notification preferences';
+
+  @override
+  String get notificationPreferencesDescription =>
+      'Choose which notifications you want to receive.';
+
+  @override
+  String get notificationPreferencesLoadFailed =>
+      'Notification preferences could not be loaded.';
+
+  @override
+  String get notificationExpiryTitle => 'Analysis expiry';
+
+  @override
+  String get notificationExpiryDescription =>
+      'Reminder when an analysis window is about to end.';
+
+  @override
+  String get notificationBroadcastTitle => 'Announcements';
+
+  @override
+  String get notificationBroadcastDescription =>
+      'Important information and broadcasts from Trade Pilot.';
+
+  @override
+  String get notificationDailyTitle => 'Daily summary';
+
+  @override
+  String get notificationDailyDescription =>
+      'Daily activity and market summary.';
+
+  @override
+  String get notificationNewsTitle => 'Market news';
+
+  @override
+  String get notificationNewsDescription =>
+      'Important news relevant to the market.';
+
+  @override
+  String get notificationCalendarTitle => 'Economic calendar';
+
+  @override
+  String get notificationCalendarDescription =>
+      'Reminders for high-impact economic events.';
+
+  @override
+  String get notificationPriceTitle => 'Price movement';
+
+  @override
+  String get notificationPriceDescription =>
+      'Significant price changes and anomalies.';
+
+  @override
+  String get notificationSignalTitle => 'Signal changes';
+
+  @override
+  String get notificationSignalDescription =>
+      'When the AI bias changes meaningfully.';
+
+  @override
+  String get notificationWeeklyTitle => 'Weekly recap';
+
+  @override
+  String get notificationWeeklyDescription =>
+      'Weekly trading activity summary.';
+
+  @override
+  String get notificationGuardrails => 'Decision guardrails';
+
+  @override
+  String get notificationRevengeTitle => 'Revenge trading warning';
+
+  @override
+  String get notificationRevengeDescription =>
+      'A gentle warning after a recent loss.';
+
+  @override
+  String get notificationOvertradingTitle => 'Overtrading warning';
+
+  @override
+  String get notificationOvertradingDescription =>
+      'A warning when analyses are created too close together.';
+
+  @override
+  String get notificationHighRiskTitle => 'High-risk warning';
+
+  @override
+  String get notificationHighRiskDescription =>
+      'A warning for high-impact events within 30 minutes.';
+
+  @override
+  String get notificationCoolingOffTitle => '30-minute cooling-off';
+
+  @override
+  String get notificationCoolingOffDescription =>
+      'An optional pause after a significant loss.';
+
+  @override
+  String get notificationSessionReminders => 'Market session reminders';
+
+  @override
+  String get quietHours => 'Quiet hours';
+
+  @override
+  String get quietHoursDescription =>
+      'Hold non-urgent notifications during rest hours.';
+
+  @override
+  String get quietHoursStart => 'Start';
+
+  @override
+  String get quietHoursEnd => 'End';
+
+  @override
+  String get notificationTimezone => 'Time zone';
+
+  @override
+  String get quietHoursSecurityNotice =>
+      'Security notifications may still be delivered during quiet hours.';
+
+  @override
+  String notificationAutoPaused(String category) {
+    return 'Some ‘$category’ notifications were paused because they have not been opened recently.';
+  }
+
+  @override
+  String get noNotifications => 'No notifications yet';
+
+  @override
   String get trader => 'Trader';
 
   @override
@@ -935,6 +1600,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get expired => 'Expired';
+
+  @override
+  String analysisWindowActiveUntil(String date) {
+    return 'Analysis window active until $date';
+  }
+
+  @override
+  String analysisWindowExpiredAt(String date) {
+    return 'Analysis window expired at $date';
+  }
+
+  @override
+  String analysisCreatedAt(String date) {
+    return 'Created $date';
+  }
 
   @override
   String get historySummary => 'History summary';
@@ -1698,4 +2378,602 @@ class AppLocalizationsEn extends AppLocalizations {
   String topUpRequestedCredits(int credits) {
     return '$credits credit';
   }
+
+  @override
+  String get errSessionExpiredRelogin =>
+      'Your session has ended. Please sign in again.';
+
+  @override
+  String get errSessionExpired => 'Your session has ended.';
+
+  @override
+  String get errSignInAgain => 'Please sign in again.';
+
+  @override
+  String get errNoConnection =>
+      'Could not reach the server. Check your internet connection.';
+
+  @override
+  String get errServerUnreachable => 'Could not reach the server.';
+
+  @override
+  String get errGeneric => 'Something went wrong. Please try again.';
+
+  @override
+  String get errServerProblem =>
+      'The server is having trouble. Try again shortly.';
+
+  @override
+  String get errConnectionTimeout =>
+      'The connection timed out. Please try again.';
+
+  @override
+  String get errRequestCancelled => 'The request was cancelled.';
+
+  @override
+  String get errInstrumentRequired => 'Instrument cannot be empty.';
+
+  @override
+  String get errInstrumentUnsupported => 'Instrument is not supported.';
+
+  @override
+  String get errTimeframeUnsupported => 'Timeframe is not supported.';
+
+  @override
+  String get errInvalidServerResponse => 'The server response was not valid.';
+
+  @override
+  String get errInvalidProfileResponse =>
+      'The profile response from the server was not valid.';
+
+  @override
+  String errDisplayNameLength(int max) {
+    return 'Name must be 2 to $max characters.';
+  }
+
+  @override
+  String get errCurrentPasswordWrong => 'Your current password is incorrect.';
+
+  @override
+  String get errPasswordTooWeak =>
+      'Password does not meet the security requirements.';
+
+  @override
+  String get errProfileInvalid =>
+      'Profile data is not valid. Check your entries.';
+
+  @override
+  String get errChangePasswordFailed =>
+      'Could not change your password. Please try again.';
+
+  @override
+  String get errUpdateProfileFailed =>
+      'Could not update your profile. Please try again.';
+
+  @override
+  String get errTooManyAttempts =>
+      'Too many attempts. Wait a moment and try again.';
+
+  @override
+  String get errDeleteAccountFailed =>
+      'Could not delete your account. Please try again.';
+
+  @override
+  String get errSecurityAnswerWrong => 'That security answer is incorrect.';
+
+  @override
+  String get errCredentialsWrong => 'That email or password is incorrect.';
+
+  @override
+  String get errQuotaReached => 'Analysis quota reached. Try again later.';
+
+  @override
+  String get errAiTimeout =>
+      'The AI is taking longer than usual to analyze. Please try again.';
+
+  @override
+  String get errAnalysisFailed => 'Analysis failed. Please try again.';
+
+  @override
+  String get errAnalysisSlowSync =>
+      'The AI took a long time to respond. The analysis may still have been created — data will sync automatically.';
+
+  @override
+  String get errDateRangeInvalid =>
+      'The start date cannot be later than the end date.';
+
+  @override
+  String get errNoteTooLong5000 => 'Notes are limited to 5,000 characters.';
+
+  @override
+  String get errNoteNotSaved =>
+      'The note was not saved. Check your connection and try again.';
+
+  @override
+  String get errNoteSaveFailed =>
+      'The note could not be saved. Please try again.';
+
+  @override
+  String get errBalanceLoadFailed => 'Credit balance could not be loaded.';
+
+  @override
+  String get errTopupConfigLoadFailed =>
+      'Top-up configuration could not be loaded.';
+
+  @override
+  String get errTopupHistoryLoadFailed =>
+      'Top-up history could not be loaded. Pull to try again.';
+
+  @override
+  String get errTopupSubmitFailed => 'The top-up request could not be sent.';
+
+  @override
+  String get errTopupAmountPositive =>
+      'The top-up amount must be greater than 0.';
+
+  @override
+  String get errLivePricesFailed => 'Could not load live prices.';
+
+  @override
+  String get errMarketDataPartial => 'Some market data is not available yet.';
+
+  @override
+  String get errTechnicalDataFailed => 'Could not load technical data.';
+
+  @override
+  String get errPriceAlertsLoadFailed => 'Could not load price alerts.';
+
+  @override
+  String get errPriceAlertCreateFailed => 'Could not create the price alert.';
+
+  @override
+  String get errPriceAlertDeleteFailed => 'Could not delete the price alert.';
+
+  @override
+  String get errTargetPricePositive => 'Target price must be greater than 0.';
+
+  @override
+  String get errNoteTooLong200 => 'Notes are limited to 200 characters.';
+
+  @override
+  String get errWatchlistLoadFailed => 'Could not load your watchlist.';
+
+  @override
+  String get errWatchlistUpdateFailed => 'Could not update your watchlist.';
+
+  @override
+  String get errNotificationsLoadFailed =>
+      'Notifications could not be loaded. Pull to try again.';
+
+  @override
+  String get errNotificationPrefsLoadFailed =>
+      'Could not load notification preferences.';
+
+  @override
+  String get errNotificationPrefsSaveFailed =>
+      'Could not save notification preferences.';
+
+  @override
+  String get errMarketSessionReminderSaveFailed =>
+      'Could not save the market session reminder.';
+
+  @override
+  String get errQuietHoursSaveFailed =>
+      'Could not save notification quiet hours.';
+
+  @override
+  String get errPushPermissionSystem =>
+      'Notification permission has not been granted in system settings.';
+
+  @override
+  String get errPushEnableFailed => 'Push notifications could not be enabled.';
+
+  @override
+  String get errPushPrefsSaveFailed =>
+      'Mobile push preferences could not be saved.';
+
+  @override
+  String get errPushTokenUnavailable =>
+      'A push token is not available on this device.';
+
+  @override
+  String get errPushRegisterFailed =>
+      'The server could not register this device for push.';
+
+  @override
+  String get errPushTokenSyncFailed => 'The push token could not be synced.';
+
+  @override
+  String get appErrInstrumentUnsupported =>
+      'This instrument does not support the Adaptive Position Plan.';
+
+  @override
+  String get appErrNoStandardPlan =>
+      'The Standard Plan or Standard Trading Rules TP is not available.';
+
+  @override
+  String get appErrFundsPositive =>
+      'Available trading funds must be greater than 0.';
+
+  @override
+  String get appErrMaxLossPositive =>
+      'The maximum loss limit must be greater than 0.';
+
+  @override
+  String get appErrMaxLossExceedsFunds =>
+      'The maximum loss limit cannot exceed available funds.';
+
+  @override
+  String get appErrExposureNegative => 'Running exposure cannot be negative.';
+
+  @override
+  String get appErrTpRulesInvalid =>
+      'The Standard Trading Rules TP does not match or is not valid.';
+
+  @override
+  String get appErrLevelsInvalid =>
+      'The Standard Plan Entry and Stop Loss levels are not valid.';
+
+  @override
+  String get appErrSnapshotConflict =>
+      'The technical snapshot conflicts with the market direction.';
+
+  @override
+  String get appErrBelowMinimumLot =>
+      'Funds or loss limit are not enough for this tier\'s minimum lot.';
+
+  @override
+  String get mindsetPacingTitle => 'Evaluation pause';
+
+  @override
+  String get mindsetPacingBody =>
+      'Several analyses were created close together. Consider leaving time to evaluate the previous one.';
+
+  @override
+  String get mindsetConcentrationTitle => 'Instrument focus';
+
+  @override
+  String mindsetConcentrationBody(int count, int total, String instrument) {
+    return '$count of $total analyses currently loaded focus on $instrument.';
+  }
+
+  @override
+  String get mindsetPendingTitle => 'Analyses still pending';
+
+  @override
+  String mindsetPendingBody(int count) {
+    return '$count analyses currently loaded have not finished evaluating. Use the next result as reflection, not certainty.';
+  }
+
+  @override
+  String get mindsetJournalTitle => 'Note consistency';
+
+  @override
+  String get mindsetJournalBody =>
+      'Personal notes are still rare. Writing your initial reasoning helps reflection once an evaluation arrives.';
+
+  @override
+  String get localTraderSentiment => 'Local trader sentiment';
+
+  @override
+  String journalSentimentGated(int entries, int traders) {
+    return 'Hidden until at least $entries entries from $traders traders are available.';
+  }
+
+  @override
+  String journalSentimentSample(int entries, int days) {
+    return '$entries entries · $days days';
+  }
+
+  @override
+  String get journalSentimentDisclaimer =>
+      'An anonymous aggregate of community journals, not a trading signal.';
+
+  @override
+  String get personalNote => 'Personal note';
+
+  @override
+  String get addNote => 'Add note';
+
+  @override
+  String get notePrivateHint =>
+      'Stored privately in your account and never sent to the AI.';
+
+  @override
+  String get noteHint => 'Write your reasoning, observations, or lessons…';
+
+  @override
+  String get deleteNote => 'Delete note';
+
+  @override
+  String get noNoteYet => 'No note for this analysis yet.';
+
+  @override
+  String get newsLinkFailed => 'That news link could not be opened.';
+
+  @override
+  String get newsLoadFailed => 'News could not be loaded.';
+
+  @override
+  String get newsEmpty => 'No recent news yet.';
+
+  @override
+  String get newsDisclaimer =>
+      'News is informational and not an investment recommendation.';
+
+  @override
+  String get newsSourceFallback => 'News source';
+
+  @override
+  String get publicAiPerformanceSubtitle =>
+      'An anonymous track record of every Trade Pilot analysis';
+
+  @override
+  String get analyticsLoadFailed =>
+      'Analytics could not be loaded. Please try again.';
+
+  @override
+  String get sessionChangedReopen =>
+      'Your session changed. Please reopen this page.';
+
+  @override
+  String get analyticsDisclaimer =>
+      'These statistics describe analysis habits, not trading profit.';
+
+  @override
+  String get metricAllAnalyses => 'All analyses';
+
+  @override
+  String get metricThisMonth => 'This month';
+
+  @override
+  String get metricThisWeek => 'This week';
+
+  @override
+  String get metricFeedbackGiven => 'Feedback given';
+
+  @override
+  String get metricDominantMode => 'Dominant mode';
+
+  @override
+  String get metricOutcomeAccuracy => 'Outcome accuracy';
+
+  @override
+  String get instrumentRanking => 'Instrument ranking';
+
+  @override
+  String countAnalyses(int count) {
+    return '$count analyses';
+  }
+
+  @override
+  String get loadedResults => 'Results currently loaded';
+
+  @override
+  String analyticsPartialScope(int loaded, int total) {
+    return 'Counting only $loaded of $total analyses. Load more in History to widen this summary.';
+  }
+
+  @override
+  String analyticsFullScope(int loaded) {
+    return 'Counting all $loaded analyses currently available on this device.';
+  }
+
+  @override
+  String get metricEvaluated => 'Evaluated';
+
+  @override
+  String get metricPending => 'Pending';
+
+  @override
+  String get metricPositiveOutcomes => 'Positive outcomes';
+
+  @override
+  String get metricNegativeOutcomes => 'Negative outcomes';
+
+  @override
+  String get metricHasNote => 'Has a note';
+
+  @override
+  String get metricAverageConfidence => 'Average confidence';
+
+  @override
+  String get metricTopTimeframe => 'Top timeframe';
+
+  @override
+  String get metricTopInstrument => 'Top instrument';
+
+  @override
+  String get traderMirrorLoadFailed => 'Trader Mirror could not be loaded.';
+
+  @override
+  String get traderMirrorDisclaimer =>
+      'This habit mirror is retrospective and gives no trading instructions.';
+
+  @override
+  String get traderMirrorNoHighlights =>
+      'Not enough data to build highlights yet.';
+
+  @override
+  String traderMirrorCoverage(int days, int resolved) {
+    return 'Covering $days days · $resolved completed evaluations';
+  }
+
+  @override
+  String get traderMirrorSessions => 'Market sessions';
+
+  @override
+  String get traderMirrorInstruments => 'Instrument concentration';
+
+  @override
+  String get traderMirrorTiming => 'Analysis timing';
+
+  @override
+  String traderMirrorBasedOn(int count) {
+    return 'Based on $count analyses currently loaded on this device.';
+  }
+
+  @override
+  String get traderMirrorNeedMore =>
+      'At least 3 analyses are needed for a careful reflection.';
+
+  @override
+  String traderMirrorGated(String need, int have) {
+    return 'Needs $need data points; $have available.';
+  }
+
+  @override
+  String get traderMirrorUngated => 'Enough data to show the details.';
+
+  @override
+  String get traderMirrorNeedMoreGeneric => 'more';
+
+  @override
+  String get dailySummaryLoadFailed =>
+      'The daily briefing could not be loaded.';
+
+  @override
+  String get dailySummarySaveFailed => 'Briefing settings could not be saved.';
+
+  @override
+  String get dailySummaryEmpty => 'No briefing for today yet.';
+
+  @override
+  String dailySummaryTimezone(String timezone) {
+    return 'Time zone: $timezone';
+  }
+
+  @override
+  String get dailySummaryDeliveryTime => 'Delivery time';
+
+  @override
+  String get marketChartUnavailable => 'The market chart is not available yet.';
+
+  @override
+  String get journalCheckFailed => 'The journal could not be checked.';
+
+  @override
+  String get alertStatusLoadFailed => 'Alert status could not be loaded.';
+
+  @override
+  String get alertNeedsNotificationPermission =>
+      'Enable notification permission so price alerts can work.';
+
+  @override
+  String get alertEnableFailed =>
+      'The alert could not be enabled. Make sure notifications are on and the instrument has a live price feed.';
+
+  @override
+  String get alertDisableFailed =>
+      'The alert could not be disabled. Try again shortly.';
+
+  @override
+  String get fundamentalDriftNone =>
+      'The latest fundamentals still support every original source.';
+
+  @override
+  String fundamentalDriftSome(int missing, int total) {
+    return '$missing of $total original sources are no longer in the latest window.';
+  }
+
+  @override
+  String get outcomePendingLabel => 'Awaiting result';
+
+  @override
+  String get outcomePendingBody =>
+      'The market is still running and the system is evaluating whether the TP or SL level was touched.';
+
+  @override
+  String get outcomeTp1Label => 'TP1 Reached';
+
+  @override
+  String get outcomeTp1Body =>
+      'Price reached the first profit target from the analysis scenario.';
+
+  @override
+  String get outcomeTp2Label => 'TP2 Reached';
+
+  @override
+  String get outcomeTp2Body =>
+      'Price reached the second profit target from the analysis scenario.';
+
+  @override
+  String get outcomeSlLabel => 'Stop Loss Hit';
+
+  @override
+  String get outcomeSlBody =>
+      'Price reached the risk limit first. This is why a Stop Loss matters in every setup.';
+
+  @override
+  String get outcomeExpiredLabel => 'Expired';
+
+  @override
+  String get outcomeExpiredBody =>
+      'The analysis window ended without a main target confirmed.';
+
+  @override
+  String get outcomeInvalidatedLabel => 'Analysis Invalidated';
+
+  @override
+  String get outcomeInvalidatedBody =>
+      'The setup no longer matches the original analysis structure.';
+
+  @override
+  String get outcomeUnknownLabel => 'Status not available';
+
+  @override
+  String get outcomeUnknownBody => 'The outcome cannot be evaluated yet.';
+
+  @override
+  String get whyNotHigherConfidence => 'Why isn\'t confidence higher?';
+
+  @override
+  String get citedSources => 'Cited sources';
+
+  @override
+  String get awaitConfirmationNotice =>
+      'Wait for confirmation — the AI does not recommend Buy or Sell right now.';
+
+  @override
+  String get instrumentRulesUnavailable =>
+      'Instrument rules are not available.';
+
+  @override
+  String get tradingRulesLoadFailed => 'Trading rules could not be loaded.';
+
+  @override
+  String get tradingRulesUnavailable => 'Trading rules are not available.';
+
+  @override
+  String get adaptivePlanIntro =>
+      'Turn the Standard Plan into a position size that fits your funds and loss limit.';
+
+  @override
+  String get adaptivePlanDisclaimer =>
+      'This calculator does not change AI levels and does not send orders. Enter free funds after deducting margin used by other positions.';
+
+  @override
+  String get availableTradingFunds => 'Available trading funds';
+
+  @override
+  String get maxLossLimit => 'Maximum loss limit';
+
+  @override
+  String get buildPositionPlan => 'Build position plan';
+
+  @override
+  String get notRecommended => 'Not recommended';
+
+  @override
+  String get adaptivePlanFootnote =>
+      'Day trading only. Estimates exclude spread, slippage, fees, VAT, rollover, and broker auto-liquidation.';
+
+  @override
+  String get lossToSl => 'Loss to SL';
+
+  @override
+  String get entryZone => 'Entry zone';
+
+  @override
+  String get primaryScenario => 'Primary scenario';
 }

@@ -34,7 +34,7 @@ void main() {
       riskStyle: AdaptiveRiskStyle.conservative,
     );
     expect(invalid.valid, isFalse);
-    expect(invalid.errors.single, contains('tidak boleh melebihi'));
+    expect(invalid.errors.single, contains('cannot exceed'));
   });
 }
 

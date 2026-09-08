@@ -5,6 +5,111 @@
   "aiTradingAssistant": "AI-powered trading analysis",
   "dashboard": "Dashboard",
   "analysis": "Analysis",
+  "analysisNotFound": "Analysis not found",
+  "analysisCreateFailed": "A new analysis could not be created.",
+  "analysisFeedbackTitle": "Analysis feedback",
+  "analysisFeedbackQuestion": "How did this analysis turn out?",
+  "feedbackCorrect": "Correct",
+  "feedbackWrong": "Wrong",
+  "feedbackUnknown": "Not sure yet",
+  "feedbackNoteOptional": "Feedback note (optional)",
+  "send": "Send",
+  "feedbackThanks": "Thanks for your feedback!",
+  "feedbackSendFailed": "Feedback could not be sent.",
+  "noteSaved": "Note saved.",
+  "noteDeleted": "Note deleted.",
+  "noteSaveFailed": "Note could not be saved.",
+  "tradingPlanTitle": "Trading Plan",
+  "tradingPlanDisclaimer": "Use these levels as a risk structure, not as a guarantee that price will follow the scenario.",
+  "marketEvidence": "Market evidence",
+  "marketEvidenceDescription": "Market snapshot and fundamental context.",
+  "technicalDetails": "Technical details",
+  "technicalDetailsDescription": "Live signal summaries and raw indicators.",
+  "providedContext": "Context you provided",
+  "analysisInvalidationTitle": "This analysis is cancelled if",
+  "mainScenario": "Scenario A — Main",
+  "alternativeScenario": "Scenario B — Alternative",
+  "waitScenario": "Scenario C — Wait / No Position",
+  "waitScenarioBody": "If confirmation is weak or an invalidation condition is approaching, waiting for a cleaner setup is the most conservative option.",
+  "technicalDrivers": "Technical drivers",
+  "fundamentalDrivers": "Fundamental drivers",
+  "analysisHelpfulQuestion": "Was this analysis helpful?",
+  "helpful": "Helpful",
+  "notHelpful": "Not helpful",
+  "analysisSafetyDisclaimer": "Trade Pilot is an analysis aid. Always limit risk and avoid opening a position based on a single indicator.",
+  "journalCreateForTrade": "Journal this trade",
+  "journalEntryForTrade": "My trade journal",
+  "journalReflectionHint": "Save your decision and trade result for reflection.",
+  "priceLevelAlerts": "Price alerts",
+  "priceLevelAlertsDescription": "Get notified when price reaches an AI Entry, Stop Loss, or Take Profit level.",
+  "priceLevelAlertsOn": "Alerts: ON · {count} levels monitored",
+  "@priceLevelAlertsOn": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "priceLevelAlertsOff": "Alerts: OFF",
+  "changeTimeframe": "Change timeframe",
+  "changeTimeframeDescription": "Same instrument, different timeframe — create a new analysis without leaving this page.",
+  "analyzeThisTimeframe": "Analyze this timeframe",
+  "priceChart": "Price Chart",
+  "openFullChart": "Open full chart in TradingView",
+  "fundamentalContext": "Fundamental Context",
+  "refreshFundamentals": "Refresh fundamentals",
+  "fundamentalContextDescription": "News and economic events used by the AI when creating this analysis.",
+  "liveTechnicalIndicators": "Live Technical Indicators",
+  "liveTechnicalDisclaimer": "Latest data; it may differ from the snapshot used for this analysis.",
+  "lastBar": "Last bar",
+  "twentyBars": "20 bars",
+  "signalSummary": "Signal summary",
+  "technicalDataPoints": "{timeframe} data · {count} candles",
+  "@technicalDataPoints": {
+    "placeholders": {
+      "timeframe": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "beginnerBullish": "Leaning Bullish",
+  "beginnerBearish": "Leaning Bearish",
+  "beginnerWait": "Wait for confirmation",
+  "biasMeaning": "A {bias} bias means the AI sees a market that is {direction}.",
+  "@biasMeaning": {
+    "placeholders": {
+      "bias": {
+        "type": "String"
+      },
+      "direction": {
+        "type": "String"
+      }
+    }
+  },
+  "directionUp": "leaning upward",
+  "directionDown": "leaning downward",
+  "directionNeutral": "without a dominant direction",
+  "beginnerBuyAction": "The analysis structure favors a Buy scenario, but entry should still wait for the area and conditions in the trading plan.",
+  "beginnerSellAction": "The analysis structure favors a Sell scenario, but entry should still follow the defined area and risk limits.",
+  "beginnerWaitAction": "The AI does not see a strong enough entry yet. Waiting for confirmation is a valid decision for beginners.",
+  "analysisSnapshotTitle": "Context When Analysis Was Created",
+  "analysisSnapshotDescription": "This is a snapshot of the data used by the AI when creating the analysis.",
+  "buy": "Buy",
+  "sell": "Sell",
+  "opportunity": "Opportunity",
+  "executionInsight": "View Execution Insight",
+  "executionInsightDescription": "How to approach the scenario without treating it as a trade instruction.",
+  "executionInsightBody": "Wait for price-action confirmation, define maximum risk before entry, and cancel the plan when an invalidation condition occurs. Do not chase price outside the planned area.",
+  "riskHighLabel": "High Risk",
+  "riskLowLabel": "Relatively Low Risk",
+  "riskModerateLabel": "Moderate Risk",
+  "riskHighProGuidance": "High volatility. Limit exposure and use the invalidation level as the risk boundary.",
+  "riskHighBeginnerGuidance": "Movement may be aggressive. Avoid large position sizes and do not ignore the Stop Loss.",
+  "riskLowGuidance": "Conditions appear more stable, but risk remains. Keep a loss limit.",
+  "riskModerateGuidance": "Opportunity and uncertainty are both present. Wait for a clear setup and use a measured position size.",
   "reanalyze": "Analyze again",
   "history": "History",
   "profile": "Profile",
@@ -36,8 +141,161 @@
   "linkOpenFailed": "The link could not be opened.",
   "insightsAndJournal": "Insights & Journal",
   "tradeJournal": "Trade Journal",
+  "journalLoadFailed": "The journal could not be loaded. Try again.",
+  "journalSaveFailed": "The journal entry could not be saved.",
+  "journalDeleteTitle": "Delete journal entry?",
+  "journalDeleteWarning": "This action cannot be undone.",
+  "journalDeleteFailed": "The journal entry could not be deleted.",
+  "journalSessionChanged": "The session changed. Reopen this page.",
+  "add": "Add",
+  "noJournalEntries": "No journal entries yet.",
+  "journalOutcomeFilter": "Outcome filter",
+  "open": "Open",
+  "breakeven": "Breakeven",
+  "skippedTrade": "Not taken",
+  "journalPrivateLimit": "Up to 100 latest entries from the server. This data is private.",
+  "edit": "Edit",
+  "addJournal": "Add journal entry",
+  "editJournal": "Edit journal entry",
+  "instrumentRequired": "Instrument is required.",
+  "side": "Side",
+  "buyJournalSide": "Buy (trade record)",
+  "sellJournalSide": "Sell (trade record)",
+  "retrospectiveStatus": "Retrospective status",
+  "tradeTime": "Trade time",
+  "moodOptional": "State of mind (optional)",
+  "reflectionOptional": "Reflection (optional)",
+  "enterValidNumber": "Enter a valid number.",
+  "entries": "Entries",
+  "wins": "Wins",
+  "losses": "Losses",
+  "averageProfitLoss": "Avg P/L",
+  "quantity": "Quantity",
   "tradeJournalDescription": "Personal trade notes and reflections",
   "analytics": "Analytics",
+  "publicAiPerformance": "Public AI Performance",
+  "performanceMethodology": "Methodology",
+  "performanceDescription": "An anonymized track record of all Trade Pilot AI analyses. These are not personal account statistics.",
+  "performanceDays": "{count} days",
+  "@performanceDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "performanceInsufficient": "Not enough data for a responsible display. {need} results required; currently {have}.",
+  "@performanceInsufficient": {
+    "placeholders": {
+      "need": {
+        "type": "int"
+      },
+      "have": {
+        "type": "int"
+      }
+    }
+  },
+  "performanceByInstrument": "By instrument",
+  "performanceBySession": "By market session",
+  "performanceByCondition": "By market condition",
+  "performanceByVolatility": "By volatility",
+  "performanceNewsActivity": "News activity",
+  "performanceMethodologyTitle": "Performance methodology",
+  "performanceMethodWhatTitle": "What is measured",
+  "performanceMethodWhatBody": "Only analyses with finalized outcomes. User data is anonymized and aggregated.",
+  "performanceMethodRatesTitle": "Win rate and hit rate",
+  "performanceMethodRatesBody": "Win rate compares wins with losses for triggered trades. Hit rate also includes expired analyses.",
+  "performanceMethodSampleTitle": "Sample threshold",
+  "performanceMethodSampleBody": "Small sample segments are hidden to avoid misleading results or exposing small-group activity.",
+  "performanceMethodExcludedTitle": "What is excluded",
+  "performanceMethodExcludedBody": "Figures exclude position size, spread, slippage, fees, taxes, and user execution decisions.",
+  "performancePastDisclaimer": "Past performance does not guarantee future results.",
+  "performanceDeclining": "Recent performance is declining",
+  "performanceWatch": "Recent performance needs attention",
+  "performanceStable": "Recent performance is stable",
+  "performanceRecentBaseline": "Latest {days} days: {recent} · baseline: {baseline}.",
+  "@performanceRecentBaseline": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "recent": {
+        "type": "String"
+      },
+      "baseline": {
+        "type": "String"
+      }
+    }
+  },
+  "performanceSummary": "{days}-day summary",
+  "@performanceSummary": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "winRate": "Win rate",
+  "hitRate": "Hit rate",
+  "performanceTotals": "{wins} wins · {losses} losses · {expired} expired · {total} samples",
+  "@performanceTotals": {
+    "placeholders": {
+      "wins": {
+        "type": "int"
+      },
+      "losses": {
+        "type": "int"
+      },
+      "expired": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "sinceDate": "Since {date}",
+  "@sinceDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "performanceSegmentInsufficient": "Not enough data: {have}/{need} samples.",
+  "@performanceSegmentInsufficient": {
+    "placeholders": {
+      "have": {
+        "type": "int"
+      },
+      "need": {
+        "type": "int"
+      }
+    }
+  },
+  "performanceBucketTotals": "{wins} wins · {losses} losses · {expired} expired",
+  "@performanceBucketTotals": {
+    "placeholders": {
+      "wins": {
+        "type": "int"
+      },
+      "losses": {
+        "type": "int"
+      },
+      "expired": {
+        "type": "int"
+      }
+    }
+  },
+  "performanceLoadFailed": "Performance data could not be loaded.",
+  "offMainSession": "Outside main sessions",
+  "uptrend": "Uptrend",
+  "downtrend": "Downtrend",
+  "activeNewsWeek": "Active news week",
+  "quietWeek": "Quiet week",
+  "rangingMarket": "Ranging",
+  "volatileMarket": "Volatile",
+  "choppyMarket": "Choppy",
   "analyticsDescription": "Activity patterns and evaluation results",
   "dailySummary": "Daily Summary",
   "traderMirror": "Trader Mirror",
@@ -241,6 +499,76 @@
   "savePassword": "Save Password",
   "myPriceAlerts": "My Price Alerts",
   "notifications": "Notifications",
+  "markAllRead": "Mark all as read",
+  "realtimeActive": "Realtime connected",
+  "realtimeConnecting": "Connecting realtime…",
+  "notificationInbox": "Inbox",
+  "notificationUnreadCount": "{count} unread",
+  "@notificationUnreadCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationAnalysisUnavailable": "This analysis is unavailable or you do not have access.",
+  "mobilePush": "Mobile Push",
+  "pushUpdatingDevice": "Updating device settings…",
+  "pushDeviceRegistered": "Device registered for push.",
+  "pushDeviceRegisteredLastReceived": "Device registered for push. Last received {date}.",
+  "@pushDeviceRegisteredLastReceived": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "pushPermissionDenied": "Permission denied. Enable it again in device settings.",
+  "pushReceiveWhenInactive": "Receive push notifications while the app is inactive.",
+  "notificationPreferences": "Notification preferences",
+  "notificationPreferencesDescription": "Choose which notifications you want to receive.",
+  "notificationPreferencesLoadFailed": "Notification preferences could not be loaded.",
+  "notificationExpiryTitle": "Analysis expiry",
+  "notificationExpiryDescription": "Reminder when an analysis window is about to end.",
+  "notificationBroadcastTitle": "Announcements",
+  "notificationBroadcastDescription": "Important information and broadcasts from Trade Pilot.",
+  "notificationDailyTitle": "Daily summary",
+  "notificationDailyDescription": "Daily activity and market summary.",
+  "notificationNewsTitle": "Market news",
+  "notificationNewsDescription": "Important news relevant to the market.",
+  "notificationCalendarTitle": "Economic calendar",
+  "notificationCalendarDescription": "Reminders for high-impact economic events.",
+  "notificationPriceTitle": "Price movement",
+  "notificationPriceDescription": "Significant price changes and anomalies.",
+  "notificationSignalTitle": "Signal changes",
+  "notificationSignalDescription": "When the AI bias changes meaningfully.",
+  "notificationWeeklyTitle": "Weekly recap",
+  "notificationWeeklyDescription": "Weekly trading activity summary.",
+  "notificationGuardrails": "Decision guardrails",
+  "notificationRevengeTitle": "Revenge trading warning",
+  "notificationRevengeDescription": "A gentle warning after a recent loss.",
+  "notificationOvertradingTitle": "Overtrading warning",
+  "notificationOvertradingDescription": "A warning when analyses are created too close together.",
+  "notificationHighRiskTitle": "High-risk warning",
+  "notificationHighRiskDescription": "A warning for high-impact events within 30 minutes.",
+  "notificationCoolingOffTitle": "30-minute cooling-off",
+  "notificationCoolingOffDescription": "An optional pause after a significant loss.",
+  "notificationSessionReminders": "Market session reminders",
+  "quietHours": "Quiet hours",
+  "quietHoursDescription": "Hold non-urgent notifications during rest hours.",
+  "quietHoursStart": "Start",
+  "quietHoursEnd": "End",
+  "notificationTimezone": "Time zone",
+  "quietHoursSecurityNotice": "Security notifications may still be delivered during quiet hours.",
+  "notificationAutoPaused": "Some ‘{category}’ notifications were paused because they have not been opened recently.",
+  "@notificationAutoPaused": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "noNotifications": "No notifications yet",
   "trader": "Trader",
   "latestAnalyses": "Latest Analyses",
   "viewAll": "View all",
@@ -495,6 +823,30 @@
   "pending": "Pending",
   "valid": "Valid",
   "expired": "Expired",
+  "analysisWindowActiveUntil": "Analysis window active until {date}",
+  "@analysisWindowActiveUntil": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "analysisWindowExpiredAt": "Analysis window expired at {date}",
+  "@analysisWindowExpiredAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "analysisCreatedAt": "Created {date}",
+  "@analysisCreatedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "historySummary": "History summary",
   "partialSummary": "Partial summary",
   "visible": "Visible",
@@ -836,33 +1188,59 @@
   "analysisQuotaUsage": "Used {used} of {limit}",
   "@analysisQuotaUsage": {
     "placeholders": {
-      "used": { "type": "int" },
-      "limit": { "type": "int" }
+      "used": {
+        "type": "int"
+      },
+      "limit": {
+        "type": "int"
+      }
     }
   },
   "analysisRetryAfter": "Try again in {duration}",
   "@analysisRetryAfter": {
-    "placeholders": { "duration": { "type": "String" } }
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
   },
   "analysisSeconds": "{count} seconds",
   "@analysisSeconds": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "analysisMinutes": "{count} minutes",
   "@analysisMinutes": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "analysisQuotaBalances": "Hourly: {hourly} • Daily: {daily} • Credits: {credits}",
   "@analysisQuotaBalances": {
     "placeholders": {
-      "hourly": { "type": "int" },
-      "daily": { "type": "int" },
-      "credits": { "type": "int" }
+      "hourly": {
+        "type": "int"
+      },
+      "daily": {
+        "type": "int"
+      },
+      "credits": {
+        "type": "int"
+      }
     }
   },
   "analysisCreditConsumed": "1 credit used. Remaining balance: {balance} credits.",
   "@analysisCreditConsumed": {
-    "placeholders": { "balance": { "type": "int" } }
+    "placeholders": {
+      "balance": {
+        "type": "int"
+      }
+    }
   },
   "analysisCreditConsumedUnknownBalance": "1 credit used. Your balance is being refreshed.",
   "creditBalance": "Credit balance",
@@ -934,5 +1312,289 @@
         "type": "int"
       }
     }
-  }
+  },
+  "errSessionExpiredRelogin": "Your session has ended. Please sign in again.",
+  "errSessionExpired": "Your session has ended.",
+  "errSignInAgain": "Please sign in again.",
+  "errNoConnection": "Could not reach the server. Check your internet connection.",
+  "errServerUnreachable": "Could not reach the server.",
+  "errGeneric": "Something went wrong. Please try again.",
+  "errServerProblem": "The server is having trouble. Try again shortly.",
+  "errConnectionTimeout": "The connection timed out. Please try again.",
+  "errRequestCancelled": "The request was cancelled.",
+  "errInstrumentRequired": "Instrument cannot be empty.",
+  "errInstrumentUnsupported": "Instrument is not supported.",
+  "errTimeframeUnsupported": "Timeframe is not supported.",
+  "errInvalidServerResponse": "The server response was not valid.",
+  "errInvalidProfileResponse": "The profile response from the server was not valid.",
+  "errDisplayNameLength": "Name must be 2 to {max} characters.",
+  "@errDisplayNameLength": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "errCurrentPasswordWrong": "Your current password is incorrect.",
+  "errPasswordTooWeak": "Password does not meet the security requirements.",
+  "errProfileInvalid": "Profile data is not valid. Check your entries.",
+  "errChangePasswordFailed": "Could not change your password. Please try again.",
+  "errUpdateProfileFailed": "Could not update your profile. Please try again.",
+  "errTooManyAttempts": "Too many attempts. Wait a moment and try again.",
+  "errDeleteAccountFailed": "Could not delete your account. Please try again.",
+  "errSecurityAnswerWrong": "That security answer is incorrect.",
+  "errCredentialsWrong": "That email or password is incorrect.",
+  "errQuotaReached": "Analysis quota reached. Try again later.",
+  "errAiTimeout": "The AI is taking longer than usual to analyze. Please try again.",
+  "errAnalysisFailed": "Analysis failed. Please try again.",
+  "errAnalysisSlowSync": "The AI took a long time to respond. The analysis may still have been created — data will sync automatically.",
+  "errDateRangeInvalid": "The start date cannot be later than the end date.",
+  "errNoteTooLong5000": "Notes are limited to 5,000 characters.",
+  "errNoteNotSaved": "The note was not saved. Check your connection and try again.",
+  "errNoteSaveFailed": "The note could not be saved. Please try again.",
+  "errBalanceLoadFailed": "Credit balance could not be loaded.",
+  "errTopupConfigLoadFailed": "Top-up configuration could not be loaded.",
+  "errTopupHistoryLoadFailed": "Top-up history could not be loaded. Pull to try again.",
+  "errTopupSubmitFailed": "The top-up request could not be sent.",
+  "errTopupAmountPositive": "The top-up amount must be greater than 0.",
+  "errLivePricesFailed": "Could not load live prices.",
+  "errMarketDataPartial": "Some market data is not available yet.",
+  "errTechnicalDataFailed": "Could not load technical data.",
+  "errPriceAlertsLoadFailed": "Could not load price alerts.",
+  "errPriceAlertCreateFailed": "Could not create the price alert.",
+  "errPriceAlertDeleteFailed": "Could not delete the price alert.",
+  "errTargetPricePositive": "Target price must be greater than 0.",
+  "errNoteTooLong200": "Notes are limited to 200 characters.",
+  "errWatchlistLoadFailed": "Could not load your watchlist.",
+  "errWatchlistUpdateFailed": "Could not update your watchlist.",
+  "errNotificationsLoadFailed": "Notifications could not be loaded. Pull to try again.",
+  "errNotificationPrefsLoadFailed": "Could not load notification preferences.",
+  "errNotificationPrefsSaveFailed": "Could not save notification preferences.",
+  "errMarketSessionReminderSaveFailed": "Could not save the market session reminder.",
+  "errQuietHoursSaveFailed": "Could not save notification quiet hours.",
+  "errPushPermissionSystem": "Notification permission has not been granted in system settings.",
+  "errPushEnableFailed": "Push notifications could not be enabled.",
+  "errPushPrefsSaveFailed": "Mobile push preferences could not be saved.",
+  "errPushTokenUnavailable": "A push token is not available on this device.",
+  "errPushRegisterFailed": "The server could not register this device for push.",
+  "errPushTokenSyncFailed": "The push token could not be synced.",
+  "appErrInstrumentUnsupported": "This instrument does not support the Adaptive Position Plan.",
+  "appErrNoStandardPlan": "The Standard Plan or Standard Trading Rules TP is not available.",
+  "appErrFundsPositive": "Available trading funds must be greater than 0.",
+  "appErrMaxLossPositive": "The maximum loss limit must be greater than 0.",
+  "appErrMaxLossExceedsFunds": "The maximum loss limit cannot exceed available funds.",
+  "appErrExposureNegative": "Running exposure cannot be negative.",
+  "appErrTpRulesInvalid": "The Standard Trading Rules TP does not match or is not valid.",
+  "appErrLevelsInvalid": "The Standard Plan Entry and Stop Loss levels are not valid.",
+  "appErrSnapshotConflict": "The technical snapshot conflicts with the market direction.",
+  "appErrBelowMinimumLot": "Funds or loss limit are not enough for this tier's minimum lot.",
+  "mindsetPacingTitle": "Evaluation pause",
+  "mindsetPacingBody": "Several analyses were created close together. Consider leaving time to evaluate the previous one.",
+  "mindsetConcentrationTitle": "Instrument focus",
+  "mindsetConcentrationBody": "{count} of {total} analyses currently loaded focus on {instrument}.",
+  "@mindsetConcentrationBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "instrument": {
+        "type": "String"
+      }
+    }
+  },
+  "mindsetPendingTitle": "Analyses still pending",
+  "mindsetPendingBody": "{count} analyses currently loaded have not finished evaluating. Use the next result as reflection, not certainty.",
+  "@mindsetPendingBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mindsetJournalTitle": "Note consistency",
+  "mindsetJournalBody": "Personal notes are still rare. Writing your initial reasoning helps reflection once an evaluation arrives.",
+  "localTraderSentiment": "Local trader sentiment",
+  "journalSentimentGated": "Hidden until at least {entries} entries from {traders} traders are available.",
+  "@journalSentimentGated": {
+    "placeholders": {
+      "entries": {
+        "type": "int"
+      },
+      "traders": {
+        "type": "int"
+      }
+    }
+  },
+  "journalSentimentSample": "{entries} entries · {days} days",
+  "@journalSentimentSample": {
+    "placeholders": {
+      "entries": {
+        "type": "int"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "journalSentimentDisclaimer": "An anonymous aggregate of community journals, not a trading signal.",
+  "personalNote": "Personal note",
+  "addNote": "Add note",
+  "notePrivateHint": "Stored privately in your account and never sent to the AI.",
+  "noteHint": "Write your reasoning, observations, or lessons…",
+  "deleteNote": "Delete note",
+  "noNoteYet": "No note for this analysis yet.",
+  "newsLinkFailed": "That news link could not be opened.",
+  "newsLoadFailed": "News could not be loaded.",
+  "newsEmpty": "No recent news yet.",
+  "newsDisclaimer": "News is informational and not an investment recommendation.",
+  "newsSourceFallback": "News source",
+  "publicAiPerformanceSubtitle": "An anonymous track record of every Trade Pilot analysis",
+  "analyticsLoadFailed": "Analytics could not be loaded. Please try again.",
+  "sessionChangedReopen": "Your session changed. Please reopen this page.",
+  "analyticsDisclaimer": "These statistics describe analysis habits, not trading profit.",
+  "metricAllAnalyses": "All analyses",
+  "metricThisMonth": "This month",
+  "metricThisWeek": "This week",
+  "metricFeedbackGiven": "Feedback given",
+  "metricDominantMode": "Dominant mode",
+  "metricOutcomeAccuracy": "Outcome accuracy",
+  "instrumentRanking": "Instrument ranking",
+  "countAnalyses": "{count} analyses",
+  "@countAnalyses": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "loadedResults": "Results currently loaded",
+  "analyticsPartialScope": "Counting only {loaded} of {total} analyses. Load more in History to widen this summary.",
+  "@analyticsPartialScope": {
+    "placeholders": {
+      "loaded": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "analyticsFullScope": "Counting all {loaded} analyses currently available on this device.",
+  "@analyticsFullScope": {
+    "placeholders": {
+      "loaded": {
+        "type": "int"
+      }
+    }
+  },
+  "metricEvaluated": "Evaluated",
+  "metricPending": "Pending",
+  "metricPositiveOutcomes": "Positive outcomes",
+  "metricNegativeOutcomes": "Negative outcomes",
+  "metricHasNote": "Has a note",
+  "metricAverageConfidence": "Average confidence",
+  "metricTopTimeframe": "Top timeframe",
+  "metricTopInstrument": "Top instrument",
+  "traderMirrorLoadFailed": "Trader Mirror could not be loaded.",
+  "traderMirrorDisclaimer": "This habit mirror is retrospective and gives no trading instructions.",
+  "traderMirrorNoHighlights": "Not enough data to build highlights yet.",
+  "traderMirrorCoverage": "Covering {days} days · {resolved} completed evaluations",
+  "@traderMirrorCoverage": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "resolved": {
+        "type": "int"
+      }
+    }
+  },
+  "traderMirrorSessions": "Market sessions",
+  "traderMirrorInstruments": "Instrument concentration",
+  "traderMirrorTiming": "Analysis timing",
+  "traderMirrorBasedOn": "Based on {count} analyses currently loaded on this device.",
+  "@traderMirrorBasedOn": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "traderMirrorNeedMore": "At least 3 analyses are needed for a careful reflection.",
+  "traderMirrorGated": "Needs {need} data points; {have} available.",
+  "@traderMirrorGated": {
+    "placeholders": {
+      "need": {
+        "type": "String"
+      },
+      "have": {
+        "type": "int"
+      }
+    }
+  },
+  "traderMirrorUngated": "Enough data to show the details.",
+  "traderMirrorNeedMoreGeneric": "more",
+  "dailySummaryLoadFailed": "The daily briefing could not be loaded.",
+  "dailySummarySaveFailed": "Briefing settings could not be saved.",
+  "dailySummaryEmpty": "No briefing for today yet.",
+  "dailySummaryTimezone": "Time zone: {timezone}",
+  "@dailySummaryTimezone": {
+    "placeholders": {
+      "timezone": {
+        "type": "String"
+      }
+    }
+  },
+  "dailySummaryDeliveryTime": "Delivery time",
+  "marketChartUnavailable": "The market chart is not available yet.",
+  "journalCheckFailed": "The journal could not be checked.",
+  "alertStatusLoadFailed": "Alert status could not be loaded.",
+  "alertNeedsNotificationPermission": "Enable notification permission so price alerts can work.",
+  "alertEnableFailed": "The alert could not be enabled. Make sure notifications are on and the instrument has a live price feed.",
+  "alertDisableFailed": "The alert could not be disabled. Try again shortly.",
+  "fundamentalDriftNone": "The latest fundamentals still support every original source.",
+  "fundamentalDriftSome": "{missing} of {total} original sources are no longer in the latest window.",
+  "@fundamentalDriftSome": {
+    "placeholders": {
+      "missing": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "outcomePendingLabel": "Awaiting result",
+  "outcomePendingBody": "The market is still running and the system is evaluating whether the TP or SL level was touched.",
+  "outcomeTp1Label": "TP1 Reached",
+  "outcomeTp1Body": "Price reached the first profit target from the analysis scenario.",
+  "outcomeTp2Label": "TP2 Reached",
+  "outcomeTp2Body": "Price reached the second profit target from the analysis scenario.",
+  "outcomeSlLabel": "Stop Loss Hit",
+  "outcomeSlBody": "Price reached the risk limit first. This is why a Stop Loss matters in every setup.",
+  "outcomeExpiredLabel": "Expired",
+  "outcomeExpiredBody": "The analysis window ended without a main target confirmed.",
+  "outcomeInvalidatedLabel": "Analysis Invalidated",
+  "outcomeInvalidatedBody": "The setup no longer matches the original analysis structure.",
+  "outcomeUnknownLabel": "Status not available",
+  "outcomeUnknownBody": "The outcome cannot be evaluated yet.",
+  "whyNotHigherConfidence": "Why isn't confidence higher?",
+  "citedSources": "Cited sources",
+  "awaitConfirmationNotice": "Wait for confirmation — the AI does not recommend Buy or Sell right now.",
+  "instrumentRulesUnavailable": "Instrument rules are not available.",
+  "tradingRulesLoadFailed": "Trading rules could not be loaded.",
+  "tradingRulesUnavailable": "Trading rules are not available.",
+  "adaptivePlanIntro": "Turn the Standard Plan into a position size that fits your funds and loss limit.",
+  "adaptivePlanDisclaimer": "This calculator does not change AI levels and does not send orders. Enter free funds after deducting margin used by other positions.",
+  "availableTradingFunds": "Available trading funds",
+  "maxLossLimit": "Maximum loss limit",
+  "buildPositionPlan": "Build position plan",
+  "notRecommended": "Not recommended",
+  "adaptivePlanFootnote": "Day trading only. Estimates exclude spread, slippage, fees, VAT, rollover, and broker auto-liquidation.",
+  "lossToSl": "Loss to SL",
+  "entryZone": "Entry zone",
+  "primaryScenario": "Primary scenario"
 }

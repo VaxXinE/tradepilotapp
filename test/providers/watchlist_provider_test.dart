@@ -82,7 +82,7 @@ void main() {
     expect(await provider.addInstrument('EUR/USD'), isFalse);
 
     expect(provider.items.map((item) => item.instrument), ['BTC/USD']);
-    expect(provider.error, 'Gagal memperbarui watchlist.');
+    expect(provider.error, 'Could not update your watchlist.');
   });
 }
 

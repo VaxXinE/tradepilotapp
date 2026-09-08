@@ -23,9 +23,26 @@ void main() {
     await _pumpDetail(tester, _analysis(AnalysisModeEnum.beginner));
 
     expect(find.text('Beginner Mode'), findsOneWidget);
-    expect(find.text('Cenderung Turun'), findsOneWidget);
-    expect(find.text('Apa artinya?'), findsOneWidget);
-    await tester.drag(find.byType(ListView), const Offset(0, -5000));
+    expect(find.text('Leaning Bearish'), findsOneWidget);
+
+    // The chart sits above the beginner explanation now, so scroll it in
+    // before asserting on it.
+    await tester.scrollUntilVisible(
+      find.text('What does it mean?'),
+      400,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('What does it mean?'), findsOneWidget);
+    // Technical detail now sits behind a collapsed section, so open it before
+    // asserting on the indicators inside.
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('analysis-technical-details')),
+      500,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('analysis-technical-details')));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('signal-scale-bar')), findsNWidgets(5));
     final segments = find.descendant(
@@ -70,7 +87,25 @@ void main() {
 
     expect(find.text('Pro Mode'), findsOneWidget);
     expect(find.text('Bearish'), findsOneWidget);
-    expect(find.text('Apa artinya?'), findsNothing);
+    expect(find.text('What does it mean?'), findsNothing);
+  });
+
+  testWidgets('the price chart is visible without expanding anything', (
+    tester,
+  ) async {
+    await _pumpDetail(tester, _analysis(AnalysisModeEnum.beginner));
+
+    // No taps: opening a finished analysis must show the chart straight away.
+    expect(find.text('Price Chart'), findsOneWidget);
+
+    // It also must not be the collapsed evidence section that renders it.
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('analysis-market-evidence')),
+        matching: find.text('Price Chart'),
+      ),
+      findsNothing,
+    );
   });
 
   testWidgets('analysis detail shows the journal linked by the server', (
@@ -94,7 +129,7 @@ void main() {
     );
 
     await tester.scrollUntilVisible(
-      find.text('Catatan trade saya'),
+      find.text('My trade journal'),
       500,
       scrollable: find.byType(Scrollable).first,
     );

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../providers/auth_provider.dart';
+import '../l10n/l10n.dart';
 
 class NewsFeedCard extends StatefulWidget {
   const NewsFeedCard({super.key});
@@ -60,9 +61,9 @@ class _NewsFeedCardState extends State<NewsFeedCard> {
     if (uri == null || !{'http', 'https'}.contains(uri.scheme)) return;
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication) &&
         mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tautan berita tidak dapat dibuka.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.newsLinkFailed)));
     }
   }
 
@@ -95,9 +96,9 @@ class _NewsFeedCardState extends State<NewsFeedCard> {
               child: Center(child: CircularProgressIndicator()),
             )
           else if (_failed)
-            _Message(text: 'Berita belum dapat dimuat.', onRetry: load)
+            _Message(text: context.l10n.newsLoadFailed, onRetry: load)
           else if (_articles.isEmpty)
-            const _Message(text: 'Belum ada berita terbaru.')
+            _Message(text: context.l10n.newsEmpty)
           else
             ..._articles.indexed.map(
               (item) => Column(
@@ -123,7 +124,7 @@ class _NewsFeedCardState extends State<NewsFeedCard> {
             ),
           const SizedBox(height: 4),
           Text(
-            'Berita bersifat informasi dan bukan rekomendasi investasi.',
+            context.l10n.newsDisclaimer,
             style: Theme.of(context).textTheme.labelSmall,
           ),
         ],
@@ -144,7 +145,7 @@ class _Message extends StatelessWidget {
       children: [
         Text(text),
         if (onRetry != null)
-          TextButton(onPressed: onRetry, child: const Text('Coba lagi')),
+          TextButton(onPressed: onRetry, child: Text(context.l10n.tryAgain)),
       ],
     ),
   );
@@ -173,7 +174,7 @@ class _NewsArticle {
     }
     return _NewsArticle(
       title: title,
-      source: value['sourceName']?.toString().trim() ?? 'Sumber berita',
+      source: value['sourceName']?.toString().trim() ?? '',
       date: value['date']?.toString().trim() ?? '',
       link: link,
     );

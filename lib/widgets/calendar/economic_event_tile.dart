@@ -30,8 +30,14 @@ class EconomicEventTile extends StatelessWidget {
           children: [
             ImpactLevelBadge(level: event.impactLevel),
             const Spacer(),
+            event.currency.toUpperCase() == 'USD'
+                ? const _UsFlag()
+                : Icon(Icons.public_rounded, size: 14, color: muted),
+            const SizedBox(width: 4),
             Text(
-              '${_flag(event.currency)} ${event.currency}',
+              event.currency.toUpperCase() == 'USD'
+                  ? 'US'
+                  : event.currency.toUpperCase(),
               style: TextStyle(color: muted, fontWeight: FontWeight.w700),
             ),
           ],
@@ -85,18 +91,54 @@ class EconomicEventTile extends StatelessWidget {
     }
     return l10n.genericEventExplanation(instrument);
   }
+}
 
-  String _flag(String currency) => switch (currency.toUpperCase()) {
-    'USD' => '🇺🇸',
-    'EUR' => '🇪🇺',
-    'GBP' => '🇬🇧',
-    'JPY' => '🇯🇵',
-    'AUD' => '🇦🇺',
-    'CHF' => '🇨🇭',
-    'CNY' => '🇨🇳',
-    'IDR' => '🇮🇩',
-    _ => '🌐',
-  };
+class _UsFlag extends StatelessWidget {
+  const _UsFlag();
+
+  @override
+  Widget build(BuildContext context) => const SizedBox(
+    key: ValueKey('currency-flag-us'),
+    width: 20,
+    height: 14,
+    child: CustomPaint(painter: _UsFlagPainter()),
+  );
+}
+
+class _UsFlagPainter extends CustomPainter {
+  const _UsFlagPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final stripeHeight = size.height / 13;
+    canvas.drawRect(Offset.zero & size, Paint()..color = Colors.white);
+    final red = Paint()..color = const Color(0xFFB22234);
+    for (var stripe = 0; stripe < 13; stripe += 2) {
+      canvas.drawRect(
+        Rect.fromLTWH(0, stripe * stripeHeight, size.width, stripeHeight),
+        red,
+      );
+    }
+
+    final canton = Rect.fromLTWH(0, 0, size.width * .42, stripeHeight * 7);
+    canvas.drawRect(canton, Paint()..color = const Color(0xFF3C3B6E));
+    final star = Paint()..color = Colors.white;
+    for (var row = 0; row < 3; row++) {
+      for (var column = 0; column < 4; column++) {
+        canvas.drawCircle(
+          Offset(
+            canton.width * (column + .5) / 4,
+            canton.height * (row + .5) / 3,
+          ),
+          .45,
+          star,
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _UsFlagPainter oldDelegate) => false;
 }
 
 class _Metric extends StatelessWidget {

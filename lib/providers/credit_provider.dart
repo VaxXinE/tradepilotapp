@@ -6,6 +6,7 @@ import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
 import '../repositories/topup_repository.dart';
 import 'auth_provider.dart';
+import '../l10n/app_messages.dart';
 
 /// State credit dan top-up.
 ///
@@ -139,7 +140,10 @@ class CreditProvider extends ChangeNotifier {
       }
     } catch (error) {
       if (isCurrent() && !silent) {
-        _balanceError = _friendlyError(error, 'Saldo credit gagal dimuat.');
+        _balanceError = _friendlyError(
+          error,
+          AppMessages.l10n.errBalanceLoadFailed,
+        );
       }
     } finally {
       if (isCurrent()) {
@@ -186,7 +190,7 @@ class CreditProvider extends ChangeNotifier {
       if (isCurrent()) {
         _configError = _friendlyError(
           error,
-          'Konfigurasi top-up gagal dimuat.',
+          AppMessages.l10n.errTopupConfigLoadFailed,
         );
       }
     } finally {
@@ -266,7 +270,7 @@ class CreditProvider extends ChangeNotifier {
       if (isCurrent()) {
         _historyError = _friendlyError(
           error,
-          'Riwayat top-up gagal dimuat. Tarik untuk mencoba lagi.',
+          AppMessages.l10n.errTopupHistoryLoadFailed,
         );
       }
     } finally {
@@ -303,7 +307,7 @@ class CreditProvider extends ChangeNotifier {
     final userId = _currentUserId;
 
     if (userId == null) {
-      _submitError = 'Sesi login sudah berakhir. Silakan login kembali.';
+      _submitError = AppMessages.l10n.errSessionExpiredRelogin;
       notifyListeners();
       return null;
     }
@@ -347,7 +351,7 @@ class CreditProvider extends ChangeNotifier {
       if (isCurrent()) {
         _submitError = _friendlyError(
           error,
-          'Permintaan top-up gagal dikirim.',
+          AppMessages.l10n.errTopupSubmitFailed,
         );
       }
 
@@ -470,7 +474,7 @@ class CreditProvider extends ChangeNotifier {
       final status = error.response?.statusCode;
 
       if (status == 401) {
-        return 'Sesi login sudah berakhir. Silakan login kembali.';
+        return AppMessages.l10n.errSessionExpiredRelogin;
       }
 
       // Validasi backend (mis. nominal di luar batas) memang untuk dibaca
@@ -489,18 +493,17 @@ class CreditProvider extends ChangeNotifier {
       }
 
       if (status != null && status >= 500) {
-        return 'Server sedang bermasalah. Coba lagi sebentar lagi.';
+        return AppMessages.l10n.errServerProblem;
       }
 
       if (error.type == DioExceptionType.connectionError) {
-        return 'Tidak bisa terhubung ke server. '
-            'Periksa koneksi internet kamu.';
+        return AppMessages.l10n.errNoConnection;
       }
 
       if (error.type == DioExceptionType.connectionTimeout ||
           error.type == DioExceptionType.sendTimeout ||
           error.type == DioExceptionType.receiveTimeout) {
-        return 'Koneksi timeout. Silakan coba lagi.';
+        return AppMessages.l10n.errConnectionTimeout;
       }
     }
 

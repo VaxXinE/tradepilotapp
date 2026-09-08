@@ -286,6 +286,15 @@ class _DashboardTabState extends State<DashboardTab> {
 
             const SizedBox(height: 16),
 
+            // Primary task stays near the top; market context remains below.
+            _BeginnerHeroCard(
+              onAnalyze: () {
+                widget.onOpenAnalyze(null);
+              },
+            ),
+
+            const SizedBox(height: 16),
+
             MarketSessionCard(instrument: market.selectedInstrument),
 
             const SizedBox(height: 16),
@@ -315,17 +324,6 @@ class _DashboardTabState extends State<DashboardTab> {
                 ),
               ),
             ],
-
-            const SizedBox(height: 16),
-
-            // ---------------------------------------------------------------
-            // BEGINNER HERO
-            // ---------------------------------------------------------------
-            _BeginnerHeroCard(
-              onAnalyze: () {
-                widget.onOpenAnalyze(null);
-              },
-            ),
 
             const SizedBox(height: 16),
 
@@ -361,7 +359,7 @@ class _DashboardTabState extends State<DashboardTab> {
               // -------------------------------------------------------------
               // BEGINNER STATS
               // -------------------------------------------------------------
-              _StatsRow(summary: summary),
+              DashboardStats(summary: summary),
 
               const SizedBox(height: 14),
 
@@ -998,8 +996,8 @@ class _RateTile extends StatelessWidget {
   );
 }
 
-class _StatsRow extends StatelessWidget {
-  const _StatsRow({required this.summary});
+class DashboardStats extends StatelessWidget {
+  const DashboardStats({super.key, required this.summary});
 
   final AnalysesSummary? summary;
 
@@ -1023,42 +1021,50 @@ class _StatsRow extends StatelessWidget {
       confidence = '${maxConfidence.round()}%';
     }
 
-    return Row(
-      children: [
-        Expanded(
-          child: _StatCard(
-            label: context.l10n.totalAnalyses,
-            value: '$total',
-            icon: Icons.insert_chart_outlined_rounded,
-          ),
-        ),
+    final cards = [
+      _StatCard(
+        key: const ValueKey('dashboard-stat-total'),
+        label: context.l10n.totalAnalyses,
+        value: '$total',
+        icon: Icons.insert_chart_outlined_rounded,
+      ),
+      _StatCard(
+        key: const ValueKey('dashboard-stat-beginner'),
+        label: context.l10n.beginnerMode,
+        value: '$beginner',
+        icon: Icons.school_outlined,
+      ),
+      _StatCard(
+        key: const ValueKey('dashboard-stat-confidence'),
+        label: context.l10n.aiConfidence,
+        value: confidence,
+        icon: Icons.speed_rounded,
+      ),
+    ];
 
-        const SizedBox(width: 8),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final textScale = MediaQuery.textScalerOf(context).scale(14) / 14;
+        final stackCards = textScale > 1.3;
+        final cardWidth = stackCards
+            ? constraints.maxWidth
+            : (constraints.maxWidth - 16) / 3;
 
-        Expanded(
-          child: _StatCard(
-            label: context.l10n.beginnerMode,
-            value: '$beginner',
-            icon: Icons.school_outlined,
-          ),
-        ),
-
-        const SizedBox(width: 8),
-
-        Expanded(
-          child: _StatCard(
-            label: context.l10n.aiConfidence,
-            value: confidence,
-            icon: Icons.speed_rounded,
-          ),
-        ),
-      ],
+        return Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final card in cards) SizedBox(width: cardWidth, child: card),
+          ],
+        );
+      },
     );
   }
 }
 
 class _StatCard extends StatelessWidget {
   const _StatCard({
+    super.key,
     required this.label,
     required this.value,
     required this.icon,

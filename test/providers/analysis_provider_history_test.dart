@@ -137,7 +137,7 @@ void main() {
   test('analysis creation errors never leak into History', () async {
     final auth = await _authenticatedUser(1);
     final provider = AnalysisProvider(auth)
-      ..errorMessage = 'Analisis gagal. Silakan coba lagi.';
+      ..errorMessage = 'Analysis failed. Please try again.';
     addTearDown(provider.dispose);
 
     expect(provider.visibleHistoryError, isNull);

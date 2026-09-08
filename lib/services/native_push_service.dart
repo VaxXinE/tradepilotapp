@@ -9,6 +9,7 @@ import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
 import '../models/notification_action.dart';
 import '../providers/auth_provider.dart';
+import '../l10n/app_messages.dart';
 
 class NativePushService extends ChangeNotifier {
   NativePushService(this._auth) {
@@ -43,6 +44,7 @@ class NativePushService extends ChangeNotifier {
   bool isEnabled = false;
   bool isBusy = false;
   String? errorMessage;
+  DateTime? lastMessageReceivedAt;
 
   bool get isPermissionDenied =>
       authorizationStatus == AuthorizationStatus.denied;
@@ -93,9 +95,12 @@ class NativePushService extends ChangeNotifier {
     _foregroundSubscription = FirebaseMessaging.onMessage.listen(
       _showForegroundNotification,
     );
-    _openedSubscription = FirebaseMessaging.onMessageOpenedApp.listen(
-      (message) => _emitAction(message.data),
-    );
+    _openedSubscription = FirebaseMessaging.onMessageOpenedApp.listen((
+      message,
+    ) {
+      _markMessageReceived();
+      _emitAction(message.data);
+    });
     _tokenSubscription = _messaging.onTokenRefresh.listen((token) {
       final userId = _currentUserId;
       if (userId != null && isEnabled) {
@@ -106,7 +111,10 @@ class NativePushService extends ChangeNotifier {
     authorizationStatus =
         (await _messaging.getNotificationSettings()).authorizationStatus;
     final initialMessage = await _messaging.getInitialMessage();
-    if (initialMessage != null) _emitAction(initialMessage.data);
+    if (initialMessage != null) {
+      _markMessageReceived();
+      _emitAction(initialMessage.data);
+    }
     await _loadEnabledPreference();
     if (isEnabled && _permissionGranted) {
       Future<void>.delayed(Duration.zero, _syncSilently);
@@ -128,13 +136,13 @@ class NativePushService extends ChangeNotifier {
         sound: true,
       )).authorizationStatus;
       if (!_permissionGranted) {
-        errorMessage = 'Izin notifikasi belum diberikan di pengaturan sistem.';
+        errorMessage = AppMessages.l10n.errPushPermissionSystem;
         return false;
       }
       if (!await _setEnabledPreference(true)) return false;
       return syncToken();
     } catch (_) {
-      errorMessage = 'Push notification belum dapat diaktifkan.';
+      errorMessage = AppMessages.l10n.errPushEnableFailed;
       return false;
     } finally {
       isBusy = false;
@@ -180,7 +188,7 @@ class NativePushService extends ChangeNotifier {
       notifyListeners();
       return isEnabled == enabled;
     } catch (_) {
-      errorMessage = 'Preferensi mobile push belum dapat disimpan.';
+      errorMessage = AppMessages.l10n.errPushPrefsSaveFailed;
       notifyListeners();
       return false;
     }
@@ -205,7 +213,7 @@ class NativePushService extends ChangeNotifier {
     final token = await _messaging.getToken();
     if (!_isCurrentSession(epoch, userId)) return false;
     if (token == null || token.isEmpty) {
-      errorMessage = 'Token push belum tersedia pada perangkat ini.';
+      errorMessage = AppMessages.l10n.errPushTokenUnavailable;
       notifyListeners();
       return false;
     }
@@ -252,7 +260,7 @@ class NativePushService extends ChangeNotifier {
     } catch (_) {
       if (!_isCurrentSession(epoch, userId)) return false;
       isRegistered = false;
-      errorMessage = 'Server belum dapat mendaftarkan perangkat push.';
+      errorMessage = AppMessages.l10n.errPushRegisterFailed;
       notifyListeners();
       return false;
     }
@@ -315,12 +323,13 @@ class NativePushService extends ChangeNotifier {
     try {
       await syncToken();
     } catch (_) {
-      errorMessage = 'Token push belum dapat disinkronkan.';
+      errorMessage = AppMessages.l10n.errPushTokenSyncFailed;
       notifyListeners();
     }
   }
 
   Future<void> _showForegroundNotification(RemoteMessage message) async {
+    _markMessageReceived();
     final notification = message.notification;
     if (notification == null) return;
     await _localNotifications.show(
@@ -340,6 +349,11 @@ class NativePushService extends ChangeNotifier {
         iOS: DarwinNotificationDetails(),
       ),
     );
+  }
+
+  void _markMessageReceived() {
+    lastMessageReceivedAt = DateTime.now();
+    notifyListeners();
   }
 
   void _emitPayload(String? payload) {

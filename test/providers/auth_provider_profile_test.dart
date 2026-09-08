@@ -74,7 +74,10 @@ void main() {
       expect(adapter.profileCalls, 0);
 
       expect(await auth.updateDisplayName('Nama Valid'), isFalse);
-      expect(auth.profileError, 'Gagal memperbarui profil. Silakan coba lagi.');
+      expect(
+        auth.profileError,
+        'Could not update your profile. Please try again.',
+      );
       expect(auth.profileError, isNot(contains('SQL')));
     },
   );
@@ -135,7 +138,10 @@ void main() {
       isFalse,
     );
     expect(auth.isChangingPassword, isFalse);
-    expect(auth.profileError, 'Gagal mengubah password. Silakan coba lagi.');
+    expect(
+      auth.profileError,
+      'Could not change your password. Please try again.',
+    );
   });
 }
 

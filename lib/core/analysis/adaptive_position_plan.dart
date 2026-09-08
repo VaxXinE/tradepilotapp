@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
 import '../../models/market_models.dart';
+import '../../l10n/app_messages.dart';
 
 enum AdaptiveAccountTier { micro, mini, regular }
 
@@ -213,21 +214,21 @@ AdaptiveRecommendation buildAdaptiveRecommendation({
 }) {
   final errors = <String>[];
   if (!supportsAdaptivePositionPlan(analysis.instrument)) {
-    errors.add('Instrumen ini belum mendukung Adaptive Position Plan.');
+    errors.add(AppMessages.l10n.appErrInstrumentUnsupported);
   }
   if (analysis.tradePlan == null || standardRule == null) {
-    errors.add('Standard Plan atau TP Standard Trading Rules tidak tersedia.');
+    errors.add(AppMessages.l10n.appErrNoStandardPlan);
   }
   if (availableMargin == null || availableMargin <= 0) {
-    errors.add('Dana trading tersedia harus lebih dari 0.');
+    errors.add(AppMessages.l10n.appErrFundsPositive);
   }
   if (maximumLoss == null || maximumLoss <= 0) {
-    errors.add('Batas rugi maksimum harus lebih dari 0.');
+    errors.add(AppMessages.l10n.appErrMaxLossPositive);
   } else if (availableMargin != null && maximumLoss > availableMargin) {
-    errors.add('Batas rugi maksimum tidak boleh melebihi dana tersedia.');
+    errors.add(AppMessages.l10n.appErrMaxLossExceedsFunds);
   }
   if (existingExposure < 0) {
-    errors.add('Eksposur berjalan tidak boleh negatif.');
+    errors.add(AppMessages.l10n.appErrExposureNegative);
   }
   if (errors.isNotEmpty) return _invalid(errors);
 
@@ -237,9 +238,7 @@ AdaptiveRecommendation buildAdaptiveRecommendation({
       movementValues.isEmpty ||
       standardRule.contractSize <= 0 ||
       standardRule.initialMarginUsdPerLot <= 0) {
-    return _invalid([
-      'TP Standard Trading Rules tidak cocok atau tidak valid.',
-    ]);
+    return _invalid([AppMessages.l10n.appErrTpRulesInvalid]);
   }
   final movement = movementValues.first;
   final contractSize = standardRule.contractSize.toDouble() * tier.multiplier;
@@ -369,7 +368,7 @@ AdaptiveRecommendation buildAdaptiveRecommendation({
   final buyAvailable = _hasValidGeometry('buy', analysis.tradePlan!.buy);
   final sellAvailable = _hasValidGeometry('sell', analysis.tradePlan!.sell);
   if (!buyAvailable && !sellAvailable) {
-    return _invalid(['Level Entry dan Stop Loss Standard Plan tidak valid.']);
+    return _invalid([AppMessages.l10n.appErrLevelsInvalid]);
   }
 
   for (var candidateLevels = levels; candidateLevels >= 0; candidateLevels--) {
@@ -409,7 +408,7 @@ AdaptiveRecommendation buildAdaptiveRecommendation({
         return AdaptiveRecommendation(
           valid: posture != AdaptivePosture.notRecommended,
           errors: posture == AdaptivePosture.notRecommended
-              ? const ['Snapshot teknikal berkonflik dengan arah pasar.']
+              ? [AppMessages.l10n.appErrSnapshotConflict]
               : const [],
           posture: posture,
           preferredSide: preferred,
@@ -422,9 +421,7 @@ AdaptiveRecommendation buildAdaptiveRecommendation({
       }
     }
   }
-  return _invalid([
-    'Dana atau batas rugi belum cukup untuk lot minimum tier ini.',
-  ]);
+  return _invalid([AppMessages.l10n.appErrBelowMinimumLot]);
 }
 
 bool _hasValidGeometry(String sideName, TradeSide side) {

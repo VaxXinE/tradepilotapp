@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
 import '../providers/auth_provider.dart';
+import '../l10n/l10n.dart';
 
 class JournalSentimentCard extends StatefulWidget {
   const JournalSentimentCard({required this.instrument, super.key});
@@ -53,10 +54,12 @@ class _JournalSentimentCardState extends State<JournalSentimentCard> {
       return Card(
         child: ListTile(
           leading: const Icon(Icons.groups_outlined),
-          title: const Text('Sentimen trader lokal'),
+          title: Text(context.l10n.localTraderSentiment),
           subtitle: Text(
-            'Data disembunyikan sampai minimal ${sentiment.minSampleSize} entri '
-            'dari ${sentiment.minDistinctTraders} trader tersedia.',
+            context.l10n.journalSentimentGated(
+              sentiment.minSampleSize,
+              sentiment.minDistinctTraders,
+            ),
           ),
         ),
       );
@@ -73,14 +76,17 @@ class _JournalSentimentCardState extends State<JournalSentimentCard> {
               children: [
                 const Icon(Icons.groups_outlined, size: 19),
                 const SizedBox(width: 8),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Sentimen trader lokal',
-                    style: TextStyle(fontWeight: FontWeight.w800),
+                    context.l10n.localTraderSentiment,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
                   ),
                 ),
                 Text(
-                  '${sentiment.sampleSize ?? 0} entri · ${sentiment.windowDays} hari',
+                  context.l10n.journalSentimentSample(
+                    sentiment.sampleSize ?? 0,
+                    sentiment.windowDays,
+                  ),
                 ),
               ],
             ),
@@ -130,7 +136,7 @@ class _JournalSentimentCardState extends State<JournalSentimentCard> {
             ),
             const SizedBox(height: 5),
             Text(
-              'Agregat anonim jurnal komunitas, bukan sinyal trading.',
+              context.l10n.journalSentimentDisclaimer,
               style: Theme.of(context).textTheme.labelSmall,
             ),
           ],

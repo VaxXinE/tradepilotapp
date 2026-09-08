@@ -56,7 +56,7 @@ void main() {
       await provider.load();
 
       expect(provider.items.single.id, 9);
-      expect(provider.loadError, contains('Tarik untuk mencoba lagi'));
+      expect(provider.loadError, contains('Pull to try again'));
       expect(provider.loadError, isNot(contains('SQL')));
     },
   );

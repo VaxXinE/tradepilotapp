@@ -142,7 +142,7 @@ void main() {
     final created = await provider.submitTopup(amountRupiah: 0);
 
     expect(created, isNull);
-    expect(provider.submitError, 'Nominal top-up harus lebih besar dari 0.');
+    expect(provider.submitError, 'The top-up amount must be greater than 0.');
     expect(
       adapter.requests.where((options) => options.method == 'POST'),
       isEmpty,
@@ -171,7 +171,7 @@ void main() {
 
     expect(
       provider.balanceError,
-      'Server sedang bermasalah. Coba lagi sebentar lagi.',
+      'The server is having trouble. Try again shortly.',
     );
     expect(provider.balanceError, isNot(contains('SQL')));
     expect(provider.isLoadingBalance, isFalse);
@@ -191,7 +191,7 @@ void main() {
 
     expect(
       provider.historyError,
-      'Tidak bisa terhubung ke server. Periksa koneksi internet kamu.',
+      'Could not reach the server. Check your internet connection.',
     );
     expect(provider.isLoadingHistory, isFalse);
 

@@ -8,6 +8,7 @@ import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 import '../core/analysis/adaptive_position_plan.dart';
 import '../models/market_models.dart';
 import '../providers/auth_provider.dart';
+import '../l10n/l10n.dart';
 
 class AdaptivePositionPlanCard extends StatefulWidget {
   const AdaptivePositionPlanCard({
@@ -57,11 +58,11 @@ class _AdaptivePositionPlanCardState extends State<AdaptivePositionPlanCard> {
       if (!mounted || response.data == null) return;
       setState(() {
         _rule = adaptiveRuleFor(response.data!, widget.analysis.instrument);
-        if (_rule == null) _loadError = 'Aturan instrumen tidak tersedia.';
+        if (_rule == null) _loadError = context.l10n.instrumentRulesUnavailable;
       });
     } catch (_) {
       if (mounted) {
-        setState(() => _loadError = 'Aturan trading belum dapat dimuat.');
+        setState(() => _loadError = context.l10n.tradingRulesLoadFailed);
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -110,9 +111,7 @@ class _AdaptivePositionPlanCardState extends State<AdaptivePositionPlanCard> {
           'Adaptive Position Plan',
           style: TextStyle(fontWeight: FontWeight.w800),
         ),
-        subtitle: const Text(
-          'Ubah Standard Plan menjadi ukuran posisi sesuai dana dan batas rugi.',
-        ),
+        subtitle: Text(context.l10n.adaptivePlanIntro),
         onExpansionChanged: (open) {
           if (open) unawaited(_loadRule());
         },
@@ -134,33 +133,33 @@ class _AdaptivePositionPlanCardState extends State<AdaptivePositionPlanCard> {
     if (_loadError != null || _rule == null) {
       return Column(
         children: [
-          Text(_loadError ?? 'Aturan trading tidak tersedia.'),
+          Text(_loadError ?? context.l10n.tradingRulesUnavailable),
           const SizedBox(height: 8),
-          OutlinedButton(onPressed: _loadRule, child: const Text('Coba lagi')),
+          OutlinedButton(
+            onPressed: _loadRule,
+            child: Text(context.l10n.tryAgain),
+          ),
         ],
       );
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _Notice(
-          'Kalkulator ini tidak mengubah level AI dan tidak mengirim order. '
-          'Isi dana bebas yang sudah dikurangi margin posisi lain.',
-        ),
+        _Notice(context.l10n.adaptivePlanDisclaimer),
         const SizedBox(height: 12),
         Row(
           children: [
             Expanded(
               child: _MoneyField(
                 controller: _margin,
-                label: 'Dana trading tersedia',
+                label: context.l10n.availableTradingFunds,
               ),
             ),
             const SizedBox(width: 10),
             Expanded(
               child: _MoneyField(
                 controller: _loss,
-                label: 'Batas rugi maksimum',
+                label: context.l10n.maxLossLimit,
               ),
             ),
           ],
@@ -212,7 +211,7 @@ class _AdaptivePositionPlanCardState extends State<AdaptivePositionPlanCard> {
         FilledButton.icon(
           onPressed: _calculate,
           icon: const Icon(Icons.calculate_outlined),
-          label: const Text('Buat rencana posisi'),
+          label: Text(context.l10n.buildPositionPlan),
         ),
         if (_recommendation != null) ...[
           const SizedBox(height: 14),
@@ -267,7 +266,7 @@ class _Result extends StatelessWidget {
     final posture = switch (recommendation.posture) {
       AdaptivePosture.scalingAllowed => 'Scaling diizinkan',
       AdaptivePosture.entryOnly => 'Entry awal saja',
-      AdaptivePosture.notRecommended => 'Tidak direkomendasikan',
+      AdaptivePosture.notRecommended => context.l10n.notRecommended,
     };
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -316,10 +315,9 @@ class _Result extends StatelessWidget {
           (item) => _LayerTile(index: item.$1, layer: item.$2),
         ),
         const SizedBox(height: 8),
-        const Text(
-          'Day trading only. Estimasi tidak memasukkan spread, slippage, fee, '
-          'VAT, rollover, atau auto-liquidation broker.',
-          style: TextStyle(fontSize: 10.5, fontStyle: FontStyle.italic),
+        Text(
+          context.l10n.adaptivePlanFootnote,
+          style: const TextStyle(fontSize: 10.5, fontStyle: FontStyle.italic),
         ),
       ],
     );
@@ -339,7 +337,7 @@ class _MetricGrid extends StatelessWidget {
       _Metric('Final SL', _decimal(side.stopLoss), color: Colors.redAccent),
       _Metric('Total lot', _decimal(side.totalLots)),
       _Metric('Margin', _money(side.marginRequired)),
-      _Metric('Rugi ke SL', _money(side.estimatedLoss)),
+      _Metric(context.l10n.lossToSl, _money(side.estimatedLoss)),
       if (side.takeProfit1 != null)
         _Metric(
           'TP1 / profit',

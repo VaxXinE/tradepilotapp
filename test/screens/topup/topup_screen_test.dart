@@ -254,7 +254,7 @@ void main() {
 
     // A 5xx is reported generically, and the server's own words never reach
     // the screen.
-    expect(find.textContaining('Server sedang bermasalah'), findsOneWidget);
+    expect(find.textContaining('The server is having trouble'), findsOneWidget);
     expect(find.textContaining('boom'), findsNothing);
     expect(find.text('Try again'), findsWidgets);
 
@@ -264,7 +264,7 @@ void main() {
     await tester.tap(find.text('Try again').last);
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Server sedang bermasalah'), findsNothing);
+    expect(find.textContaining('The server is having trouble'), findsNothing);
     expect(find.text('Approved'), findsOneWidget);
 
     harness.dispose();

@@ -914,7 +914,7 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
         );
         telemetryId = response.data?.id;
       }
-      if (telemetryId == null) throw StateError('Telemetry ID tidak tersedia');
+      if (telemetryId == null) throw StateError('Missing telemetry id');
       final award = (await auth.client.analyses.waitGuardrail(
         id: telemetryId,
       )).data;

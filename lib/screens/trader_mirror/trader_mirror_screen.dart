@@ -5,6 +5,7 @@ import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 import '../../core/mindset/mindset_engine.dart';
 import '../../providers/analysis_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../l10n/l10n.dart';
 
 class TraderMirrorScreen extends StatefulWidget {
   const TraderMirrorScreen({super.key});
@@ -38,7 +39,7 @@ class _TraderMirrorScreenState extends State<TraderMirrorScreen> {
       });
     } catch (_) {
       if (mounted && auth.user?.id == userId) {
-        setState(() => _error = 'Trader Mirror belum dapat dimuat.');
+        setState(() => _error = context.l10n.traderMirrorLoadFailed);
       }
     } finally {
       if (mounted && auth.user?.id == userId) setState(() => _loading = false);
@@ -51,9 +52,7 @@ class _TraderMirrorScreenState extends State<TraderMirrorScreen> {
     if (_ownerUserId != null && currentUserId != _ownerUserId) {
       return Scaffold(
         appBar: AppBar(title: const Text('Trader Mirror')),
-        body: const Center(
-          child: Text('Sesi berubah. Buka kembali halaman ini.'),
-        ),
+        body: Center(child: Text(context.l10n.sessionChangedReopen)),
       );
     }
     final analysis = context.watch<AnalysisProvider>();
@@ -78,7 +77,7 @@ class _TraderMirrorScreenState extends State<TraderMirrorScreen> {
                   Center(
                     child: TextButton(
                       onPressed: _load,
-                      child: const Text('Coba lagi'),
+                      child: Text(context.l10n.tryAgain),
                     ),
                   ),
                 ],
@@ -86,15 +85,13 @@ class _TraderMirrorScreenState extends State<TraderMirrorScreen> {
             : ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  const Text(
-                    'Cermin kebiasaan ini bersifat retrospektif dan tidak memberikan instruksi trading.',
-                  ),
+                  Text(context.l10n.traderMirrorDisclaimer),
                   const SizedBox(height: 16),
                   if (data!.highlights.isEmpty)
-                    const Card(
+                    Card(
                       child: Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Text('Belum cukup data untuk membuat sorotan.'),
+                        padding: const EdgeInsets.all(16),
+                        child: Text(context.l10n.traderMirrorNoHighlights),
                       ),
                     )
                   else
@@ -112,20 +109,23 @@ class _TraderMirrorScreenState extends State<TraderMirrorScreen> {
                     ),
                   const SizedBox(height: 18),
                   Text(
-                    'Cakupan ${data.insights.windowDays} hari · ${data.insights.totalResolved} evaluasi selesai',
+                    context.l10n.traderMirrorCoverage(
+                      data.insights.windowDays,
+                      data.insights.totalResolved,
+                    ),
                     style: const TextStyle(fontWeight: FontWeight.w800),
                   ),
                   const SizedBox(height: 8),
                   _GateRow(
-                    label: 'Sesi pasar',
+                    label: context.l10n.traderMirrorSessions,
                     insight: data.insights.sessions,
                   ),
                   _GateRow(
-                    label: 'Konsentrasi instrumen',
+                    label: context.l10n.traderMirrorInstruments,
                     insight: data.insights.instruments,
                   ),
                   _GateRow(
-                    label: 'Waktu analisis',
+                    label: context.l10n.traderMirrorTiming,
                     insight: data.insights.timing,
                   ),
                   _GateRow(
@@ -142,17 +142,15 @@ class _TraderMirrorScreenState extends State<TraderMirrorScreen> {
                     style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
                   ),
                   Text(
-                    'Berdasarkan ${analysis.history.length} analisis yang sedang dimuat di perangkat.',
+                    context.l10n.traderMirrorBasedOn(analysis.history.length),
                     style: const TextStyle(fontSize: 12),
                   ),
                   const SizedBox(height: 8),
                   if (reflections.isEmpty)
-                    const Card(
+                    Card(
                       child: Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Text(
-                          'Butuh sedikitnya 3 analisis untuk refleksi yang cukup hati-hati.',
-                        ),
+                        padding: const EdgeInsets.all(16),
+                        child: Text(context.l10n.traderMirrorNeedMore),
                       ),
                     )
                   else
@@ -190,8 +188,11 @@ class _GateRow extends StatelessWidget {
         title: Text(label),
         subtitle: Text(
           insight.gated
-              ? 'Perlu ${insight.need ?? 'lebih banyak'} data; tersedia ${insight.have ?? 0}.'
-              : 'Data cukup untuk menampilkan rincian.',
+              ? context.l10n.traderMirrorGated(
+                  '${insight.need ?? context.l10n.traderMirrorNeedMoreGeneric}',
+                  insight.have ?? 0,
+                )
+              : context.l10n.traderMirrorUngated,
         ),
         children: insight.gated || data == null
             ? const []

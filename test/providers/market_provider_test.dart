@@ -90,7 +90,7 @@ void main() {
       await provider.loadQuotes(force: true);
 
       expect(provider.quoteFor('BTC/USD')?.price, 65000);
-      expect(provider.marketError, 'Gagal memuat harga live.');
+      expect(provider.marketError, 'Could not load live prices.');
 
       repository.error = null;
       await provider.loadQuotes(force: true);

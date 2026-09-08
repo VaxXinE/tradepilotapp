@@ -10,7 +10,7 @@ class AppColors {
   static const lightText = Color(0xFF211A12);
   static const lightBackground = Color(0xFFFBFBF8);
   static const lightCard = Color(0xFFFFFFFF);
-  static const lightPrimary = Color(0xFFAA6F09);
+  static const lightPrimary = Color(0xFF8A5900);
   static const lightPrimaryForeground = Color(0xFFFCFBF7);
   static const lightSecondary = Color(0xFFF7F4E8);
   static const lightSecondaryForeground = Color(0xFF281F15);

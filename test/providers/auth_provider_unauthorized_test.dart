@@ -108,7 +108,7 @@ void main() {
     );
 
     expect(result, isNull);
-    expect(auth.errorMessage, 'Jawaban keamanan tidak sesuai.');
+    expect(auth.errorMessage, 'That security answer is incorrect.');
     expect(auth.status, AuthStatus.authenticated);
   });
 

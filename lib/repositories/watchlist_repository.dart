@@ -1,5 +1,6 @@
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 import 'package:trade_pilot_api_client/trade_pilot_client.dart';
+import '../l10n/app_messages.dart';
 
 class WatchlistRepository {
   const WatchlistRepository(this._client);
@@ -43,7 +44,7 @@ class WatchlistRepository {
       throw ArgumentError.value(
         instrument,
         'instrument',
-        'Instrument tidak boleh kosong.',
+        AppMessages.l10n.errInstrumentRequired,
       );
     }
     return normalized;

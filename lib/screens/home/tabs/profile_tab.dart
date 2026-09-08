@@ -405,10 +405,8 @@ class ProfileTab extends StatelessWidget {
                       const Divider(height: 1),
                       ListTile(
                         leading: const Icon(Icons.public_rounded),
-                        title: const Text('Kinerja AI Publik'),
-                        subtitle: const Text(
-                          'Rekam jejak anonim seluruh analisis Trade Pilot',
-                        ),
+                        title: Text(l10n.publicAiPerformance),
+                        subtitle: Text(l10n.publicAiPerformanceSubtitle),
                         trailing: const Icon(Icons.chevron_right_rounded),
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute(

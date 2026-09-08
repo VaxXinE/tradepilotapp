@@ -11,6 +11,7 @@ import 'package:trade_pilot_api_client/trade_pilot_client.dart';
 import '../models/history_filters.dart';
 import '../models/history_sort.dart';
 import 'auth_provider.dart';
+import '../l10n/app_messages.dart';
 
 /// Detail rate-limit dari `POST /analyses` untuk ditampilkan UI tanpa
 /// bergantung pada teks error backend.
@@ -475,7 +476,7 @@ class AnalysisProvider extends ChangeNotifier {
     String? userInputContext,
   }) async {
     if (_authProvider.status != AuthStatus.authenticated) {
-      errorMessage = 'Sesi login sudah berakhir. Silakan login kembali.';
+      errorMessage = AppMessages.l10n.errSessionExpiredRelogin;
 
       notifyListeners();
 
@@ -565,9 +566,7 @@ class AnalysisProvider extends ChangeNotifier {
               error.type == DioExceptionType.connectionTimeout);
 
       if (isTimeout) {
-        errorMessage =
-            'Koneksi ke AI lama meresponsnya. Analisis mungkin tetap '
-            'berhasil dibuat — data akan disinkronkan otomatis.';
+        errorMessage = AppMessages.l10n.errAnalysisSlowSync;
 
         _scheduleTimeoutRevalidation(epoch: epoch, userId: _activeUserId);
       } else {
@@ -743,7 +742,7 @@ class AnalysisProvider extends ChangeNotifier {
     final to = normalized.to;
 
     if (from != null && to != null && from.isAfter(to)) {
-      filteredHistoryError = 'Tanggal awal tidak boleh melewati tanggal akhir.';
+      filteredHistoryError = AppMessages.l10n.errDateRangeInvalid;
 
       notifyListeners();
 
@@ -1225,7 +1224,7 @@ class AnalysisProvider extends ChangeNotifier {
         _savingNoteIds.contains(analysis.id) ||
         note.length > 5000) {
       if (note.length > 5000) {
-        errorMessage = 'Catatan maksimal 5.000 karakter.';
+        errorMessage = AppMessages.l10n.errNoteTooLong5000;
         notifyListeners();
       }
       return null;
@@ -1510,31 +1509,29 @@ class AnalysisProvider extends ChangeNotifier {
       }
 
       if (error.response?.statusCode == 401) {
-        return 'Sesi login sudah berakhir. Silakan login kembali.';
+        return AppMessages.l10n.errSessionExpiredRelogin;
       }
 
       if (error.response?.statusCode == 429) {
-        return 'Batas kuota analisis tercapai. Coba lagi nanti.';
+        return AppMessages.l10n.errQuotaReached;
       }
 
       if (error.type == DioExceptionType.receiveTimeout ||
           error.type == DioExceptionType.sendTimeout ||
           error.type == DioExceptionType.connectionTimeout) {
-        return 'AI butuh waktu lebih lama dari biasanya untuk '
-            'menganalisis. Silakan coba lagi.';
+        return AppMessages.l10n.errAiTimeout;
       }
 
       if (error.type == DioExceptionType.connectionError) {
-        return 'Tidak bisa terhubung ke server. '
-            'Periksa koneksi internet kamu.';
+        return AppMessages.l10n.errNoConnection;
       }
 
       if (error.type == DioExceptionType.cancel) {
-        return 'Permintaan dibatalkan.';
+        return AppMessages.l10n.errRequestCancelled;
       }
     }
 
-    return 'Analisis gagal. Silakan coba lagi.';
+    return AppMessages.l10n.errAnalysisFailed;
   }
 
   AnalysisQuotaLimit _parseQuotaLimit(DioException error) {
@@ -1585,16 +1582,16 @@ class AnalysisProvider extends ChangeNotifier {
   String _friendlyNoteError(Object error) {
     if (error is DioException) {
       if (error.response?.statusCode == 401) {
-        return 'Sesi login sudah berakhir. Silakan login kembali.';
+        return AppMessages.l10n.errSessionExpiredRelogin;
       }
       if (error.type == DioExceptionType.connectionError ||
           error.type == DioExceptionType.connectionTimeout ||
           error.type == DioExceptionType.receiveTimeout ||
           error.type == DioExceptionType.sendTimeout) {
-        return 'Catatan belum tersimpan. Periksa koneksi lalu coba lagi.';
+        return AppMessages.l10n.errNoteNotSaved;
       }
     }
-    return 'Catatan belum dapat disimpan. Silakan coba lagi.';
+    return AppMessages.l10n.errNoteSaveFailed;
   }
 
   // ===========================================================================
