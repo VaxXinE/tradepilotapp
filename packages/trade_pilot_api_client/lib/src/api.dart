@@ -16,13 +16,16 @@ import 'package:trade_pilot_api_client/src/api/daily_summary_api.dart';
 import 'package:trade_pilot_api_client/src/api/events_api.dart';
 import 'package:trade_pilot_api_client/src/api/filter_presets_api.dart';
 import 'package:trade_pilot_api_client/src/api/health_api.dart';
+import 'package:trade_pilot_api_client/src/api/native_push_api.dart';
 import 'package:trade_pilot_api_client/src/api/notifications_api.dart';
 import 'package:trade_pilot_api_client/src/api/performance_api.dart';
+import 'package:trade_pilot_api_client/src/api/progression_api.dart';
 import 'package:trade_pilot_api_client/src/api/push_api.dart';
 import 'package:trade_pilot_api_client/src/api/storage_api.dart';
 import 'package:trade_pilot_api_client/src/api/superadmin_api.dart';
 import 'package:trade_pilot_api_client/src/api/trade_journal_api.dart';
 import 'package:trade_pilot_api_client/src/api/trader_mirror_api.dart';
+import 'package:trade_pilot_api_client/src/api/trading_rules_api.dart';
 import 'package:trade_pilot_api_client/src/api/user_price_alerts_api.dart';
 import 'package:trade_pilot_api_client/src/api/watchlist_api.dart';
 
@@ -162,6 +165,12 @@ class TradePilotApiClient {
     return HealthApi(dio, serializers);
   }
 
+  /// Get NativePushApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  NativePushApi getNativePushApi() {
+    return NativePushApi(dio, serializers);
+  }
+
   /// Get NotificationsApi instance, base route and serializer can be overridden by a given but be careful,
   /// by doing that all interceptors will not be executed
   NotificationsApi getNotificationsApi() {
@@ -172,6 +181,12 @@ class TradePilotApiClient {
   /// by doing that all interceptors will not be executed
   PerformanceApi getPerformanceApi() {
     return PerformanceApi(dio, serializers);
+  }
+
+  /// Get ProgressionApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  ProgressionApi getProgressionApi() {
+    return ProgressionApi(dio, serializers);
   }
 
   /// Get PushApi instance, base route and serializer can be overridden by a given but be careful,
@@ -202,6 +217,12 @@ class TradePilotApiClient {
   /// by doing that all interceptors will not be executed
   TraderMirrorApi getTraderMirrorApi() {
     return TraderMirrorApi(dio, serializers);
+  }
+
+  /// Get TradingRulesApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  TradingRulesApi getTradingRulesApi() {
+    return TradingRulesApi(dio, serializers);
   }
 
   /// Get UserPriceAlertsApi instance, base route and serializer can be overridden by a given but be careful,

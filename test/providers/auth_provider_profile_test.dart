@@ -158,6 +158,7 @@ User _user({required String name, String mode = 'beginner'}) => User(
         : UserSelectedModeEnum.beginner
     ..themePreference = UserThemePreferenceEnum.dark
     ..securityQuestion = 'Nama hewan pertama?'
+    ..createdAt = DateTime.utc(2026)
     ..onboardingCompleted = true,
 );
 
@@ -205,6 +206,7 @@ class _ProfileAdapter implements HttpClientAdapter {
       'selectedMode': mode,
       'themePreference': 'dark',
       'securityQuestion': 'Nama hewan pertama?',
+      'createdAt': '2026-01-01T00:00:00.000Z',
       'onboardingCompleted': true,
     });
   }
@@ -253,6 +255,7 @@ class _RegisterAdapter implements HttpClientAdapter {
           'selectedMode': 'beginner',
           'themePreference': 'dark',
           'securityQuestion': 'Nama hewan peliharaan pertama kamu?',
+          'createdAt': '2026-01-01T00:00:00.000Z',
           'onboardingCompleted': false,
         },
       }),

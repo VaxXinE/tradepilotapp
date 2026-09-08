@@ -522,6 +522,63 @@ class NotificationsProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> updateQuietHours({
+    bool? enabled,
+    String? start,
+    String? end,
+    String? timezone,
+  }) async {
+    final userId = _currentUserId;
+    final validTime = RegExp(r'^(?:[01]\d|2[0-3]):[0-5]\d$');
+    final validTimezone = RegExp(r'^(?:UTC|[A-Za-z_+-]+/[A-Za-z0-9_+/-]+)$');
+
+    if (userId == null ||
+        isSavingPreferences ||
+        (enabled == null && start == null && end == null && timezone == null) ||
+        (start != null && !validTime.hasMatch(start)) ||
+        (end != null && !validTime.hasMatch(end)) ||
+        (timezone != null && !validTimezone.hasMatch(timezone))) {
+      return false;
+    }
+
+    final epoch = _sessionEpoch;
+    final mutationId = ++_prefsMutationId;
+    isSavingPreferences = true;
+    preferencesError = null;
+    notifyListeners();
+
+    try {
+      final response = await _client.push.updatePushPrefs(
+        pushPrefsUpdate: PushPrefsUpdate(
+          (builder) => builder
+            ..quietHoursEnabled = enabled
+            ..quietHoursStart = start
+            ..quietHoursEnd = end
+            ..notificationTimezone = timezone,
+        ),
+      );
+
+      if (!_isCurrentSession(epoch: epoch, userId: userId) ||
+          mutationId != _prefsMutationId) {
+        return false;
+      }
+
+      preferences = response.data;
+      return preferences != null;
+    } catch (_) {
+      if (_isCurrentSession(epoch: epoch, userId: userId)) {
+        preferencesError = 'Gagal menyimpan waktu tenang notifikasi.';
+      }
+      return false;
+    } finally {
+      if (mutationId == _prefsMutationId &&
+          _isCurrentSession(epoch: epoch, userId: userId)) {
+        isSavingPreferences = false;
+        notifyListeners();
+      }
+    }
+  }
+
   Future<bool> dismissDisengageNotice() async {
     final userId = _currentUserId;
 

@@ -11,16 +11,17 @@ part 'performance_bucket.g.dart';
 /// Single bucket inside a performance segment (per instrument, FX session, or market-condition). `winRate` is wins / (wins + losses) — only trades that actually triggered. `hitRate` is wins / total resolved (expired included).
 ///
 /// Properties:
-/// * [key] 
-/// * [triggered] 
-/// * [wins] 
-/// * [losses] 
-/// * [expired] 
-/// * [total] 
-/// * [winRate] 
-/// * [hitRate] 
+/// * [key]
+/// * [triggered]
+/// * [wins]
+/// * [losses]
+/// * [expired]
+/// * [total]
+/// * [winRate]
+/// * [hitRate]
 @BuiltValue()
-abstract class PerformanceBucket implements Built<PerformanceBucket, PerformanceBucketBuilder> {
+abstract class PerformanceBucket
+    implements Built<PerformanceBucket, PerformanceBucketBuilder> {
   @BuiltValueField(wireName: r'key')
   String get key;
 
@@ -40,23 +41,26 @@ abstract class PerformanceBucket implements Built<PerformanceBucket, Performance
   int get total;
 
   @BuiltValueField(wireName: r'winRate')
-  num get winRate;
+  num? get winRate;
 
   @BuiltValueField(wireName: r'hitRate')
-  num get hitRate;
+  num? get hitRate;
 
   PerformanceBucket._();
 
-  factory PerformanceBucket([void updates(PerformanceBucketBuilder b)]) = _$PerformanceBucket;
+  factory PerformanceBucket([void updates(PerformanceBucketBuilder b)]) =
+      _$PerformanceBucket;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(PerformanceBucketBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<PerformanceBucket> get serializer => _$PerformanceBucketSerializer();
+  static Serializer<PerformanceBucket> get serializer =>
+      _$PerformanceBucketSerializer();
 }
 
-class _$PerformanceBucketSerializer implements PrimitiveSerializer<PerformanceBucket> {
+class _$PerformanceBucketSerializer
+    implements PrimitiveSerializer<PerformanceBucket> {
   @override
   final Iterable<Type> types = const [PerformanceBucket, _$PerformanceBucket];
 
@@ -101,12 +105,12 @@ class _$PerformanceBucketSerializer implements PrimitiveSerializer<PerformanceBu
     yield r'winRate';
     yield serializers.serialize(
       object.winRate,
-      specifiedType: const FullType(num),
+      specifiedType: const FullType.nullable(num),
     );
     yield r'hitRate';
     yield serializers.serialize(
       object.hitRate,
-      specifiedType: const FullType(num),
+      specifiedType: const FullType.nullable(num),
     );
   }
 
@@ -116,7 +120,9 @@ class _$PerformanceBucketSerializer implements PrimitiveSerializer<PerformanceBu
     PerformanceBucket object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -176,15 +182,15 @@ class _$PerformanceBucketSerializer implements PrimitiveSerializer<PerformanceBu
         case r'winRate':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(num),
-          ) as num;
+            specifiedType: const FullType.nullable(num),
+          ) as num?;
           result.winRate = valueDes;
           break;
         case r'hitRate':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(num),
-          ) as num;
+            specifiedType: const FullType.nullable(num),
+          ) as num?;
           result.hitRate = valueDes;
           break;
         default:
@@ -215,4 +221,3 @@ class _$PerformanceBucketSerializer implements PrimitiveSerializer<PerformanceBu
     return result.build();
   }
 }
-

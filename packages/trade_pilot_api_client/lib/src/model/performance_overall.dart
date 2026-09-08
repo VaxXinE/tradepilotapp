@@ -11,15 +11,16 @@ part 'performance_overall.g.dart';
 /// PerformanceOverall
 ///
 /// Properties:
-/// * [triggered] 
-/// * [wins] 
-/// * [losses] 
-/// * [expired] 
-/// * [total] 
-/// * [winRate] 
-/// * [hitRate] 
+/// * [triggered]
+/// * [wins]
+/// * [losses]
+/// * [expired]
+/// * [total]
+/// * [winRate]
+/// * [hitRate]
 @BuiltValue()
-abstract class PerformanceOverall implements Built<PerformanceOverall, PerformanceOverallBuilder> {
+abstract class PerformanceOverall
+    implements Built<PerformanceOverall, PerformanceOverallBuilder> {
   @BuiltValueField(wireName: r'triggered')
   int get triggered;
 
@@ -36,23 +37,26 @@ abstract class PerformanceOverall implements Built<PerformanceOverall, Performan
   int get total;
 
   @BuiltValueField(wireName: r'winRate')
-  num get winRate;
+  num? get winRate;
 
   @BuiltValueField(wireName: r'hitRate')
-  num get hitRate;
+  num? get hitRate;
 
   PerformanceOverall._();
 
-  factory PerformanceOverall([void updates(PerformanceOverallBuilder b)]) = _$PerformanceOverall;
+  factory PerformanceOverall([void updates(PerformanceOverallBuilder b)]) =
+      _$PerformanceOverall;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(PerformanceOverallBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<PerformanceOverall> get serializer => _$PerformanceOverallSerializer();
+  static Serializer<PerformanceOverall> get serializer =>
+      _$PerformanceOverallSerializer();
 }
 
-class _$PerformanceOverallSerializer implements PrimitiveSerializer<PerformanceOverall> {
+class _$PerformanceOverallSerializer
+    implements PrimitiveSerializer<PerformanceOverall> {
   @override
   final Iterable<Type> types = const [PerformanceOverall, _$PerformanceOverall];
 
@@ -92,12 +96,12 @@ class _$PerformanceOverallSerializer implements PrimitiveSerializer<PerformanceO
     yield r'winRate';
     yield serializers.serialize(
       object.winRate,
-      specifiedType: const FullType(num),
+      specifiedType: const FullType.nullable(num),
     );
     yield r'hitRate';
     yield serializers.serialize(
       object.hitRate,
-      specifiedType: const FullType(num),
+      specifiedType: const FullType.nullable(num),
     );
   }
 
@@ -107,7 +111,9 @@ class _$PerformanceOverallSerializer implements PrimitiveSerializer<PerformanceO
     PerformanceOverall object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -160,15 +166,15 @@ class _$PerformanceOverallSerializer implements PrimitiveSerializer<PerformanceO
         case r'winRate':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(num),
-          ) as num;
+            specifiedType: const FullType.nullable(num),
+          ) as num?;
           result.winRate = valueDes;
           break;
         case r'hitRate':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(num),
-          ) as num;
+            specifiedType: const FullType.nullable(num),
+          ) as num?;
           result.hitRate = valueDes;
           break;
         default:
@@ -199,4 +205,3 @@ class _$PerformanceOverallSerializer implements PrimitiveSerializer<PerformanceO
     return result.build();
   }
 }
-

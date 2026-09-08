@@ -246,6 +246,7 @@ User _user(int id) => User(
     ..role = UserRoleEnum.user
     ..selectedMode = UserSelectedModeEnum.beginner
     ..themePreference = UserThemePreferenceEnum.dark
+    ..createdAt = DateTime.utc(2026)
     ..onboardingCompleted = true,
 );
 

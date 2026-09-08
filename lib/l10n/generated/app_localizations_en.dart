@@ -143,6 +143,198 @@ class AppLocalizationsEn extends AppLocalizations {
       'Short lessons for disciplined decisions';
 
   @override
+  String get guide => 'Guide Center';
+
+  @override
+  String get guideDescription =>
+      'Guides to features, analysis, risk, and trading discipline';
+
+  @override
+  String get mentalChecklistPreference => 'Pre-analysis mental checklist';
+
+  @override
+  String get mentalChecklistPreferenceHint =>
+      'Show four discipline reminders before creating an analysis';
+
+  @override
+  String get mentalChecklistTitle => 'Pre-trade mental check';
+
+  @override
+  String get mentalChecklistRisk =>
+      'I know exactly how much I will lose if this trade fails';
+
+  @override
+  String get mentalChecklistPlan =>
+      'I have a written entry, stop-loss, and target';
+
+  @override
+  String get mentalChecklistChase =>
+      'I am not chasing a move that already happened (no FOMO)';
+
+  @override
+  String get mentalChecklistCalm =>
+      'I am not trading to recover a previous loss';
+
+  @override
+  String get mentalChecklistHint =>
+      'Tick all four before you click Analyze. It\'s a nudge, not a block — but unchecked items are usually how losses start.';
+
+  @override
+  String get safeWait => 'Wait Safely';
+
+  @override
+  String get safeWaitHint =>
+      'Acknowledge the risk and wait on the sidelines. Good discipline.';
+
+  @override
+  String get safeWaitRecorded => 'Your decision to wait was recorded.';
+
+  @override
+  String get safeWaitFailed =>
+      'Your decision to wait could not be saved. Try again.';
+
+  @override
+  String get coolingOffBreathingTitle => 'Take a breath first';
+
+  @override
+  String coolingOffBreathingBody(String loss) {
+    return 'You just took a $loss% loss. Follow this breathing pattern before choosing. The setup will still be there.';
+  }
+
+  @override
+  String get coolingOffBreathingBodyGeneric =>
+      'Follow this breathing pattern before choosing. The setup will still be there.';
+
+  @override
+  String get coolingOffBreathingInhale => 'Breathe in';
+
+  @override
+  String get coolingOffBreathingHold => 'Hold';
+
+  @override
+  String get coolingOffBreathingExhale => 'Breathe out';
+
+  @override
+  String get coolingOffBreathingWait => 'Wait it out';
+
+  @override
+  String get coolingOffBreathingContinue => 'Continue anyway';
+
+  @override
+  String xpAwarded(int xp, String activity) {
+    return '+$xp XP for $activity';
+  }
+
+  @override
+  String get checklistActivity => 'completing the pre-analysis checklist';
+
+  @override
+  String get guideComplete => 'Mark complete';
+
+  @override
+  String get guideReading =>
+      'Read the material until the completion button becomes active.';
+
+  @override
+  String get guideProgressFailed => 'Guide progress could not be saved.';
+
+  @override
+  String get openFullExplanation => 'Open full explanation';
+
+  @override
+  String get learnAdaptivePosition => 'Learn adaptive positioning';
+
+  @override
+  String get sponsoredBySolidPrime => 'Sponsored by SOLID PRIME';
+
+  @override
+  String get sponsorDisclosure =>
+      'Sponsor links do not influence analysis independence and are not a recommendation to open an account or trade.';
+
+  @override
+  String get openSponsorWebsite => 'Open sponsor website';
+
+  @override
+  String get liveAnalysisTitle => 'Live Analysis';
+
+  @override
+  String get liveAnalysisSponsorSubtitle =>
+      'Every weekday at 09:00 WIB on TikTok @solid.prime';
+
+  @override
+  String get progressionTitle => 'Progression';
+
+  @override
+  String get progressionSubtitle =>
+      'Your private record of preparation, reflection, and discipline.';
+
+  @override
+  String get progressionLoading => 'Loading discipline data...';
+
+  @override
+  String get progressionLoadFailed => 'Could not load progression data.';
+
+  @override
+  String get progressionOverview => 'Overview';
+
+  @override
+  String get progressionAchievements => 'Achievements';
+
+  @override
+  String get progressionHistory => 'XP History';
+
+  @override
+  String get progressionCurrentStreak => 'Current streak';
+
+  @override
+  String get progressionLongestStreak => 'Longest streak';
+
+  @override
+  String progressionLevel(int level) {
+    return 'Level $level';
+  }
+
+  @override
+  String progressionMastery(int level) {
+    return 'Mastery $level';
+  }
+
+  @override
+  String progressionRank(String rank) {
+    return 'Rank: $rank';
+  }
+
+  @override
+  String progressionXpToNext(int xp) {
+    return '$xp XP to the next level';
+  }
+
+  @override
+  String progressionUnlocked(String date) {
+    return 'Unlocked $date';
+  }
+
+  @override
+  String get progressionLocked => 'Locked';
+
+  @override
+  String get progressionNoAchievements =>
+      'Complete activities to unlock achievements.';
+
+  @override
+  String get progressionNoHistory =>
+      'No activity yet. Start building your discipline routine.';
+
+  @override
+  String get progressionPrivate =>
+      'Progress is private. XP rewards process—not profit, win rate, or account size.';
+
+  @override
+  String progressionActivity(int xp, String reason) {
+    return '+$xp XP for $reason';
+  }
+
+  @override
   String get mindsetDisclaimer =>
       'Educational material only. It is not financial or psychological advice.';
 
@@ -1222,4 +1414,124 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get biometricLockUnavailable =>
       'No fingerprint or face unlock is set up on this device.';
+
+  @override
+  String get riskMapTitle => 'Timeframe Risk Map';
+
+  @override
+  String get riskMapDescription =>
+      'Compare technical risk across timeframes before creating an analysis.';
+
+  @override
+  String get riskMapLoading => 'Scanning timeframes...';
+
+  @override
+  String get riskMapError => 'Could not load the risk map.';
+
+  @override
+  String get riskMapOverallWait => 'Overall: wait';
+
+  @override
+  String get riskMapOverallCompare => 'Compare timeframe options';
+
+  @override
+  String get riskMapRelativeNote =>
+      'This map indicates relative risk, not guaranteed profit.';
+
+  @override
+  String get riskLow => 'Low risk';
+
+  @override
+  String get riskModerate => 'Moderate risk';
+
+  @override
+  String get riskHigh => 'High risk';
+
+  @override
+  String get riskUnavailable => 'Unavailable';
+
+  @override
+  String get riskEligible => 'Eligible';
+
+  @override
+  String get riskCaution => 'Caution';
+
+  @override
+  String get riskWait => 'Wait';
+
+  @override
+  String get riskSelected => 'Selected';
+
+  @override
+  String useTimeframe(String timeframe) {
+    return 'Use $timeframe';
+  }
+
+  @override
+  String get standardRulesTitle => 'TP Standard Trading Rules';
+
+  @override
+  String get standardRulesDescription =>
+      'Broker-neutral rules used as the basis for Trade Pilot estimates.';
+
+  @override
+  String get standardRulesLoading => 'Loading the standard trading rules...';
+
+  @override
+  String get standardRulesError =>
+      'Standard trading rules are temporarily unavailable.';
+
+  @override
+  String get ruleVersion => 'Version';
+
+  @override
+  String get fixedConversionRate => 'Fixed conversion rate';
+
+  @override
+  String get contractSize => 'Contract size';
+
+  @override
+  String get tradingSession => 'Trading session';
+
+  @override
+  String get initialMargin => 'Initial margin';
+
+  @override
+  String get facilityFee => 'Facility fee';
+
+  @override
+  String get rollover => 'Rollover';
+
+  @override
+  String get spread => 'Spread';
+
+  @override
+  String get hecticSpread => 'Hectic-market spread';
+
+  @override
+  String get minimumMovement => 'Minimum movement';
+
+  @override
+  String get limitStopRange => 'Limit/stop range';
+
+  @override
+  String get priceSource => 'Price source / guidance';
+
+  @override
+  String get settlement => 'Settlement';
+
+  @override
+  String get allowedLotRange => 'Allowed open position';
+
+  @override
+  String get minimumDeposit => 'Minimum deposit';
+
+  @override
+  String get marginControls => 'Margin controls';
+
+  @override
+  String get profitLossFormula => 'P/L formula';
+
+  @override
+  String get sourceDocument => 'Source document';
 }

@@ -143,6 +143,197 @@ class AppLocalizationsId extends AppLocalizations {
       'Pelajaran singkat untuk keputusan disiplin';
 
   @override
+  String get guide => 'Pusat Panduan';
+
+  @override
+  String get guideDescription =>
+      'Panduan fitur, analisis, risiko, dan disiplin trading';
+
+  @override
+  String get mentalChecklistPreference => 'Checklist mental pra-analisis';
+
+  @override
+  String get mentalChecklistPreferenceHint =>
+      'Tampilkan empat pengingat disiplin sebelum membuat analisis';
+
+  @override
+  String get mentalChecklistTitle => 'Cek mental sebelum trade';
+
+  @override
+  String get mentalChecklistRisk =>
+      'Gw tau persis berapa loss kalau trade ini gagal';
+
+  @override
+  String get mentalChecklistPlan =>
+      'Gw punya entry, stop-loss, dan target — tertulis, bukan di kepala doang';
+
+  @override
+  String get mentalChecklistChase =>
+      'Gw nggak ngejar pergerakan yang sudah jalan (bukan FOMO)';
+
+  @override
+  String get mentalChecklistCalm =>
+      'Gw nggak trade buat balas dendam loss sebelumnya';
+
+  @override
+  String get mentalChecklistHint =>
+      'Centang keempatnya sebelum klik Analisis. Cuma reminder, bukan blocker — tapi yang nggak dicentang biasanya jadi awal loss.';
+
+  @override
+  String get safeWait => 'Tahan Diri (Wait)';
+
+  @override
+  String get safeWaitHint =>
+      'Pahami risikonya dan menepi sejenak. Disiplin yang bagus.';
+
+  @override
+  String get safeWaitRecorded => 'Keputusan menunggu berhasil dicatat.';
+
+  @override
+  String get safeWaitFailed =>
+      'Keputusan menunggu tidak dapat disimpan. Coba lagi.';
+
+  @override
+  String get coolingOffBreathingTitle => 'Tarik napas dulu';
+
+  @override
+  String coolingOffBreathingBody(String loss) {
+    return 'Kamu baru loss $loss%. Ikuti pola napas ini sebelum memilih. Setup-nya tidak ke mana-mana.';
+  }
+
+  @override
+  String get coolingOffBreathingBodyGeneric =>
+      'Ikuti pola napas ini sebelum memilih. Setup-nya tidak ke mana-mana.';
+
+  @override
+  String get coolingOffBreathingInhale => 'Tarik napas';
+
+  @override
+  String get coolingOffBreathingHold => 'Tahan';
+
+  @override
+  String get coolingOffBreathingExhale => 'Buang napas';
+
+  @override
+  String get coolingOffBreathingWait => 'Tunggu dulu';
+
+  @override
+  String get coolingOffBreathingContinue => 'Lanjut saja';
+
+  @override
+  String xpAwarded(int xp, String activity) {
+    return '+$xp XP untuk $activity';
+  }
+
+  @override
+  String get checklistActivity => 'menyelesaikan checklist pra-analisis';
+
+  @override
+  String get guideComplete => 'Tandai selesai';
+
+  @override
+  String get guideReading => 'Baca materi sampai tombol selesai aktif.';
+
+  @override
+  String get guideProgressFailed => 'Progres panduan tidak dapat disimpan.';
+
+  @override
+  String get openFullExplanation => 'Buka penjelasan lengkap';
+
+  @override
+  String get learnAdaptivePosition => 'Pelajari posisi adaptif';
+
+  @override
+  String get sponsoredBySolidPrime => 'Disponsori oleh SOLID PRIME';
+
+  @override
+  String get sponsorDisclosure =>
+      'Tautan sponsor tidak memengaruhi independensi analisis dan bukan rekomendasi untuk membuka akun atau bertransaksi.';
+
+  @override
+  String get openSponsorWebsite => 'Buka situs sponsor';
+
+  @override
+  String get liveAnalysisTitle => 'Live Analisa';
+
+  @override
+  String get liveAnalysisSponsorSubtitle =>
+      'Setiap hari kerja pukul 09.00 WIB di TikTok @solid.prime';
+
+  @override
+  String get progressionTitle => 'Progression';
+
+  @override
+  String get progressionSubtitle =>
+      'Rekam jejak pribadi untuk persiapan, refleksi, dan disiplin.';
+
+  @override
+  String get progressionLoading => 'Memuat data kedisiplinan...';
+
+  @override
+  String get progressionLoadFailed => 'Gagal memuat data kedisiplinan.';
+
+  @override
+  String get progressionOverview => 'Ringkasan';
+
+  @override
+  String get progressionAchievements => 'Pencapaian';
+
+  @override
+  String get progressionHistory => 'Riwayat XP';
+
+  @override
+  String get progressionCurrentStreak => 'Streak aktif';
+
+  @override
+  String get progressionLongestStreak => 'Streak terpanjang';
+
+  @override
+  String progressionLevel(int level) {
+    return 'Level $level';
+  }
+
+  @override
+  String progressionMastery(int level) {
+    return 'Mastery $level';
+  }
+
+  @override
+  String progressionRank(String rank) {
+    return 'Rank: $rank';
+  }
+
+  @override
+  String progressionXpToNext(int xp) {
+    return '$xp XP menuju level berikutnya';
+  }
+
+  @override
+  String progressionUnlocked(String date) {
+    return 'Terbuka $date';
+  }
+
+  @override
+  String get progressionLocked => 'Terkunci';
+
+  @override
+  String get progressionNoAchievements =>
+      'Selesaikan aktivitas untuk membuka pencapaian.';
+
+  @override
+  String get progressionNoHistory =>
+      'Belum ada aktivitas. Mulai bangun rutinitas kedisiplinanmu.';
+
+  @override
+  String get progressionPrivate =>
+      'Progress ini privat. XP menghargai proses, bukan profit, win rate, atau besar modal.';
+
+  @override
+  String progressionActivity(int xp, String reason) {
+    return '+$xp XP karena $reason';
+  }
+
+  @override
   String get mindsetDisclaimer =>
       'Materi edukasi saja. Bukan nasihat finansial atau psikologis.';
 
@@ -1217,4 +1408,124 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get biometricLockUnavailable =>
       'Belum ada sidik jari atau face unlock di perangkat ini.';
+
+  @override
+  String get riskMapTitle => 'Peta Risiko Timeframe';
+
+  @override
+  String get riskMapDescription =>
+      'Bandingkan risiko teknikal di berbagai timeframe sebelum membuat analisis.';
+
+  @override
+  String get riskMapLoading => 'Memindai timeframe...';
+
+  @override
+  String get riskMapError => 'Gagal memuat peta risiko.';
+
+  @override
+  String get riskMapOverallWait => 'Secara keseluruhan: tunggu';
+
+  @override
+  String get riskMapOverallCompare => 'Bandingkan pilihan timeframe';
+
+  @override
+  String get riskMapRelativeNote =>
+      'Peta ini menunjukkan risiko relatif, bukan jaminan profit.';
+
+  @override
+  String get riskLow => 'Risiko rendah';
+
+  @override
+  String get riskModerate => 'Risiko sedang';
+
+  @override
+  String get riskHigh => 'Risiko tinggi';
+
+  @override
+  String get riskUnavailable => 'Tidak tersedia';
+
+  @override
+  String get riskEligible => 'Layak';
+
+  @override
+  String get riskCaution => 'Hati-hati';
+
+  @override
+  String get riskWait => 'Tunggu';
+
+  @override
+  String get riskSelected => 'Terpilih';
+
+  @override
+  String useTimeframe(String timeframe) {
+    return 'Gunakan $timeframe';
+  }
+
+  @override
+  String get standardRulesTitle => 'TP Standard Trading Rules';
+
+  @override
+  String get standardRulesDescription =>
+      'Aturan broker-neutral yang menjadi dasar estimasi Trade Pilot.';
+
+  @override
+  String get standardRulesLoading => 'Memuat aturan trading standar...';
+
+  @override
+  String get standardRulesError =>
+      'Aturan trading standar sedang tidak tersedia.';
+
+  @override
+  String get ruleVersion => 'Versi';
+
+  @override
+  String get fixedConversionRate => 'Kurs konversi tetap';
+
+  @override
+  String get contractSize => 'Ukuran kontrak';
+
+  @override
+  String get tradingSession => 'Sesi trading';
+
+  @override
+  String get initialMargin => 'Margin awal';
+
+  @override
+  String get facilityFee => 'Facility fee';
+
+  @override
+  String get rollover => 'Rollover';
+
+  @override
+  String get spread => 'Spread';
+
+  @override
+  String get hecticSpread => 'Spread saat pasar hectic';
+
+  @override
+  String get minimumMovement => 'Pergerakan minimum';
+
+  @override
+  String get limitStopRange => 'Rentang limit/stop';
+
+  @override
+  String get priceSource => 'Sumber / panduan harga';
+
+  @override
+  String get settlement => 'Penyelesaian';
+
+  @override
+  String get allowedLotRange => 'Posisi terbuka yang diizinkan';
+
+  @override
+  String get minimumDeposit => 'Deposit minimum';
+
+  @override
+  String get marginControls => 'Kontrol margin';
+
+  @override
+  String get profitLossFormula => 'Formula P/L';
+
+  @override
+  String get sourceDocument => 'Dokumen sumber';
 }

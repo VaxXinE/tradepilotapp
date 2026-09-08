@@ -60,6 +60,35 @@ void main() {
       expect(provider.loadError, isNot(contains('SQL')));
     },
   );
+
+  test('updates quiet hours and notification timezone together', () async {
+    final auth = await _authenticatedUser();
+    final adapter = _NotificationsAdapter();
+    auth.client.dio.httpClientAdapter = adapter;
+    final provider = NotificationsProvider(auth);
+    addTearDown(provider.dispose);
+
+    await provider.loadPreferences();
+    expect(
+      await provider.updateQuietHours(
+        enabled: true,
+        start: '23:00',
+        end: '06:00',
+        timezone: 'Asia/Makassar',
+      ),
+      isTrue,
+    );
+    expect(provider.preferences?.quietHoursStart, '23:00');
+    expect(provider.preferences?.notificationTimezone, 'Asia/Makassar');
+    expect(
+      adapter.requests.last.data,
+      containsPair('notificationTimezone', 'Asia/Makassar'),
+    );
+
+    final requestsBeforeInvalidInput = adapter.requests.length;
+    expect(await provider.updateQuietHours(start: '25:00'), isFalse);
+    expect(adapter.requests, hasLength(requestsBeforeInvalidInput));
+  });
 }
 
 Future<AuthProvider> _authenticatedUser() async {
@@ -75,12 +104,14 @@ Future<AuthProvider> _authenticatedUser() async {
         ..role = UserRoleEnum.user
         ..selectedMode = UserSelectedModeEnum.beginner
         ..themePreference = UserThemePreferenceEnum.dark
+        ..createdAt = DateTime.utc(2026)
         ..onboardingCompleted = true,
     );
 }
 
 class _NotificationsAdapter implements HttpClientAdapter {
   bool fail = false;
+  final List<RequestOptions> requests = [];
 
   @override
   Future<ResponseBody> fetch(
@@ -88,6 +119,7 @@ class _NotificationsAdapter implements HttpClientAdapter {
     Stream<Uint8List>? requestStream,
     Future<void>? cancelFuture,
   ) async {
+    requests.add(options);
     if (fail) {
       return ResponseBody.fromString(
         jsonEncode({'message': 'SQL internal failure'}),
@@ -97,6 +129,20 @@ class _NotificationsAdapter implements HttpClientAdapter {
         },
       );
     }
+
+    if (options.path == '/push/prefs') {
+      final update = options.data is Map
+          ? Map<String, dynamic>.from(options.data as Map)
+          : <String, dynamic>{};
+      return ResponseBody.fromString(
+        jsonEncode({..._pushPrefs(), ...update}),
+        200,
+        headers: {
+          Headers.contentTypeHeader: [Headers.jsonContentType],
+        },
+      );
+    }
+
     return ResponseBody.fromString(
       jsonEncode({
         'notifications': [
@@ -106,8 +152,8 @@ class _NotificationsAdapter implements HttpClientAdapter {
             'title': 'Analisis Selesai',
             'message': 'Hasil tersedia.',
             'type': 'info',
-            'actionType': 'analysis',
-            'actionId': 42,
+            'actionType': 'open_analysis',
+            'actionId': '42',
             'createdAt': '2026-08-23T00:00:00.000Z',
           },
         ],
@@ -123,3 +169,32 @@ class _NotificationsAdapter implements HttpClientAdapter {
   @override
   void close({bool force = false}) {}
 }
+
+Map<String, dynamic> _pushPrefs() => {
+  'pushExpiry': true,
+  'pushBroadcast': true,
+  'pushDailySummary': true,
+  'pushMarketNews': true,
+  'pushCalendarEvents': true,
+  'pushPriceAnomaly': true,
+  'pushWeeklyRecap': true,
+  'pushSignalFlip': true,
+  'marketOpenSessions': <String>[],
+  'pushDormancyNudge': false,
+  'pushOnboarding': true,
+  'disengageNoticeCategory': null,
+  'guardrailRevenge': true,
+  'guardrailOvertrading': true,
+  'guardrailHighRisk': true,
+  'coolingOffEnabled': false,
+  'pushAnalysisCompleted': true,
+  'pushTpSlHit': true,
+  'pushLoginAlert': true,
+  'nativePushEnabled': true,
+  'webPushEnabled': false,
+  'quietHoursEnabled': true,
+  'quietHoursStart': '22:00',
+  'quietHoursEnd': '07:00',
+  'notificationTimezone': 'Asia/Jakarta',
+  'progressionNotificationsEnabled': true,
+};

@@ -8,8 +8,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 import 'package:tradepilotapp/core/theme/theme_controller.dart';
 import 'package:tradepilotapp/core/localization/locale_controller.dart';
+import 'package:tradepilotapp/core/preferences/mental_checklist_controller.dart';
 import 'package:tradepilotapp/l10n/l10n.dart';
 import 'package:tradepilotapp/providers/auth_provider.dart';
+import 'package:tradepilotapp/providers/progression_provider.dart';
 import 'package:tradepilotapp/screens/home/tabs/profile_tab.dart';
 import 'package:tradepilotapp/screens/profile/change_password_screen.dart';
 import 'package:tradepilotapp/screens/profile/delete_account_screen.dart';
@@ -42,6 +44,11 @@ void main() {
     _authenticate(auth);
     final theme = ThemeController(await SharedPreferences.getInstance());
     final locale = LocaleController(await SharedPreferences.getInstance());
+    final checklist = MentalChecklistController(
+      await SharedPreferences.getInstance(),
+    );
+    final progression = ProgressionProvider(auth);
+    addTearDown(progression.dispose);
 
     await tester.pumpWidget(
       MultiProvider(
@@ -49,6 +56,8 @@ void main() {
           ChangeNotifierProvider.value(value: auth),
           ChangeNotifierProvider.value(value: theme),
           ChangeNotifierProvider.value(value: locale),
+          ChangeNotifierProvider.value(value: checklist),
+          ChangeNotifierProvider.value(value: progression),
         ],
         child: const _LocalizedApp(home: ProfileTab()),
       ),
@@ -165,6 +174,11 @@ void main() {
     auth.client.dio.httpClientAdapter = _LogoutAdapter();
     final theme = ThemeController(await SharedPreferences.getInstance());
     final locale = LocaleController(await SharedPreferences.getInstance());
+    final checklist = MentalChecklistController(
+      await SharedPreferences.getInstance(),
+    );
+    final progression = ProgressionProvider(auth);
+    addTearDown(progression.dispose);
 
     await tester.pumpWidget(
       MultiProvider(
@@ -172,6 +186,8 @@ void main() {
           ChangeNotifierProvider.value(value: auth),
           ChangeNotifierProvider.value(value: theme),
           ChangeNotifierProvider.value(value: locale),
+          ChangeNotifierProvider.value(value: checklist),
+          ChangeNotifierProvider.value(value: progression),
         ],
         child: const _LocalizedApp(home: ProfileTab()),
       ),
@@ -223,6 +239,7 @@ void _authenticate(AuthProvider auth) {
         ..selectedMode = UserSelectedModeEnum.beginner
         ..themePreference = UserThemePreferenceEnum.dark
         ..securityQuestion = 'Nama hewan pertama?'
+        ..createdAt = DateTime.utc(2026)
         ..onboardingCompleted = true,
     );
 }

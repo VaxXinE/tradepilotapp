@@ -19,8 +19,9 @@ part 'notification.g.dart';
 /// * [message] 
 /// * [type] 
 /// * [readAt] 
-/// * [actionType] - Structured in-app navigation target. Clients must allowlist supported action types and never interpret this value as an arbitrary URL.
-/// * [actionId] - Optional resource ID associated with actionType. For actionType=analysis this is the analysis ID.
+/// * [category] - Category slug used by the anti-annoyance/frequency-cap engine (e.g. \"market_news\", \"security_alert\"). Informational for clients — not itself a tap-target.
+/// * [actionType] - Allowlisted tap-target. Clients should treat any value they don't recognise the same as null (no special action, just mark read) so new action types can be added without breaking older clients.
+/// * [actionId] - The id `actionType` refers to (e.g. an analysis id for \"open_analysis\").
 /// * [createdAt] 
 @BuiltValue()
 abstract class Notification implements Built<Notification, NotificationBuilder> {
@@ -46,14 +47,18 @@ abstract class Notification implements Built<Notification, NotificationBuilder> 
   @BuiltValueField(wireName: r'readAt')
   DateTime? get readAt;
 
-  /// Structured in-app navigation target. Clients must allowlist supported action types and never interpret this value as an arbitrary URL.
+  /// Category slug used by the anti-annoyance/frequency-cap engine (e.g. \"market_news\", \"security_alert\"). Informational for clients — not itself a tap-target.
+  @BuiltValueField(wireName: r'category')
+  String? get category;
+
+  /// Allowlisted tap-target. Clients should treat any value they don't recognise the same as null (no special action, just mark read) so new action types can be added without breaking older clients.
   @BuiltValueField(wireName: r'actionType')
   NotificationActionTypeEnum? get actionType;
-  // enum actionTypeEnum {  analysis,  history,  notifications,  daily_summary,  alerts,  };
+  // enum actionTypeEnum {  open_notification,  open_analysis,  };
 
-  /// Optional resource ID associated with actionType. For actionType=analysis this is the analysis ID.
+  /// The id `actionType` refers to (e.g. an analysis id for \"open_analysis\").
   @BuiltValueField(wireName: r'actionId')
-  int? get actionId;
+  String? get actionId;
 
   @BuiltValueField(wireName: r'createdAt')
   DateTime get createdAt;
@@ -122,6 +127,13 @@ class _$NotificationSerializer implements PrimitiveSerializer<Notification> {
         specifiedType: const FullType(DateTime),
       );
     }
+    if (object.category != null) {
+      yield r'category';
+      yield serializers.serialize(
+        object.category,
+        specifiedType: const FullType(String),
+      );
+    }
     if (object.actionType != null) {
       yield r'actionType';
       yield serializers.serialize(
@@ -133,7 +145,7 @@ class _$NotificationSerializer implements PrimitiveSerializer<Notification> {
       yield r'actionId';
       yield serializers.serialize(
         object.actionId,
-        specifiedType: const FullType(int),
+        specifiedType: const FullType(String),
       );
     }
     yield r'createdAt';
@@ -216,6 +228,14 @@ class _$NotificationSerializer implements PrimitiveSerializer<Notification> {
           if (valueDes == null) continue;
           result.readAt = valueDes;
           break;
+        case r'category':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
+          result.category = valueDes;
+          break;
         case r'actionType':
           final valueDes = serializers.deserialize(
             value,
@@ -227,8 +247,8 @@ class _$NotificationSerializer implements PrimitiveSerializer<Notification> {
         case r'actionId':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(int),
-          ) as int?;
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
           if (valueDes == null) continue;
           result.actionId = valueDes;
           break;
@@ -287,21 +307,12 @@ class NotificationTypeEnum extends EnumClass {
 
 class NotificationActionTypeEnum extends EnumClass {
 
-  /// Structured in-app navigation target. Clients must allowlist supported action types and never interpret this value as an arbitrary URL.
-  @BuiltValueEnumConst(wireName: r'analysis')
-  static const NotificationActionTypeEnum analysis = _$notificationActionTypeEnum_analysis;
-  /// Structured in-app navigation target. Clients must allowlist supported action types and never interpret this value as an arbitrary URL.
-  @BuiltValueEnumConst(wireName: r'history')
-  static const NotificationActionTypeEnum history = _$notificationActionTypeEnum_history;
-  /// Structured in-app navigation target. Clients must allowlist supported action types and never interpret this value as an arbitrary URL.
-  @BuiltValueEnumConst(wireName: r'notifications')
-  static const NotificationActionTypeEnum notifications = _$notificationActionTypeEnum_notifications;
-  /// Structured in-app navigation target. Clients must allowlist supported action types and never interpret this value as an arbitrary URL.
-  @BuiltValueEnumConst(wireName: r'daily_summary')
-  static const NotificationActionTypeEnum dailySummary = _$notificationActionTypeEnum_dailySummary;
-  /// Structured in-app navigation target. Clients must allowlist supported action types and never interpret this value as an arbitrary URL.
-  @BuiltValueEnumConst(wireName: r'alerts')
-  static const NotificationActionTypeEnum alerts = _$notificationActionTypeEnum_alerts;
+  /// Allowlisted tap-target. Clients should treat any value they don't recognise the same as null (no special action, just mark read) so new action types can be added without breaking older clients.
+  @BuiltValueEnumConst(wireName: r'open_notification')
+  static const NotificationActionTypeEnum openNotification = _$notificationActionTypeEnum_openNotification;
+  /// Allowlisted tap-target. Clients should treat any value they don't recognise the same as null (no special action, just mark read) so new action types can be added without breaking older clients.
+  @BuiltValueEnumConst(wireName: r'open_analysis')
+  static const NotificationActionTypeEnum openAnalysis = _$notificationActionTypeEnum_openAnalysis;
 
   static Serializer<NotificationActionTypeEnum> get serializer => _$notificationActionTypeEnumSerializer;
 

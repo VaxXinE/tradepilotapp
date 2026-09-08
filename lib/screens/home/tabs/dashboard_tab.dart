@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/config/sponsor_config.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../l10n/l10n.dart';
 import '../../../models/market_models.dart';
@@ -17,6 +19,7 @@ import '../../../widgets/analysis_card.dart';
 import '../../../widgets/calendar/economic_calendar_card.dart';
 import '../../../widgets/market/market_overview_card.dart';
 import '../../../widgets/market/market_session_card.dart';
+import '../../../widgets/news_feed_card.dart';
 import '../../../widgets/price_alert/price_alert_sheet.dart';
 import '../../price_alert/price_alert_list_screen.dart';
 import '../../../widgets/watchlist/instrument_picker_sheet.dart';
@@ -118,9 +121,37 @@ class _DashboardTabState extends State<DashboardTab> {
     }
 
     if (created == true) {
+      unawaited(
+        context.read<AuthProvider>().telemetry.track(
+          AnalyticsEventBodyEventTypeEnum.alertArmed,
+          path: '/',
+          metadata: {'instrument': instrument},
+        ),
+      );
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.l10n.priceAlertCreated(instrument))),
       );
+    }
+  }
+
+  Future<void> _openSponsorTikTok() async {
+    unawaited(
+      context.read<AuthProvider>().telemetry.recordOutboundClick(
+        placement: OutboundClickBodyPlacementEnum.dashboardTiktok,
+        target: OutboundClickBodyTargetEnum.tiktok,
+        languageCode: Localizations.localeOf(context).languageCode,
+      ),
+    );
+    final uri = Uri.parse(sponsorTikTokUrl);
+    try {
+      if (await launchUrl(uri, mode: LaunchMode.externalApplication)) return;
+    } catch (_) {
+      // Telemetry dan browser eksternal tidak boleh merusak dashboard.
+    }
+    if (mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.linkOpenFailed)));
     }
   }
 
@@ -267,6 +298,23 @@ class _DashboardTabState extends State<DashboardTab> {
               onRetry: () =>
                   unawaited(market.loadSelectedMarketData(force: true)),
             ),
+
+            const SizedBox(height: 16),
+
+            const NewsFeedCard(),
+
+            if (showSponsor) ...[
+              const SizedBox(height: 16),
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.live_tv_outlined),
+                  title: Text(l10n.liveAnalysisTitle),
+                  subtitle: Text(l10n.liveAnalysisSponsorSubtitle),
+                  trailing: const Icon(Icons.open_in_new_rounded),
+                  onTap: _openSponsorTikTok,
+                ),
+              ),
+            ],
 
             const SizedBox(height: 16),
 

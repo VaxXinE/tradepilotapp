@@ -6,12 +6,14 @@ import 'package:provider/provider.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
 import '../../../core/market/market_sessions.dart';
+import '../../../core/preferences/mental_checklist_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../l10n/l10n.dart';
 import '../../../models/market_models.dart';
 import '../../../providers/analysis_provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/market_provider.dart';
+import '../../../providers/progression_provider.dart';
 import '../../../providers/watchlist_provider.dart';
 import '../../../widgets/error_banner.dart';
 import '../../../widgets/chart/timeframe_selector.dart';
@@ -20,8 +22,11 @@ import '../../../widgets/context/market_context_card.dart';
 import '../../../widgets/technical/technical_summary_card.dart';
 import '../../../widgets/market_mini_chart.dart';
 import '../../../widgets/watchlist/instrument_picker_sheet.dart';
+import '../../../widgets/journal_sentiment_card.dart';
+import '../../../widgets/cooling_off_breathing_dialog.dart';
 import '../../analysis/analysis_detail_screen.dart';
 import '../../../widgets/price_alert/price_alert_sheet.dart';
+import '../../../widgets/risk/risk_tools_section.dart';
 import '../../price_alert/price_alert_list_screen.dart';
 
 // =============================================================================
@@ -76,6 +81,13 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
   final TextEditingController _contextController = TextEditingController();
   String? _guardrailInstrument;
   List<Map<String, dynamic>> _guardrails = const [];
+  final Map<String, int> _guardrailTelemetryIds = {};
+  bool _isRecordingWait = false;
+  String? _checklistContext;
+  final Set<int> _checkedMentalItems = {};
+  String? _checklistEvidenceToken;
+  DateTime? _checklistMinimumCompleteAt;
+  bool _isAwardingChecklist = false;
 
   @override
   void initState() {
@@ -195,6 +207,13 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
     );
 
     if (created == true && mounted) {
+      unawaited(
+        context.read<AuthProvider>().telemetry.track(
+          AnalyticsEventBodyEventTypeEnum.alertArmed,
+          path: '/analyze',
+          metadata: {'instrument': instrument},
+        ),
+      );
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.l10n.priceAlertCreated(instrument))),
       );
@@ -206,6 +225,33 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
   // ===========================================================================
 
   Future<void> _submit() async {
+    Map<String, dynamic>? coolingOff;
+    for (final signal in _guardrails) {
+      if (signal['kind'] == 'cooling_off') {
+        coolingOff = signal;
+        break;
+      }
+    }
+    if (coolingOff != null) {
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) => CoolingOffBreathingDialog(
+          lossPercent: coolingOff?['lossPnlPercent']?.toString(),
+          onWait: () => Navigator.of(dialogContext).pop(),
+          onContinue: () {
+            Navigator.of(dialogContext).pop();
+            unawaited(_runAnalysis());
+          },
+        ),
+      );
+      return;
+    }
+
+    await _runAnalysis();
+  }
+
+  Future<void> _runAnalysis() async {
     final auth = context.read<AuthProvider>();
 
     final analysisProvider = context.read<AnalysisProvider>();
@@ -230,12 +276,108 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
     );
 
     if (result != null && mounted) {
+      unawaited(
+        auth.telemetry.track(
+          AnalyticsEventBodyEventTypeEnum.analysisCreated,
+          path: '/analyze',
+          metadata: {
+            'instrument': result.instrument,
+            'timeframe': market.selectedTimeframe,
+          },
+        ),
+      );
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (_) =>
               AnalysisDetailScreen(analysisId: result.id, preloaded: result),
         ),
       );
+    }
+  }
+
+  Future<void> _prepareChecklistEvidence(
+    String instrument,
+    String timeframe,
+  ) async {
+    if (mounted) {
+      setState(() {
+        _checkedMentalItems.clear();
+        _checklistEvidenceToken = null;
+        _checklistMinimumCompleteAt = null;
+      });
+    }
+    try {
+      final response = await context
+          .read<AuthProvider>()
+          .client
+          .progression
+          .startProgressionEvidence(
+            progressionEvidenceStartInput: ProgressionEvidenceStartInput(
+              (b) => b
+                ..source_ = ProgressionEvidenceStartInputSource_Enum
+                    .preAnalysisChecklist
+                ..checklist.replace(
+                  ProgressionEvidenceStartInputChecklist(
+                    (c) => c
+                      ..instrument = instrument
+                      ..timeframe = timeframe,
+                  ),
+                ),
+            ),
+          );
+      if (!mounted || _checklistContext != '$instrument|$timeframe') return;
+      setState(() {
+        _checklistEvidenceToken = response.data?.token;
+        _checklistMinimumCompleteAt = response.data?.minimumCompleteAt;
+      });
+    } catch (_) {
+      // Siklus yang sudah selesai/aktif tetap boleh memakai checklist tanpa XP.
+    }
+  }
+
+  Future<void> _toggleMentalItem(int index) async {
+    final wasComplete = _checkedMentalItems.length == 4;
+    setState(() {
+      if (!_checkedMentalItems.add(index)) _checkedMentalItems.remove(index);
+    });
+    if (!wasComplete && _checkedMentalItems.length == 4) {
+      await _completeMentalChecklist();
+    }
+  }
+
+  Future<void> _completeMentalChecklist() async {
+    final token = _checklistEvidenceToken;
+    if (token == null || _isAwardingChecklist) return;
+    final wait = _checklistMinimumCompleteAt?.difference(DateTime.now());
+    if (wait != null && !wait.isNegative) await Future<void>.delayed(wait);
+    if (!mounted || _checkedMentalItems.length != 4) return;
+    setState(() => _isAwardingChecklist = true);
+    try {
+      final response = await context
+          .read<AuthProvider>()
+          .client
+          .progression
+          .recordProgressionActivity(
+            progressionActivityInput: ProgressionActivityInput(
+              (b) => b.token = token,
+            ),
+          );
+      final award = response.data;
+      if (mounted && award?.awarded == true) {
+        unawaited(context.read<ProgressionProvider>().refresh(silent: true));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              context.l10n.xpAwarded(award!.xp, context.l10n.checklistActivity),
+            ),
+          ),
+        );
+      }
+      _checklistEvidenceToken = null;
+    } catch (_) {
+      // Checklist adalah nudge; kegagalan XP tidak boleh memblokir analisis.
+    } finally {
+      if (mounted) setState(() => _isAwardingChecklist = false);
     }
   }
 
@@ -255,6 +397,7 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
 
     final market = context.watch<MarketProvider>();
     final watchlist = context.watch<WatchlistProvider>();
+    final mentalChecklist = context.watch<MentalChecklistController>();
     final isPro =
         context.watch<AuthProvider>().user?.selectedMode ==
         UserSelectedModeEnum.pro;
@@ -279,6 +422,21 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
     }
 
     final timeframe = market.selectedTimeframe;
+
+    final checklistContext = mentalChecklist.enabled
+        ? '$instrument|$timeframe'
+        : null;
+    if (_checklistContext != checklistContext) {
+      _checklistContext = checklistContext;
+      if (checklistContext == null) {
+        _checkedMentalItems.clear();
+        _checklistEvidenceToken = null;
+      } else {
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _prepareChecklistEvidence(instrument, timeframe),
+        );
+      }
+    }
 
     final quote = market.selectedQuote;
 
@@ -414,6 +572,22 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
                 },
               ),
 
+              RiskToolsSection(
+                key: ValueKey(instrument),
+                instrument: instrument,
+                selectedTimeframe: timeframe,
+                onSelectTimeframe: (value) {
+                  unawaited(market.selectTimeframe(value));
+                },
+              ),
+
+              const SizedBox(height: 10),
+
+              JournalSentimentCard(
+                key: ValueKey('sentiment-$instrument'),
+                instrument: instrument,
+              ),
+
               const SizedBox(height: 22),
 
               // ---------------------------------------------------------------
@@ -534,7 +708,25 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
               ],
 
               if (_guardrails.isNotEmpty) ...[
-                _GuardrailCard(signals: _guardrails),
+                _GuardrailCard(
+                  signals: _guardrails,
+                  isWaiting: _isRecordingWait,
+                  onWait:
+                      _guardrails.any(
+                        (signal) => signal['kind'] == 'high_risk_window',
+                      )
+                      ? _recordSafeWait
+                      : null,
+                ),
+                const SizedBox(height: 14),
+              ],
+
+              if (mentalChecklist.enabled) ...[
+                _MentalChecklistCard(
+                  checked: _checkedMentalItems,
+                  isSaving: _isAwardingChecklist,
+                  onToggle: _toggleMentalItem,
+                ),
                 const SizedBox(height: 14),
               ],
 
@@ -590,27 +782,26 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
 
   Future<void> _loadGuardrails(String instrument) async {
     try {
-      final response = await context
-          .read<AuthProvider>()
-          .client
-          .dio
-          .get<Object?>(
-            '/analyses/guardrails',
-            queryParameters: {'instrument': instrument},
-          );
-      final data = response.data;
-      if (!mounted || _guardrailInstrument != instrument || data is! Map) {
-        return;
-      }
-      final rawSignals = data['signals'];
-      if (rawSignals is! List) return;
+      final auth = context.read<AuthProvider>();
+      final response = await auth.client.analyses.getGuardrails(
+        instrument: instrument,
+      );
+      if (!mounted || _guardrailInstrument != instrument) return;
+      final signals = (response.data?.signals?.toList() ?? const [])
+          .map(
+            (item) => <String, dynamic>{
+              for (final entry in item.entries) entry.key: entry.value?.value,
+            },
+          )
+          .where((item) => item['kind'] is String)
+          .toList();
       setState(() {
-        _guardrails = rawSignals
-            .whereType<Map>()
-            .map((item) => Map<String, dynamic>.from(item))
-            .where((item) => item['kind'] is String)
-            .toList();
+        _guardrails = signals;
+        _guardrailTelemetryIds.clear();
       });
+      for (final signal in signals) {
+        unawaited(_logGuardrailImpression(auth, signal, instrument));
+      }
     } catch (_) {
       if (mounted && _guardrailInstrument == instrument) {
         setState(() => _guardrails = const []);
@@ -624,16 +815,98 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
     String instrument,
   ) async {
     try {
-      await auth.client.dio.post<void>(
-        '/analyses/guardrails/telemetry',
-        data: {
-          'kind': signal['kind'],
-          'instrument': instrument,
-          'proceeded': true,
-        },
+      await auth.client.analyses.recordGuardrailTelemetry(
+        recordGuardrailTelemetryRequest: RecordGuardrailTelemetryRequest(
+          (b) => b
+            ..kind = signal['kind'] as String
+            ..instrument = instrument
+            ..proceeded = true,
+        ),
       );
     } catch (_) {
       // Telemetry tidak boleh memblokir pembuatan analisis.
+    }
+  }
+
+  String _guardrailKey(Map<String, dynamic> signal) =>
+      signal['kind'] == 'overtrading'
+      ? 'overtrading:${signal['scope']}'
+      : signal['kind'] as String;
+
+  Future<void> _logGuardrailImpression(
+    AuthProvider auth,
+    Map<String, dynamic> signal,
+    String instrument,
+  ) async {
+    try {
+      final response = await auth.client.analyses.recordGuardrailTelemetry(
+        recordGuardrailTelemetryRequest: RecordGuardrailTelemetryRequest(
+          (b) => b
+            ..kind = signal['kind'] as String
+            ..instrument = instrument
+            ..proceeded = false,
+        ),
+      );
+      if (mounted && _guardrailInstrument == instrument) {
+        _guardrailTelemetryIds[_guardrailKey(signal)] = response.data!.id;
+      }
+    } catch (_) {
+      // Guardrail tetap tampil walau pencatatan impresi gagal.
+    }
+  }
+
+  Future<void> _recordSafeWait() async {
+    if (_isRecordingWait) return;
+    final signal = _guardrails.cast<Map<String, dynamic>?>().firstWhere(
+      (item) => item?['kind'] == 'high_risk_window',
+      orElse: () => null,
+    );
+    if (signal == null) return;
+    setState(() => _isRecordingWait = true);
+    try {
+      final auth = context.read<AuthProvider>();
+      var telemetryId = _guardrailTelemetryIds[_guardrailKey(signal)];
+      if (telemetryId == null) {
+        final response = await auth.client.analyses.recordGuardrailTelemetry(
+          recordGuardrailTelemetryRequest: RecordGuardrailTelemetryRequest(
+            (b) => b
+              ..kind = signal['kind'] as String
+              ..instrument = _guardrailInstrument
+              ..proceeded = false,
+          ),
+        );
+        telemetryId = response.data?.id;
+      }
+      if (telemetryId == null) throw StateError('Telemetry ID tidak tersedia');
+      final award = (await auth.client.analyses.waitGuardrail(
+        id: telemetryId,
+      )).data;
+      if (!mounted) return;
+      if (award?.awarded == true) {
+        unawaited(context.read<ProgressionProvider>().refresh(silent: true));
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            award?.awarded == true
+                ? context.l10n.xpAwarded(award!.xp, context.l10n.safeWait)
+                : context.l10n.safeWaitRecorded,
+          ),
+        ),
+      );
+      setState(
+        () => _guardrails = _guardrails
+            .where((item) => item['kind'] != 'high_risk_window')
+            .toList(),
+      );
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(context.l10n.safeWaitFailed)));
+      }
+    } finally {
+      if (mounted) setState(() => _isRecordingWait = false);
     }
   }
 }
@@ -675,8 +948,14 @@ class _InstrumentShortcuts extends StatelessWidget {
 }
 
 class _GuardrailCard extends StatelessWidget {
-  const _GuardrailCard({required this.signals});
+  const _GuardrailCard({
+    required this.signals,
+    required this.isWaiting,
+    this.onWait,
+  });
   final List<Map<String, dynamic>> signals;
+  final bool isWaiting;
+  final Future<void> Function()? onWait;
 
   @override
   Widget build(BuildContext context) => Card(
@@ -707,6 +986,26 @@ class _GuardrailCard extends StatelessWidget {
             context.l10n.guardrailHint,
             style: Theme.of(context).textTheme.bodySmall,
           ),
+          if (onWait != null) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: isWaiting ? null : () => unawaited(onWait!()),
+                icon: isWaiting
+                    ? const SizedBox.square(
+                        dimension: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.pause_circle_outline_rounded),
+                label: Text(context.l10n.safeWait),
+              ),
+            ),
+            Text(
+              context.l10n.safeWaitHint,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
         ],
       ),
     ),
@@ -733,6 +1032,90 @@ class _GuardrailCard extends StatelessWidget {
       ),
       _ => context.l10n.guardrailGeneric,
     };
+  }
+}
+
+class _MentalChecklistCard extends StatelessWidget {
+  const _MentalChecklistCard({
+    required this.checked,
+    required this.isSaving,
+    required this.onToggle,
+  });
+
+  final Set<int> checked;
+  final bool isSaving;
+  final Future<void> Function(int) onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    final labels = [
+      context.l10n.mentalChecklistRisk,
+      context.l10n.mentalChecklistPlan,
+      context.l10n.mentalChecklistChase,
+      context.l10n.mentalChecklistCalm,
+    ];
+    final complete = checked.length == labels.length;
+    final colors = Theme.of(context).colorScheme;
+    return Card(
+      color: (complete ? colors.tertiary : colors.primary).withValues(
+        alpha: .06,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  complete
+                      ? Icons.check_circle_outline_rounded
+                      : Icons.psychology_alt_outlined,
+                  size: 19,
+                  color: complete ? colors.tertiary : colors.primary,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  context.l10n.mentalChecklistTitle,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+                if (isSaving) ...[
+                  const Spacer(),
+                  const SizedBox.square(
+                    dimension: 15,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ],
+              ],
+            ),
+            const SizedBox(height: 6),
+            ...List.generate(
+              labels.length,
+              (index) => CheckboxListTile(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+                value: checked.contains(index),
+                onChanged: (_) => unawaited(onToggle(index)),
+                title: Text(
+                  labels[index],
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    decoration: checked.contains(index)
+                        ? TextDecoration.lineThrough
+                        : null,
+                  ),
+                ),
+              ),
+            ),
+            Text(
+              context.l10n.mentalChecklistHint,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

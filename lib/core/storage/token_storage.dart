@@ -87,6 +87,6 @@ class TokenStorage {
     'themePreference': user.themePreference.name,
     'securityQuestion': user.securityQuestion,
     'onboardingCompleted': user.onboardingCompleted,
-    'createdAt': user.createdAt?.toIso8601String(),
+    if (user.createdAt != null) 'createdAt': user.createdAt!.toIso8601String(),
   };
 }

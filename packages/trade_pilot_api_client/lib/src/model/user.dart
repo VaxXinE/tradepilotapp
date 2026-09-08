@@ -12,16 +12,16 @@ part 'user.g.dart';
 /// User
 ///
 /// Properties:
-/// * [id] 
-/// * [email] 
-/// * [displayName] 
+/// * [id]
+/// * [email]
+/// * [displayName]
 /// * [avatarUrl] - Object-storage path (e.g. `/objects/uploads/uuid`) for the user's profile photo. Null if not set.
-/// * [role] 
-/// * [selectedMode] 
-/// * [themePreference] 
-/// * [securityQuestion] 
-/// * [onboardingCompleted] 
-/// * [createdAt] 
+/// * [role]
+/// * [selectedMode]
+/// * [themePreference]
+/// * [securityQuestion]
+/// * [onboardingCompleted]
+/// * [createdAt]
 @BuiltValue()
 abstract class User implements Built<User, UserBuilder> {
   @BuiltValueField(wireName: r'id')
@@ -134,7 +134,7 @@ class _$UserSerializer implements PrimitiveSerializer<User> {
       yield r'createdAt';
       yield serializers.serialize(
         object.createdAt,
-        specifiedType: const FullType(DateTime),
+        specifiedType: const FullType.nullable(DateTime),
       );
     }
   }
@@ -145,7 +145,9 @@ class _$UserSerializer implements PrimitiveSerializer<User> {
     User object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -263,7 +265,6 @@ class _$UserSerializer implements PrimitiveSerializer<User> {
 }
 
 class UserRoleEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'user')
   static const UserRoleEnum user = _$userRoleEnum_user;
   @BuiltValueEnumConst(wireName: r'admin')
@@ -273,38 +274,42 @@ class UserRoleEnum extends EnumClass {
 
   static Serializer<UserRoleEnum> get serializer => _$userRoleEnumSerializer;
 
-  const UserRoleEnum._(String name): super(name);
+  const UserRoleEnum._(String name) : super(name);
 
   static BuiltSet<UserRoleEnum> get values => _$userRoleEnumValues;
   static UserRoleEnum valueOf(String name) => _$userRoleEnumValueOf(name);
 }
 
 class UserSelectedModeEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'beginner')
   static const UserSelectedModeEnum beginner = _$userSelectedModeEnum_beginner;
   @BuiltValueEnumConst(wireName: r'pro')
   static const UserSelectedModeEnum pro = _$userSelectedModeEnum_pro;
 
-  static Serializer<UserSelectedModeEnum> get serializer => _$userSelectedModeEnumSerializer;
+  static Serializer<UserSelectedModeEnum> get serializer =>
+      _$userSelectedModeEnumSerializer;
 
-  const UserSelectedModeEnum._(String name): super(name);
+  const UserSelectedModeEnum._(String name) : super(name);
 
-  static BuiltSet<UserSelectedModeEnum> get values => _$userSelectedModeEnumValues;
-  static UserSelectedModeEnum valueOf(String name) => _$userSelectedModeEnumValueOf(name);
+  static BuiltSet<UserSelectedModeEnum> get values =>
+      _$userSelectedModeEnumValues;
+  static UserSelectedModeEnum valueOf(String name) =>
+      _$userSelectedModeEnumValueOf(name);
 }
 
 class UserThemePreferenceEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'light')
   static const UserThemePreferenceEnum light = _$userThemePreferenceEnum_light;
   @BuiltValueEnumConst(wireName: r'dark')
   static const UserThemePreferenceEnum dark = _$userThemePreferenceEnum_dark;
 
-  static Serializer<UserThemePreferenceEnum> get serializer => _$userThemePreferenceEnumSerializer;
+  static Serializer<UserThemePreferenceEnum> get serializer =>
+      _$userThemePreferenceEnumSerializer;
 
-  const UserThemePreferenceEnum._(String name): super(name);
+  const UserThemePreferenceEnum._(String name) : super(name);
 
-  static BuiltSet<UserThemePreferenceEnum> get values => _$userThemePreferenceEnumValues;
-  static UserThemePreferenceEnum valueOf(String name) => _$userThemePreferenceEnumValueOf(name);
+  static BuiltSet<UserThemePreferenceEnum> get values =>
+      _$userThemePreferenceEnumValues;
+  static UserThemePreferenceEnum valueOf(String name) =>
+      _$userThemePreferenceEnumValueOf(name);
 }

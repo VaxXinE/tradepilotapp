@@ -7,6 +7,7 @@ import 'package:trade_pilot_api_client/trade_pilot_client.dart';
 
 import '../core/api/api_config.dart';
 import '../core/storage/token_storage.dart';
+import '../services/telemetry_service.dart';
 
 enum AuthStatus { unknown, authenticated, unauthenticated }
 
@@ -21,11 +22,13 @@ class AuthProvider extends ChangeNotifier {
     _client.dio.interceptors.add(
       InterceptorsWrapper(onError: _handleUnauthorized),
     );
+    telemetry = TelemetryService(_client);
     _restoreSession();
   }
 
   final _storage = TokenStorage();
   late final TradePilotClient _client;
+  late final TelemetryService telemetry;
 
   TradePilotClient get client => _client;
 

@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -69,11 +72,44 @@ void main() {
     expect(find.text('Bearish'), findsOneWidget);
     expect(find.text('Apa artinya?'), findsNothing);
   });
+
+  testWidgets('analysis detail shows the journal linked by the server', (
+    tester,
+  ) async {
+    await _pumpDetail(
+      tester,
+      _analysis(AnalysisModeEnum.beginner),
+      journal: {
+        'id': 7,
+        'analysisId': 1,
+        'instrument': 'XAU/USD',
+        'side': 'sell',
+        'outcome': 'win',
+        'mood': 'calm',
+        'note': 'Entry sesuai rencana',
+        'tradedAt': '2026-09-08T08:00:00.000Z',
+        'createdAt': '2026-09-08T08:00:00.000Z',
+        'updatedAt': '2026-09-08T08:00:00.000Z',
+      },
+    );
+
+    await tester.scrollUntilVisible(
+      find.text('Catatan trade saya'),
+      500,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.textContaining('Entry sesuai rencana'), findsOneWidget);
+  });
 }
 
-Future<void> _pumpDetail(WidgetTester tester, Analysis analysis) async {
+Future<void> _pumpDetail(
+  WidgetTester tester,
+  Analysis analysis, {
+  Map<String, Object?>? journal,
+}) async {
   final auth = AuthProvider();
   await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+  auth.client.dio.httpClientAdapter = _JournalAdapter(journal);
   final analysisProvider = _FakeAnalysisProvider(auth, analysis);
   final marketProvider = _FakeMarketProvider(auth);
   addTearDown(analysisProvider.dispose);
@@ -82,6 +118,7 @@ Future<void> _pumpDetail(WidgetTester tester, Analysis analysis) async {
   await tester.pumpWidget(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider<AuthProvider>.value(value: auth),
         ChangeNotifierProvider<AnalysisProvider>.value(value: analysisProvider),
         ChangeNotifierProvider<MarketProvider>.value(value: marketProvider),
       ],
@@ -95,6 +132,34 @@ Future<void> _pumpDetail(WidgetTester tester, Analysis analysis) async {
     ),
   );
   await tester.pumpAndSettle();
+}
+
+class _JournalAdapter implements HttpClientAdapter {
+  _JournalAdapter(this.journal);
+
+  final Map<String, Object?>? journal;
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    if (options.path.startsWith('/journal/for-analysis/')) {
+      if (journal == null) return ResponseBody.fromString('', 404);
+      return ResponseBody.fromString(
+        jsonEncode(journal),
+        200,
+        headers: {
+          Headers.contentTypeHeader: ['application/json'],
+        },
+      );
+    }
+    return ResponseBody.fromString('', 404);
+  }
+
+  @override
+  void close({bool force = false}) {}
 }
 
 Analysis _analysis(AnalysisModeEnum mode) => Analysis(

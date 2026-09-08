@@ -14,6 +14,7 @@ import 'package:trade_pilot_api_client/src/model/alert_status.dart';
 import 'package:trade_pilot_api_client/src/model/analyses_list.dart';
 import 'package:trade_pilot_api_client/src/model/analyses_summary.dart';
 import 'package:trade_pilot_api_client/src/model/analysis.dart';
+import 'package:trade_pilot_api_client/src/model/analysis_history_summary.dart';
 import 'package:trade_pilot_api_client/src/model/analysis_note_response.dart';
 import 'package:trade_pilot_api_client/src/model/analysis_outcomes_summary.dart';
 import 'package:trade_pilot_api_client/src/model/analysis_quota.dart';
@@ -22,10 +23,15 @@ import 'package:trade_pilot_api_client/src/model/date.dart';
 import 'package:trade_pilot_api_client/src/model/error_response.dart';
 import 'package:trade_pilot_api_client/src/model/feedback.dart';
 import 'package:trade_pilot_api_client/src/model/feedback_body.dart';
+import 'package:trade_pilot_api_client/src/model/get_guardrails200_response.dart';
 import 'package:trade_pilot_api_client/src/model/personal_analytics.dart';
+import 'package:trade_pilot_api_client/src/model/progression_award.dart';
 import 'package:trade_pilot_api_client/src/model/recent_instruments.dart';
+import 'package:trade_pilot_api_client/src/model/record_guardrail_telemetry201_response.dart';
+import 'package:trade_pilot_api_client/src/model/record_guardrail_telemetry_request.dart';
 import 'package:trade_pilot_api_client/src/model/refresh_fundamentals_response.dart';
 import 'package:trade_pilot_api_client/src/model/set_analysis_note_request.dart';
+import 'package:trade_pilot_api_client/src/model/timeframe_risk_map.dart';
 
 class AnalysesApi {
 
@@ -36,10 +42,10 @@ class AnalysesApi {
   const AnalysesApi(this._dio, this._serializers);
 
   /// Arm price alerts for an analysis
-  /// Arms one push alert per AI level on the preferred trade side. The background watcher polls live prices every ~30s and fires the first time each level is touched, deep-linking back to this analysis. 
+  /// Arms one push alert per AI level on the preferred trade side. The background watcher polls live prices every ~30s and fires the first time each level is touched, deep-linking back to this analysis.
   ///
   /// Parameters:
-  /// * [id] 
+  /// * [id]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -49,7 +55,7 @@ class AnalysesApi {
   ///
   /// Returns a [Future] containing a [Response] with a [AlertStatus] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<AlertStatus>> armAnalysisAlerts({ 
+  Future<Response<AlertStatus>> armAnalysisAlerts({
     required int id,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -111,10 +117,10 @@ class AnalysesApi {
   }
 
   /// Cancel any un-fired price alerts for an analysis
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [id] 
+  /// * [id]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -124,7 +130,7 @@ class AnalysesApi {
   ///
   /// Returns a [Future] containing a [Response] with a [AlertStatus] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<AlertStatus>> cancelAnalysisAlerts({ 
+  Future<Response<AlertStatus>> cancelAnalysisAlerts({
     required int id,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -186,10 +192,10 @@ class AnalysesApi {
   }
 
   /// Create new analysis (triggers AI)
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [createAnalysisBody] 
+  /// * [createAnalysisBody]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -199,7 +205,7 @@ class AnalysesApi {
   ///
   /// Returns a [Future] containing a [Response] with a [Analysis] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<Analysis>> createAnalysis({ 
+  Future<Response<Analysis>> createAnalysis({
     required CreateAnalysisBody createAnalysisBody,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -281,7 +287,7 @@ class AnalysesApi {
   }
 
   /// Get dashboard summary stats
-  /// 
+  ///
   ///
   /// Parameters:
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
@@ -293,7 +299,7 @@ class AnalysesApi {
   ///
   /// Returns a [Future] containing a [Response] with a [AnalysesSummary] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<AnalysesSummary>> getAnalysesSummary({ 
+  Future<Response<AnalysesSummary>> getAnalysesSummary({
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -354,10 +360,10 @@ class AnalysesApi {
   }
 
   /// Get single analysis
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [id] 
+  /// * [id]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -367,7 +373,7 @@ class AnalysesApi {
   ///
   /// Returns a [Future] containing a [Response] with a [Analysis] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<Analysis>> getAnalysis({ 
+  Future<Response<Analysis>> getAnalysis({
     required int id,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -429,10 +435,10 @@ class AnalysesApi {
   }
 
   /// Get price-alert status for an analysis
-  /// Returns whether push alerts are armed on this analysis&#39;s AI-generated entry / SL / TP levels, and the per-level fire history. Drives the \&quot;Alerts: ON · N levels armed\&quot; indicator on the analysis-detail page. 
+  /// Returns whether push alerts are armed on this analysis&#39;s AI-generated entry / SL / TP levels, and the per-level fire history. Drives the \&quot;Alerts: ON · N levels armed\&quot; indicator on the analysis-detail page.
   ///
   /// Parameters:
-  /// * [id] 
+  /// * [id]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -442,7 +448,7 @@ class AnalysesApi {
   ///
   /// Returns a [Future] containing a [Response] with a [AlertStatus] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<AlertStatus>> getAnalysisAlerts({ 
+  Future<Response<AlertStatus>> getAnalysisAlerts({
     required int id,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -503,8 +509,94 @@ class AnalysesApi {
     );
   }
 
+  /// Get the current user&#39;s analysis-outcome summary by timeframe
+  ///
+  ///
+  /// Parameters:
+  /// * [range]
+  /// * [instruments]
+  /// * [timeframes]
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [AnalysisHistorySummary] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<AnalysisHistorySummary>> getAnalysisHistorySummary({
+    String? range = '30',
+    BuiltList<String>? instruments,
+    BuiltList<String>? timeframes,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/analyses/history-summary';
+    final _options = Options(
+      method: r'GET',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _queryParameters = <String, dynamic>{
+      if (range != null) r'range': encodeQueryParameter(_serializers, range, const FullType(String)),
+      if (instruments != null) r'instruments': encodeCollectionQueryParameter<String>(_serializers, instruments, const FullType(BuiltList, [FullType(String)]), format: ListFormat.multi,),
+      if (timeframes != null) r'timeframes': encodeCollectionQueryParameter<String>(_serializers, timeframes, const FullType(BuiltList, [FullType(String)]), format: ListFormat.multi,),
+    };
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      queryParameters: _queryParameters,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    AnalysisHistorySummary? _responseData;
+
+    try {
+      final rawResponse = _response.data;
+      _responseData = rawResponse == null ? null : _serializers.deserialize(
+        rawResponse,
+        specifiedType: const FullType(AnalysisHistorySummary),
+      ) as AnalysisHistorySummary;
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<AnalysisHistorySummary>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
   /// AI trade-plan outcome roll-up over the last 30 days
-  /// Aggregates the after-the-fact outcomes the background resolver has written to each analysis (TP1/TP2 hit, SL hit, expired, invalidated, or still pending) for the current user over the past 30 days. Drives the \&quot;AI accuracy\&quot; card on the dashboard. 
+  /// Aggregates the after-the-fact outcomes the background resolver has written to each analysis (TP1/TP2 hit, SL hit, expired, invalidated, or still pending) for the current user over the past 30 days. Drives the \&quot;AI accuracy\&quot; card on the dashboard.
   ///
   /// Parameters:
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
@@ -516,7 +608,7 @@ class AnalysesApi {
   ///
   /// Returns a [Future] containing a [Response] with a [AnalysisOutcomesSummary] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<AnalysisOutcomesSummary>> getAnalysisOutcomesSummary({ 
+  Future<Response<AnalysisOutcomesSummary>> getAnalysisOutcomesSummary({
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -577,7 +669,7 @@ class AnalysesApi {
   }
 
   /// Get current user&#39;s analysis quota usage
-  /// 
+  ///
   ///
   /// Parameters:
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
@@ -589,7 +681,7 @@ class AnalysesApi {
   ///
   /// Returns a [Future] containing a [Response] with a [AnalysisQuota] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<AnalysisQuota>> getAnalysisQuota({ 
+  Future<Response<AnalysisQuota>> getAnalysisQuota({
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -649,8 +741,88 @@ class AnalysesApi {
     );
   }
 
+  /// Detect active soft warnings for the requested instrument
+  ///
+  ///
+  /// Parameters:
+  /// * [instrument]
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [GetGuardrails200Response] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<GetGuardrails200Response>> getGuardrails({
+    required String instrument,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/analyses/guardrails';
+    final _options = Options(
+      method: r'GET',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _queryParameters = <String, dynamic>{
+      r'instrument': encodeQueryParameter(_serializers, instrument, const FullType(String)),
+    };
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      queryParameters: _queryParameters,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    GetGuardrails200Response? _responseData;
+
+    try {
+      final rawResponse = _response.data;
+      _responseData = rawResponse == null ? null : _serializers.deserialize(
+        rawResponse,
+        specifiedType: const FullType(GetGuardrails200Response),
+      ) as GetGuardrails200Response;
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<GetGuardrails200Response>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
   /// Get personal analytics data
-  /// 
+  ///
   ///
   /// Parameters:
   /// * [range] - Time-bucket range for the chart series. `daily` returns the last 7 days, `weekly` the last 7 weeks, `monthly` the last 6 months.
@@ -663,7 +835,7 @@ class AnalysesApi {
   ///
   /// Returns a [Future] containing a [Response] with a [PersonalAnalytics] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<PersonalAnalytics>> getPersonalAnalytics({ 
+  Future<Response<PersonalAnalytics>> getPersonalAnalytics({
     String? range = 'weekly',
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -730,7 +902,7 @@ class AnalysesApi {
   }
 
   /// Get 3 most recently analyzed instruments
-  /// 
+  ///
   ///
   /// Parameters:
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
@@ -742,7 +914,7 @@ class AnalysesApi {
   ///
   /// Returns a [Future] containing a [Response] with a [RecentInstruments] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<RecentInstruments>> getRecentInstruments({ 
+  Future<Response<RecentInstruments>> getRecentInstruments({
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -802,16 +974,108 @@ class AnalysesApi {
     );
   }
 
-  /// List user&#39;s analyses with filters
-  /// 
+  /// Compare deterministic technical risk across supported timeframes
+  /// Authenticated, read-only technical comparison for XAU/USD, BRENT, HSI, and NIKKEI only. It uses the shared getIndicators cache/pipeline; it never creates an analysis, consumes quota, calls AI, or writes user history. Missing or stale/insufficient data is explicitly reported and is not a low-risk result.
   ///
   /// Parameters:
-  /// * [mode] 
-  /// * [instrument] 
+  /// * [instrument]
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [TimeframeRiskMap] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<TimeframeRiskMap>> getTimeframeRiskMap({
+    required String instrument,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/risk-map/timeframes';
+    final _options = Options(
+      method: r'GET',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'apiKey',
+            'name': 'sessionCookie',
+            'keyName': 'session_token',
+            'where': '',
+          },{
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _queryParameters = <String, dynamic>{
+      r'instrument': encodeQueryParameter(_serializers, instrument, const FullType(String)),
+    };
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      queryParameters: _queryParameters,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    TimeframeRiskMap? _responseData;
+
+    try {
+      final rawResponse = _response.data;
+      _responseData = rawResponse == null ? null : _serializers.deserialize(
+        rawResponse,
+        specifiedType: const FullType(TimeframeRiskMap),
+      ) as TimeframeRiskMap;
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<TimeframeRiskMap>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// List user&#39;s analyses with filters
+  ///
+  ///
+  /// Parameters:
+  /// * [mode]
+  /// * [instrument]
   /// * [instruments] - Multi-select instrument filter (repeatable). Wins over `instrument` when both provided.
   /// * [timeframes] - Multi-select timeframe filter (repeatable).
-  /// * [page] 
-  /// * [limit] 
+  /// * [outcomes] - Multi-select resolved outcome filter (repeatable).
+  /// * [page]
+  /// * [limit]
   /// * [q] - Free-text search across instrument, user note, and the AI's narrative blocks (parameterised ILIKE, case-insensitive).
   /// * [from] - Filter analyses created on or after this date (ISO 8601)
   /// * [to] - Filter analyses created on or before this date (ISO 8601)
@@ -824,11 +1088,12 @@ class AnalysesApi {
   ///
   /// Returns a [Future] containing a [Response] with a [AnalysesList] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<AnalysesList>> listAnalyses({ 
+  Future<Response<AnalysesList>> listAnalyses({
     String? mode,
     String? instrument,
     BuiltList<String>? instruments,
     BuiltList<String>? timeframes,
+    BuiltList<String>? outcomes,
     int? page = 1,
     int? limit = 20,
     String? q,
@@ -859,6 +1124,7 @@ class AnalysesApi {
       if (instrument != null) r'instrument': encodeQueryParameter(_serializers, instrument, const FullType(String)),
       if (instruments != null) r'instruments': encodeCollectionQueryParameter<String>(_serializers, instruments, const FullType(BuiltList, [FullType(String)]), format: ListFormat.multi,),
       if (timeframes != null) r'timeframes': encodeCollectionQueryParameter<String>(_serializers, timeframes, const FullType(BuiltList, [FullType(String)]), format: ListFormat.multi,),
+      if (outcomes != null) r'outcomes': encodeCollectionQueryParameter<String>(_serializers, outcomes, const FullType(BuiltList, [FullType(String)]), format: ListFormat.multi,),
       if (page != null) r'page': encodeQueryParameter(_serializers, page, const FullType(int)),
       if (limit != null) r'limit': encodeQueryParameter(_serializers, limit, const FullType(int)),
       if (q != null) r'q': encodeQueryParameter(_serializers, q, const FullType(String)),
@@ -906,11 +1172,106 @@ class AnalysesApi {
     );
   }
 
-  /// Re-fetch news + economic calendar for an existing analysis (no AI re-run)
-  /// Re-fetches the news headlines and economic-calendar events for the analysis&#39;s instrument WITHOUT re-running the AI. Persists the fresh snapshot on the analyses row (the audit \&quot;Fundamental Context\&quot; card renders from this) and returns a drift report listing which of the AI&#39;s original &#x60;fundamentalCitations&#x60; no longer match anything in the fresh window. Lets the user sanity-check whether the saved AI thesis still rests on a valid fundamental base. 
+  /// Record impression or override of a guardrail
+  ///
   ///
   /// Parameters:
-  /// * [id] 
+  /// * [recordGuardrailTelemetryRequest]
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [RecordGuardrailTelemetry201Response] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<RecordGuardrailTelemetry201Response>> recordGuardrailTelemetry({
+    required RecordGuardrailTelemetryRequest recordGuardrailTelemetryRequest,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/analyses/guardrails/telemetry';
+    final _options = Options(
+      method: r'POST',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[],
+        ...?extra,
+      },
+      contentType: 'application/json',
+      validateStatus: validateStatus,
+    );
+
+    dynamic _bodyData;
+
+    try {
+      const _type = FullType(RecordGuardrailTelemetryRequest);
+      _bodyData = _serializers.serialize(recordGuardrailTelemetryRequest, specifiedType: _type);
+
+    } catch(error, stackTrace) {
+      throw DioException(
+         requestOptions: _options.compose(
+          _dio.options,
+          _path,
+        ),
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    final _response = await _dio.request<Object>(
+      _path,
+      data: _bodyData,
+      options: _options,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    RecordGuardrailTelemetry201Response? _responseData;
+
+    try {
+      final rawResponse = _response.data;
+      _responseData = rawResponse == null ? null : _serializers.deserialize(
+        rawResponse,
+        specifiedType: const FullType(RecordGuardrailTelemetry201Response),
+      ) as RecordGuardrailTelemetry201Response;
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<RecordGuardrailTelemetry201Response>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// Re-fetch news + economic calendar for an existing analysis (no AI re-run)
+  /// Re-fetches the news headlines and economic-calendar events for the analysis&#39;s instrument WITHOUT re-running the AI. Persists the fresh snapshot on the analyses row (the audit \&quot;Fundamental Context\&quot; card renders from this) and returns a drift report listing which of the AI&#39;s original &#x60;fundamentalCitations&#x60; no longer match anything in the fresh window. Lets the user sanity-check whether the saved AI thesis still rests on a valid fundamental base.
+  ///
+  /// Parameters:
+  /// * [id]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -920,7 +1281,7 @@ class AnalysesApi {
   ///
   /// Returns a [Future] containing a [Response] with a [RefreshFundamentalsResponse] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<RefreshFundamentalsResponse>> refreshFundamentals({ 
+  Future<Response<RefreshFundamentalsResponse>> refreshFundamentals({
     required int id,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -982,11 +1343,11 @@ class AnalysesApi {
   }
 
   /// Save the user&#39;s private trading-journal note for an analysis
-  /// Persists a plain-text journal note scoped to this analysis and the authenticated user. Sending an empty / whitespace-only string clears the note. The note is never included in any AI prompt — it is purely a private user field for the trading-journal UI on the detail page. 
+  /// Persists a plain-text journal note scoped to this analysis and the authenticated user. Sending an empty / whitespace-only string clears the note. The note is never included in any AI prompt — it is purely a private user field for the trading-journal UI on the detail page.
   ///
   /// Parameters:
-  /// * [id] 
-  /// * [setAnalysisNoteRequest] 
+  /// * [id]
+  /// * [setAnalysisNoteRequest]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -996,7 +1357,7 @@ class AnalysesApi {
   ///
   /// Returns a [Future] containing a [Response] with a [AnalysisNoteResponse] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<AnalysisNoteResponse>> setAnalysisNote({ 
+  Future<Response<AnalysisNoteResponse>> setAnalysisNote({
     required int id,
     required SetAnalysisNoteRequest setAnalysisNoteRequest,
     CancelToken? cancelToken,
@@ -1079,11 +1440,11 @@ class AnalysesApi {
   }
 
   /// Submit feedback for analysis
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [id] 
-  /// * [feedbackBody] 
+  /// * [id]
+  /// * [feedbackBody]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -1093,7 +1454,7 @@ class AnalysesApi {
   ///
   /// Returns a [Future] containing a [Response] with a [Feedback] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<Feedback>> submitFeedback({ 
+  Future<Response<Feedback>> submitFeedback({
     required int id,
     required FeedbackBody feedbackBody,
     CancelToken? cancelToken,
@@ -1164,6 +1525,81 @@ class AnalysesApi {
     }
 
     return Response<Feedback>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// Record an explicit decision to wait
+  ///
+  ///
+  /// Parameters:
+  /// * [id]
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [ProgressionAward] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<ProgressionAward>> waitGuardrail({
+    required int id,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/analyses/guardrails/{id}/wait'.replaceAll('{' r'id' '}', encodeQueryParameter(_serializers, id, const FullType(int)).toString());
+    final _options = Options(
+      method: r'POST',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    ProgressionAward? _responseData;
+
+    try {
+      final rawResponse = _response.data;
+      _responseData = rawResponse == null ? null : _serializers.deserialize(
+        rawResponse,
+        specifiedType: const FullType(ProgressionAward),
+      ) as ProgressionAward;
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<ProgressionAward>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,

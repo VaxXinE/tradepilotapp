@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -10,11 +11,16 @@ import '../../core/theme/app_colors.dart';
 import '../../l10n/l10n.dart';
 import '../../models/market_models.dart';
 import '../../providers/analysis_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/market_provider.dart';
+import '../../providers/progression_provider.dart';
+import '../../services/native_push_service.dart';
+import '../../widgets/adaptive_position_plan_card.dart';
 import '../../widgets/analysis_levels_chart.dart';
 import '../../widgets/analysis_note_card.dart';
-import '../../widgets/price_alert/price_alert_sheet.dart';
+import '../../widgets/risk/risk_tools_section.dart';
 import '../journal/trade_journal_screen.dart';
+import '../mindset/mindset_screen.dart';
 
 const _analysisTimeframes = ['1m', '5m', '15m', '30m', '1h', '4h', '1D', '1W'];
 
@@ -80,9 +86,16 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
   bool _marketLoading = false;
   bool _reanalyzing = false;
   bool _refreshingFundamentals = false;
+  bool _alertStatusLoading = true;
+  bool _alertBusy = false;
+  bool _journalLoading = true;
   String? _selectedTimeframe;
 
   String? _marketError;
+  String? _alertError;
+  String? _journalError;
+  AlertStatus? _alertStatus;
+  JournalEntry? _journalEntry;
 
   Timer? _pollTimer;
 
@@ -91,6 +104,17 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
     super.initState();
 
     _analysis = widget.preloaded;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final telemetry = context.read<AuthProvider?>()?.telemetry;
+        if (telemetry != null) {
+          unawaited(telemetry.pageView('/analyses/${widget.analysisId}'));
+        }
+        unawaited(_loadAlertStatus());
+        unawaited(_loadJournalEntry());
+      }
+    });
 
     _load();
     _startOutcomePolling();
@@ -258,6 +282,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
   Future<void> _reanalyze([String? timeframe]) async {
     final analysis = _analysis;
     if (analysis == null || _reanalyzing) return;
+    final auth = context.read<AuthProvider>();
     final selected = timeframe ?? analysis.timeframe;
     setState(() {
       _reanalyzing = true;
@@ -279,6 +304,14 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
       );
       return;
     }
+
+    unawaited(
+      auth.telemetry.track(
+        AnalyticsEventBodyEventTypeEnum.analysisCreated,
+        path: '/analyses/${widget.analysisId}',
+        metadata: {'instrument': created.instrument, 'timeframe': selected},
+      ),
+    );
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (_) =>
@@ -317,8 +350,39 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
     }
   }
 
+  void _openGuide(ProgressionEvidenceStartInputGuideIdEnum guideId) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => MindsetScreen(initialGuideId: guideId)),
+    );
+  }
+
+  Future<void> _openRiskMap(Analysis analysis) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: FractionallySizedBox(
+          heightFactor: .85,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
+            child: RiskMapCard(
+              instrument: analysis.instrument,
+              selectedTimeframe: _selectedTimeframe ?? analysis.timeframe,
+              initiallyExpanded: true,
+              onSelectTimeframe: (timeframe) {
+                Navigator.of(sheetContext).pop();
+                unawaited(_reanalyze(timeframe));
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _refresh() async {
-    await _load();
+    await Future.wait([_load(), _loadAlertStatus(), _loadJournalEntry()]);
 
     final analysis = _analysis;
 
@@ -327,49 +391,121 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
     }
   }
 
+  Future<void> _loadJournalEntry() async {
+    if (!mounted) return;
+    setState(() {
+      _journalLoading = true;
+      _journalError = null;
+    });
+    try {
+      final response = await context
+          .read<AuthProvider>()
+          .client
+          .tradeJournal
+          .getJournalEntryForAnalysis(analysisId: widget.analysisId);
+      if (!mounted) return;
+      setState(() => _journalEntry = response.data);
+    } on DioException catch (error) {
+      if (!mounted) return;
+      if (error.response?.statusCode == 404) {
+        setState(() => _journalEntry = null);
+      } else {
+        setState(() => _journalError = 'Jurnal belum dapat diperiksa.');
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _journalError = 'Jurnal belum dapat diperiksa.');
+      }
+    } finally {
+      if (mounted) setState(() => _journalLoading = false);
+    }
+  }
+
+  Future<void> _openJournal(Analysis analysis) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            TradeJournalScreen(analysis: analysis, initialEntry: _journalEntry),
+      ),
+    );
+    if (mounted) await _loadJournalEntry();
+  }
+
   // ===========================================================================
-  // PRICE ALERT
+  // ANALYSIS LEVEL ALERTS
   // ===========================================================================
 
-  Future<void> _openPriceAlert() async {
-    final analysis = _analysis;
+  Future<void> _loadAlertStatus() async {
+    if (!mounted) return;
+    setState(() {
+      _alertStatusLoading = true;
+      _alertError = null;
+    });
+    final status = await context.read<AnalysisProvider>().getAnalysisAlerts(
+      widget.analysisId,
+    );
+    if (!mounted) return;
+    setState(() {
+      _alertStatus = status;
+      _alertStatusLoading = false;
+      _alertError = status == null ? 'Status alert belum dapat dimuat.' : null;
+    });
+  }
 
-    if (analysis == null) {
-      return;
+  Future<void> _setAnalysisAlerts(bool enabled) async {
+    if (_alertBusy) return;
+    final analysisProvider = context.read<AnalysisProvider>();
+    setState(() => _alertBusy = true);
+
+    if (enabled) {
+      final push = context.read<NativePushService?>();
+      if (push != null &&
+          (!push.isEnabled || !push.isRegistered) &&
+          !await push.enable()) {
+        if (!mounted) return;
+        setState(() => _alertBusy = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              push.errorMessage ??
+                  'Aktifkan izin notifikasi agar alert harga dapat digunakan.',
+            ),
+          ),
+        );
+        return;
+      }
     }
 
-    final market = context.read<MarketProvider>();
+    final status = await analysisProvider.setAnalysisAlerts(
+      widget.analysisId,
+      enabled: enabled,
+    );
+    if (!mounted) return;
+    setState(() {
+      _alertBusy = false;
+      if (status != null) _alertStatus = status;
+    });
 
-    await market.loadQuotes(force: true, silent: true);
-
-    if (!mounted) {
-      return;
-    }
-
-    final quote = market.quoteFor(analysis.instrument);
-
-    if (quote == null) {
+    if (status == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Harga live belum tersedia untuk instrumen ini, '
-            'jadi price alert belum dapat dibuat.',
+            enabled
+                ? 'Alert gagal diaktifkan. Pastikan notifikasi aktif dan instrumen memiliki feed harga live.'
+                : 'Alert gagal dinonaktifkan. Coba lagi sebentar.',
           ),
         ),
       );
-
       return;
     }
 
-    final created = await showPriceAlertSheet(
-      context: context,
-      instrument: analysis.instrument,
-      currentPrice: quote.price,
-    );
-
-    if (created == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Price alert berhasil dibuat.')),
+    if (enabled) {
+      unawaited(
+        context.read<AuthProvider>().telemetry.track(
+          AnalyticsEventBodyEventTypeEnum.alertArmed,
+          path: '/analyses/${widget.analysisId}',
+          metadata: {'analysisId': widget.analysisId},
+        ),
       );
     }
   }
@@ -465,6 +601,17 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
 
     if (!mounted) {
       return;
+    }
+
+    if (ok) {
+      unawaited(context.read<ProgressionProvider>().refresh(silent: true));
+      unawaited(
+        context.read<AuthProvider>().telemetry.track(
+          AnalyticsEventBodyEventTypeEnum.feedbackSubmitted,
+          path: '/analyses/${widget.analysisId}',
+          metadata: {'analysisId': widget.analysisId},
+        ),
+      );
     }
 
     setState(() {
@@ -587,11 +734,6 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
                   )
                 : const Icon(Icons.refresh_rounded),
           ),
-          IconButton(
-            tooltip: 'Buat Price Alert',
-            onPressed: _openPriceAlert,
-            icon: const Icon(Icons.notifications_active_outlined),
-          ),
         ],
       ),
       body: RefreshIndicator(
@@ -620,6 +762,18 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
                   _reanalyze(_selectedTimeframe ?? analysis.timeframe),
             ),
 
+            if (supportsRiskMap(analysis.instrument)) ...[
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: OutlinedButton.icon(
+                  onPressed: _reanalyzing ? null : () => _openRiskMap(analysis),
+                  icon: const Icon(Icons.monitor_heart_outlined),
+                  label: Text(context.l10n.riskMapTitle),
+                ),
+              ),
+            ],
+
             if (!isPro) ...[
               const SizedBox(height: 14),
               _BeginnerMeaningCard(
@@ -637,6 +791,11 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
             const SizedBox(height: 14),
 
             _RiskCard(analysis: analysis, isPro: isPro),
+            _AnalysisGuideLink(
+              onPressed: () => _openGuide(
+                ProgressionEvidenceStartInputGuideIdEnum.biasConfidenceValidity,
+              ),
+            ),
 
             if ((isPro ? analysis.uncertaintyNotes : analysis.whyReason)
                     ?.trim()
@@ -679,6 +838,11 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
                 onRefresh: _refreshFundamentals,
                 onOpenUrl: _openExternalUrl,
               ),
+              _AnalysisGuideLink(
+                onPressed: () => _openGuide(
+                  ProgressionEvidenceStartInputGuideIdEnum.technicalFundamental,
+                ),
+              ),
             ],
 
             if (analysis.tradePlan != null) ...[
@@ -694,26 +858,47 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
               ),
               const SizedBox(height: 12),
               _TradePlanCard(plan: analysis.tradePlan!, isDark: isDark),
+              const SizedBox(height: 14),
+              AdaptivePositionPlanCard(analysis: analysis, candles: _candles),
+              Wrap(
+                spacing: 4,
+                children: [
+                  _AnalysisGuideLink(
+                    onPressed: () => _openGuide(
+                      ProgressionEvidenceStartInputGuideIdEnum.standardPlan,
+                    ),
+                  ),
+                  _AnalysisGuideLink(
+                    label: context.l10n.learnAdaptivePosition,
+                    onPressed: () => _openGuide(
+                      ProgressionEvidenceStartInputGuideIdEnum
+                          .adaptivePositionPlan,
+                    ),
+                  ),
+                ],
+              ),
             ],
 
-            const SizedBox(height: 22),
-
-            OutlinedButton.icon(
-              onPressed: _openPriceAlert,
-              icon: const Icon(Icons.notifications_active_outlined),
-              label: const Text('Buat Price Alert'),
-            ),
+            if (analysis.tradePlan != null) ...[
+              const SizedBox(height: 14),
+              _AnalysisAlertsCard(
+                status: _alertStatus,
+                loading: _alertStatusLoading,
+                busy: _alertBusy,
+                error: _alertError,
+                onToggle: _setAnalysisAlerts,
+                onRetry: _loadAlertStatus,
+              ),
+            ],
 
             const SizedBox(height: 14),
 
-            OutlinedButton.icon(
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => TradeJournalScreen(analysis: analysis),
-                ),
-              ),
-              icon: const Icon(Icons.menu_book_outlined),
-              label: const Text('Catat trade ini'),
+            _AnalysisJournalCard(
+              entry: _journalEntry,
+              loading: _journalLoading,
+              error: _journalError,
+              onOpen: () => _openJournal(analysis),
+              onRetry: _loadJournalEntry,
             ),
 
             const SizedBox(height: 14),
@@ -871,6 +1056,248 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _AnalysisGuideLink extends StatelessWidget {
+  const _AnalysisGuideLink({required this.onPressed, this.label});
+
+  final VoidCallback onPressed;
+  final String? label;
+
+  @override
+  Widget build(BuildContext context) => Align(
+    alignment: Alignment.centerLeft,
+    child: TextButton.icon(
+      onPressed: onPressed,
+      icon: const Icon(Icons.menu_book_outlined, size: 17),
+      label: Text(label ?? context.l10n.openFullExplanation),
+    ),
+  );
+}
+
+class _AnalysisJournalCard extends StatelessWidget {
+  const _AnalysisJournalCard({
+    required this.entry,
+    required this.loading,
+    required this.error,
+    required this.onOpen,
+    required this.onRetry,
+  });
+
+  final JournalEntry? entry;
+  final bool loading;
+  final String? error;
+  final VoidCallback onOpen;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final journal = entry;
+    return Card(
+      child: ListTile(
+        leading: const Icon(Icons.menu_book_outlined),
+        title: Text(
+          journal == null ? 'Catat trade ini' : 'Catatan trade saya',
+          style: const TextStyle(fontWeight: FontWeight.w800),
+        ),
+        subtitle: loading
+            ? const Padding(
+                padding: EdgeInsets.only(top: 8),
+                child: LinearProgressIndicator(),
+              )
+            : error != null
+            ? Text(error!)
+            : journal == null
+            ? const Text('Simpan keputusan dan hasil trade untuk refleksi.')
+            : Text(
+                [
+                  journal.side.name.toUpperCase(),
+                  journal.outcome.name,
+                  if (journal.mood?.trim().isNotEmpty == true) journal.mood!,
+                  if (journal.note?.trim().isNotEmpty == true) journal.note!,
+                ].join(' · '),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+        trailing: error != null
+            ? IconButton(
+                tooltip: 'Coba lagi',
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh_rounded),
+              )
+            : const Icon(Icons.chevron_right_rounded),
+        onTap: loading || error != null ? null : onOpen,
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// ANALYSIS LEVEL ALERTS
+// =============================================================================
+
+class _AnalysisAlertsCard extends StatelessWidget {
+  const _AnalysisAlertsCard({
+    required this.status,
+    required this.loading,
+    required this.busy,
+    required this.error,
+    required this.onToggle,
+    required this.onRetry,
+  });
+
+  final AlertStatus? status;
+  final bool loading;
+  final bool busy;
+  final String? error;
+  final ValueChanged<bool> onToggle;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final enabled = status?.enabled ?? false;
+
+    return Card(
+      key: const ValueKey('analysis-level-alert-card'),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  enabled
+                      ? Icons.notifications_active_outlined
+                      : Icons.notifications_off_outlined,
+                  size: 20,
+                  color: enabled ? colors.primary : colors.onSurfaceVariant,
+                ),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Alert harga',
+                        style: TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                      SizedBox(height: 3),
+                      Text(
+                        'Dapat notifikasi saat harga menyentuh level Entry, Stop Loss, atau Take Profit dari AI.',
+                        style: TextStyle(fontSize: 11, height: 1.35),
+                      ),
+                    ],
+                  ),
+                ),
+                if (loading || busy)
+                  const Padding(
+                    padding: EdgeInsets.all(8),
+                    child: SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  )
+                else
+                  Switch.adaptive(
+                    key: const ValueKey('analysis-level-alert-switch'),
+                    value: enabled,
+                    onChanged: error == null ? onToggle : null,
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (error != null)
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      error!,
+                      style: TextStyle(color: colors.error, fontSize: 11),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: onRetry,
+                    child: const Text('Coba lagi'),
+                  ),
+                ],
+              )
+            else ...[
+              Text(
+                enabled
+                    ? 'Alert: AKTIF · ${status?.armedCount ?? 0} level dipantau'
+                    : 'Alert: NONAKTIF',
+                style: TextStyle(
+                  color: enabled ? colors.primary : colors.onSurfaceVariant,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              if (status?.levels.isNotEmpty == true) ...[
+                const SizedBox(height: 10),
+                ...status!.levels.map(
+                  (row) => Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            '${_alertLevelLabel(row.level)} · ${row.side.name.toUpperCase()}',
+                            style: const TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          '@ ${row.price}',
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            fontFeatures: [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        _AlertStatusBadge(row: row),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+String _alertLevelLabel(AlertLevelRowLevelEnum level) => switch (level) {
+  AlertLevelRowLevelEnum.entry => 'Entry',
+  AlertLevelRowLevelEnum.sl => 'Stop Loss',
+  AlertLevelRowLevelEnum.tp1 => 'Take Profit 1',
+  _ => 'Take Profit 2',
+};
+
+class _AlertStatusBadge extends StatelessWidget {
+  const _AlertStatusBadge({required this.row});
+
+  final AlertLevelRow row;
+
+  @override
+  Widget build(BuildContext context) {
+    final (label, color) = row.triggeredAt != null
+        ? ('Terpicu', AppColors.bullishLight)
+        : row.cancelledAt != null
+        ? ('Dibatalkan', Theme.of(context).colorScheme.onSurfaceVariant)
+        : ('Dipantau', Theme.of(context).colorScheme.primary);
+
+    return Text(
+      label,
+      style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w700),
     );
   }
 }
@@ -1637,7 +2064,9 @@ class _FundamentalSnapshotCard extends StatelessWidget {
                       '${item.source_} • '
                       '${DateFormat('d MMM HH:mm').format(item.publishedAt.toLocal())}',
                   icon: Icons.article_outlined,
-                  onTap: () => onOpenUrl(item.url),
+                  onTap: item.url?.trim().isNotEmpty == true
+                      ? () => onOpenUrl(item.url!)
+                      : null,
                 ),
                 const SizedBox(height: 9),
               ],
@@ -1655,8 +2084,8 @@ class _FundamentalSnapshotCard extends StatelessWidget {
                   title: event.event,
                   meta:
                       '${event.currency} • '
-                      '${event.date} ${event.time} • '
-                      '${event.impact}',
+                      '${event.date}${event.time == null ? '' : ' ${event.time}'}'
+                      '${event.impact == null ? '' : ' • ${event.impact}'}',
                   icon: Icons.calendar_month_outlined,
                 ),
                 const SizedBox(height: 9),
@@ -1930,8 +2359,9 @@ class _ConfidenceReasonCard extends StatelessWidget {
                       onPressed: () {
                         for (final item
                             in news ?? const <FundamentalNewsItem>[]) {
-                          if (item.title == title) {
-                            onOpenUrl(item.url);
+                          final url = item.url;
+                          if (item.title == title && url != null) {
+                            onOpenUrl(url);
                             return;
                           }
                         }

@@ -9,6 +9,7 @@ import '../../core/theme/app_colors.dart';
 import '../../models/notification_action.dart';
 import '../../providers/analysis_provider.dart';
 import '../../providers/notifications_provider.dart';
+import '../../services/native_push_service.dart';
 import '../../widgets/error_banner.dart';
 import '../analysis/analysis_detail_screen.dart';
 import '../home/tabs/history_tab.dart';
@@ -140,6 +141,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         : AppColors.lightMutedForeground;
 
     final provider = context.watch<NotificationsProvider>();
+    final nativePush = context.watch<NativePushService?>();
     return Scaffold(
       appBar: AppBar(
         title: const Text('Notifikasi'),
@@ -184,6 +186,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             ),
 
             const SizedBox(height: 14),
+
+            if (nativePush != null) ...[
+              _NativePushCard(service: nativePush),
+              const SizedBox(height: 12),
+            ],
 
             _PreferencesCard(provider: provider),
 
@@ -251,6 +258,39 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 // PREFERENCES
 // =============================================================================
 
+class _NativePushCard extends StatelessWidget {
+  const _NativePushCard({required this.service});
+
+  final NativePushService service;
+
+  @override
+  Widget build(BuildContext context) {
+    final subtitle = service.isBusy
+        ? 'Memperbarui pengaturan perangkat...'
+        : service.isRegistered
+        ? 'Aktif untuk perangkat ini.'
+        : service.isPermissionDenied
+        ? 'Izin ditolak. Aktifkan kembali melalui pengaturan perangkat.'
+        : service.errorMessage ?? 'Terima push saat aplikasi tidak aktif.';
+
+    return Card(
+      child: SwitchListTile(
+        secondary: const Icon(Icons.phone_android_rounded),
+        title: const Text(
+          'Mobile Push',
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+        ),
+        subtitle: Text(subtitle, style: const TextStyle(fontSize: 11)),
+        value: service.isEnabled,
+        onChanged: service.isBusy
+            ? null
+            : (enabled) =>
+                  unawaited(enabled ? service.enable() : service.disable()),
+      ),
+    );
+  }
+}
+
 class _PreferencesCard extends StatelessWidget {
   const _PreferencesCard({required this.provider});
 
@@ -313,6 +353,10 @@ class _PreferencesCard extends StatelessWidget {
                       unawaited(provider.dismissDisengageNotice());
                     },
             ),
+
+          _QuietHoursSettings(provider: provider, prefs: prefs),
+
+          const Divider(),
 
           _PreferenceSwitch(
             title: 'Analisis kedaluwarsa',
@@ -562,6 +606,138 @@ class _PreferencesCard extends StatelessWidget {
             ),
         ],
       ),
+    );
+  }
+}
+
+class _QuietHoursSettings extends StatelessWidget {
+  const _QuietHoursSettings({required this.provider, required this.prefs});
+
+  static const _timezones = <String>[
+    'Asia/Jakarta',
+    'Asia/Makassar',
+    'Asia/Jayapura',
+    'Asia/Singapore',
+    'Asia/Kuala_Lumpur',
+    'Asia/Bangkok',
+    'Asia/Tokyo',
+    'Europe/London',
+    'America/New_York',
+    'UTC',
+  ];
+
+  final NotificationsProvider provider;
+  final api.PushPrefs prefs;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = !provider.isSavingPreferences;
+    final zones = {prefs.notificationTimezone, ..._timezones}.toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _PreferenceSwitch(
+          title: 'Waktu tenang',
+          subtitle: 'Tahan notifikasi non-darurat selama jam istirahat.',
+          value: prefs.quietHoursEnabled,
+          enabled: enabled,
+          onChanged: (value) =>
+              unawaited(provider.updateQuietHours(enabled: value)),
+        ),
+        if (prefs.quietHoursEnabled) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _HourDropdown(
+                    label: 'Mulai',
+                    value: prefs.quietHoursStart,
+                    enabled: enabled,
+                    onChanged: (value) =>
+                        unawaited(provider.updateQuietHours(start: value)),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _HourDropdown(
+                    label: 'Selesai',
+                    value: prefs.quietHoursEnd,
+                    enabled: enabled,
+                    onChanged: (value) =>
+                        unawaited(provider.updateQuietHours(end: value)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: DropdownButtonFormField<String>(
+              initialValue: prefs.notificationTimezone,
+              decoration: const InputDecoration(
+                labelText: 'Zona waktu',
+                prefixIcon: Icon(Icons.public_rounded, size: 19),
+              ),
+              items: zones
+                  .map(
+                    (zone) => DropdownMenuItem(value: zone, child: Text(zone)),
+                  )
+                  .toList(),
+              onChanged: enabled
+                  ? (value) {
+                      if (value != null) {
+                        unawaited(provider.updateQuietHours(timezone: value));
+                      }
+                    }
+                  : null,
+            ),
+          ),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(12, 7, 12, 4),
+            child: Text(
+              'Notifikasi keamanan tetap dapat dikirim selama waktu tenang.',
+              style: TextStyle(fontSize: 10.5),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _HourDropdown extends StatelessWidget {
+  const _HourDropdown({
+    required this.label,
+    required this.value,
+    required this.enabled,
+    required this.onChanged,
+  });
+
+  final String label;
+  final String value;
+  final bool enabled;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final hour = int.tryParse(value.split(':').first) ?? 0;
+    final normalized = '${hour.toString().padLeft(2, '0')}:00';
+
+    return DropdownButtonFormField<String>(
+      initialValue: normalized,
+      decoration: InputDecoration(labelText: label),
+      items: List.generate(24, (index) {
+        final value = '${index.toString().padLeft(2, '0')}:00';
+        return DropdownMenuItem(value: value, child: Text(value));
+      }),
+      onChanged: enabled
+          ? (value) {
+              if (value != null) onChanged(value);
+            }
+          : null,
     );
   }
 }

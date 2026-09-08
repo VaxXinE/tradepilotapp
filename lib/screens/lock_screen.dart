@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../core/theme/app_colors.dart';
 import '../l10n/l10n.dart';
 import '../providers/auth_provider.dart';
+import '../services/native_push_service.dart';
 
 /// Biometric gate in front of an already-valid session.
 ///
@@ -78,6 +79,8 @@ class _LockScreenState extends State<LockScreen> {
   }
 
   Future<void> _signOut() async {
+    await context.read<NativePushService?>()?.unregister();
+    if (!mounted) return;
     await context.read<AuthProvider>().logout();
   }
 

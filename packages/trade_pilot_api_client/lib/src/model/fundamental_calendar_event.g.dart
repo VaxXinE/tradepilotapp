@@ -10,19 +10,19 @@ class _$FundamentalCalendarEvent extends FundamentalCalendarEvent {
   @override
   final String date;
   @override
-  final String time;
+  final String? time;
   @override
   final String currency;
   @override
   final String event;
   @override
-  final String impact;
+  final String? impact;
   @override
-  final String actual;
+  final String? actual;
   @override
-  final String forecast;
+  final String? forecast;
   @override
-  final String previous;
+  final String? previous;
 
   factory _$FundamentalCalendarEvent(
           [void Function(FundamentalCalendarEventBuilder)? updates]) =>
@@ -30,13 +30,13 @@ class _$FundamentalCalendarEvent extends FundamentalCalendarEvent {
 
   _$FundamentalCalendarEvent._(
       {required this.date,
-      required this.time,
+      this.time,
       required this.currency,
       required this.event,
-      required this.impact,
-      required this.actual,
-      required this.forecast,
-      required this.previous})
+      this.impact,
+      this.actual,
+      this.forecast,
+      this.previous})
       : super._();
   @override
   FundamentalCalendarEvent rebuild(
@@ -166,20 +166,15 @@ class FundamentalCalendarEventBuilder
         _$FundamentalCalendarEvent._(
           date: BuiltValueNullFieldError.checkNotNull(
               date, r'FundamentalCalendarEvent', 'date'),
-          time: BuiltValueNullFieldError.checkNotNull(
-              time, r'FundamentalCalendarEvent', 'time'),
+          time: time,
           currency: BuiltValueNullFieldError.checkNotNull(
               currency, r'FundamentalCalendarEvent', 'currency'),
           event: BuiltValueNullFieldError.checkNotNull(
               event, r'FundamentalCalendarEvent', 'event'),
-          impact: BuiltValueNullFieldError.checkNotNull(
-              impact, r'FundamentalCalendarEvent', 'impact'),
-          actual: BuiltValueNullFieldError.checkNotNull(
-              actual, r'FundamentalCalendarEvent', 'actual'),
-          forecast: BuiltValueNullFieldError.checkNotNull(
-              forecast, r'FundamentalCalendarEvent', 'forecast'),
-          previous: BuiltValueNullFieldError.checkNotNull(
-              previous, r'FundamentalCalendarEvent', 'previous'),
+          impact: impact,
+          actual: actual,
+          forecast: forecast,
+          previous: previous,
         );
     replace(_$result);
     return _$result;

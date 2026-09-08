@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -8,9 +10,10 @@ import '../../providers/auth_provider.dart';
 import '../analysis/analysis_detail_screen.dart';
 
 class TradeJournalScreen extends StatefulWidget {
-  const TradeJournalScreen({super.key, this.analysis});
+  const TradeJournalScreen({super.key, this.analysis, this.initialEntry});
 
   final Analysis? analysis;
+  final JournalEntry? initialEntry;
 
   @override
   State<TradeJournalScreen> createState() => _TradeJournalScreenState();
@@ -31,7 +34,9 @@ class _TradeJournalScreenState extends State<TradeJournalScreen> {
     super.initState();
     _load();
     if (widget.analysis != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _openForm());
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _openForm(widget.initialEntry),
+      );
     }
   }
 
@@ -144,6 +149,15 @@ class _TradeJournalScreenState extends State<TradeJournalScreen> {
       }
       final savedEntry = saved;
       if (!_sameUser(userId) || savedEntry == null) return;
+      if (entry == null) {
+        unawaited(
+          auth.telemetry.track(
+            AnalyticsEventBodyEventTypeEnum.tradeLogged,
+            path: '/journal',
+            metadata: {'instrument': result.instrument, 'side': result.side},
+          ),
+        );
+      }
       setState(() {
         final index = _entries.indexWhere((item) => item.id == savedEntry.id);
         if (index < 0) {

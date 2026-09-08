@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
@@ -5,11 +7,16 @@ import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/localization/locale_controller.dart';
+import '../../../core/preferences/mental_checklist_controller.dart';
 import '../../../core/api/api_config.dart';
+import '../../../core/config/sponsor_config.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme_controller.dart';
 import '../../../l10n/l10n.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../providers/progression_provider.dart';
+import '../../../services/native_push_service.dart';
+import '../../../widgets/progression/progression_emblem.dart';
 // import '../../../screens/notifications/notifications_screen.dart';
 import '../../profile/change_password_screen.dart';
 import '../../profile/change_security_question_screen.dart';
@@ -20,6 +27,8 @@ import '../../daily_summary/daily_summary_screen.dart';
 import '../../journal/trade_journal_screen.dart';
 import '../../trader_mirror/trader_mirror_screen.dart';
 import '../../mindset/mindset_screen.dart';
+import '../../progression/progression_screen.dart';
+import '../../performance/performance_screen.dart';
 
 class ProfileTab extends StatelessWidget {
   const ProfileTab({super.key});
@@ -28,7 +37,21 @@ class ProfileTab extends StatelessWidget {
   static const _termsUrl = 'https://tradepilot.id/terms';
   static const _supportUrl = 'https://tradepilot.id/support';
 
-  Future<void> _openUrl(BuildContext context, String url) async {
+  Future<void> _openUrl(
+    BuildContext context,
+    String url, {
+    OutboundClickBodyPlacementEnum? placement,
+    OutboundClickBodyTargetEnum? target,
+  }) async {
+    if (placement != null && target != null) {
+      unawaited(
+        context.read<AuthProvider>().telemetry.recordOutboundClick(
+          placement: placement,
+          target: target,
+          languageCode: Localizations.localeOf(context).languageCode,
+        ),
+      );
+    }
     try {
       if (await launchUrl(
         Uri.parse(url),
@@ -96,6 +119,8 @@ class ProfileTab extends StatelessWidget {
 
     if (confirmed != true || !context.mounted) return;
 
+    await context.read<NativePushService?>()?.unregister();
+    if (!context.mounted) return;
     await context.read<AuthProvider>().logout();
   }
 
@@ -172,6 +197,8 @@ class ProfileTab extends StatelessWidget {
                     onPrimary: onPrimary,
                     muted: muted,
                   ),
+                  const SizedBox(height: 12),
+                  const _ProgressionProfileCard(),
                   const SizedBox(height: 24),
                   _Section(
                     title: l10n.account,
@@ -237,6 +264,18 @@ class ProfileTab extends StatelessWidget {
                         onChanged: auth.isUpdatingProfile
                             ? null
                             : (value) => _toggleMode(context, value),
+                      ),
+                      const Divider(height: 1),
+                      SwitchListTile(
+                        secondary: const Icon(Icons.checklist_rounded),
+                        title: Text(l10n.mentalChecklistPreference),
+                        subtitle: Text(l10n.mentalChecklistPreferenceHint),
+                        value: context
+                            .watch<MentalChecklistController>()
+                            .enabled,
+                        onChanged: (value) => context
+                            .read<MentalChecklistController>()
+                            .setEnabled(value),
                       ),
                     ],
                   ),
@@ -362,6 +401,20 @@ class ProfileTab extends StatelessWidget {
                       ),
                       const Divider(height: 1),
                       ListTile(
+                        leading: const Icon(Icons.public_rounded),
+                        title: const Text('Kinerja AI Publik'),
+                        subtitle: const Text(
+                          'Rekam jejak anonim seluruh analisis Trade Pilot',
+                        ),
+                        trailing: const Icon(Icons.chevron_right_rounded),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const PerformanceScreen(),
+                          ),
+                        ),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
                         leading: const Icon(Icons.today_outlined),
                         title: Text(l10n.dailySummary),
                         trailing: const Icon(Icons.chevron_right_rounded),
@@ -385,9 +438,9 @@ class ProfileTab extends StatelessWidget {
                       ),
                       const Divider(height: 1),
                       ListTile(
-                        leading: const Icon(Icons.psychology_alt_outlined),
-                        title: Text(l10n.traderMindset),
-                        subtitle: Text(l10n.traderMindsetDescription),
+                        leading: const Icon(Icons.school_outlined),
+                        title: Text(l10n.guide),
+                        subtitle: Text(l10n.guideDescription),
                         trailing: const Icon(Icons.chevron_right_rounded),
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute(
@@ -397,6 +450,42 @@ class ProfileTab extends StatelessWidget {
                       ),
                     ],
                   ),
+                  if (showSponsor) ...[
+                    const SizedBox(height: 8),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              l10n.sponsoredBySolidPrime,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              l10n.sponsorDisclosure,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                            const SizedBox(height: 12),
+                            FilledButton.icon(
+                              onPressed: () => _openUrl(
+                                context,
+                                sponsorWebsiteUrl,
+                                placement:
+                                    OutboundClickBodyPlacementEnum.profileCta,
+                                target: OutboundClickBodyTargetEnum.sgBerjangka,
+                              ),
+                              icon: const Icon(Icons.open_in_new_rounded),
+                              label: Text(l10n.openSponsorWebsite),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 8),
                   OutlinedButton.icon(
                     onPressed: auth.isBusy
@@ -418,6 +507,59 @@ class ProfileTab extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ProgressionProfileCard extends StatelessWidget {
+  const _ProgressionProfileCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final summary = context.watch<ProgressionProvider>().summary;
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const ProgressionScreen())),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              if (summary == null)
+                const CircleAvatar(child: Icon(Icons.emoji_events_outlined))
+              else
+                ProgressionEmblem(
+                  level: summary.level,
+                  masteryLevel: summary.masteryLevel,
+                  size: 54,
+                ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.l10n.progressionTitle,
+                      style: const TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                    Text(
+                      summary == null
+                          ? context.l10n.progressionSubtitle
+                          : '${summary.totalXp} XP · ${context.l10n.progressionLevel(summary.level)} · ${summary.rank}',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right_rounded),
+            ],
+          ),
+        ),
       ),
     );
   }

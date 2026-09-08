@@ -25,6 +25,10 @@ import 'package:trade_pilot_api_client/src/model/alert_status.dart';
 import 'package:trade_pilot_api_client/src/model/analyses_list.dart';
 import 'package:trade_pilot_api_client/src/model/analyses_summary.dart';
 import 'package:trade_pilot_api_client/src/model/analysis.dart';
+import 'package:trade_pilot_api_client/src/model/analysis_history_instrument_stats.dart';
+import 'package:trade_pilot_api_client/src/model/analysis_history_outcome_stats.dart';
+import 'package:trade_pilot_api_client/src/model/analysis_history_summary.dart';
+import 'package:trade_pilot_api_client/src/model/analysis_history_timeframe_stats.dart';
 import 'package:trade_pilot_api_client/src/model/analysis_note_response.dart';
 import 'package:trade_pilot_api_client/src/model/analysis_outcomes_summary.dart';
 import 'package:trade_pilot_api_client/src/model/analysis_quota.dart';
@@ -60,6 +64,7 @@ import 'package:trade_pilot_api_client/src/model/daily_summary_response.dart';
 import 'package:trade_pilot_api_client/src/model/daily_summary_settings.dart';
 import 'package:trade_pilot_api_client/src/model/daily_summary_settings_update.dart';
 import 'package:trade_pilot_api_client/src/model/daily_summary_today.dart';
+import 'package:trade_pilot_api_client/src/model/delete_account_body.dart';
 import 'package:trade_pilot_api_client/src/model/error_response.dart';
 import 'package:trade_pilot_api_client/src/model/feedback.dart';
 import 'package:trade_pilot_api_client/src/model/feedback_body.dart';
@@ -75,6 +80,7 @@ import 'package:trade_pilot_api_client/src/model/fundamental_context.dart';
 import 'package:trade_pilot_api_client/src/model/fundamental_drift.dart';
 import 'package:trade_pilot_api_client/src/model/fundamental_drift_citation.dart';
 import 'package:trade_pilot_api_client/src/model/fundamental_news_item.dart';
+import 'package:trade_pilot_api_client/src/model/get_guardrails200_response.dart';
 import 'package:trade_pilot_api_client/src/model/health_status.dart';
 import 'package:trade_pilot_api_client/src/model/journal_entry.dart';
 import 'package:trade_pilot_api_client/src/model/journal_entry_list.dart';
@@ -86,6 +92,8 @@ import 'package:trade_pilot_api_client/src/model/login_body.dart';
 import 'package:trade_pilot_api_client/src/model/message_response.dart';
 import 'package:trade_pilot_api_client/src/model/mirror_gated_insight.dart';
 import 'package:trade_pilot_api_client/src/model/mirror_group_stat.dart';
+import 'package:trade_pilot_api_client/src/model/native_push_register_body.dart';
+import 'package:trade_pilot_api_client/src/model/native_push_unregister_body.dart';
 import 'package:trade_pilot_api_client/src/model/notification.dart';
 import 'package:trade_pilot_api_client/src/model/notifications_list.dart';
 import 'package:trade_pilot_api_client/src/model/outbound_click_body.dart';
@@ -101,6 +109,19 @@ import 'package:trade_pilot_api_client/src/model/performance_summary.dart';
 import 'package:trade_pilot_api_client/src/model/personal_analytics.dart';
 import 'package:trade_pilot_api_client/src/model/personal_analytics_top_instruments_inner.dart';
 import 'package:trade_pilot_api_client/src/model/personal_analytics_weekly_data_inner.dart';
+import 'package:trade_pilot_api_client/src/model/progression_achievement.dart';
+import 'package:trade_pilot_api_client/src/model/progression_activity_input.dart';
+import 'package:trade_pilot_api_client/src/model/progression_audit.dart';
+import 'package:trade_pilot_api_client/src/model/progression_audit_entry.dart';
+import 'package:trade_pilot_api_client/src/model/progression_award.dart';
+import 'package:trade_pilot_api_client/src/model/progression_backfill_result.dart';
+import 'package:trade_pilot_api_client/src/model/progression_catalog.dart';
+import 'package:trade_pilot_api_client/src/model/progression_evidence_session.dart';
+import 'package:trade_pilot_api_client/src/model/progression_evidence_start_input.dart';
+import 'package:trade_pilot_api_client/src/model/progression_evidence_start_input_checklist.dart';
+import 'package:trade_pilot_api_client/src/model/progression_history.dart';
+import 'package:trade_pilot_api_client/src/model/progression_ledger_entry.dart';
+import 'package:trade_pilot_api_client/src/model/progression_summary.dart';
 import 'package:trade_pilot_api_client/src/model/push_prefs.dart';
 import 'package:trade_pilot_api_client/src/model/push_prefs_update.dart';
 import 'package:trade_pilot_api_client/src/model/push_public_key.dart';
@@ -111,6 +132,8 @@ import 'package:trade_pilot_api_client/src/model/push_test_result.dart';
 import 'package:trade_pilot_api_client/src/model/push_unsubscribe_body.dart';
 import 'package:trade_pilot_api_client/src/model/recent_instruments.dart';
 import 'package:trade_pilot_api_client/src/model/recent_instruments_instruments_inner.dart';
+import 'package:trade_pilot_api_client/src/model/record_guardrail_telemetry201_response.dart';
+import 'package:trade_pilot_api_client/src/model/record_guardrail_telemetry_request.dart';
 import 'package:trade_pilot_api_client/src/model/refresh_fundamentals_response.dart';
 import 'package:trade_pilot_api_client/src/model/register_body.dart';
 import 'package:trade_pilot_api_client/src/model/rename_filter_preset_body.dart';
@@ -119,7 +142,17 @@ import 'package:trade_pilot_api_client/src/model/reset_token_response.dart';
 import 'package:trade_pilot_api_client/src/model/reset_user_password_body.dart';
 import 'package:trade_pilot_api_client/src/model/security_question_response.dart';
 import 'package:trade_pilot_api_client/src/model/set_analysis_note_request.dart';
+import 'package:trade_pilot_api_client/src/model/standard_trading_rule_account.dart';
+import 'package:trade_pilot_api_client/src/model/standard_trading_rule_instrument.dart';
+import 'package:trade_pilot_api_client/src/model/standard_trading_rule_instrument_trading_hours.dart';
+import 'package:trade_pilot_api_client/src/model/standard_trading_rule_text.dart';
+import 'package:trade_pilot_api_client/src/model/standard_trading_rules.dart';
+import 'package:trade_pilot_api_client/src/model/standard_trading_rules_fixed_rate.dart';
 import 'package:trade_pilot_api_client/src/model/tags_list.dart';
+import 'package:trade_pilot_api_client/src/model/timeframe_risk.dart';
+import 'package:trade_pilot_api_client/src/model/timeframe_risk_map.dart';
+import 'package:trade_pilot_api_client/src/model/timeframe_risk_map_overall.dart';
+import 'package:trade_pilot_api_client/src/model/timeframe_risk_metrics.dart';
 import 'package:trade_pilot_api_client/src/model/trade_plan.dart';
 import 'package:trade_pilot_api_client/src/model/trade_side.dart';
 import 'package:trade_pilot_api_client/src/model/trader_mirror_highlight.dart';
@@ -155,6 +188,10 @@ part 'serializers.g.dart';
   AnalysesList,
   AnalysesSummary,
   Analysis,
+  AnalysisHistoryInstrumentStats,
+  AnalysisHistoryOutcomeStats,$AnalysisHistoryOutcomeStats,
+  AnalysisHistorySummary,
+  AnalysisHistoryTimeframeStats,
   AnalysisNoteResponse,
   AnalysisOutcomesSummary,
   AnalysisQuota,
@@ -190,6 +227,7 @@ part 'serializers.g.dart';
   DailySummarySettings,
   DailySummarySettingsUpdate,
   DailySummaryToday,
+  DeleteAccountBody,
   ErrorResponse,
   Feedback,
   FeedbackBody,
@@ -205,6 +243,7 @@ part 'serializers.g.dart';
   FundamentalDrift,
   FundamentalDriftCitation,
   FundamentalNewsItem,
+  GetGuardrails200Response,
   HealthStatus,
   JournalEntry,
   JournalEntryList,
@@ -216,6 +255,8 @@ part 'serializers.g.dart';
   MessageResponse,
   MirrorGatedInsight,
   MirrorGroupStat,
+  NativePushRegisterBody,
+  NativePushUnregisterBody,
   Notification,
   NotificationsList,
   OutboundClickBody,
@@ -231,6 +272,19 @@ part 'serializers.g.dart';
   PersonalAnalytics,
   PersonalAnalyticsTopInstrumentsInner,
   PersonalAnalyticsWeeklyDataInner,
+  ProgressionAchievement,
+  ProgressionActivityInput,
+  ProgressionAudit,
+  ProgressionAuditEntry,
+  ProgressionAward,
+  ProgressionBackfillResult,
+  ProgressionCatalog,
+  ProgressionEvidenceSession,
+  ProgressionEvidenceStartInput,
+  ProgressionEvidenceStartInputChecklist,
+  ProgressionHistory,
+  ProgressionLedgerEntry,
+  ProgressionSummary,
   PushPrefs,
   PushPrefsUpdate,
   PushPublicKey,
@@ -241,6 +295,8 @@ part 'serializers.g.dart';
   PushUnsubscribeBody,
   RecentInstruments,
   RecentInstrumentsInstrumentsInner,
+  RecordGuardrailTelemetry201Response,
+  RecordGuardrailTelemetryRequest,
   RefreshFundamentalsResponse,
   RegisterBody,
   RenameFilterPresetBody,
@@ -249,7 +305,17 @@ part 'serializers.g.dart';
   ResetUserPasswordBody,
   SecurityQuestionResponse,
   SetAnalysisNoteRequest,
+  StandardTradingRuleAccount,
+  StandardTradingRuleInstrument,
+  StandardTradingRuleInstrumentTradingHours,
+  StandardTradingRuleText,
+  StandardTradingRules,
+  StandardTradingRulesFixedRate,
   TagsList,
+  TimeframeRisk,
+  TimeframeRiskMap,
+  TimeframeRiskMapOverall,
+  TimeframeRiskMetrics,
   TradePlan,
   TradeSide,
   TraderMirrorHighlight,
@@ -285,6 +351,10 @@ Serializers serializers = (_$serializers.toBuilder()
         () => ListBuilder<OutboundClickStatsByPlacementInner>(),
       )
       ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(StandardTradingRuleInstrument)]),
+        () => ListBuilder<StandardTradingRuleInstrument>(),
+      )
+      ..addBuilderFactory(
         const FullType(BuiltList, [FullType(AnalyticsUsageStatsDeviceBreakdownInner)]),
         () => ListBuilder<AnalyticsUsageStatsDeviceBreakdownInner>(),
       )
@@ -293,12 +363,20 @@ Serializers serializers = (_$serializers.toBuilder()
         () => ListBuilder<FundamentalCalendarEvent>(),
       )
       ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(TimeframeRisk)]),
+        () => ListBuilder<TimeframeRisk>(),
+      )
+      ..addBuilderFactory(
         const FullType(BuiltList, [FullType(Broadcast)]),
         () => ListBuilder<Broadcast>(),
       )
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(PersonalAnalyticsTopInstrumentsInner)]),
         () => ListBuilder<PersonalAnalyticsTopInstrumentsInner>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(ProgressionAchievement)]),
+        () => ListBuilder<ProgressionAchievement>(),
       )
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(UserWithStats)]),
@@ -321,8 +399,20 @@ Serializers serializers = (_$serializers.toBuilder()
         () => ListBuilder<AnalyticsTokenStatsByModelInner>(),
       )
       ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(BuiltMap, [FullType(String), FullType(JsonObject)])]),
+        () => ListBuilder<BuiltMap<String, JsonObject>>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(AnalysisHistoryTimeframeStats)]),
+        () => ListBuilder<AnalysisHistoryTimeframeStats>(),
+      )
+      ..addBuilderFactory(
         const FullType(BuiltList, [FullType(AnalyticsUsageStatsCountryBreakdownInner)]),
         () => ListBuilder<AnalyticsUsageStatsCountryBreakdownInner>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(ProgressionLedgerEntry)]),
+        () => ListBuilder<ProgressionLedgerEntry>(),
       )
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(AnalyticsTokenStatsDailyTokensInner)]),
@@ -381,12 +471,20 @@ Serializers serializers = (_$serializers.toBuilder()
         () => ListBuilder<PersonalAnalyticsWeeklyDataInner>(),
       )
       ..addBuilderFactory(
-        const FullType(BuiltList, [FullType(FundamentalNewsItem)]),
-        () => ListBuilder<FundamentalNewsItem>(),
+        const FullType(BuiltList, [FullType(ProgressionAuditEntry)]),
+        () => ListBuilder<ProgressionAuditEntry>(),
       )
       ..addBuilderFactory(
         const FullType(BuiltMap, [FullType(String), FullType.nullable(JsonObject)]),
         () => MapBuilder<String, JsonObject?>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(FundamentalNewsItem)]),
+        () => ListBuilder<FundamentalNewsItem>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(AnalysisHistoryInstrumentStats)]),
+        () => ListBuilder<AnalysisHistoryInstrumentStats>(),
       )
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(String)]),
@@ -404,6 +502,7 @@ Serializers serializers = (_$serializers.toBuilder()
         const FullType(BuiltList, [FullType(AnalyticsTokenStatsTopUsersInner)]),
         () => ListBuilder<AnalyticsTokenStatsTopUsersInner>(),
       )
+      ..add(AnalysisHistoryOutcomeStats.serializer)
       ..add(const OneOfSerializer())
       ..add(const AnyOfSerializer())
       ..add(const DateSerializer())

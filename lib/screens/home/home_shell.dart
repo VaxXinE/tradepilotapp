@@ -7,6 +7,7 @@ import '../../providers/analysis_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/market_provider.dart';
 import '../../providers/notifications_provider.dart';
+import '../../providers/progression_provider.dart';
 import '../../providers/watchlist_provider.dart';
 import '../../l10n/l10n.dart';
 import 'tabs/analyze_tab.dart';
@@ -23,6 +24,7 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   static const Duration _analysisPollInterval = Duration(seconds: 15);
+  static const _tabPaths = ['/', '/analyze', '/history', '/profile'];
 
   int _index = 0;
 
@@ -61,6 +63,8 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       // -------------------------------------------------------------------
 
       context.read<NotificationsProvider>().setRealtimeEnabled(true);
+
+      unawaited(context.read<AuthProvider>().telemetry.pageView(_tabPaths[0]));
 
       // Initial sync tab.
       _syncCurrentTab(showLoading: true);
@@ -305,6 +309,8 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
 
         unawaited(watchlistProvider.loadWatchlist());
 
+        unawaited(context.read<ProgressionProvider>().refresh(silent: true));
+
         break;
 
       // ---------------------------------------------------------------------
@@ -323,6 +329,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       // ---------------------------------------------------------------------
 
       case 3:
+        unawaited(context.read<ProgressionProvider>().refresh(silent: true));
         break;
     }
   }
@@ -368,6 +375,9 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       setState(() {
         _index = index;
       });
+      unawaited(
+        context.read<AuthProvider>().telemetry.pageView(_tabPaths[index]),
+      );
     }
 
     // -----------------------------------------------------------------------

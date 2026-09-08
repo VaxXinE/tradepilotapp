@@ -362,6 +362,324 @@ abstract class AppLocalizations {
   /// **'Short lessons for disciplined decisions'**
   String get traderMindsetDescription;
 
+  /// No description provided for @guide.
+  ///
+  /// In en, this message translates to:
+  /// **'Guide Center'**
+  String get guide;
+
+  /// No description provided for @guideDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Guides to features, analysis, risk, and trading discipline'**
+  String get guideDescription;
+
+  /// No description provided for @mentalChecklistPreference.
+  ///
+  /// In en, this message translates to:
+  /// **'Pre-analysis mental checklist'**
+  String get mentalChecklistPreference;
+
+  /// No description provided for @mentalChecklistPreferenceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Show four discipline reminders before creating an analysis'**
+  String get mentalChecklistPreferenceHint;
+
+  /// No description provided for @mentalChecklistTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pre-trade mental check'**
+  String get mentalChecklistTitle;
+
+  /// No description provided for @mentalChecklistRisk.
+  ///
+  /// In en, this message translates to:
+  /// **'I know exactly how much I will lose if this trade fails'**
+  String get mentalChecklistRisk;
+
+  /// No description provided for @mentalChecklistPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'I have a written entry, stop-loss, and target'**
+  String get mentalChecklistPlan;
+
+  /// No description provided for @mentalChecklistChase.
+  ///
+  /// In en, this message translates to:
+  /// **'I am not chasing a move that already happened (no FOMO)'**
+  String get mentalChecklistChase;
+
+  /// No description provided for @mentalChecklistCalm.
+  ///
+  /// In en, this message translates to:
+  /// **'I am not trading to recover a previous loss'**
+  String get mentalChecklistCalm;
+
+  /// No description provided for @mentalChecklistHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tick all four before you click Analyze. It\'s a nudge, not a block — but unchecked items are usually how losses start.'**
+  String get mentalChecklistHint;
+
+  /// No description provided for @safeWait.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait Safely'**
+  String get safeWait;
+
+  /// No description provided for @safeWaitHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Acknowledge the risk and wait on the sidelines. Good discipline.'**
+  String get safeWaitHint;
+
+  /// No description provided for @safeWaitRecorded.
+  ///
+  /// In en, this message translates to:
+  /// **'Your decision to wait was recorded.'**
+  String get safeWaitRecorded;
+
+  /// No description provided for @safeWaitFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Your decision to wait could not be saved. Try again.'**
+  String get safeWaitFailed;
+
+  /// No description provided for @coolingOffBreathingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a breath first'**
+  String get coolingOffBreathingTitle;
+
+  /// No description provided for @coolingOffBreathingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You just took a {loss}% loss. Follow this breathing pattern before choosing. The setup will still be there.'**
+  String coolingOffBreathingBody(String loss);
+
+  /// No description provided for @coolingOffBreathingBodyGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow this breathing pattern before choosing. The setup will still be there.'**
+  String get coolingOffBreathingBodyGeneric;
+
+  /// No description provided for @coolingOffBreathingInhale.
+  ///
+  /// In en, this message translates to:
+  /// **'Breathe in'**
+  String get coolingOffBreathingInhale;
+
+  /// No description provided for @coolingOffBreathingHold.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold'**
+  String get coolingOffBreathingHold;
+
+  /// No description provided for @coolingOffBreathingExhale.
+  ///
+  /// In en, this message translates to:
+  /// **'Breathe out'**
+  String get coolingOffBreathingExhale;
+
+  /// No description provided for @coolingOffBreathingWait.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait it out'**
+  String get coolingOffBreathingWait;
+
+  /// No description provided for @coolingOffBreathingContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue anyway'**
+  String get coolingOffBreathingContinue;
+
+  /// No description provided for @xpAwarded.
+  ///
+  /// In en, this message translates to:
+  /// **'+{xp} XP for {activity}'**
+  String xpAwarded(int xp, String activity);
+
+  /// No description provided for @checklistActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'completing the pre-analysis checklist'**
+  String get checklistActivity;
+
+  /// No description provided for @guideComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark complete'**
+  String get guideComplete;
+
+  /// No description provided for @guideReading.
+  ///
+  /// In en, this message translates to:
+  /// **'Read the material until the completion button becomes active.'**
+  String get guideReading;
+
+  /// No description provided for @guideProgressFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Guide progress could not be saved.'**
+  String get guideProgressFailed;
+
+  /// No description provided for @openFullExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Open full explanation'**
+  String get openFullExplanation;
+
+  /// No description provided for @learnAdaptivePosition.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn adaptive positioning'**
+  String get learnAdaptivePosition;
+
+  /// No description provided for @sponsoredBySolidPrime.
+  ///
+  /// In en, this message translates to:
+  /// **'Sponsored by SOLID PRIME'**
+  String get sponsoredBySolidPrime;
+
+  /// No description provided for @sponsorDisclosure.
+  ///
+  /// In en, this message translates to:
+  /// **'Sponsor links do not influence analysis independence and are not a recommendation to open an account or trade.'**
+  String get sponsorDisclosure;
+
+  /// No description provided for @openSponsorWebsite.
+  ///
+  /// In en, this message translates to:
+  /// **'Open sponsor website'**
+  String get openSponsorWebsite;
+
+  /// No description provided for @liveAnalysisTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Live Analysis'**
+  String get liveAnalysisTitle;
+
+  /// No description provided for @liveAnalysisSponsorSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Every weekday at 09:00 WIB on TikTok @solid.prime'**
+  String get liveAnalysisSponsorSubtitle;
+
+  /// No description provided for @progressionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Progression'**
+  String get progressionTitle;
+
+  /// No description provided for @progressionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your private record of preparation, reflection, and discipline.'**
+  String get progressionSubtitle;
+
+  /// No description provided for @progressionLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading discipline data...'**
+  String get progressionLoading;
+
+  /// No description provided for @progressionLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load progression data.'**
+  String get progressionLoadFailed;
+
+  /// No description provided for @progressionOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
+  String get progressionOverview;
+
+  /// No description provided for @progressionAchievements.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievements'**
+  String get progressionAchievements;
+
+  /// No description provided for @progressionHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'XP History'**
+  String get progressionHistory;
+
+  /// No description provided for @progressionCurrentStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Current streak'**
+  String get progressionCurrentStreak;
+
+  /// No description provided for @progressionLongestStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Longest streak'**
+  String get progressionLongestStreak;
+
+  /// No description provided for @progressionLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Level {level}'**
+  String progressionLevel(int level);
+
+  /// No description provided for @progressionMastery.
+  ///
+  /// In en, this message translates to:
+  /// **'Mastery {level}'**
+  String progressionMastery(int level);
+
+  /// No description provided for @progressionRank.
+  ///
+  /// In en, this message translates to:
+  /// **'Rank: {rank}'**
+  String progressionRank(String rank);
+
+  /// No description provided for @progressionXpToNext.
+  ///
+  /// In en, this message translates to:
+  /// **'{xp} XP to the next level'**
+  String progressionXpToNext(int xp);
+
+  /// No description provided for @progressionUnlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlocked {date}'**
+  String progressionUnlocked(String date);
+
+  /// No description provided for @progressionLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked'**
+  String get progressionLocked;
+
+  /// No description provided for @progressionNoAchievements.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete activities to unlock achievements.'**
+  String get progressionNoAchievements;
+
+  /// No description provided for @progressionNoHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'No activity yet. Start building your discipline routine.'**
+  String get progressionNoHistory;
+
+  /// No description provided for @progressionPrivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress is private. XP rewards process—not profit, win rate, or account size.'**
+  String get progressionPrivate;
+
+  /// No description provided for @progressionActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'+{xp} XP for {reason}'**
+  String progressionActivity(int xp, String reason);
+
   /// No description provided for @mindsetDisclaimer.
   ///
   /// In en, this message translates to:
@@ -2281,6 +2599,234 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No fingerprint or face unlock is set up on this device.'**
   String get biometricLockUnavailable;
+
+  /// No description provided for @riskMapTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Timeframe Risk Map'**
+  String get riskMapTitle;
+
+  /// No description provided for @riskMapDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare technical risk across timeframes before creating an analysis.'**
+  String get riskMapDescription;
+
+  /// No description provided for @riskMapLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning timeframes...'**
+  String get riskMapLoading;
+
+  /// No description provided for @riskMapError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the risk map.'**
+  String get riskMapError;
+
+  /// No description provided for @riskMapOverallWait.
+  ///
+  /// In en, this message translates to:
+  /// **'Overall: wait'**
+  String get riskMapOverallWait;
+
+  /// No description provided for @riskMapOverallCompare.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare timeframe options'**
+  String get riskMapOverallCompare;
+
+  /// No description provided for @riskMapRelativeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'This map indicates relative risk, not guaranteed profit.'**
+  String get riskMapRelativeNote;
+
+  /// No description provided for @riskLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low risk'**
+  String get riskLow;
+
+  /// No description provided for @riskModerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate risk'**
+  String get riskModerate;
+
+  /// No description provided for @riskHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'High risk'**
+  String get riskHigh;
+
+  /// No description provided for @riskUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable'**
+  String get riskUnavailable;
+
+  /// No description provided for @riskEligible.
+  ///
+  /// In en, this message translates to:
+  /// **'Eligible'**
+  String get riskEligible;
+
+  /// No description provided for @riskCaution.
+  ///
+  /// In en, this message translates to:
+  /// **'Caution'**
+  String get riskCaution;
+
+  /// No description provided for @riskWait.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait'**
+  String get riskWait;
+
+  /// No description provided for @riskSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected'**
+  String get riskSelected;
+
+  /// No description provided for @useTimeframe.
+  ///
+  /// In en, this message translates to:
+  /// **'Use {timeframe}'**
+  String useTimeframe(String timeframe);
+
+  /// No description provided for @standardRulesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'TP Standard Trading Rules'**
+  String get standardRulesTitle;
+
+  /// No description provided for @standardRulesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Broker-neutral rules used as the basis for Trade Pilot estimates.'**
+  String get standardRulesDescription;
+
+  /// No description provided for @standardRulesLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading the standard trading rules...'**
+  String get standardRulesLoading;
+
+  /// No description provided for @standardRulesError.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard trading rules are temporarily unavailable.'**
+  String get standardRulesError;
+
+  /// No description provided for @ruleVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get ruleVersion;
+
+  /// No description provided for @fixedConversionRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed conversion rate'**
+  String get fixedConversionRate;
+
+  /// No description provided for @contractSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Contract size'**
+  String get contractSize;
+
+  /// No description provided for @tradingSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Trading session'**
+  String get tradingSession;
+
+  /// No description provided for @initialMargin.
+  ///
+  /// In en, this message translates to:
+  /// **'Initial margin'**
+  String get initialMargin;
+
+  /// No description provided for @facilityFee.
+  ///
+  /// In en, this message translates to:
+  /// **'Facility fee'**
+  String get facilityFee;
+
+  /// No description provided for @rollover.
+  ///
+  /// In en, this message translates to:
+  /// **'Rollover'**
+  String get rollover;
+
+  /// No description provided for @spread.
+  ///
+  /// In en, this message translates to:
+  /// **'Spread'**
+  String get spread;
+
+  /// No description provided for @hecticSpread.
+  ///
+  /// In en, this message translates to:
+  /// **'Hectic-market spread'**
+  String get hecticSpread;
+
+  /// No description provided for @minimumMovement.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum movement'**
+  String get minimumMovement;
+
+  /// No description provided for @limitStopRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Limit/stop range'**
+  String get limitStopRange;
+
+  /// No description provided for @priceSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Price source / guidance'**
+  String get priceSource;
+
+  /// No description provided for @settlement.
+  ///
+  /// In en, this message translates to:
+  /// **'Settlement'**
+  String get settlement;
+
+  /// No description provided for @allowedLotRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed open position'**
+  String get allowedLotRange;
+
+  /// No description provided for @minimumDeposit.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum deposit'**
+  String get minimumDeposit;
+
+  /// No description provided for @marginControls.
+  ///
+  /// In en, this message translates to:
+  /// **'Margin controls'**
+  String get marginControls;
+
+  /// No description provided for @profitLossFormula.
+  ///
+  /// In en, this message translates to:
+  /// **'P/L formula'**
+  String get profitLossFormula;
+
+  /// No description provided for @sourceDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Source document'**
+  String get sourceDocument;
 }
 
 class _AppLocalizationsDelegate

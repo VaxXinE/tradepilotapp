@@ -188,11 +188,11 @@ class _$AlertLevelRow extends AlertLevelRow {
   @override
   final AlertLevelRowDirectionEnum direction;
   @override
-  final DateTime triggeredAt;
+  final DateTime? triggeredAt;
   @override
-  final String triggeredPrice;
+  final String? triggeredPrice;
   @override
-  final DateTime cancelledAt;
+  final DateTime? cancelledAt;
 
   factory _$AlertLevelRow([void Function(AlertLevelRowBuilder)? updates]) =>
       (AlertLevelRowBuilder()..update(updates))._build();
@@ -202,9 +202,9 @@ class _$AlertLevelRow extends AlertLevelRow {
       required this.side,
       required this.price,
       required this.direction,
-      required this.triggeredAt,
-      required this.triggeredPrice,
-      required this.cancelledAt})
+      this.triggeredAt,
+      this.triggeredPrice,
+      this.cancelledAt})
       : super._();
   @override
   AlertLevelRow rebuild(void Function(AlertLevelRowBuilder) updates) =>
@@ -331,12 +331,9 @@ class AlertLevelRowBuilder
               price, r'AlertLevelRow', 'price'),
           direction: BuiltValueNullFieldError.checkNotNull(
               direction, r'AlertLevelRow', 'direction'),
-          triggeredAt: BuiltValueNullFieldError.checkNotNull(
-              triggeredAt, r'AlertLevelRow', 'triggeredAt'),
-          triggeredPrice: BuiltValueNullFieldError.checkNotNull(
-              triggeredPrice, r'AlertLevelRow', 'triggeredPrice'),
-          cancelledAt: BuiltValueNullFieldError.checkNotNull(
-              cancelledAt, r'AlertLevelRow', 'cancelledAt'),
+          triggeredAt: triggeredAt,
+          triggeredPrice: triggeredPrice,
+          cancelledAt: cancelledAt,
         );
     replace(_$result);
     return _$result;

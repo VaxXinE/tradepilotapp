@@ -33,7 +33,7 @@ abstract class FundamentalNewsItem implements Built<FundamentalNewsItem, Fundame
   String get source_;
 
   @BuiltValueField(wireName: r'url')
-  String get url;
+  String? get url;
 
   @BuiltValueField(wireName: r'publishedAt')
   DateTime get publishedAt;
@@ -81,11 +81,13 @@ class _$FundamentalNewsItemSerializer implements PrimitiveSerializer<Fundamental
       object.source_,
       specifiedType: const FullType(String),
     );
-    yield r'url';
-    yield serializers.serialize(
-      object.url,
-      specifiedType: const FullType(String),
-    );
+    if (object.url != null) {
+      yield r'url';
+      yield serializers.serialize(
+        object.url,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
     yield r'publishedAt';
     yield serializers.serialize(
       object.publishedAt,
@@ -145,8 +147,9 @@ class _$FundamentalNewsItemSerializer implements PrimitiveSerializer<Fundamental
         case r'url':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(String),
-          ) as String;
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
           result.url = valueDes;
           break;
         case r'publishedAt':
@@ -184,4 +187,3 @@ class _$FundamentalNewsItemSerializer implements PrimitiveSerializer<Fundamental
     return result.build();
   }
 }
-

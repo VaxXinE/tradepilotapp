@@ -1104,6 +1104,35 @@ class AnalysisProvider extends ChangeNotifier {
   // DETAIL
   // ===========================================================================
 
+  Future<AlertStatus?> getAnalysisAlerts(int id) async {
+    if (_authProvider.status != AuthStatus.authenticated) return null;
+    final epoch = _sessionEpoch;
+
+    try {
+      final response = await _client.analyses.getAnalysisAlerts(id: id);
+      return _isSessionCurrent(epoch) ? response.data : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<AlertStatus?> setAnalysisAlerts(
+    int id, {
+    required bool enabled,
+  }) async {
+    if (_authProvider.status != AuthStatus.authenticated) return null;
+    final epoch = _sessionEpoch;
+
+    try {
+      final response = enabled
+          ? await _client.analyses.armAnalysisAlerts(id: id)
+          : await _client.analyses.cancelAnalysisAlerts(id: id);
+      return _isSessionCurrent(epoch) ? response.data : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<Analysis?> getAnalysis(int id, {bool silent = false}) async {
     if (_authProvider.status != AuthStatus.authenticated) {
       return null;

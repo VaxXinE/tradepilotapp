@@ -161,6 +161,7 @@ User _user() => User(
     ..selectedMode = UserSelectedModeEnum.beginner
     ..themePreference = UserThemePreferenceEnum.dark
     ..securityQuestion = 'Nama hewan pertama?'
+    ..createdAt = DateTime.utc(2026)
     ..onboardingCompleted = true,
 );
 
