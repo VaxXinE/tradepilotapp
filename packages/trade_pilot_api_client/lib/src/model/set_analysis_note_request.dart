@@ -13,25 +13,33 @@ part 'set_analysis_note_request.g.dart';
 /// Properties:
 /// * [note] - Plain-text note (max 5000 chars). Empty/whitespace string clears the note.
 @BuiltValue()
-abstract class SetAnalysisNoteRequest implements Built<SetAnalysisNoteRequest, SetAnalysisNoteRequestBuilder> {
+abstract class SetAnalysisNoteRequest
+    implements Built<SetAnalysisNoteRequest, SetAnalysisNoteRequestBuilder> {
   /// Plain-text note (max 5000 chars). Empty/whitespace string clears the note.
   @BuiltValueField(wireName: r'note')
   String get note;
 
   SetAnalysisNoteRequest._();
 
-  factory SetAnalysisNoteRequest([void updates(SetAnalysisNoteRequestBuilder b)]) = _$SetAnalysisNoteRequest;
+  factory SetAnalysisNoteRequest(
+          [void updates(SetAnalysisNoteRequestBuilder b)]) =
+      _$SetAnalysisNoteRequest;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(SetAnalysisNoteRequestBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<SetAnalysisNoteRequest> get serializer => _$SetAnalysisNoteRequestSerializer();
+  static Serializer<SetAnalysisNoteRequest> get serializer =>
+      _$SetAnalysisNoteRequestSerializer();
 }
 
-class _$SetAnalysisNoteRequestSerializer implements PrimitiveSerializer<SetAnalysisNoteRequest> {
+class _$SetAnalysisNoteRequestSerializer
+    implements PrimitiveSerializer<SetAnalysisNoteRequest> {
   @override
-  final Iterable<Type> types = const [SetAnalysisNoteRequest, _$SetAnalysisNoteRequest];
+  final Iterable<Type> types = const [
+    SetAnalysisNoteRequest,
+    _$SetAnalysisNoteRequest
+  ];
 
   @override
   final String wireName = r'SetAnalysisNoteRequest';
@@ -54,7 +62,9 @@ class _$SetAnalysisNoteRequestSerializer implements PrimitiveSerializer<SetAnaly
     SetAnalysisNoteRequest object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -104,4 +114,3 @@ class _$SetAnalysisNoteRequestSerializer implements PrimitiveSerializer<SetAnaly
     return result.build();
   }
 }
-

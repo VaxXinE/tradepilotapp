@@ -12,15 +12,16 @@ part 'register_body.g.dart';
 /// RegisterBody
 ///
 /// Properties:
-/// * [email] 
-/// * [password] 
-/// * [displayName] 
-/// * [selectedMode] 
-/// * [securityQuestion] 
-/// * [securityAnswer] 
-/// * [rememberMe] 
+/// * [email]
+/// * [password]
+/// * [displayName]
+/// * [selectedMode]
+/// * [securityQuestion]
+/// * [securityAnswer]
+/// * [rememberMe]
 @BuiltValue()
-abstract class RegisterBody implements Built<RegisterBody, RegisterBodyBuilder> {
+abstract class RegisterBody
+    implements Built<RegisterBody, RegisterBodyBuilder> {
   @BuiltValueField(wireName: r'email')
   String get email;
 
@@ -49,8 +50,8 @@ abstract class RegisterBody implements Built<RegisterBody, RegisterBodyBuilder> 
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(RegisterBodyBuilder b) => b
-      ..selectedMode = RegisterBodySelectedModeEnum.valueOf('beginner')
-      ..rememberMe = false;
+    ..selectedMode = RegisterBodySelectedModeEnum.valueOf('pro')
+    ..rememberMe = false;
 
   @BuiltValueSerializer(custom: true)
   static Serializer<RegisterBody> get serializer => _$RegisterBodySerializer();
@@ -115,7 +116,9 @@ class _$RegisterBodySerializer implements PrimitiveSerializer<RegisterBody> {
     RegisterBody object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -154,7 +157,8 @@ class _$RegisterBodySerializer implements PrimitiveSerializer<RegisterBody> {
         case r'selectedMode':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(RegisterBodySelectedModeEnum),
+            specifiedType:
+                const FullType.nullable(RegisterBodySelectedModeEnum),
           ) as RegisterBodySelectedModeEnum?;
           if (valueDes == null) continue;
           result.selectedMode = valueDes;
@@ -211,17 +215,20 @@ class _$RegisterBodySerializer implements PrimitiveSerializer<RegisterBody> {
 }
 
 class RegisterBodySelectedModeEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'beginner')
-  static const RegisterBodySelectedModeEnum beginner = _$registerBodySelectedModeEnum_beginner;
+  static const RegisterBodySelectedModeEnum beginner =
+      _$registerBodySelectedModeEnum_beginner;
   @BuiltValueEnumConst(wireName: r'pro')
-  static const RegisterBodySelectedModeEnum pro = _$registerBodySelectedModeEnum_pro;
+  static const RegisterBodySelectedModeEnum pro =
+      _$registerBodySelectedModeEnum_pro;
 
-  static Serializer<RegisterBodySelectedModeEnum> get serializer => _$registerBodySelectedModeEnumSerializer;
+  static Serializer<RegisterBodySelectedModeEnum> get serializer =>
+      _$registerBodySelectedModeEnumSerializer;
 
-  const RegisterBodySelectedModeEnum._(String name): super(name);
+  const RegisterBodySelectedModeEnum._(String name) : super(name);
 
-  static BuiltSet<RegisterBodySelectedModeEnum> get values => _$registerBodySelectedModeEnumValues;
-  static RegisterBodySelectedModeEnum valueOf(String name) => _$registerBodySelectedModeEnumValueOf(name);
+  static BuiltSet<RegisterBodySelectedModeEnum> get values =>
+      _$registerBodySelectedModeEnumValues;
+  static RegisterBodySelectedModeEnum valueOf(String name) =>
+      _$registerBodySelectedModeEnumValueOf(name);
 }
-

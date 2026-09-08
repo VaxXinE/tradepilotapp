@@ -32,6 +32,7 @@ import 'package:trade_pilot_api_client/src/model/analysis_history_timeframe_stat
 import 'package:trade_pilot_api_client/src/model/analysis_note_response.dart';
 import 'package:trade_pilot_api_client/src/model/analysis_outcomes_summary.dart';
 import 'package:trade_pilot_api_client/src/model/analysis_quota.dart';
+import 'package:trade_pilot_api_client/src/model/analysis_quota_credits.dart';
 import 'package:trade_pilot_api_client/src/model/analysis_quota_hourly.dart';
 import 'package:trade_pilot_api_client/src/model/analytics_event_body.dart';
 import 'package:trade_pilot_api_client/src/model/analytics_token_stats.dart';
@@ -54,11 +55,14 @@ import 'package:trade_pilot_api_client/src/model/broadcasts_list.dart';
 import 'package:trade_pilot_api_client/src/model/change_password_body.dart';
 import 'package:trade_pilot_api_client/src/model/change_security_question_body.dart';
 import 'package:trade_pilot_api_client/src/model/create_analysis_body.dart';
+import 'package:trade_pilot_api_client/src/model/create_analysis_result.dart';
 import 'package:trade_pilot_api_client/src/model/create_filter_preset_body.dart';
 import 'package:trade_pilot_api_client/src/model/create_journal_entry_body.dart';
 import 'package:trade_pilot_api_client/src/model/create_journal_entry_body_entry_price.dart';
+import 'package:trade_pilot_api_client/src/model/create_topup_request_body.dart';
 import 'package:trade_pilot_api_client/src/model/create_user_body.dart';
 import 'package:trade_pilot_api_client/src/model/create_user_price_alert_body.dart';
+import 'package:trade_pilot_api_client/src/model/credit_balance.dart';
 import 'package:trade_pilot_api_client/src/model/daily_summary_analysis.dart';
 import 'package:trade_pilot_api_client/src/model/daily_summary_response.dart';
 import 'package:trade_pilot_api_client/src/model/daily_summary_settings.dart';
@@ -153,6 +157,10 @@ import 'package:trade_pilot_api_client/src/model/timeframe_risk.dart';
 import 'package:trade_pilot_api_client/src/model/timeframe_risk_map.dart';
 import 'package:trade_pilot_api_client/src/model/timeframe_risk_map_overall.dart';
 import 'package:trade_pilot_api_client/src/model/timeframe_risk_metrics.dart';
+import 'package:trade_pilot_api_client/src/model/topup_config.dart';
+import 'package:trade_pilot_api_client/src/model/topup_request.dart';
+import 'package:trade_pilot_api_client/src/model/topup_request_list.dart';
+import 'package:trade_pilot_api_client/src/model/topup_request_status.dart';
 import 'package:trade_pilot_api_client/src/model/trade_plan.dart';
 import 'package:trade_pilot_api_client/src/model/trade_side.dart';
 import 'package:trade_pilot_api_client/src/model/trader_mirror_highlight.dart';
@@ -188,13 +196,16 @@ part 'serializers.g.dart';
   AnalysesList,
   AnalysesSummary,
   Analysis,
+  $Analysis,
   AnalysisHistoryInstrumentStats,
-  AnalysisHistoryOutcomeStats,$AnalysisHistoryOutcomeStats,
+  AnalysisHistoryOutcomeStats,
+  $AnalysisHistoryOutcomeStats,
   AnalysisHistorySummary,
   AnalysisHistoryTimeframeStats,
   AnalysisNoteResponse,
   AnalysisOutcomesSummary,
   AnalysisQuota,
+  AnalysisQuotaCredits,
   AnalysisQuotaHourly,
   AnalyticsEventBody,
   AnalyticsTokenStats,
@@ -217,11 +228,14 @@ part 'serializers.g.dart';
   ChangePasswordBody,
   ChangeSecurityQuestionBody,
   CreateAnalysisBody,
+  CreateAnalysisResult,
   CreateFilterPresetBody,
   CreateJournalEntryBody,
   CreateJournalEntryBodyEntryPrice,
+  CreateTopupRequestBody,
   CreateUserBody,
   CreateUserPriceAlertBody,
+  CreditBalance,
   DailySummaryAnalysis,
   DailySummaryResponse,
   DailySummarySettings,
@@ -316,6 +330,11 @@ part 'serializers.g.dart';
   TimeframeRiskMap,
   TimeframeRiskMapOverall,
   TimeframeRiskMetrics,
+  TopupConfig,
+  TopupRequest,
+  $TopupRequest,
+  TopupRequestList,
+  TopupRequestStatus,
   TradePlan,
   TradeSide,
   TraderMirrorHighlight,
@@ -347,7 +366,8 @@ Serializers serializers = (_$serializers.toBuilder()
         () => ListBuilder<FilterPreset>(),
       )
       ..addBuilderFactory(
-        const FullType(BuiltList, [FullType(OutboundClickStatsByPlacementInner)]),
+        const FullType(
+            BuiltList, [FullType(OutboundClickStatsByPlacementInner)]),
         () => ListBuilder<OutboundClickStatsByPlacementInner>(),
       )
       ..addBuilderFactory(
@@ -355,7 +375,8 @@ Serializers serializers = (_$serializers.toBuilder()
         () => ListBuilder<StandardTradingRuleInstrument>(),
       )
       ..addBuilderFactory(
-        const FullType(BuiltList, [FullType(AnalyticsUsageStatsDeviceBreakdownInner)]),
+        const FullType(
+            BuiltList, [FullType(AnalyticsUsageStatsDeviceBreakdownInner)]),
         () => ListBuilder<AnalyticsUsageStatsDeviceBreakdownInner>(),
       )
       ..addBuilderFactory(
@@ -371,7 +392,8 @@ Serializers serializers = (_$serializers.toBuilder()
         () => ListBuilder<Broadcast>(),
       )
       ..addBuilderFactory(
-        const FullType(BuiltList, [FullType(PersonalAnalyticsTopInstrumentsInner)]),
+        const FullType(
+            BuiltList, [FullType(PersonalAnalyticsTopInstrumentsInner)]),
         () => ListBuilder<PersonalAnalyticsTopInstrumentsInner>(),
       )
       ..addBuilderFactory(
@@ -383,7 +405,8 @@ Serializers serializers = (_$serializers.toBuilder()
         () => ListBuilder<UserWithStats>(),
       )
       ..addBuilderFactory(
-        const FullType(BuiltList, [FullType(AnalyticsUsageStatsFeatureBreakdownInner)]),
+        const FullType(
+            BuiltList, [FullType(AnalyticsUsageStatsFeatureBreakdownInner)]),
         () => ListBuilder<AnalyticsUsageStatsFeatureBreakdownInner>(),
       )
       ..addBuilderFactory(
@@ -399,7 +422,9 @@ Serializers serializers = (_$serializers.toBuilder()
         () => ListBuilder<AnalyticsTokenStatsByModelInner>(),
       )
       ..addBuilderFactory(
-        const FullType(BuiltList, [FullType(BuiltMap, [FullType(String), FullType(JsonObject)])]),
+        const FullType(BuiltList, [
+          FullType(BuiltMap, [FullType(String), FullType(JsonObject)])
+        ]),
         () => ListBuilder<BuiltMap<String, JsonObject>>(),
       )
       ..addBuilderFactory(
@@ -407,7 +432,8 @@ Serializers serializers = (_$serializers.toBuilder()
         () => ListBuilder<AnalysisHistoryTimeframeStats>(),
       )
       ..addBuilderFactory(
-        const FullType(BuiltList, [FullType(AnalyticsUsageStatsCountryBreakdownInner)]),
+        const FullType(
+            BuiltList, [FullType(AnalyticsUsageStatsCountryBreakdownInner)]),
         () => ListBuilder<AnalyticsUsageStatsCountryBreakdownInner>(),
       )
       ..addBuilderFactory(
@@ -415,11 +441,13 @@ Serializers serializers = (_$serializers.toBuilder()
         () => ListBuilder<ProgressionLedgerEntry>(),
       )
       ..addBuilderFactory(
-        const FullType(BuiltList, [FullType(AnalyticsTokenStatsDailyTokensInner)]),
+        const FullType(
+            BuiltList, [FullType(AnalyticsTokenStatsDailyTokensInner)]),
         () => ListBuilder<AnalyticsTokenStatsDailyTokensInner>(),
       )
       ..addBuilderFactory(
-        const FullType(BuiltList, [FullType(AnalyticsTokenStatsByInstrumentInner)]),
+        const FullType(
+            BuiltList, [FullType(AnalyticsTokenStatsByInstrumentInner)]),
         () => ListBuilder<AnalyticsTokenStatsByInstrumentInner>(),
       )
       ..addBuilderFactory(
@@ -427,15 +455,22 @@ Serializers serializers = (_$serializers.toBuilder()
         () => ListBuilder<AlertLevelRow>(),
       )
       ..addBuilderFactory(
-        const FullType(BuiltList, [FullType(AnalyticsUsageStatsDailyActivityInner)]),
+        const FullType(BuiltList, [FullType(TopupRequest)]),
+        () => ListBuilder<TopupRequest>(),
+      )
+      ..addBuilderFactory(
+        const FullType(
+            BuiltList, [FullType(AnalyticsUsageStatsDailyActivityInner)]),
         () => ListBuilder<AnalyticsUsageStatsDailyActivityInner>(),
       )
       ..addBuilderFactory(
-        const FullType(BuiltList, [FullType(AnalyticsUsageStatsBrowserBreakdownInner)]),
+        const FullType(
+            BuiltList, [FullType(AnalyticsUsageStatsBrowserBreakdownInner)]),
         () => ListBuilder<AnalyticsUsageStatsBrowserBreakdownInner>(),
       )
       ..addBuilderFactory(
-        const FullType(BuiltList, [FullType(RecentInstrumentsInstrumentsInner)]),
+        const FullType(
+            BuiltList, [FullType(RecentInstrumentsInstrumentsInner)]),
         () => ListBuilder<RecentInstrumentsInstrumentsInner>(),
       )
       ..addBuilderFactory(
@@ -475,7 +510,8 @@ Serializers serializers = (_$serializers.toBuilder()
         () => ListBuilder<ProgressionAuditEntry>(),
       )
       ..addBuilderFactory(
-        const FullType(BuiltMap, [FullType(String), FullType.nullable(JsonObject)]),
+        const FullType(
+            BuiltMap, [FullType(String), FullType.nullable(JsonObject)]),
         () => MapBuilder<String, JsonObject?>(),
       )
       ..addBuilderFactory(
@@ -502,12 +538,14 @@ Serializers serializers = (_$serializers.toBuilder()
         const FullType(BuiltList, [FullType(AnalyticsTokenStatsTopUsersInner)]),
         () => ListBuilder<AnalyticsTokenStatsTopUsersInner>(),
       )
+      ..add(Analysis.serializer)
       ..add(AnalysisHistoryOutcomeStats.serializer)
+      ..add(TopupRequest.serializer)
       ..add(const OneOfSerializer())
       ..add(const AnyOfSerializer())
       ..add(const DateSerializer())
-      ..add(Iso8601DateTimeSerializer())
-    ).build();
+      ..add(Iso8601DateTimeSerializer()))
+    .build();
 
 Serializers standardSerializers =
     (serializers.toBuilder()..addPlugin(StandardJsonPlugin())).build();

@@ -11,26 +11,34 @@ part 'push_subscription_status.g.dart';
 /// PushSubscriptionStatus
 ///
 /// Properties:
-/// * [subscribed] 
+/// * [subscribed]
 @BuiltValue()
-abstract class PushSubscriptionStatus implements Built<PushSubscriptionStatus, PushSubscriptionStatusBuilder> {
+abstract class PushSubscriptionStatus
+    implements Built<PushSubscriptionStatus, PushSubscriptionStatusBuilder> {
   @BuiltValueField(wireName: r'subscribed')
   bool get subscribed;
 
   PushSubscriptionStatus._();
 
-  factory PushSubscriptionStatus([void updates(PushSubscriptionStatusBuilder b)]) = _$PushSubscriptionStatus;
+  factory PushSubscriptionStatus(
+          [void updates(PushSubscriptionStatusBuilder b)]) =
+      _$PushSubscriptionStatus;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(PushSubscriptionStatusBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<PushSubscriptionStatus> get serializer => _$PushSubscriptionStatusSerializer();
+  static Serializer<PushSubscriptionStatus> get serializer =>
+      _$PushSubscriptionStatusSerializer();
 }
 
-class _$PushSubscriptionStatusSerializer implements PrimitiveSerializer<PushSubscriptionStatus> {
+class _$PushSubscriptionStatusSerializer
+    implements PrimitiveSerializer<PushSubscriptionStatus> {
   @override
-  final Iterable<Type> types = const [PushSubscriptionStatus, _$PushSubscriptionStatus];
+  final Iterable<Type> types = const [
+    PushSubscriptionStatus,
+    _$PushSubscriptionStatus
+  ];
 
   @override
   final String wireName = r'PushSubscriptionStatus';
@@ -53,7 +61,9 @@ class _$PushSubscriptionStatusSerializer implements PrimitiveSerializer<PushSubs
     PushSubscriptionStatus object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -103,4 +113,3 @@ class _$PushSubscriptionStatusSerializer implements PrimitiveSerializer<PushSubs
     return result.build();
   }
 }
-

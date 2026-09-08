@@ -22,7 +22,6 @@ import 'package:trade_pilot_api_client/src/model/user_quota.dart';
 import 'package:trade_pilot_api_client/src/model/users_list.dart';
 
 class SuperadminApi {
-
   final Dio _dio;
 
   final Serializers _serializers;
@@ -30,11 +29,11 @@ class SuperadminApi {
   const SuperadminApi(this._dio, this._serializers);
 
   /// Add a tag to a user
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [id] 
-  /// * [addUserTagBody] 
+  /// * [id]
+  /// * [addUserTagBody]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -44,7 +43,7 @@ class SuperadminApi {
   ///
   /// Returns a [Future] containing a [Response] with a [TagsList] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<TagsList>> addUserTag({ 
+  Future<Response<TagsList>> addUserTag({
     required int id,
     required AddUserTagBody addUserTagBody,
     CancelToken? cancelToken,
@@ -54,7 +53,8 @@ class SuperadminApi {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    final _path = r'/superadmin/users/{id}/tags'.replaceAll('{' r'id' '}', encodeQueryParameter(_serializers, id, const FullType(int)).toString());
+    final _path = r'/superadmin/users/{id}/tags'.replaceAll('{' r'id' '}',
+        encodeQueryParameter(_serializers, id, const FullType(int)).toString());
     final _options = Options(
       method: r'POST',
       headers: <String, dynamic>{
@@ -73,10 +73,9 @@ class SuperadminApi {
     try {
       const _type = FullType(AddUserTagBody);
       _bodyData = _serializers.serialize(addUserTagBody, specifiedType: _type);
-
-    } catch(error, stackTrace) {
+    } catch (error, stackTrace) {
       throw DioException(
-         requestOptions: _options.compose(
+        requestOptions: _options.compose(
           _dio.options,
           _path,
         ),
@@ -99,11 +98,12 @@ class SuperadminApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(TagsList),
-      ) as TagsList;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(TagsList),
+            ) as TagsList;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -127,10 +127,10 @@ class SuperadminApi {
   }
 
   /// Create new user (superadmin only)
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [createUserBody] 
+  /// * [createUserBody]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -140,7 +140,7 @@ class SuperadminApi {
   ///
   /// Returns a [Future] containing a [Response] with a [User] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<User>> createUser({ 
+  Future<Response<User>> createUser({
     required CreateUserBody createUserBody,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -168,10 +168,9 @@ class SuperadminApi {
     try {
       const _type = FullType(CreateUserBody);
       _bodyData = _serializers.serialize(createUserBody, specifiedType: _type);
-
-    } catch(error, stackTrace) {
+    } catch (error, stackTrace) {
       throw DioException(
-         requestOptions: _options.compose(
+        requestOptions: _options.compose(
           _dio.options,
           _path,
         ),
@@ -194,11 +193,12 @@ class SuperadminApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(User),
-      ) as User;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(User),
+            ) as User;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -222,10 +222,10 @@ class SuperadminApi {
   }
 
   /// Delete user (superadmin only)
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [id] 
+  /// * [id]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -235,7 +235,7 @@ class SuperadminApi {
   ///
   /// Returns a [Future] containing a [Response] with a [MessageResponse] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<MessageResponse>> deleteUser({ 
+  Future<Response<MessageResponse>> deleteUser({
     required int id,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -244,7 +244,8 @@ class SuperadminApi {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    final _path = r'/superadmin/users/{id}'.replaceAll('{' r'id' '}', encodeQueryParameter(_serializers, id, const FullType(int)).toString());
+    final _path = r'/superadmin/users/{id}'.replaceAll('{' r'id' '}',
+        encodeQueryParameter(_serializers, id, const FullType(int)).toString());
     final _options = Options(
       method: r'DELETE',
       headers: <String, dynamic>{
@@ -269,11 +270,12 @@ class SuperadminApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(MessageResponse),
-      ) as MessageResponse;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(MessageResponse),
+            ) as MessageResponse;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -297,7 +299,7 @@ class SuperadminApi {
   }
 
   /// List all distinct tags assigned to users
-  /// 
+  ///
   ///
   /// Parameters:
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
@@ -309,7 +311,7 @@ class SuperadminApi {
   ///
   /// Returns a [Future] containing a [Response] with a [TagsList] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<TagsList>> getAllTags({ 
+  Future<Response<TagsList>> getAllTags({
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -342,11 +344,12 @@ class SuperadminApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(TagsList),
-      ) as TagsList;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(TagsList),
+            ) as TagsList;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -370,12 +373,12 @@ class SuperadminApi {
   }
 
   /// Get all users (superadmin only)
-  /// 
+  ///
   ///
   /// Parameters:
   /// * [search] - ILIKE filter on email or display name
-  /// * [page] 
-  /// * [limit] 
+  /// * [page]
+  /// * [limit]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -385,7 +388,7 @@ class SuperadminApi {
   ///
   /// Returns a [Future] containing a [Response] with a [UsersList] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<UsersList>> getAllUsers({ 
+  Future<Response<UsersList>> getAllUsers({
     String? search,
     int? page = 1,
     int? limit = 50,
@@ -410,9 +413,14 @@ class SuperadminApi {
     );
 
     final _queryParameters = <String, dynamic>{
-      if (search != null) r'search': encodeQueryParameter(_serializers, search, const FullType(String)),
-      if (page != null) r'page': encodeQueryParameter(_serializers, page, const FullType(int)),
-      if (limit != null) r'limit': encodeQueryParameter(_serializers, limit, const FullType(int)),
+      if (search != null)
+        r'search':
+            encodeQueryParameter(_serializers, search, const FullType(String)),
+      if (page != null)
+        r'page': encodeQueryParameter(_serializers, page, const FullType(int)),
+      if (limit != null)
+        r'limit':
+            encodeQueryParameter(_serializers, limit, const FullType(int)),
     };
 
     final _response = await _dio.request<Object>(
@@ -428,11 +436,12 @@ class SuperadminApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(UsersList),
-      ) as UsersList;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(UsersList),
+            ) as UsersList;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -456,10 +465,10 @@ class SuperadminApi {
   }
 
   /// Get all tags for a specific user
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [id] 
+  /// * [id]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -469,7 +478,7 @@ class SuperadminApi {
   ///
   /// Returns a [Future] containing a [Response] with a [TagsList] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<TagsList>> getUserTags({ 
+  Future<Response<TagsList>> getUserTags({
     required int id,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -478,7 +487,8 @@ class SuperadminApi {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    final _path = r'/superadmin/users/{id}/tags'.replaceAll('{' r'id' '}', encodeQueryParameter(_serializers, id, const FullType(int)).toString());
+    final _path = r'/superadmin/users/{id}/tags'.replaceAll('{' r'id' '}',
+        encodeQueryParameter(_serializers, id, const FullType(int)).toString());
     final _options = Options(
       method: r'GET',
       headers: <String, dynamic>{
@@ -503,11 +513,12 @@ class SuperadminApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(TagsList),
-      ) as TagsList;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(TagsList),
+            ) as TagsList;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -531,11 +542,11 @@ class SuperadminApi {
   }
 
   /// Remove a tag from a user
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [id] 
-  /// * [tag] 
+  /// * [id]
+  /// * [tag]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -545,7 +556,7 @@ class SuperadminApi {
   ///
   /// Returns a [Future] containing a [Response] with a [TagsList] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<TagsList>> removeUserTag({ 
+  Future<Response<TagsList>> removeUserTag({
     required int id,
     required String tag,
     CancelToken? cancelToken,
@@ -555,7 +566,15 @@ class SuperadminApi {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    final _path = r'/superadmin/users/{id}/tags/{tag}'.replaceAll('{' r'id' '}', encodeQueryParameter(_serializers, id, const FullType(int)).toString()).replaceAll('{' r'tag' '}', encodeQueryParameter(_serializers, tag, const FullType(String)).toString());
+    final _path = r'/superadmin/users/{id}/tags/{tag}'
+        .replaceAll(
+            '{' r'id' '}',
+            encodeQueryParameter(_serializers, id, const FullType(int))
+                .toString())
+        .replaceAll(
+            '{' r'tag' '}',
+            encodeQueryParameter(_serializers, tag, const FullType(String))
+                .toString());
     final _options = Options(
       method: r'DELETE',
       headers: <String, dynamic>{
@@ -580,11 +599,12 @@ class SuperadminApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(TagsList),
-      ) as TagsList;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(TagsList),
+            ) as TagsList;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -608,11 +628,11 @@ class SuperadminApi {
   }
 
   /// Reset user password (superadmin only)
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [id] 
-  /// * [resetUserPasswordBody] 
+  /// * [id]
+  /// * [resetUserPasswordBody]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -622,7 +642,7 @@ class SuperadminApi {
   ///
   /// Returns a [Future] containing a [Response] with a [MessageResponse] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<MessageResponse>> resetUserPassword({ 
+  Future<Response<MessageResponse>> resetUserPassword({
     required int id,
     required ResetUserPasswordBody resetUserPasswordBody,
     CancelToken? cancelToken,
@@ -632,7 +652,8 @@ class SuperadminApi {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    final _path = r'/superadmin/users/{id}/password'.replaceAll('{' r'id' '}', encodeQueryParameter(_serializers, id, const FullType(int)).toString());
+    final _path = r'/superadmin/users/{id}/password'.replaceAll('{' r'id' '}',
+        encodeQueryParameter(_serializers, id, const FullType(int)).toString());
     final _options = Options(
       method: r'PATCH',
       headers: <String, dynamic>{
@@ -650,11 +671,11 @@ class SuperadminApi {
 
     try {
       const _type = FullType(ResetUserPasswordBody);
-      _bodyData = _serializers.serialize(resetUserPasswordBody, specifiedType: _type);
-
-    } catch(error, stackTrace) {
+      _bodyData =
+          _serializers.serialize(resetUserPasswordBody, specifiedType: _type);
+    } catch (error, stackTrace) {
       throw DioException(
-         requestOptions: _options.compose(
+        requestOptions: _options.compose(
           _dio.options,
           _path,
         ),
@@ -677,11 +698,12 @@ class SuperadminApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(MessageResponse),
-      ) as MessageResponse;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(MessageResponse),
+            ) as MessageResponse;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -705,11 +727,11 @@ class SuperadminApi {
   }
 
   /// Set or clear a per-user analysis-quota override
-  /// Each field is either a positive integer (override for just this user) or null (clear the override, revert to the global default from PATCH /superadmin/quota-settings). 
+  /// Each field is either a positive integer (override for just this user) or null (clear the override, revert to the global default from PATCH /superadmin/quota-settings).
   ///
   /// Parameters:
-  /// * [id] 
-  /// * [updateUserQuotaBody] 
+  /// * [id]
+  /// * [updateUserQuotaBody]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -719,7 +741,7 @@ class SuperadminApi {
   ///
   /// Returns a [Future] containing a [Response] with a [UserQuota] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<UserQuota>> updateUserQuota({ 
+  Future<Response<UserQuota>> updateUserQuota({
     required int id,
     required UpdateUserQuotaBody updateUserQuotaBody,
     CancelToken? cancelToken,
@@ -729,7 +751,8 @@ class SuperadminApi {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    final _path = r'/superadmin/users/{id}/quota'.replaceAll('{' r'id' '}', encodeQueryParameter(_serializers, id, const FullType(int)).toString());
+    final _path = r'/superadmin/users/{id}/quota'.replaceAll('{' r'id' '}',
+        encodeQueryParameter(_serializers, id, const FullType(int)).toString());
     final _options = Options(
       method: r'PATCH',
       headers: <String, dynamic>{
@@ -747,11 +770,11 @@ class SuperadminApi {
 
     try {
       const _type = FullType(UpdateUserQuotaBody);
-      _bodyData = _serializers.serialize(updateUserQuotaBody, specifiedType: _type);
-
-    } catch(error, stackTrace) {
+      _bodyData =
+          _serializers.serialize(updateUserQuotaBody, specifiedType: _type);
+    } catch (error, stackTrace) {
       throw DioException(
-         requestOptions: _options.compose(
+        requestOptions: _options.compose(
           _dio.options,
           _path,
         ),
@@ -774,11 +797,12 @@ class SuperadminApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(UserQuota),
-      ) as UserQuota;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(UserQuota),
+            ) as UserQuota;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -802,11 +826,11 @@ class SuperadminApi {
   }
 
   /// Update user role (superadmin only)
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [id] 
-  /// * [updateUserRoleBody] 
+  /// * [id]
+  /// * [updateUserRoleBody]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -816,7 +840,7 @@ class SuperadminApi {
   ///
   /// Returns a [Future] containing a [Response] with a [User] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<User>> updateUserRole({ 
+  Future<Response<User>> updateUserRole({
     required int id,
     required UpdateUserRoleBody updateUserRoleBody,
     CancelToken? cancelToken,
@@ -826,7 +850,8 @@ class SuperadminApi {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    final _path = r'/superadmin/users/{id}/role'.replaceAll('{' r'id' '}', encodeQueryParameter(_serializers, id, const FullType(int)).toString());
+    final _path = r'/superadmin/users/{id}/role'.replaceAll('{' r'id' '}',
+        encodeQueryParameter(_serializers, id, const FullType(int)).toString());
     final _options = Options(
       method: r'PATCH',
       headers: <String, dynamic>{
@@ -844,11 +869,11 @@ class SuperadminApi {
 
     try {
       const _type = FullType(UpdateUserRoleBody);
-      _bodyData = _serializers.serialize(updateUserRoleBody, specifiedType: _type);
-
-    } catch(error, stackTrace) {
+      _bodyData =
+          _serializers.serialize(updateUserRoleBody, specifiedType: _type);
+    } catch (error, stackTrace) {
       throw DioException(
-         requestOptions: _options.compose(
+        requestOptions: _options.compose(
           _dio.options,
           _path,
         ),
@@ -871,11 +896,12 @@ class SuperadminApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(User),
-      ) as User;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(User),
+            ) as User;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -897,5 +923,4 @@ class SuperadminApi {
       extra: _response.extra,
     );
   }
-
 }

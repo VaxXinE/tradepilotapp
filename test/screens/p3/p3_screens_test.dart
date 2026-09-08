@@ -130,7 +130,7 @@ Future<AuthProvider> _auth(WidgetTester tester) async {
     );
 }
 
-Analysis _analysis() => Analysis(
+Analysis _analysis() => $Analysis(
   (builder) => builder
     ..id = 1
     ..userId = 1

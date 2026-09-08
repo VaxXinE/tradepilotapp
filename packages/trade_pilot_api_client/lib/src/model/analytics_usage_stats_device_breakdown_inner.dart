@@ -11,10 +11,13 @@ part 'analytics_usage_stats_device_breakdown_inner.g.dart';
 /// AnalyticsUsageStatsDeviceBreakdownInner
 ///
 /// Properties:
-/// * [deviceType] 
-/// * [count] 
+/// * [deviceType]
+/// * [count]
 @BuiltValue()
-abstract class AnalyticsUsageStatsDeviceBreakdownInner implements Built<AnalyticsUsageStatsDeviceBreakdownInner, AnalyticsUsageStatsDeviceBreakdownInnerBuilder> {
+abstract class AnalyticsUsageStatsDeviceBreakdownInner
+    implements
+        Built<AnalyticsUsageStatsDeviceBreakdownInner,
+            AnalyticsUsageStatsDeviceBreakdownInnerBuilder> {
   @BuiltValueField(wireName: r'deviceType')
   String get deviceType;
 
@@ -23,18 +26,25 @@ abstract class AnalyticsUsageStatsDeviceBreakdownInner implements Built<Analytic
 
   AnalyticsUsageStatsDeviceBreakdownInner._();
 
-  factory AnalyticsUsageStatsDeviceBreakdownInner([void updates(AnalyticsUsageStatsDeviceBreakdownInnerBuilder b)]) = _$AnalyticsUsageStatsDeviceBreakdownInner;
+  factory AnalyticsUsageStatsDeviceBreakdownInner(
+          [void updates(AnalyticsUsageStatsDeviceBreakdownInnerBuilder b)]) =
+      _$AnalyticsUsageStatsDeviceBreakdownInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AnalyticsUsageStatsDeviceBreakdownInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AnalyticsUsageStatsDeviceBreakdownInner> get serializer => _$AnalyticsUsageStatsDeviceBreakdownInnerSerializer();
+  static Serializer<AnalyticsUsageStatsDeviceBreakdownInner> get serializer =>
+      _$AnalyticsUsageStatsDeviceBreakdownInnerSerializer();
 }
 
-class _$AnalyticsUsageStatsDeviceBreakdownInnerSerializer implements PrimitiveSerializer<AnalyticsUsageStatsDeviceBreakdownInner> {
+class _$AnalyticsUsageStatsDeviceBreakdownInnerSerializer
+    implements PrimitiveSerializer<AnalyticsUsageStatsDeviceBreakdownInner> {
   @override
-  final Iterable<Type> types = const [AnalyticsUsageStatsDeviceBreakdownInner, _$AnalyticsUsageStatsDeviceBreakdownInner];
+  final Iterable<Type> types = const [
+    AnalyticsUsageStatsDeviceBreakdownInner,
+    _$AnalyticsUsageStatsDeviceBreakdownInner
+  ];
 
   @override
   final String wireName = r'AnalyticsUsageStatsDeviceBreakdownInner';
@@ -62,7 +72,9 @@ class _$AnalyticsUsageStatsDeviceBreakdownInnerSerializer implements PrimitiveSe
     AnalyticsUsageStatsDeviceBreakdownInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -119,4 +131,3 @@ class _$AnalyticsUsageStatsDeviceBreakdownInnerSerializer implements PrimitiveSe
     return result.build();
   }
 }
-

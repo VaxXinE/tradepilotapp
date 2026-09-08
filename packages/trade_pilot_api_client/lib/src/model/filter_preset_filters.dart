@@ -12,14 +12,15 @@ part 'filter_preset_filters.g.dart';
 /// Mirrors the URL-derived filter state used by the history page.
 ///
 /// Properties:
-/// * [mode] 
-/// * [instruments] 
-/// * [timeframes] 
-/// * [from] 
-/// * [to] 
-/// * [q] 
+/// * [mode]
+/// * [instruments]
+/// * [timeframes]
+/// * [from]
+/// * [to]
+/// * [q]
 @BuiltValue()
-abstract class FilterPresetFilters implements Built<FilterPresetFilters, FilterPresetFiltersBuilder> {
+abstract class FilterPresetFilters
+    implements Built<FilterPresetFilters, FilterPresetFiltersBuilder> {
   @BuiltValueField(wireName: r'mode')
   FilterPresetFiltersModeEnum get mode;
   // enum modeEnum {  ,  beginner,  pro,  };
@@ -41,18 +42,24 @@ abstract class FilterPresetFilters implements Built<FilterPresetFilters, FilterP
 
   FilterPresetFilters._();
 
-  factory FilterPresetFilters([void updates(FilterPresetFiltersBuilder b)]) = _$FilterPresetFilters;
+  factory FilterPresetFilters([void updates(FilterPresetFiltersBuilder b)]) =
+      _$FilterPresetFilters;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(FilterPresetFiltersBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<FilterPresetFilters> get serializer => _$FilterPresetFiltersSerializer();
+  static Serializer<FilterPresetFilters> get serializer =>
+      _$FilterPresetFiltersSerializer();
 }
 
-class _$FilterPresetFiltersSerializer implements PrimitiveSerializer<FilterPresetFilters> {
+class _$FilterPresetFiltersSerializer
+    implements PrimitiveSerializer<FilterPresetFilters> {
   @override
-  final Iterable<Type> types = const [FilterPresetFilters, _$FilterPresetFilters];
+  final Iterable<Type> types = const [
+    FilterPresetFilters,
+    _$FilterPresetFilters
+  ];
 
   @override
   final String wireName = r'FilterPresetFilters';
@@ -100,7 +107,9 @@ class _$FilterPresetFiltersSerializer implements PrimitiveSerializer<FilterPrese
     FilterPresetFilters object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -187,19 +196,23 @@ class _$FilterPresetFiltersSerializer implements PrimitiveSerializer<FilterPrese
 }
 
 class FilterPresetFiltersModeEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'')
-  static const FilterPresetFiltersModeEnum empty = _$filterPresetFiltersModeEnum_empty;
+  static const FilterPresetFiltersModeEnum empty =
+      _$filterPresetFiltersModeEnum_empty;
   @BuiltValueEnumConst(wireName: r'beginner')
-  static const FilterPresetFiltersModeEnum beginner = _$filterPresetFiltersModeEnum_beginner;
+  static const FilterPresetFiltersModeEnum beginner =
+      _$filterPresetFiltersModeEnum_beginner;
   @BuiltValueEnumConst(wireName: r'pro')
-  static const FilterPresetFiltersModeEnum pro = _$filterPresetFiltersModeEnum_pro;
+  static const FilterPresetFiltersModeEnum pro =
+      _$filterPresetFiltersModeEnum_pro;
 
-  static Serializer<FilterPresetFiltersModeEnum> get serializer => _$filterPresetFiltersModeEnumSerializer;
+  static Serializer<FilterPresetFiltersModeEnum> get serializer =>
+      _$filterPresetFiltersModeEnumSerializer;
 
-  const FilterPresetFiltersModeEnum._(String name): super(name);
+  const FilterPresetFiltersModeEnum._(String name) : super(name);
 
-  static BuiltSet<FilterPresetFiltersModeEnum> get values => _$filterPresetFiltersModeEnumValues;
-  static FilterPresetFiltersModeEnum valueOf(String name) => _$filterPresetFiltersModeEnumValueOf(name);
+  static BuiltSet<FilterPresetFiltersModeEnum> get values =>
+      _$filterPresetFiltersModeEnumValues;
+  static FilterPresetFiltersModeEnum valueOf(String name) =>
+      _$filterPresetFiltersModeEnumValueOf(name);
 }
-

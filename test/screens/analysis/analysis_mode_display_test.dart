@@ -162,7 +162,7 @@ class _JournalAdapter implements HttpClientAdapter {
   void close({bool force = false}) {}
 }
 
-Analysis _analysis(AnalysisModeEnum mode) => Analysis(
+Analysis _analysis(AnalysisModeEnum mode) => $Analysis(
   (builder) => builder
     ..id = mode == AnalysisModeEnum.pro ? 2 : 1
     ..userId = 1

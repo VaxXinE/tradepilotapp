@@ -24,7 +24,6 @@ import 'package:trade_pilot_api_client/src/model/progression_audit.dart';
 import 'package:trade_pilot_api_client/src/model/progression_backfill_result.dart';
 
 class AdminApi {
-
   final Dio _dio;
 
   final Serializers _serializers;
@@ -77,11 +76,12 @@ class AdminApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(ProgressionBackfillResult),
-      ) as ProgressionBackfillResult;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(ProgressionBackfillResult),
+            ) as ProgressionBackfillResult;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -145,11 +145,11 @@ class AdminApi {
 
     try {
       const _type = FullType(BroadcastNotificationBody);
-      _bodyData = _serializers.serialize(broadcastNotificationBody, specifiedType: _type);
-
-    } catch(error, stackTrace) {
+      _bodyData = _serializers.serialize(broadcastNotificationBody,
+          specifiedType: _type);
+    } catch (error, stackTrace) {
       throw DioException(
-         requestOptions: _options.compose(
+        requestOptions: _options.compose(
           _dio.options,
           _path,
         ),
@@ -172,11 +172,12 @@ class AdminApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(BroadcastSendResult),
-      ) as BroadcastSendResult;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(BroadcastSendResult),
+            ) as BroadcastSendResult;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -236,7 +237,8 @@ class AdminApi {
     );
 
     final _queryParameters = <String, dynamic>{
-      if (days != null) r'days': encodeQueryParameter(_serializers, days, const FullType(int)),
+      if (days != null)
+        r'days': encodeQueryParameter(_serializers, days, const FullType(int)),
     };
 
     final _response = await _dio.request<Object>(
@@ -252,11 +254,12 @@ class AdminApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(AnalyticsTokenStats),
-      ) as AnalyticsTokenStats;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(AnalyticsTokenStats),
+            ) as AnalyticsTokenStats;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -316,7 +319,8 @@ class AdminApi {
     );
 
     final _queryParameters = <String, dynamic>{
-      if (days != null) r'days': encodeQueryParameter(_serializers, days, const FullType(int)),
+      if (days != null)
+        r'days': encodeQueryParameter(_serializers, days, const FullType(int)),
     };
 
     final _response = await _dio.request<Object>(
@@ -332,11 +336,12 @@ class AdminApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(AnalyticsUsageStats),
-      ) as AnalyticsUsageStats;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(AnalyticsUsageStats),
+            ) as AnalyticsUsageStats;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -408,13 +413,24 @@ class AdminApi {
     );
 
     final _queryParameters = <String, dynamic>{
-      if (page != null) r'page': encodeQueryParameter(_serializers, page, const FullType(int)),
-      if (limit != null) r'limit': encodeQueryParameter(_serializers, limit, const FullType(int)),
-      if (search != null) r'search': encodeQueryParameter(_serializers, search, const FullType(String)),
-      if (feedbackType != null) r'feedbackType': encodeQueryParameter(_serializers, feedbackType, const FullType(String)),
-      if (from != null) r'from': encodeQueryParameter(_serializers, from, const FullType(Date)),
-      if (to != null) r'to': encodeQueryParameter(_serializers, to, const FullType(Date)),
-      if (analysisId != null) r'analysisId': encodeQueryParameter(_serializers, analysisId, const FullType(int)),
+      if (page != null)
+        r'page': encodeQueryParameter(_serializers, page, const FullType(int)),
+      if (limit != null)
+        r'limit':
+            encodeQueryParameter(_serializers, limit, const FullType(int)),
+      if (search != null)
+        r'search':
+            encodeQueryParameter(_serializers, search, const FullType(String)),
+      if (feedbackType != null)
+        r'feedbackType': encodeQueryParameter(
+            _serializers, feedbackType, const FullType(String)),
+      if (from != null)
+        r'from': encodeQueryParameter(_serializers, from, const FullType(Date)),
+      if (to != null)
+        r'to': encodeQueryParameter(_serializers, to, const FullType(Date)),
+      if (analysisId != null)
+        r'analysisId':
+            encodeQueryParameter(_serializers, analysisId, const FullType(int)),
     };
 
     final _response = await _dio.request<Object>(
@@ -430,11 +446,12 @@ class AdminApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(AdminFeedbackList),
-      ) as AdminFeedbackList;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(AdminFeedbackList),
+            ) as AdminFeedbackList;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -503,11 +520,12 @@ class AdminApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(AdminStats),
-      ) as AdminStats;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(AdminStats),
+            ) as AdminStats;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -569,8 +587,11 @@ class AdminApi {
     );
 
     final _queryParameters = <String, dynamic>{
-      if (page != null) r'page': encodeQueryParameter(_serializers, page, const FullType(int)),
-      if (limit != null) r'limit': encodeQueryParameter(_serializers, limit, const FullType(int)),
+      if (page != null)
+        r'page': encodeQueryParameter(_serializers, page, const FullType(int)),
+      if (limit != null)
+        r'limit':
+            encodeQueryParameter(_serializers, limit, const FullType(int)),
     };
 
     final _response = await _dio.request<Object>(
@@ -586,11 +607,12 @@ class AdminApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(AnalysesList),
-      ) as AnalysesList;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(AnalysesList),
+            ) as AnalysesList;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -652,8 +674,11 @@ class AdminApi {
     );
 
     final _queryParameters = <String, dynamic>{
-      if (page != null) r'page': encodeQueryParameter(_serializers, page, const FullType(int)),
-      if (limit != null) r'limit': encodeQueryParameter(_serializers, limit, const FullType(int)),
+      if (page != null)
+        r'page': encodeQueryParameter(_serializers, page, const FullType(int)),
+      if (limit != null)
+        r'limit':
+            encodeQueryParameter(_serializers, limit, const FullType(int)),
     };
 
     final _response = await _dio.request<Object>(
@@ -669,11 +694,12 @@ class AdminApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(BroadcastsList),
-      ) as BroadcastsList;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(BroadcastsList),
+            ) as BroadcastsList;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -733,7 +759,8 @@ class AdminApi {
     );
 
     final _queryParameters = <String, dynamic>{
-      if (days != null) r'days': encodeQueryParameter(_serializers, days, const FullType(int)),
+      if (days != null)
+        r'days': encodeQueryParameter(_serializers, days, const FullType(int)),
     };
 
     final _response = await _dio.request<Object>(
@@ -749,11 +776,12 @@ class AdminApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(OutboundClickStats),
-      ) as OutboundClickStats;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(OutboundClickStats),
+            ) as OutboundClickStats;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -813,7 +841,9 @@ class AdminApi {
     );
 
     final _queryParameters = <String, dynamic>{
-      if (userId != null) r'userId': encodeQueryParameter(_serializers, userId, const FullType(int)),
+      if (userId != null)
+        r'userId':
+            encodeQueryParameter(_serializers, userId, const FullType(int)),
     };
 
     final _response = await _dio.request<Object>(
@@ -829,11 +859,12 @@ class AdminApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(ProgressionAudit),
-      ) as ProgressionAudit;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(ProgressionAudit),
+            ) as ProgressionAudit;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -855,5 +886,4 @@ class AdminApi {
       extra: _response.extra,
     );
   }
-
 }

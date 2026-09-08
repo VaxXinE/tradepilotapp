@@ -13,14 +13,15 @@ part 'daily_summary_today.g.dart';
 /// DailySummaryToday
 ///
 /// Properties:
-/// * [digestDate] 
-/// * [kind] 
-/// * [instruments] 
-/// * [summary] 
-/// * [createdAt] 
-/// * [analyses] 
+/// * [digestDate]
+/// * [kind]
+/// * [instruments]
+/// * [summary]
+/// * [createdAt]
+/// * [analyses]
 @BuiltValue()
-abstract class DailySummaryToday implements Built<DailySummaryToday, DailySummaryTodayBuilder> {
+abstract class DailySummaryToday
+    implements Built<DailySummaryToday, DailySummaryTodayBuilder> {
   @BuiltValueField(wireName: r'digestDate')
   String get digestDate;
 
@@ -42,16 +43,19 @@ abstract class DailySummaryToday implements Built<DailySummaryToday, DailySummar
 
   DailySummaryToday._();
 
-  factory DailySummaryToday([void updates(DailySummaryTodayBuilder b)]) = _$DailySummaryToday;
+  factory DailySummaryToday([void updates(DailySummaryTodayBuilder b)]) =
+      _$DailySummaryToday;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(DailySummaryTodayBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<DailySummaryToday> get serializer => _$DailySummaryTodaySerializer();
+  static Serializer<DailySummaryToday> get serializer =>
+      _$DailySummaryTodaySerializer();
 }
 
-class _$DailySummaryTodaySerializer implements PrimitiveSerializer<DailySummaryToday> {
+class _$DailySummaryTodaySerializer
+    implements PrimitiveSerializer<DailySummaryToday> {
   @override
   final Iterable<Type> types = const [DailySummaryToday, _$DailySummaryToday];
 
@@ -91,7 +95,8 @@ class _$DailySummaryTodaySerializer implements PrimitiveSerializer<DailySummaryT
     yield r'analyses';
     yield serializers.serialize(
       object.analyses,
-      specifiedType: const FullType(BuiltList, [FullType(DailySummaryAnalysis)]),
+      specifiedType:
+          const FullType(BuiltList, [FullType(DailySummaryAnalysis)]),
     );
   }
 
@@ -101,7 +106,9 @@ class _$DailySummaryTodaySerializer implements PrimitiveSerializer<DailySummaryT
     DailySummaryToday object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -154,7 +161,8 @@ class _$DailySummaryTodaySerializer implements PrimitiveSerializer<DailySummaryT
         case r'analyses':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltList, [FullType(DailySummaryAnalysis)]),
+            specifiedType:
+                const FullType(BuiltList, [FullType(DailySummaryAnalysis)]),
           ) as BuiltList<DailySummaryAnalysis>;
           result.analyses.replace(valueDes);
           break;
@@ -188,17 +196,20 @@ class _$DailySummaryTodaySerializer implements PrimitiveSerializer<DailySummaryT
 }
 
 class DailySummaryTodayKindEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'full')
-  static const DailySummaryTodayKindEnum full = _$dailySummaryTodayKindEnum_full;
+  static const DailySummaryTodayKindEnum full =
+      _$dailySummaryTodayKindEnum_full;
   @BuiltValueEnumConst(wireName: r'quota_only')
-  static const DailySummaryTodayKindEnum quotaOnly = _$dailySummaryTodayKindEnum_quotaOnly;
+  static const DailySummaryTodayKindEnum quotaOnly =
+      _$dailySummaryTodayKindEnum_quotaOnly;
 
-  static Serializer<DailySummaryTodayKindEnum> get serializer => _$dailySummaryTodayKindEnumSerializer;
+  static Serializer<DailySummaryTodayKindEnum> get serializer =>
+      _$dailySummaryTodayKindEnumSerializer;
 
-  const DailySummaryTodayKindEnum._(String name): super(name);
+  const DailySummaryTodayKindEnum._(String name) : super(name);
 
-  static BuiltSet<DailySummaryTodayKindEnum> get values => _$dailySummaryTodayKindEnumValues;
-  static DailySummaryTodayKindEnum valueOf(String name) => _$dailySummaryTodayKindEnumValueOf(name);
+  static BuiltSet<DailySummaryTodayKindEnum> get values =>
+      _$dailySummaryTodayKindEnumValues;
+  static DailySummaryTodayKindEnum valueOf(String name) =>
+      _$dailySummaryTodayKindEnumValueOf(name);
 }
-

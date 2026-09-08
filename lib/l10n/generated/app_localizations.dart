@@ -2827,6 +2827,270 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Source document'**
   String get sourceDocument;
+
+  /// No description provided for @topUpCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Top Up Credit'**
+  String get topUpCredit;
+
+  /// No description provided for @analysisQuotaHourTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hourly limit reached'**
+  String get analysisQuotaHourTitle;
+
+  /// No description provided for @analysisQuotaHourMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your hourly analysis quota is used up. Try again after the wait period ends.'**
+  String get analysisQuotaHourMessage;
+
+  /// No description provided for @analysisQuotaDayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily limit reached'**
+  String get analysisQuotaDayTitle;
+
+  /// No description provided for @analysisQuotaDayMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your free daily quota is used up. Use a credit or try again tomorrow.'**
+  String get analysisQuotaDayMessage;
+
+  /// No description provided for @analysisQuotaConcurrentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Analysis still in progress'**
+  String get analysisQuotaConcurrentTitle;
+
+  /// No description provided for @analysisQuotaConcurrentMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait for the previous analysis to finish before creating another one.'**
+  String get analysisQuotaConcurrentMessage;
+
+  /// No description provided for @analysisQuotaUnknownTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Analysis could not be created'**
+  String get analysisQuotaUnknownTitle;
+
+  /// No description provided for @analysisQuotaUnknownMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'An analysis limit is active. Please try again later.'**
+  String get analysisQuotaUnknownMessage;
+
+  /// No description provided for @analysisQuotaUsage.
+  ///
+  /// In en, this message translates to:
+  /// **'Used {used} of {limit}'**
+  String analysisQuotaUsage(int used, int limit);
+
+  /// No description provided for @analysisRetryAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again in {duration}'**
+  String analysisRetryAfter(String duration);
+
+  /// No description provided for @analysisSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} seconds'**
+  String analysisSeconds(int count);
+
+  /// No description provided for @analysisMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} minutes'**
+  String analysisMinutes(int count);
+
+  /// No description provided for @analysisQuotaBalances.
+  ///
+  /// In en, this message translates to:
+  /// **'Hourly: {hourly} • Daily: {daily} • Credits: {credits}'**
+  String analysisQuotaBalances(int hourly, int daily, int credits);
+
+  /// No description provided for @analysisCreditConsumed.
+  ///
+  /// In en, this message translates to:
+  /// **'1 credit used. Remaining balance: {balance} credits.'**
+  String analysisCreditConsumed(int balance);
+
+  /// No description provided for @analysisCreditConsumedUnknownBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'1 credit used. Your balance is being refreshed.'**
+  String get analysisCreditConsumedUnknownBalance;
+
+  /// No description provided for @creditBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit balance'**
+  String get creditBalance;
+
+  /// No description provided for @creditBalanceFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance could not be loaded.'**
+  String get creditBalanceFailed;
+
+  /// No description provided for @topUpScanQris.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan this QRIS with your banking or e-wallet app, then submit the request below.'**
+  String get topUpScanQris;
+
+  /// No description provided for @topUpQrisUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The QRIS code could not be loaded.'**
+  String get topUpQrisUnavailable;
+
+  /// No description provided for @topUpRatePerCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} per credit'**
+  String topUpRatePerCredit(String amount);
+
+  /// No description provided for @topUpAmountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount (Rupiah)'**
+  String get topUpAmountLabel;
+
+  /// No description provided for @topUpAmountHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 50000'**
+  String get topUpAmountHint;
+
+  /// No description provided for @topUpCreditsPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'You will receive {credits} credit'**
+  String topUpCreditsPreview(int credits);
+
+  /// No description provided for @topUpAmountRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the amount you paid.'**
+  String get topUpAmountRequired;
+
+  /// No description provided for @topUpAmountTooSmall.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum top-up is {amount}.'**
+  String topUpAmountTooSmall(String amount);
+
+  /// No description provided for @topUpReferenceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment reference (optional)'**
+  String get topUpReferenceLabel;
+
+  /// No description provided for @topUpReferenceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. sender name or transfer reference'**
+  String get topUpReferenceHint;
+
+  /// No description provided for @topUpProofLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment proof (optional)'**
+  String get topUpProofLabel;
+
+  /// No description provided for @topUpAddProof.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach proof'**
+  String get topUpAddProof;
+
+  /// No description provided for @topUpChangeProof.
+  ///
+  /// In en, this message translates to:
+  /// **'Change proof'**
+  String get topUpChangeProof;
+
+  /// No description provided for @topUpProofAttached.
+  ///
+  /// In en, this message translates to:
+  /// **'Proof attached'**
+  String get topUpProofAttached;
+
+  /// No description provided for @topUpSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit top-up request'**
+  String get topUpSubmit;
+
+  /// No description provided for @topUpSubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Top-up request submitted. It will be reviewed shortly.'**
+  String get topUpSubmitted;
+
+  /// No description provided for @topUpProofFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment proof could not be uploaded. The request was not submitted.'**
+  String get topUpProofFailed;
+
+  /// No description provided for @topUpConfigFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Top-up configuration could not be loaded.'**
+  String get topUpConfigFailed;
+
+  /// No description provided for @topUpHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Top-up history'**
+  String get topUpHistory;
+
+  /// No description provided for @topUpHistoryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'You have not made any top-up requests yet.'**
+  String get topUpHistoryEmpty;
+
+  /// No description provided for @topUpLoadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more'**
+  String get topUpLoadMore;
+
+  /// No description provided for @topUpApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved'**
+  String get topUpApproved;
+
+  /// No description provided for @topUpRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get topUpRejected;
+
+  /// No description provided for @topUpCreditsGranted.
+  ///
+  /// In en, this message translates to:
+  /// **'{credits} credit added'**
+  String topUpCreditsGranted(int credits);
+
+  /// No description provided for @topUpReviewNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin note: {note}'**
+  String topUpReviewNote(String note);
+
+  /// No description provided for @topUpRequestedCredits.
+  ///
+  /// In en, this message translates to:
+  /// **'{credits} credit'**
+  String topUpRequestedCredits(int credits);
 }
 
 class _AppLocalizationsDelegate

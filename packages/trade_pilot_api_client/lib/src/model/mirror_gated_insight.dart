@@ -13,13 +13,14 @@ part 'mirror_gated_insight.g.dart';
 /// Wrapper around a trader-mirror insight category. When `gated` is true the cohort was below the minimum sample threshold and `data` is omitted; the UI should render a 'need more data' placeholder.
 ///
 /// Properties:
-/// * [gated] 
-/// * [reason] 
-/// * [need] 
-/// * [have] 
-/// * [data] 
+/// * [gated]
+/// * [reason]
+/// * [need]
+/// * [have]
+/// * [data]
 @BuiltValue()
-abstract class MirrorGatedInsight implements Built<MirrorGatedInsight, MirrorGatedInsightBuilder> {
+abstract class MirrorGatedInsight
+    implements Built<MirrorGatedInsight, MirrorGatedInsightBuilder> {
   @BuiltValueField(wireName: r'gated')
   bool get gated;
 
@@ -38,16 +39,19 @@ abstract class MirrorGatedInsight implements Built<MirrorGatedInsight, MirrorGat
 
   MirrorGatedInsight._();
 
-  factory MirrorGatedInsight([void updates(MirrorGatedInsightBuilder b)]) = _$MirrorGatedInsight;
+  factory MirrorGatedInsight([void updates(MirrorGatedInsightBuilder b)]) =
+      _$MirrorGatedInsight;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(MirrorGatedInsightBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<MirrorGatedInsight> get serializer => _$MirrorGatedInsightSerializer();
+  static Serializer<MirrorGatedInsight> get serializer =>
+      _$MirrorGatedInsightSerializer();
 }
 
-class _$MirrorGatedInsightSerializer implements PrimitiveSerializer<MirrorGatedInsight> {
+class _$MirrorGatedInsightSerializer
+    implements PrimitiveSerializer<MirrorGatedInsight> {
   @override
   final Iterable<Type> types = const [MirrorGatedInsight, _$MirrorGatedInsight];
 
@@ -89,7 +93,8 @@ class _$MirrorGatedInsightSerializer implements PrimitiveSerializer<MirrorGatedI
       yield r'data';
       yield serializers.serialize(
         object.data,
-        specifiedType: const FullType(BuiltMap, [FullType(String), FullType.nullable(JsonObject)]),
+        specifiedType: const FullType(
+            BuiltMap, [FullType(String), FullType.nullable(JsonObject)]),
       );
     }
   }
@@ -100,7 +105,9 @@ class _$MirrorGatedInsightSerializer implements PrimitiveSerializer<MirrorGatedI
     MirrorGatedInsight object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -125,7 +132,8 @@ class _$MirrorGatedInsightSerializer implements PrimitiveSerializer<MirrorGatedI
         case r'reason':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(MirrorGatedInsightReasonEnum),
+            specifiedType:
+                const FullType.nullable(MirrorGatedInsightReasonEnum),
           ) as MirrorGatedInsightReasonEnum?;
           if (valueDes == null) continue;
           result.reason = valueDes;
@@ -149,7 +157,8 @@ class _$MirrorGatedInsightSerializer implements PrimitiveSerializer<MirrorGatedI
         case r'data':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(BuiltMap, [FullType(String), FullType.nullable(JsonObject)]),
+            specifiedType: const FullType.nullable(
+                BuiltMap, [FullType(String), FullType.nullable(JsonObject)]),
           ) as BuiltMap<String, JsonObject?>?;
           if (valueDes == null) continue;
           result.data.replace(valueDes);
@@ -184,15 +193,17 @@ class _$MirrorGatedInsightSerializer implements PrimitiveSerializer<MirrorGatedI
 }
 
 class MirrorGatedInsightReasonEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'need_more_data')
-  static const MirrorGatedInsightReasonEnum needMoreData = _$mirrorGatedInsightReasonEnum_needMoreData;
+  static const MirrorGatedInsightReasonEnum needMoreData =
+      _$mirrorGatedInsightReasonEnum_needMoreData;
 
-  static Serializer<MirrorGatedInsightReasonEnum> get serializer => _$mirrorGatedInsightReasonEnumSerializer;
+  static Serializer<MirrorGatedInsightReasonEnum> get serializer =>
+      _$mirrorGatedInsightReasonEnumSerializer;
 
-  const MirrorGatedInsightReasonEnum._(String name): super(name);
+  const MirrorGatedInsightReasonEnum._(String name) : super(name);
 
-  static BuiltSet<MirrorGatedInsightReasonEnum> get values => _$mirrorGatedInsightReasonEnumValues;
-  static MirrorGatedInsightReasonEnum valueOf(String name) => _$mirrorGatedInsightReasonEnumValueOf(name);
+  static BuiltSet<MirrorGatedInsightReasonEnum> get values =>
+      _$mirrorGatedInsightReasonEnumValues;
+  static MirrorGatedInsightReasonEnum valueOf(String name) =>
+      _$mirrorGatedInsightReasonEnumValueOf(name);
 }
-

@@ -11,16 +11,18 @@ part 'fundamental_calendar_event.g.dart';
 /// A single economic-calendar event included in the fundamental snapshot persisted on an analysis row.
 ///
 /// Properties:
-/// * [date] 
-/// * [time] 
-/// * [currency] 
-/// * [event] 
+/// * [date]
+/// * [time]
+/// * [currency]
+/// * [event]
 /// * [impact] - Star-rating string from the upstream feed: ★, ★★ or ★★★. Null when impact is unknown.
-/// * [actual] 
-/// * [forecast] 
-/// * [previous] 
+/// * [actual]
+/// * [forecast]
+/// * [previous]
 @BuiltValue()
-abstract class FundamentalCalendarEvent implements Built<FundamentalCalendarEvent, FundamentalCalendarEventBuilder> {
+abstract class FundamentalCalendarEvent
+    implements
+        Built<FundamentalCalendarEvent, FundamentalCalendarEventBuilder> {
   @BuiltValueField(wireName: r'date')
   String get date;
 
@@ -48,18 +50,25 @@ abstract class FundamentalCalendarEvent implements Built<FundamentalCalendarEven
 
   FundamentalCalendarEvent._();
 
-  factory FundamentalCalendarEvent([void updates(FundamentalCalendarEventBuilder b)]) = _$FundamentalCalendarEvent;
+  factory FundamentalCalendarEvent(
+          [void updates(FundamentalCalendarEventBuilder b)]) =
+      _$FundamentalCalendarEvent;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(FundamentalCalendarEventBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<FundamentalCalendarEvent> get serializer => _$FundamentalCalendarEventSerializer();
+  static Serializer<FundamentalCalendarEvent> get serializer =>
+      _$FundamentalCalendarEventSerializer();
 }
 
-class _$FundamentalCalendarEventSerializer implements PrimitiveSerializer<FundamentalCalendarEvent> {
+class _$FundamentalCalendarEventSerializer
+    implements PrimitiveSerializer<FundamentalCalendarEvent> {
   @override
-  final Iterable<Type> types = const [FundamentalCalendarEvent, _$FundamentalCalendarEvent];
+  final Iterable<Type> types = const [
+    FundamentalCalendarEvent,
+    _$FundamentalCalendarEvent
+  ];
 
   @override
   final String wireName = r'FundamentalCalendarEvent';
@@ -127,7 +136,9 @@ class _$FundamentalCalendarEventSerializer implements PrimitiveSerializer<Fundam
     FundamentalCalendarEvent object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(

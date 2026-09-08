@@ -60,7 +60,13 @@
   "safeWaitFailed": "Your decision to wait could not be saved. Try again.",
   "coolingOffBreathingTitle": "Take a breath first",
   "coolingOffBreathingBody": "You just took a {loss}% loss. Follow this breathing pattern before choosing. The setup will still be there.",
-  "@coolingOffBreathingBody": {"placeholders": {"loss": {"type": "String"}}},
+  "@coolingOffBreathingBody": {
+    "placeholders": {
+      "loss": {
+        "type": "String"
+      }
+    }
+  },
   "coolingOffBreathingBodyGeneric": "Follow this breathing pattern before choosing. The setup will still be there.",
   "coolingOffBreathingInhale": "Breathe in",
   "coolingOffBreathingHold": "Hold",
@@ -68,7 +74,16 @@
   "coolingOffBreathingWait": "Wait it out",
   "coolingOffBreathingContinue": "Continue anyway",
   "xpAwarded": "+{xp} XP for {activity}",
-  "@xpAwarded": {"placeholders": {"xp": {"type": "int"}, "activity": {"type": "String"}}},
+  "@xpAwarded": {
+    "placeholders": {
+      "xp": {
+        "type": "int"
+      },
+      "activity": {
+        "type": "String"
+      }
+    }
+  },
   "checklistActivity": "completing the pre-analysis checklist",
   "guideComplete": "Mark complete",
   "guideReading": "Read the material until the completion button becomes active.",
@@ -90,21 +105,60 @@
   "progressionCurrentStreak": "Current streak",
   "progressionLongestStreak": "Longest streak",
   "progressionLevel": "Level {level}",
-  "@progressionLevel": {"placeholders": {"level": {"type": "int"}}},
+  "@progressionLevel": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
   "progressionMastery": "Mastery {level}",
-  "@progressionMastery": {"placeholders": {"level": {"type": "int"}}},
+  "@progressionMastery": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
   "progressionRank": "Rank: {rank}",
-  "@progressionRank": {"placeholders": {"rank": {"type": "String"}}},
+  "@progressionRank": {
+    "placeholders": {
+      "rank": {
+        "type": "String"
+      }
+    }
+  },
   "progressionXpToNext": "{xp} XP to the next level",
-  "@progressionXpToNext": {"placeholders": {"xp": {"type": "int"}}},
+  "@progressionXpToNext": {
+    "placeholders": {
+      "xp": {
+        "type": "int"
+      }
+    }
+  },
   "progressionUnlocked": "Unlocked {date}",
-  "@progressionUnlocked": {"placeholders": {"date": {"type": "String"}}},
+  "@progressionUnlocked": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "progressionLocked": "Locked",
   "progressionNoAchievements": "Complete activities to unlock achievements.",
   "progressionNoHistory": "No activity yet. Start building your discipline routine.",
   "progressionPrivate": "Progress is private. XP rewards process—not profit, win rate, or account size.",
   "progressionActivity": "+{xp} XP for {reason}",
-  "@progressionActivity": {"placeholders": {"xp": {"type": "int"}, "reason": {"type": "String"}}},
+  "@progressionActivity": {
+    "placeholders": {
+      "xp": {
+        "type": "int"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "mindsetDisclaimer": "Educational material only. It is not financial or psychological advice.",
   "signOut": "Sign Out",
   "signOutConfirmation": "Are you sure you want to sign out of this account?",
@@ -741,7 +795,13 @@
   "riskWait": "Wait",
   "riskSelected": "Selected",
   "useTimeframe": "Use {timeframe}",
-  "@useTimeframe": {"placeholders": {"timeframe": {"type": "String"}}},
+  "@useTimeframe": {
+    "placeholders": {
+      "timeframe": {
+        "type": "String"
+      }
+    }
+  },
   "standardRulesTitle": "TP Standard Trading Rules",
   "standardRulesDescription": "Broker-neutral rules used as the basis for Trade Pilot estimates.",
   "standardRulesLoading": "Loading the standard trading rules...",
@@ -763,5 +823,116 @@
   "minimumDeposit": "Minimum deposit",
   "marginControls": "Margin controls",
   "profitLossFormula": "P/L formula",
-  "sourceDocument": "Source document"
+  "sourceDocument": "Source document",
+  "topUpCredit": "Top Up Credit",
+  "analysisQuotaHourTitle": "Hourly limit reached",
+  "analysisQuotaHourMessage": "Your hourly analysis quota is used up. Try again after the wait period ends.",
+  "analysisQuotaDayTitle": "Daily limit reached",
+  "analysisQuotaDayMessage": "Your free daily quota is used up. Use a credit or try again tomorrow.",
+  "analysisQuotaConcurrentTitle": "Analysis still in progress",
+  "analysisQuotaConcurrentMessage": "Wait for the previous analysis to finish before creating another one.",
+  "analysisQuotaUnknownTitle": "Analysis could not be created",
+  "analysisQuotaUnknownMessage": "An analysis limit is active. Please try again later.",
+  "analysisQuotaUsage": "Used {used} of {limit}",
+  "@analysisQuotaUsage": {
+    "placeholders": {
+      "used": { "type": "int" },
+      "limit": { "type": "int" }
+    }
+  },
+  "analysisRetryAfter": "Try again in {duration}",
+  "@analysisRetryAfter": {
+    "placeholders": { "duration": { "type": "String" } }
+  },
+  "analysisSeconds": "{count} seconds",
+  "@analysisSeconds": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "analysisMinutes": "{count} minutes",
+  "@analysisMinutes": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "analysisQuotaBalances": "Hourly: {hourly} • Daily: {daily} • Credits: {credits}",
+  "@analysisQuotaBalances": {
+    "placeholders": {
+      "hourly": { "type": "int" },
+      "daily": { "type": "int" },
+      "credits": { "type": "int" }
+    }
+  },
+  "analysisCreditConsumed": "1 credit used. Remaining balance: {balance} credits.",
+  "@analysisCreditConsumed": {
+    "placeholders": { "balance": { "type": "int" } }
+  },
+  "analysisCreditConsumedUnknownBalance": "1 credit used. Your balance is being refreshed.",
+  "creditBalance": "Credit balance",
+  "creditBalanceFailed": "Balance could not be loaded.",
+  "topUpScanQris": "Scan this QRIS with your banking or e-wallet app, then submit the request below.",
+  "topUpQrisUnavailable": "The QRIS code could not be loaded.",
+  "topUpRatePerCredit": "{amount} per credit",
+  "@topUpRatePerCredit": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "topUpAmountLabel": "Amount (Rupiah)",
+  "topUpAmountHint": "e.g. 50000",
+  "topUpCreditsPreview": "You will receive {credits} credit",
+  "@topUpCreditsPreview": {
+    "placeholders": {
+      "credits": {
+        "type": "int"
+      }
+    }
+  },
+  "topUpAmountRequired": "Enter the amount you paid.",
+  "topUpAmountTooSmall": "Minimum top-up is {amount}.",
+  "@topUpAmountTooSmall": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "topUpReferenceLabel": "Payment reference (optional)",
+  "topUpReferenceHint": "e.g. sender name or transfer reference",
+  "topUpProofLabel": "Payment proof (optional)",
+  "topUpAddProof": "Attach proof",
+  "topUpChangeProof": "Change proof",
+  "topUpProofAttached": "Proof attached",
+  "topUpSubmit": "Submit top-up request",
+  "topUpSubmitted": "Top-up request submitted. It will be reviewed shortly.",
+  "topUpProofFailed": "Payment proof could not be uploaded. The request was not submitted.",
+  "topUpConfigFailed": "Top-up configuration could not be loaded.",
+  "topUpHistory": "Top-up history",
+  "topUpHistoryEmpty": "You have not made any top-up requests yet.",
+  "topUpLoadMore": "Load more",
+  "topUpApproved": "Approved",
+  "topUpRejected": "Rejected",
+  "topUpCreditsGranted": "{credits} credit added",
+  "@topUpCreditsGranted": {
+    "placeholders": {
+      "credits": {
+        "type": "int"
+      }
+    }
+  },
+  "topUpReviewNote": "Admin note: {note}",
+  "@topUpReviewNote": {
+    "placeholders": {
+      "note": {
+        "type": "String"
+      }
+    }
+  },
+  "topUpRequestedCredits": "{credits} credit",
+  "@topUpRequestedCredits": {
+    "placeholders": {
+      "credits": {
+        "type": "int"
+      }
+    }
+  }
 }

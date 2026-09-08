@@ -19,6 +19,7 @@ import 'package:trade_pilot_api_client/src/model/analysis_note_response.dart';
 import 'package:trade_pilot_api_client/src/model/analysis_outcomes_summary.dart';
 import 'package:trade_pilot_api_client/src/model/analysis_quota.dart';
 import 'package:trade_pilot_api_client/src/model/create_analysis_body.dart';
+import 'package:trade_pilot_api_client/src/model/create_analysis_result.dart';
 import 'package:trade_pilot_api_client/src/model/date.dart';
 import 'package:trade_pilot_api_client/src/model/error_response.dart';
 import 'package:trade_pilot_api_client/src/model/feedback.dart';
@@ -34,7 +35,6 @@ import 'package:trade_pilot_api_client/src/model/set_analysis_note_request.dart'
 import 'package:trade_pilot_api_client/src/model/timeframe_risk_map.dart';
 
 class AnalysesApi {
-
   final Dio _dio;
 
   final Serializers _serializers;
@@ -64,7 +64,8 @@ class AnalysesApi {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    final _path = r'/analyses/{id}/alerts'.replaceAll('{' r'id' '}', encodeQueryParameter(_serializers, id, const FullType(int)).toString());
+    final _path = r'/analyses/{id}/alerts'.replaceAll('{' r'id' '}',
+        encodeQueryParameter(_serializers, id, const FullType(int)).toString());
     final _options = Options(
       method: r'POST',
       headers: <String, dynamic>{
@@ -89,11 +90,12 @@ class AnalysesApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(AlertStatus),
-      ) as AlertStatus;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(AlertStatus),
+            ) as AlertStatus;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -139,7 +141,8 @@ class AnalysesApi {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    final _path = r'/analyses/{id}/alerts'.replaceAll('{' r'id' '}', encodeQueryParameter(_serializers, id, const FullType(int)).toString());
+    final _path = r'/analyses/{id}/alerts'.replaceAll('{' r'id' '}',
+        encodeQueryParameter(_serializers, id, const FullType(int)).toString());
     final _options = Options(
       method: r'DELETE',
       headers: <String, dynamic>{
@@ -164,11 +167,12 @@ class AnalysesApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(AlertStatus),
-      ) as AlertStatus;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(AlertStatus),
+            ) as AlertStatus;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -203,9 +207,9 @@ class AnalysesApi {
   /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
   /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
   ///
-  /// Returns a [Future] containing a [Response] with a [Analysis] as data
+  /// Returns a [Future] containing a [Response] with a [CreateAnalysisResult] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<Analysis>> createAnalysis({
+  Future<Response<CreateAnalysisResult>> createAnalysis({
     required CreateAnalysisBody createAnalysisBody,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -232,11 +236,11 @@ class AnalysesApi {
 
     try {
       const _type = FullType(CreateAnalysisBody);
-      _bodyData = _serializers.serialize(createAnalysisBody, specifiedType: _type);
-
-    } catch(error, stackTrace) {
+      _bodyData =
+          _serializers.serialize(createAnalysisBody, specifiedType: _type);
+    } catch (error, stackTrace) {
       throw DioException(
-         requestOptions: _options.compose(
+        requestOptions: _options.compose(
           _dio.options,
           _path,
         ),
@@ -255,15 +259,16 @@ class AnalysesApi {
       onReceiveProgress: onReceiveProgress,
     );
 
-    Analysis? _responseData;
+    CreateAnalysisResult? _responseData;
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(Analysis),
-      ) as Analysis;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(CreateAnalysisResult),
+            ) as CreateAnalysisResult;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -274,7 +279,7 @@ class AnalysesApi {
       );
     }
 
-    return Response<Analysis>(
+    return Response<CreateAnalysisResult>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,
@@ -332,11 +337,12 @@ class AnalysesApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(AnalysesSummary),
-      ) as AnalysesSummary;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(AnalysesSummary),
+            ) as AnalysesSummary;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -382,7 +388,8 @@ class AnalysesApi {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    final _path = r'/analyses/{id}'.replaceAll('{' r'id' '}', encodeQueryParameter(_serializers, id, const FullType(int)).toString());
+    final _path = r'/analyses/{id}'.replaceAll('{' r'id' '}',
+        encodeQueryParameter(_serializers, id, const FullType(int)).toString());
     final _options = Options(
       method: r'GET',
       headers: <String, dynamic>{
@@ -407,11 +414,12 @@ class AnalysesApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(Analysis),
-      ) as Analysis;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(Analysis),
+            ) as Analysis;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -457,7 +465,8 @@ class AnalysesApi {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    final _path = r'/analyses/{id}/alerts'.replaceAll('{' r'id' '}', encodeQueryParameter(_serializers, id, const FullType(int)).toString());
+    final _path = r'/analyses/{id}/alerts'.replaceAll('{' r'id' '}',
+        encodeQueryParameter(_serializers, id, const FullType(int)).toString());
     final _options = Options(
       method: r'GET',
       headers: <String, dynamic>{
@@ -482,11 +491,12 @@ class AnalysesApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(AlertStatus),
-      ) as AlertStatus;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(AlertStatus),
+            ) as AlertStatus;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -550,9 +560,23 @@ class AnalysesApi {
     );
 
     final _queryParameters = <String, dynamic>{
-      if (range != null) r'range': encodeQueryParameter(_serializers, range, const FullType(String)),
-      if (instruments != null) r'instruments': encodeCollectionQueryParameter<String>(_serializers, instruments, const FullType(BuiltList, [FullType(String)]), format: ListFormat.multi,),
-      if (timeframes != null) r'timeframes': encodeCollectionQueryParameter<String>(_serializers, timeframes, const FullType(BuiltList, [FullType(String)]), format: ListFormat.multi,),
+      if (range != null)
+        r'range':
+            encodeQueryParameter(_serializers, range, const FullType(String)),
+      if (instruments != null)
+        r'instruments': encodeCollectionQueryParameter<String>(
+          _serializers,
+          instruments,
+          const FullType(BuiltList, [FullType(String)]),
+          format: ListFormat.multi,
+        ),
+      if (timeframes != null)
+        r'timeframes': encodeCollectionQueryParameter<String>(
+          _serializers,
+          timeframes,
+          const FullType(BuiltList, [FullType(String)]),
+          format: ListFormat.multi,
+        ),
     };
 
     final _response = await _dio.request<Object>(
@@ -568,11 +592,12 @@ class AnalysesApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(AnalysisHistorySummary),
-      ) as AnalysisHistorySummary;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(AnalysisHistorySummary),
+            ) as AnalysisHistorySummary;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -641,11 +666,12 @@ class AnalysesApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(AnalysisOutcomesSummary),
-      ) as AnalysisOutcomesSummary;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(AnalysisOutcomesSummary),
+            ) as AnalysisOutcomesSummary;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -714,11 +740,12 @@ class AnalysesApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(AnalysisQuota),
-      ) as AnalysisQuota;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(AnalysisQuota),
+            ) as AnalysisQuota;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -778,7 +805,8 @@ class AnalysesApi {
     );
 
     final _queryParameters = <String, dynamic>{
-      r'instrument': encodeQueryParameter(_serializers, instrument, const FullType(String)),
+      r'instrument': encodeQueryParameter(
+          _serializers, instrument, const FullType(String)),
     };
 
     final _response = await _dio.request<Object>(
@@ -794,11 +822,12 @@ class AnalysesApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(GetGuardrails200Response),
-      ) as GetGuardrails200Response;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(GetGuardrails200Response),
+            ) as GetGuardrails200Response;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -858,7 +887,9 @@ class AnalysesApi {
     );
 
     final _queryParameters = <String, dynamic>{
-      if (range != null) r'range': encodeQueryParameter(_serializers, range, const FullType(String)),
+      if (range != null)
+        r'range':
+            encodeQueryParameter(_serializers, range, const FullType(String)),
     };
 
     final _response = await _dio.request<Object>(
@@ -874,11 +905,12 @@ class AnalysesApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(PersonalAnalytics),
-      ) as PersonalAnalytics;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(PersonalAnalytics),
+            ) as PersonalAnalytics;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -947,11 +979,12 @@ class AnalysesApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(RecentInstruments),
-      ) as RecentInstruments;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(RecentInstruments),
+            ) as RecentInstruments;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -1010,7 +1043,8 @@ class AnalysesApi {
             'name': 'sessionCookie',
             'keyName': 'session_token',
             'where': '',
-          },{
+          },
+          {
             'type': 'http',
             'scheme': 'bearer',
             'name': 'bearerAuth',
@@ -1022,7 +1056,8 @@ class AnalysesApi {
     );
 
     final _queryParameters = <String, dynamic>{
-      r'instrument': encodeQueryParameter(_serializers, instrument, const FullType(String)),
+      r'instrument': encodeQueryParameter(
+          _serializers, instrument, const FullType(String)),
     };
 
     final _response = await _dio.request<Object>(
@@ -1038,11 +1073,12 @@ class AnalysesApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(TimeframeRiskMap),
-      ) as TimeframeRiskMap;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(TimeframeRiskMap),
+            ) as TimeframeRiskMap;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -1120,16 +1156,44 @@ class AnalysesApi {
     );
 
     final _queryParameters = <String, dynamic>{
-      if (mode != null) r'mode': encodeQueryParameter(_serializers, mode, const FullType(String)),
-      if (instrument != null) r'instrument': encodeQueryParameter(_serializers, instrument, const FullType(String)),
-      if (instruments != null) r'instruments': encodeCollectionQueryParameter<String>(_serializers, instruments, const FullType(BuiltList, [FullType(String)]), format: ListFormat.multi,),
-      if (timeframes != null) r'timeframes': encodeCollectionQueryParameter<String>(_serializers, timeframes, const FullType(BuiltList, [FullType(String)]), format: ListFormat.multi,),
-      if (outcomes != null) r'outcomes': encodeCollectionQueryParameter<String>(_serializers, outcomes, const FullType(BuiltList, [FullType(String)]), format: ListFormat.multi,),
-      if (page != null) r'page': encodeQueryParameter(_serializers, page, const FullType(int)),
-      if (limit != null) r'limit': encodeQueryParameter(_serializers, limit, const FullType(int)),
-      if (q != null) r'q': encodeQueryParameter(_serializers, q, const FullType(String)),
-      if (from != null) r'from': encodeQueryParameter(_serializers, from, const FullType(Date)),
-      if (to != null) r'to': encodeQueryParameter(_serializers, to, const FullType(Date)),
+      if (mode != null)
+        r'mode':
+            encodeQueryParameter(_serializers, mode, const FullType(String)),
+      if (instrument != null)
+        r'instrument': encodeQueryParameter(
+            _serializers, instrument, const FullType(String)),
+      if (instruments != null)
+        r'instruments': encodeCollectionQueryParameter<String>(
+          _serializers,
+          instruments,
+          const FullType(BuiltList, [FullType(String)]),
+          format: ListFormat.multi,
+        ),
+      if (timeframes != null)
+        r'timeframes': encodeCollectionQueryParameter<String>(
+          _serializers,
+          timeframes,
+          const FullType(BuiltList, [FullType(String)]),
+          format: ListFormat.multi,
+        ),
+      if (outcomes != null)
+        r'outcomes': encodeCollectionQueryParameter<String>(
+          _serializers,
+          outcomes,
+          const FullType(BuiltList, [FullType(String)]),
+          format: ListFormat.multi,
+        ),
+      if (page != null)
+        r'page': encodeQueryParameter(_serializers, page, const FullType(int)),
+      if (limit != null)
+        r'limit':
+            encodeQueryParameter(_serializers, limit, const FullType(int)),
+      if (q != null)
+        r'q': encodeQueryParameter(_serializers, q, const FullType(String)),
+      if (from != null)
+        r'from': encodeQueryParameter(_serializers, from, const FullType(Date)),
+      if (to != null)
+        r'to': encodeQueryParameter(_serializers, to, const FullType(Date)),
     };
 
     final _response = await _dio.request<Object>(
@@ -1145,11 +1209,12 @@ class AnalysesApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(AnalysesList),
-      ) as AnalysesList;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(AnalysesList),
+            ) as AnalysesList;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -1186,7 +1251,8 @@ class AnalysesApi {
   ///
   /// Returns a [Future] containing a [Response] with a [RecordGuardrailTelemetry201Response] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<RecordGuardrailTelemetry201Response>> recordGuardrailTelemetry({
+  Future<Response<RecordGuardrailTelemetry201Response>>
+      recordGuardrailTelemetry({
     required RecordGuardrailTelemetryRequest recordGuardrailTelemetryRequest,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -1213,11 +1279,11 @@ class AnalysesApi {
 
     try {
       const _type = FullType(RecordGuardrailTelemetryRequest);
-      _bodyData = _serializers.serialize(recordGuardrailTelemetryRequest, specifiedType: _type);
-
-    } catch(error, stackTrace) {
+      _bodyData = _serializers.serialize(recordGuardrailTelemetryRequest,
+          specifiedType: _type);
+    } catch (error, stackTrace) {
       throw DioException(
-         requestOptions: _options.compose(
+        requestOptions: _options.compose(
           _dio.options,
           _path,
         ),
@@ -1240,11 +1306,13 @@ class AnalysesApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(RecordGuardrailTelemetry201Response),
-      ) as RecordGuardrailTelemetry201Response;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType:
+                  const FullType(RecordGuardrailTelemetry201Response),
+            ) as RecordGuardrailTelemetry201Response;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -1290,7 +1358,9 @@ class AnalysesApi {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    final _path = r'/analyses/{id}/refresh-fundamentals'.replaceAll('{' r'id' '}', encodeQueryParameter(_serializers, id, const FullType(int)).toString());
+    final _path = r'/analyses/{id}/refresh-fundamentals'.replaceAll(
+        '{' r'id' '}',
+        encodeQueryParameter(_serializers, id, const FullType(int)).toString());
     final _options = Options(
       method: r'POST',
       headers: <String, dynamic>{
@@ -1315,11 +1385,12 @@ class AnalysesApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(RefreshFundamentalsResponse),
-      ) as RefreshFundamentalsResponse;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(RefreshFundamentalsResponse),
+            ) as RefreshFundamentalsResponse;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -1367,7 +1438,8 @@ class AnalysesApi {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    final _path = r'/analyses/{id}/note'.replaceAll('{' r'id' '}', encodeQueryParameter(_serializers, id, const FullType(int)).toString());
+    final _path = r'/analyses/{id}/note'.replaceAll('{' r'id' '}',
+        encodeQueryParameter(_serializers, id, const FullType(int)).toString());
     final _options = Options(
       method: r'PUT',
       headers: <String, dynamic>{
@@ -1385,11 +1457,11 @@ class AnalysesApi {
 
     try {
       const _type = FullType(SetAnalysisNoteRequest);
-      _bodyData = _serializers.serialize(setAnalysisNoteRequest, specifiedType: _type);
-
-    } catch(error, stackTrace) {
+      _bodyData =
+          _serializers.serialize(setAnalysisNoteRequest, specifiedType: _type);
+    } catch (error, stackTrace) {
       throw DioException(
-         requestOptions: _options.compose(
+        requestOptions: _options.compose(
           _dio.options,
           _path,
         ),
@@ -1412,11 +1484,12 @@ class AnalysesApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(AnalysisNoteResponse),
-      ) as AnalysisNoteResponse;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(AnalysisNoteResponse),
+            ) as AnalysisNoteResponse;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -1464,7 +1537,8 @@ class AnalysesApi {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    final _path = r'/analyses/{id}/feedback'.replaceAll('{' r'id' '}', encodeQueryParameter(_serializers, id, const FullType(int)).toString());
+    final _path = r'/analyses/{id}/feedback'.replaceAll('{' r'id' '}',
+        encodeQueryParameter(_serializers, id, const FullType(int)).toString());
     final _options = Options(
       method: r'POST',
       headers: <String, dynamic>{
@@ -1483,10 +1557,9 @@ class AnalysesApi {
     try {
       const _type = FullType(FeedbackBody);
       _bodyData = _serializers.serialize(feedbackBody, specifiedType: _type);
-
-    } catch(error, stackTrace) {
+    } catch (error, stackTrace) {
       throw DioException(
-         requestOptions: _options.compose(
+        requestOptions: _options.compose(
           _dio.options,
           _path,
         ),
@@ -1509,11 +1582,12 @@ class AnalysesApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(Feedback),
-      ) as Feedback;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(Feedback),
+            ) as Feedback;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -1559,7 +1633,8 @@ class AnalysesApi {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    final _path = r'/analyses/guardrails/{id}/wait'.replaceAll('{' r'id' '}', encodeQueryParameter(_serializers, id, const FullType(int)).toString());
+    final _path = r'/analyses/guardrails/{id}/wait'.replaceAll('{' r'id' '}',
+        encodeQueryParameter(_serializers, id, const FullType(int)).toString());
     final _options = Options(
       method: r'POST',
       headers: <String, dynamic>{
@@ -1584,11 +1659,12 @@ class AnalysesApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(ProgressionAward),
-      ) as ProgressionAward;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(ProgressionAward),
+            ) as ProgressionAward;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -1610,5 +1686,4 @@ class AnalysesApi {
       extra: _response.extra,
     );
   }
-
 }

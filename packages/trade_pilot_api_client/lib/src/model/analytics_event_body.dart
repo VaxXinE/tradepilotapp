@@ -17,7 +17,8 @@ part 'analytics_event_body.g.dart';
 /// * [path] - Route path at event time (mainly for page_view)
 /// * [metadata] - Small free-form context (e.g. {instrument, timeframe}). Capped server-side to a few KB.
 @BuiltValue()
-abstract class AnalyticsEventBody implements Built<AnalyticsEventBody, AnalyticsEventBodyBuilder> {
+abstract class AnalyticsEventBody
+    implements Built<AnalyticsEventBody, AnalyticsEventBodyBuilder> {
   /// Server validates against a fixed allowlist — unknown values are silently dropped, never persisted as-is
   @BuiltValueField(wireName: r'eventType')
   AnalyticsEventBodyEventTypeEnum get eventType;
@@ -33,16 +34,19 @@ abstract class AnalyticsEventBody implements Built<AnalyticsEventBody, Analytics
 
   AnalyticsEventBody._();
 
-  factory AnalyticsEventBody([void updates(AnalyticsEventBodyBuilder b)]) = _$AnalyticsEventBody;
+  factory AnalyticsEventBody([void updates(AnalyticsEventBodyBuilder b)]) =
+      _$AnalyticsEventBody;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AnalyticsEventBodyBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AnalyticsEventBody> get serializer => _$AnalyticsEventBodySerializer();
+  static Serializer<AnalyticsEventBody> get serializer =>
+      _$AnalyticsEventBodySerializer();
 }
 
-class _$AnalyticsEventBodySerializer implements PrimitiveSerializer<AnalyticsEventBody> {
+class _$AnalyticsEventBodySerializer
+    implements PrimitiveSerializer<AnalyticsEventBody> {
   @override
   final Iterable<Type> types = const [AnalyticsEventBody, _$AnalyticsEventBody];
 
@@ -70,7 +74,8 @@ class _$AnalyticsEventBodySerializer implements PrimitiveSerializer<AnalyticsEve
       yield r'metadata';
       yield serializers.serialize(
         object.metadata,
-        specifiedType: const FullType(BuiltMap, [FullType(String), FullType.nullable(JsonObject)]),
+        specifiedType: const FullType(
+            BuiltMap, [FullType(String), FullType.nullable(JsonObject)]),
       );
     }
   }
@@ -81,7 +86,9 @@ class _$AnalyticsEventBodySerializer implements PrimitiveSerializer<AnalyticsEve
     AnalyticsEventBody object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -114,7 +121,8 @@ class _$AnalyticsEventBodySerializer implements PrimitiveSerializer<AnalyticsEve
         case r'metadata':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(BuiltMap, [FullType(String), FullType.nullable(JsonObject)]),
+            specifiedType: const FullType.nullable(
+                BuiltMap, [FullType(String), FullType.nullable(JsonObject)]),
           ) as BuiltMap<String, JsonObject?>?;
           if (valueDes == null) continue;
           result.metadata.replace(valueDes);
@@ -149,28 +157,38 @@ class _$AnalyticsEventBodySerializer implements PrimitiveSerializer<AnalyticsEve
 }
 
 class AnalyticsEventBodyEventTypeEnum extends EnumClass {
-
   /// Server validates against a fixed allowlist — unknown values are silently dropped, never persisted as-is
   @BuiltValueEnumConst(wireName: r'page_view')
-  static const AnalyticsEventBodyEventTypeEnum pageView = _$analyticsEventBodyEventTypeEnum_pageView;
+  static const AnalyticsEventBodyEventTypeEnum pageView =
+      _$analyticsEventBodyEventTypeEnum_pageView;
+
   /// Server validates against a fixed allowlist — unknown values are silently dropped, never persisted as-is
   @BuiltValueEnumConst(wireName: r'analysis_created')
-  static const AnalyticsEventBodyEventTypeEnum analysisCreated = _$analyticsEventBodyEventTypeEnum_analysisCreated;
+  static const AnalyticsEventBodyEventTypeEnum analysisCreated =
+      _$analyticsEventBodyEventTypeEnum_analysisCreated;
+
   /// Server validates against a fixed allowlist — unknown values are silently dropped, never persisted as-is
   @BuiltValueEnumConst(wireName: r'trade_logged')
-  static const AnalyticsEventBodyEventTypeEnum tradeLogged = _$analyticsEventBodyEventTypeEnum_tradeLogged;
+  static const AnalyticsEventBodyEventTypeEnum tradeLogged =
+      _$analyticsEventBodyEventTypeEnum_tradeLogged;
+
   /// Server validates against a fixed allowlist — unknown values are silently dropped, never persisted as-is
   @BuiltValueEnumConst(wireName: r'alert_armed')
-  static const AnalyticsEventBodyEventTypeEnum alertArmed = _$analyticsEventBodyEventTypeEnum_alertArmed;
+  static const AnalyticsEventBodyEventTypeEnum alertArmed =
+      _$analyticsEventBodyEventTypeEnum_alertArmed;
+
   /// Server validates against a fixed allowlist — unknown values are silently dropped, never persisted as-is
   @BuiltValueEnumConst(wireName: r'feedback_submitted')
-  static const AnalyticsEventBodyEventTypeEnum feedbackSubmitted = _$analyticsEventBodyEventTypeEnum_feedbackSubmitted;
+  static const AnalyticsEventBodyEventTypeEnum feedbackSubmitted =
+      _$analyticsEventBodyEventTypeEnum_feedbackSubmitted;
 
-  static Serializer<AnalyticsEventBodyEventTypeEnum> get serializer => _$analyticsEventBodyEventTypeEnumSerializer;
+  static Serializer<AnalyticsEventBodyEventTypeEnum> get serializer =>
+      _$analyticsEventBodyEventTypeEnumSerializer;
 
-  const AnalyticsEventBodyEventTypeEnum._(String name): super(name);
+  const AnalyticsEventBodyEventTypeEnum._(String name) : super(name);
 
-  static BuiltSet<AnalyticsEventBodyEventTypeEnum> get values => _$analyticsEventBodyEventTypeEnumValues;
-  static AnalyticsEventBodyEventTypeEnum valueOf(String name) => _$analyticsEventBodyEventTypeEnumValueOf(name);
+  static BuiltSet<AnalyticsEventBodyEventTypeEnum> get values =>
+      _$analyticsEventBodyEventTypeEnumValues;
+  static AnalyticsEventBodyEventTypeEnum valueOf(String name) =>
+      _$analyticsEventBodyEventTypeEnumValueOf(name);
 }
-

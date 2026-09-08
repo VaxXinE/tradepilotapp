@@ -19,7 +19,6 @@ import 'package:trade_pilot_api_client/src/model/push_test_result.dart';
 import 'package:trade_pilot_api_client/src/model/push_unsubscribe_body.dart';
 
 class PushApi {
-
   final Dio _dio;
 
   final Serializers _serializers;
@@ -27,7 +26,7 @@ class PushApi {
   const PushApi(this._dio, this._serializers);
 
   /// Get current user&#39;s push notification preferences
-  /// 
+  ///
   ///
   /// Parameters:
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
@@ -39,7 +38,7 @@ class PushApi {
   ///
   /// Returns a [Future] containing a [Response] with a [PushPrefs] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<PushPrefs>> getPushPrefs({ 
+  Future<Response<PushPrefs>> getPushPrefs({
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -72,11 +71,12 @@ class PushApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(PushPrefs),
-      ) as PushPrefs;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(PushPrefs),
+            ) as PushPrefs;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -100,7 +100,7 @@ class PushApi {
   }
 
   /// Get the VAPID public key for Web Push subscription
-  /// 
+  ///
   ///
   /// Parameters:
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
@@ -112,7 +112,7 @@ class PushApi {
   ///
   /// Returns a [Future] containing a [Response] with a [PushPublicKey] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<PushPublicKey>> getPushPublicKey({ 
+  Future<Response<PushPublicKey>> getPushPublicKey({
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -145,11 +145,12 @@ class PushApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(PushPublicKey),
-      ) as PushPublicKey;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(PushPublicKey),
+            ) as PushPublicKey;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -173,7 +174,7 @@ class PushApi {
   }
 
   /// Check whether the current user has any active push subscription
-  /// 
+  ///
   ///
   /// Parameters:
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
@@ -185,7 +186,7 @@ class PushApi {
   ///
   /// Returns a [Future] containing a [Response] with a [PushSubscriptionStatus] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<PushSubscriptionStatus>> getPushSubscriptionStatus({ 
+  Future<Response<PushSubscriptionStatus>> getPushSubscriptionStatus({
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -218,11 +219,12 @@ class PushApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(PushSubscriptionStatus),
-      ) as PushSubscriptionStatus;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(PushSubscriptionStatus),
+            ) as PushSubscriptionStatus;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -246,7 +248,7 @@ class PushApi {
   }
 
   /// Send a sample push notification to the calling user&#39;s subscribed devices
-  /// Lets a signed-in user verify their phone actually pops up an OS-level notification. Sends to every subscription endpoint registered for the caller. Per-user rate limited so a misbehaving client cannot spam their own devices. 
+  /// Lets a signed-in user verify their phone actually pops up an OS-level notification. Sends to every subscription endpoint registered for the caller. Per-user rate limited so a misbehaving client cannot spam their own devices.
   ///
   /// Parameters:
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
@@ -258,7 +260,7 @@ class PushApi {
   ///
   /// Returns a [Future] containing a [Response] with a [PushTestResult] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<PushTestResult>> sendPushTest({ 
+  Future<Response<PushTestResult>> sendPushTest({
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -291,11 +293,12 @@ class PushApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(PushTestResult),
-      ) as PushTestResult;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(PushTestResult),
+            ) as PushTestResult;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -319,10 +322,10 @@ class PushApi {
   }
 
   /// Register a Web Push subscription for the current user
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [pushSubscriptionBody] 
+  /// * [pushSubscriptionBody]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -332,7 +335,7 @@ class PushApi {
   ///
   /// Returns a [Future] containing a [Response] with a [MessageResponse] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<MessageResponse>> subscribePush({ 
+  Future<Response<MessageResponse>> subscribePush({
     required PushSubscriptionBody pushSubscriptionBody,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -359,11 +362,11 @@ class PushApi {
 
     try {
       const _type = FullType(PushSubscriptionBody);
-      _bodyData = _serializers.serialize(pushSubscriptionBody, specifiedType: _type);
-
-    } catch(error, stackTrace) {
+      _bodyData =
+          _serializers.serialize(pushSubscriptionBody, specifiedType: _type);
+    } catch (error, stackTrace) {
       throw DioException(
-         requestOptions: _options.compose(
+        requestOptions: _options.compose(
           _dio.options,
           _path,
         ),
@@ -386,11 +389,12 @@ class PushApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(MessageResponse),
-      ) as MessageResponse;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(MessageResponse),
+            ) as MessageResponse;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -414,10 +418,10 @@ class PushApi {
   }
 
   /// Remove a Web Push subscription for the current user
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [pushUnsubscribeBody] 
+  /// * [pushUnsubscribeBody]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -427,7 +431,7 @@ class PushApi {
   ///
   /// Returns a [Future] containing a [Response] with a [MessageResponse] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<MessageResponse>> unsubscribePush({ 
+  Future<Response<MessageResponse>> unsubscribePush({
     required PushUnsubscribeBody pushUnsubscribeBody,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -454,11 +458,11 @@ class PushApi {
 
     try {
       const _type = FullType(PushUnsubscribeBody);
-      _bodyData = _serializers.serialize(pushUnsubscribeBody, specifiedType: _type);
-
-    } catch(error, stackTrace) {
+      _bodyData =
+          _serializers.serialize(pushUnsubscribeBody, specifiedType: _type);
+    } catch (error, stackTrace) {
       throw DioException(
-         requestOptions: _options.compose(
+        requestOptions: _options.compose(
           _dio.options,
           _path,
         ),
@@ -481,11 +485,12 @@ class PushApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(MessageResponse),
-      ) as MessageResponse;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(MessageResponse),
+            ) as MessageResponse;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -509,10 +514,10 @@ class PushApi {
   }
 
   /// Update push notification preferences
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [pushPrefsUpdate] 
+  /// * [pushPrefsUpdate]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -522,7 +527,7 @@ class PushApi {
   ///
   /// Returns a [Future] containing a [Response] with a [PushPrefs] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<PushPrefs>> updatePushPrefs({ 
+  Future<Response<PushPrefs>> updatePushPrefs({
     required PushPrefsUpdate pushPrefsUpdate,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -550,10 +555,9 @@ class PushApi {
     try {
       const _type = FullType(PushPrefsUpdate);
       _bodyData = _serializers.serialize(pushPrefsUpdate, specifiedType: _type);
-
-    } catch(error, stackTrace) {
+    } catch (error, stackTrace) {
       throw DioException(
-         requestOptions: _options.compose(
+        requestOptions: _options.compose(
           _dio.options,
           _path,
         ),
@@ -576,11 +580,12 @@ class PushApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(PushPrefs),
-      ) as PushPrefs;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(PushPrefs),
+            ) as PushPrefs;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -602,5 +607,4 @@ class PushApi {
       extra: _response.extra,
     );
   }
-
 }

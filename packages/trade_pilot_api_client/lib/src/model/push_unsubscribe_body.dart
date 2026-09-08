@@ -11,26 +11,33 @@ part 'push_unsubscribe_body.g.dart';
 /// PushUnsubscribeBody
 ///
 /// Properties:
-/// * [endpoint] 
+/// * [endpoint]
 @BuiltValue()
-abstract class PushUnsubscribeBody implements Built<PushUnsubscribeBody, PushUnsubscribeBodyBuilder> {
+abstract class PushUnsubscribeBody
+    implements Built<PushUnsubscribeBody, PushUnsubscribeBodyBuilder> {
   @BuiltValueField(wireName: r'endpoint')
   String get endpoint;
 
   PushUnsubscribeBody._();
 
-  factory PushUnsubscribeBody([void updates(PushUnsubscribeBodyBuilder b)]) = _$PushUnsubscribeBody;
+  factory PushUnsubscribeBody([void updates(PushUnsubscribeBodyBuilder b)]) =
+      _$PushUnsubscribeBody;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(PushUnsubscribeBodyBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<PushUnsubscribeBody> get serializer => _$PushUnsubscribeBodySerializer();
+  static Serializer<PushUnsubscribeBody> get serializer =>
+      _$PushUnsubscribeBodySerializer();
 }
 
-class _$PushUnsubscribeBodySerializer implements PrimitiveSerializer<PushUnsubscribeBody> {
+class _$PushUnsubscribeBodySerializer
+    implements PrimitiveSerializer<PushUnsubscribeBody> {
   @override
-  final Iterable<Type> types = const [PushUnsubscribeBody, _$PushUnsubscribeBody];
+  final Iterable<Type> types = const [
+    PushUnsubscribeBody,
+    _$PushUnsubscribeBody
+  ];
 
   @override
   final String wireName = r'PushUnsubscribeBody';
@@ -53,7 +60,9 @@ class _$PushUnsubscribeBodySerializer implements PrimitiveSerializer<PushUnsubsc
     PushUnsubscribeBody object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -103,4 +112,3 @@ class _$PushUnsubscribeBodySerializer implements PrimitiveSerializer<PushUnsubsc
     return result.build();
   }
 }
-

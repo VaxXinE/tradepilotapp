@@ -39,7 +39,8 @@ part 'push_prefs_update.g.dart';
 /// * [notificationTimezone] - IANA timezone.
 /// * [progressionNotificationsEnabled]
 @BuiltValue()
-abstract class PushPrefsUpdate implements Built<PushPrefsUpdate, PushPrefsUpdateBuilder> {
+abstract class PushPrefsUpdate
+    implements Built<PushPrefsUpdate, PushPrefsUpdateBuilder> {
   @BuiltValueField(wireName: r'pushExpiry')
   bool? get pushExpiry;
 
@@ -125,16 +126,19 @@ abstract class PushPrefsUpdate implements Built<PushPrefsUpdate, PushPrefsUpdate
 
   PushPrefsUpdate._();
 
-  factory PushPrefsUpdate([void updates(PushPrefsUpdateBuilder b)]) = _$PushPrefsUpdate;
+  factory PushPrefsUpdate([void updates(PushPrefsUpdateBuilder b)]) =
+      _$PushPrefsUpdate;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(PushPrefsUpdateBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<PushPrefsUpdate> get serializer => _$PushPrefsUpdateSerializer();
+  static Serializer<PushPrefsUpdate> get serializer =>
+      _$PushPrefsUpdateSerializer();
 }
 
-class _$PushPrefsUpdateSerializer implements PrimitiveSerializer<PushPrefsUpdate> {
+class _$PushPrefsUpdateSerializer
+    implements PrimitiveSerializer<PushPrefsUpdate> {
   @override
   final Iterable<Type> types = const [PushPrefsUpdate, _$PushPrefsUpdate];
 
@@ -206,7 +210,8 @@ class _$PushPrefsUpdateSerializer implements PrimitiveSerializer<PushPrefsUpdate
       yield r'marketOpenSessions';
       yield serializers.serialize(
         object.marketOpenSessions,
-        specifiedType: const FullType(BuiltList, [FullType(PushPrefsUpdateMarketOpenSessionsEnum)]),
+        specifiedType: const FullType(
+            BuiltList, [FullType(PushPrefsUpdateMarketOpenSessionsEnum)]),
       );
     }
     if (object.pushDormancyNudge != null) {
@@ -336,7 +341,9 @@ class _$PushPrefsUpdateSerializer implements PrimitiveSerializer<PushPrefsUpdate
     PushPrefsUpdate object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -418,7 +425,8 @@ class _$PushPrefsUpdateSerializer implements PrimitiveSerializer<PushPrefsUpdate
         case r'marketOpenSessions':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(BuiltList, [FullType(PushPrefsUpdateMarketOpenSessionsEnum)]),
+            specifiedType: const FullType.nullable(
+                BuiltList, [FullType(PushPrefsUpdateMarketOpenSessionsEnum)]),
           ) as BuiltList<PushPrefsUpdateMarketOpenSessionsEnum>?;
           if (valueDes == null) continue;
           result.marketOpenSessions.replace(valueDes);
@@ -589,19 +597,23 @@ class _$PushPrefsUpdateSerializer implements PrimitiveSerializer<PushPrefsUpdate
 }
 
 class PushPrefsUpdateMarketOpenSessionsEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'tokyo')
-  static const PushPrefsUpdateMarketOpenSessionsEnum tokyo = _$pushPrefsUpdateMarketOpenSessionsEnum_tokyo;
+  static const PushPrefsUpdateMarketOpenSessionsEnum tokyo =
+      _$pushPrefsUpdateMarketOpenSessionsEnum_tokyo;
   @BuiltValueEnumConst(wireName: r'london')
-  static const PushPrefsUpdateMarketOpenSessionsEnum london = _$pushPrefsUpdateMarketOpenSessionsEnum_london;
+  static const PushPrefsUpdateMarketOpenSessionsEnum london =
+      _$pushPrefsUpdateMarketOpenSessionsEnum_london;
   @BuiltValueEnumConst(wireName: r'newyork')
-  static const PushPrefsUpdateMarketOpenSessionsEnum newyork = _$pushPrefsUpdateMarketOpenSessionsEnum_newyork;
+  static const PushPrefsUpdateMarketOpenSessionsEnum newyork =
+      _$pushPrefsUpdateMarketOpenSessionsEnum_newyork;
 
-  static Serializer<PushPrefsUpdateMarketOpenSessionsEnum> get serializer => _$pushPrefsUpdateMarketOpenSessionsEnumSerializer;
+  static Serializer<PushPrefsUpdateMarketOpenSessionsEnum> get serializer =>
+      _$pushPrefsUpdateMarketOpenSessionsEnumSerializer;
 
-  const PushPrefsUpdateMarketOpenSessionsEnum._(String name): super(name);
+  const PushPrefsUpdateMarketOpenSessionsEnum._(String name) : super(name);
 
-  static BuiltSet<PushPrefsUpdateMarketOpenSessionsEnum> get values => _$pushPrefsUpdateMarketOpenSessionsEnumValues;
-  static PushPrefsUpdateMarketOpenSessionsEnum valueOf(String name) => _$pushPrefsUpdateMarketOpenSessionsEnumValueOf(name);
+  static BuiltSet<PushPrefsUpdateMarketOpenSessionsEnum> get values =>
+      _$pushPrefsUpdateMarketOpenSessionsEnumValues;
+  static PushPrefsUpdateMarketOpenSessionsEnum valueOf(String name) =>
+      _$pushPrefsUpdateMarketOpenSessionsEnumValueOf(name);
 }
-

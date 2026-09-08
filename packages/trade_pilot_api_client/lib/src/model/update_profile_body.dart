@@ -12,14 +12,15 @@ part 'update_profile_body.g.dart';
 /// UpdateProfileBody
 ///
 /// Properties:
-/// * [displayName] 
-/// * [selectedMode] 
-/// * [themePreference] 
-/// * [onboardingCompleted] 
+/// * [displayName]
+/// * [selectedMode]
+/// * [themePreference]
+/// * [onboardingCompleted]
 /// * [lang] - UI language preference — synced from the client so background dispatchers (e.g. weekly trader-mirror report) render notifications in the user's chosen language.
 /// * [avatarUrl] - Object-storage path returned by the storage upload flow. Pass `null` to remove the current avatar.
 @BuiltValue()
-abstract class UpdateProfileBody implements Built<UpdateProfileBody, UpdateProfileBodyBuilder> {
+abstract class UpdateProfileBody
+    implements Built<UpdateProfileBody, UpdateProfileBodyBuilder> {
   @BuiltValueField(wireName: r'displayName')
   String? get displayName;
 
@@ -45,16 +46,19 @@ abstract class UpdateProfileBody implements Built<UpdateProfileBody, UpdateProfi
 
   UpdateProfileBody._();
 
-  factory UpdateProfileBody([void updates(UpdateProfileBodyBuilder b)]) = _$UpdateProfileBody;
+  factory UpdateProfileBody([void updates(UpdateProfileBodyBuilder b)]) =
+      _$UpdateProfileBody;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(UpdateProfileBodyBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<UpdateProfileBody> get serializer => _$UpdateProfileBodySerializer();
+  static Serializer<UpdateProfileBody> get serializer =>
+      _$UpdateProfileBodySerializer();
 }
 
-class _$UpdateProfileBodySerializer implements PrimitiveSerializer<UpdateProfileBody> {
+class _$UpdateProfileBodySerializer
+    implements PrimitiveSerializer<UpdateProfileBody> {
   @override
   final Iterable<Type> types = const [UpdateProfileBody, _$UpdateProfileBody];
 
@@ -116,7 +120,9 @@ class _$UpdateProfileBodySerializer implements PrimitiveSerializer<UpdateProfile
     UpdateProfileBody object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -142,7 +148,8 @@ class _$UpdateProfileBodySerializer implements PrimitiveSerializer<UpdateProfile
         case r'selectedMode':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(UpdateProfileBodySelectedModeEnum),
+            specifiedType:
+                const FullType.nullable(UpdateProfileBodySelectedModeEnum),
           ) as UpdateProfileBodySelectedModeEnum?;
           if (valueDes == null) continue;
           result.selectedMode = valueDes;
@@ -150,7 +157,8 @@ class _$UpdateProfileBodySerializer implements PrimitiveSerializer<UpdateProfile
         case r'themePreference':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(UpdateProfileBodyThemePreferenceEnum),
+            specifiedType:
+                const FullType.nullable(UpdateProfileBodyThemePreferenceEnum),
           ) as UpdateProfileBodyThemePreferenceEnum?;
           if (valueDes == null) continue;
           result.themePreference = valueDes;
@@ -209,49 +217,59 @@ class _$UpdateProfileBodySerializer implements PrimitiveSerializer<UpdateProfile
 }
 
 class UpdateProfileBodySelectedModeEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'beginner')
-  static const UpdateProfileBodySelectedModeEnum beginner = _$updateProfileBodySelectedModeEnum_beginner;
+  static const UpdateProfileBodySelectedModeEnum beginner =
+      _$updateProfileBodySelectedModeEnum_beginner;
   @BuiltValueEnumConst(wireName: r'pro')
-  static const UpdateProfileBodySelectedModeEnum pro = _$updateProfileBodySelectedModeEnum_pro;
+  static const UpdateProfileBodySelectedModeEnum pro =
+      _$updateProfileBodySelectedModeEnum_pro;
 
-  static Serializer<UpdateProfileBodySelectedModeEnum> get serializer => _$updateProfileBodySelectedModeEnumSerializer;
+  static Serializer<UpdateProfileBodySelectedModeEnum> get serializer =>
+      _$updateProfileBodySelectedModeEnumSerializer;
 
-  const UpdateProfileBodySelectedModeEnum._(String name): super(name);
+  const UpdateProfileBodySelectedModeEnum._(String name) : super(name);
 
-  static BuiltSet<UpdateProfileBodySelectedModeEnum> get values => _$updateProfileBodySelectedModeEnumValues;
-  static UpdateProfileBodySelectedModeEnum valueOf(String name) => _$updateProfileBodySelectedModeEnumValueOf(name);
+  static BuiltSet<UpdateProfileBodySelectedModeEnum> get values =>
+      _$updateProfileBodySelectedModeEnumValues;
+  static UpdateProfileBodySelectedModeEnum valueOf(String name) =>
+      _$updateProfileBodySelectedModeEnumValueOf(name);
 }
 
 class UpdateProfileBodyThemePreferenceEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'light')
-  static const UpdateProfileBodyThemePreferenceEnum light = _$updateProfileBodyThemePreferenceEnum_light;
+  static const UpdateProfileBodyThemePreferenceEnum light =
+      _$updateProfileBodyThemePreferenceEnum_light;
   @BuiltValueEnumConst(wireName: r'dark')
-  static const UpdateProfileBodyThemePreferenceEnum dark = _$updateProfileBodyThemePreferenceEnum_dark;
+  static const UpdateProfileBodyThemePreferenceEnum dark =
+      _$updateProfileBodyThemePreferenceEnum_dark;
 
-  static Serializer<UpdateProfileBodyThemePreferenceEnum> get serializer => _$updateProfileBodyThemePreferenceEnumSerializer;
+  static Serializer<UpdateProfileBodyThemePreferenceEnum> get serializer =>
+      _$updateProfileBodyThemePreferenceEnumSerializer;
 
-  const UpdateProfileBodyThemePreferenceEnum._(String name): super(name);
+  const UpdateProfileBodyThemePreferenceEnum._(String name) : super(name);
 
-  static BuiltSet<UpdateProfileBodyThemePreferenceEnum> get values => _$updateProfileBodyThemePreferenceEnumValues;
-  static UpdateProfileBodyThemePreferenceEnum valueOf(String name) => _$updateProfileBodyThemePreferenceEnumValueOf(name);
+  static BuiltSet<UpdateProfileBodyThemePreferenceEnum> get values =>
+      _$updateProfileBodyThemePreferenceEnumValues;
+  static UpdateProfileBodyThemePreferenceEnum valueOf(String name) =>
+      _$updateProfileBodyThemePreferenceEnumValueOf(name);
 }
 
 class UpdateProfileBodyLangEnum extends EnumClass {
-
   /// UI language preference — synced from the client so background dispatchers (e.g. weekly trader-mirror report) render notifications in the user's chosen language.
   @BuiltValueEnumConst(wireName: r'en')
   static const UpdateProfileBodyLangEnum en = _$updateProfileBodyLangEnum_en;
+
   /// UI language preference — synced from the client so background dispatchers (e.g. weekly trader-mirror report) render notifications in the user's chosen language.
   @BuiltValueEnumConst(wireName: r'id')
   static const UpdateProfileBodyLangEnum id = _$updateProfileBodyLangEnum_id;
 
-  static Serializer<UpdateProfileBodyLangEnum> get serializer => _$updateProfileBodyLangEnumSerializer;
+  static Serializer<UpdateProfileBodyLangEnum> get serializer =>
+      _$updateProfileBodyLangEnumSerializer;
 
-  const UpdateProfileBodyLangEnum._(String name): super(name);
+  const UpdateProfileBodyLangEnum._(String name) : super(name);
 
-  static BuiltSet<UpdateProfileBodyLangEnum> get values => _$updateProfileBodyLangEnumValues;
-  static UpdateProfileBodyLangEnum valueOf(String name) => _$updateProfileBodyLangEnumValueOf(name);
+  static BuiltSet<UpdateProfileBodyLangEnum> get values =>
+      _$updateProfileBodyLangEnumValues;
+  static UpdateProfileBodyLangEnum valueOf(String name) =>
+      _$updateProfileBodyLangEnumValueOf(name);
 }
-

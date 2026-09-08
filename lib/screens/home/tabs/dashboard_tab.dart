@@ -1175,6 +1175,25 @@ class _QuotaCard extends StatelessWidget {
               primary: primary,
               muted: muted,
             ),
+
+            const SizedBox(height: 10),
+
+            Row(
+              children: [
+                Icon(Icons.toll_rounded, size: 16, color: primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    context.l10n.creditBalance,
+                    style: TextStyle(fontSize: 12, color: muted),
+                  ),
+                ),
+                Text(
+                  '${quota.credits.balance}',
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ],
+            ),
           ],
         ),
       ),

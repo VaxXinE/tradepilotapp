@@ -16,32 +16,32 @@ part 'analysis.g.dart';
 /// Analysis
 ///
 /// Properties:
-/// * [id] 
-/// * [userId] 
-/// * [instrument] 
-/// * [timeframe] 
-/// * [userInputContext] 
-/// * [mode] 
-/// * [validUntil] 
-/// * [marketCondition] 
-/// * [riskLevel] 
-/// * [confidenceMin] 
-/// * [confidenceMax] 
-/// * [mainScenario] 
-/// * [alternativeScenario] 
-/// * [whyReason] 
-/// * [failureConditions] 
-/// * [baseCase] 
-/// * [bullishScenario] 
-/// * [bearishScenario] 
-/// * [keyDriversTechnical] 
-/// * [keyDriversFundamental] 
-/// * [marketContext] 
-/// * [invalidationConditions] 
-/// * [uncertaintyNotes] 
+/// * [id]
+/// * [userId]
+/// * [instrument]
+/// * [timeframe]
+/// * [userInputContext]
+/// * [mode]
+/// * [validUntil]
+/// * [marketCondition]
+/// * [riskLevel]
+/// * [confidenceMin]
+/// * [confidenceMax]
+/// * [mainScenario]
+/// * [alternativeScenario]
+/// * [whyReason]
+/// * [failureConditions]
+/// * [baseCase]
+/// * [bullishScenario]
+/// * [bearishScenario]
+/// * [keyDriversTechnical]
+/// * [keyDriversFundamental]
+/// * [marketContext]
+/// * [invalidationConditions]
+/// * [uncertaintyNotes]
 /// * [tradingBias] - Directional bias. One of: bearish_strong, bearish, neutral, bullish, bullish_strong. Legacy values (strong_sell, sell, buy, strong_buy) may exist on older rows and are normalized client-side.
-/// * [opportunity] 
-/// * [risk] 
+/// * [opportunity]
+/// * [risk]
 /// * [techBuyCount] - Snapshot of the technical-indicator buy tally captured at analysis time. Used to render the same Market Context Summary on the saved analysis page.
 /// * [techSellCount] - Snapshot of the technical-indicator sell tally captured at analysis time.
 /// * [techNeutralCount] - Snapshot of the technical-indicator neutral tally captured at analysis time.
@@ -54,12 +54,12 @@ part 'analysis.g.dart';
 /// * [userNote] - Private per-analysis trading journal note written by the owning user. Only populated by the single-analysis GET; the list endpoint exposes `hasNote` instead to keep payloads small. Never fed into the AI prompt.
 /// * [userNoteUpdatedAt] - When `userNote` was last saved server-side. Null when no note has been written.
 /// * [hasNote] - True when the user has written a non-empty `userNote` for this analysis. Returned by the list endpoint so the history page can show a 'journaled' icon without loading the full note body.
-/// * [feedback] 
+/// * [feedback]
 /// * [usefulCount] - Number of \"useful\" feedback rows for this analysis. Only populated by admin endpoints.
 /// * [notUsefulCount] - Number of \"not_useful\" feedback rows for this analysis. Only populated by admin endpoints.
-/// * [createdAt] 
-@BuiltValue()
-abstract class Analysis implements Built<Analysis, AnalysisBuilder> {
+/// * [createdAt]
+@BuiltValue(instantiable: false)
+abstract class Analysis {
   @BuiltValueField(wireName: r'id')
   int get id;
 
@@ -203,20 +203,13 @@ abstract class Analysis implements Built<Analysis, AnalysisBuilder> {
   @BuiltValueField(wireName: r'createdAt')
   DateTime get createdAt;
 
-  Analysis._();
-
-  factory Analysis([void updates(AnalysisBuilder b)]) = _$Analysis;
-
-  @BuiltValueHook(initializeBuilder: true)
-  static void _defaults(AnalysisBuilder b) => b;
-
   @BuiltValueSerializer(custom: true)
   static Serializer<Analysis> get serializer => _$AnalysisSerializer();
 }
 
 class _$AnalysisSerializer implements PrimitiveSerializer<Analysis> {
   @override
-  final Iterable<Type> types = const [Analysis, _$Analysis];
+  final Iterable<Type> types = const [Analysis];
 
   @override
   final String wireName = r'Analysis';
@@ -514,7 +507,51 @@ class _$AnalysisSerializer implements PrimitiveSerializer<Analysis> {
     Analysis object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
+  }
+
+  @override
+  Analysis deserialize(
+    Serializers serializers,
+    Object serialized, {
+    FullType specifiedType = FullType.unspecified,
+  }) {
+    return serializers.deserialize(serialized,
+        specifiedType: FullType($Analysis)) as $Analysis;
+  }
+}
+
+/// a concrete implementation of [Analysis], since [Analysis] is not instantiable
+@BuiltValue(instantiable: true)
+abstract class $Analysis
+    implements Analysis, Built<$Analysis, $AnalysisBuilder> {
+  $Analysis._();
+
+  factory $Analysis([void Function($AnalysisBuilder)? updates]) = _$$Analysis;
+
+  @BuiltValueHook(initializeBuilder: true)
+  static void _defaults($AnalysisBuilder b) => b;
+
+  @BuiltValueSerializer(custom: true)
+  static Serializer<$Analysis> get serializer => _$$AnalysisSerializer();
+}
+
+class _$$AnalysisSerializer implements PrimitiveSerializer<$Analysis> {
+  @override
+  final Iterable<Type> types = const [$Analysis, _$$Analysis];
+
+  @override
+  final String wireName = r'$Analysis';
+
+  @override
+  Object serialize(
+    Serializers serializers,
+    $Analysis object, {
+    FullType specifiedType = FullType.unspecified,
+  }) {
+    return serializers.serialize(object, specifiedType: FullType(Analysis))!;
   }
 
   void _deserializeProperties(
@@ -867,12 +904,12 @@ class _$AnalysisSerializer implements PrimitiveSerializer<Analysis> {
   }
 
   @override
-  Analysis deserialize(
+  $Analysis deserialize(
     Serializers serializers,
     Object serialized, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    final result = AnalysisBuilder();
+    final result = $AnalysisBuilder();
     final serializedList = (serialized as Iterable<Object?>).toList();
     final unhandled = <Object?>[];
     _deserializeProperties(
@@ -888,46 +925,59 @@ class _$AnalysisSerializer implements PrimitiveSerializer<Analysis> {
 }
 
 class AnalysisModeEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'beginner')
   static const AnalysisModeEnum beginner = _$analysisModeEnum_beginner;
   @BuiltValueEnumConst(wireName: r'pro')
   static const AnalysisModeEnum pro = _$analysisModeEnum_pro;
 
-  static Serializer<AnalysisModeEnum> get serializer => _$analysisModeEnumSerializer;
+  static Serializer<AnalysisModeEnum> get serializer =>
+      _$analysisModeEnumSerializer;
 
-  const AnalysisModeEnum._(String name): super(name);
+  const AnalysisModeEnum._(String name) : super(name);
 
   static BuiltSet<AnalysisModeEnum> get values => _$analysisModeEnumValues;
-  static AnalysisModeEnum valueOf(String name) => _$analysisModeEnumValueOf(name);
+  static AnalysisModeEnum valueOf(String name) =>
+      _$analysisModeEnumValueOf(name);
 }
 
 class AnalysisOutcomeStatusEnum extends EnumClass {
-
   /// After-the-fact resolution of the AI's trade plan. `pending` until the background resolver finishes scoring it; `tp1_hit`/`tp2_hit` if price reached the corresponding take-profit; `sl_hit` if the stop-loss was touched first; `expired` if the validity window passed with no trigger touched; `invalidated` when the plan levels were unparseable or internally inconsistent.
   @BuiltValueEnumConst(wireName: r'pending')
-  static const AnalysisOutcomeStatusEnum pending = _$analysisOutcomeStatusEnum_pending;
+  static const AnalysisOutcomeStatusEnum pending =
+      _$analysisOutcomeStatusEnum_pending;
+
   /// After-the-fact resolution of the AI's trade plan. `pending` until the background resolver finishes scoring it; `tp1_hit`/`tp2_hit` if price reached the corresponding take-profit; `sl_hit` if the stop-loss was touched first; `expired` if the validity window passed with no trigger touched; `invalidated` when the plan levels were unparseable or internally inconsistent.
   @BuiltValueEnumConst(wireName: r'tp1_hit')
-  static const AnalysisOutcomeStatusEnum tp1Hit = _$analysisOutcomeStatusEnum_tp1Hit;
+  static const AnalysisOutcomeStatusEnum tp1Hit =
+      _$analysisOutcomeStatusEnum_tp1Hit;
+
   /// After-the-fact resolution of the AI's trade plan. `pending` until the background resolver finishes scoring it; `tp1_hit`/`tp2_hit` if price reached the corresponding take-profit; `sl_hit` if the stop-loss was touched first; `expired` if the validity window passed with no trigger touched; `invalidated` when the plan levels were unparseable or internally inconsistent.
   @BuiltValueEnumConst(wireName: r'tp2_hit')
-  static const AnalysisOutcomeStatusEnum tp2Hit = _$analysisOutcomeStatusEnum_tp2Hit;
+  static const AnalysisOutcomeStatusEnum tp2Hit =
+      _$analysisOutcomeStatusEnum_tp2Hit;
+
   /// After-the-fact resolution of the AI's trade plan. `pending` until the background resolver finishes scoring it; `tp1_hit`/`tp2_hit` if price reached the corresponding take-profit; `sl_hit` if the stop-loss was touched first; `expired` if the validity window passed with no trigger touched; `invalidated` when the plan levels were unparseable or internally inconsistent.
   @BuiltValueEnumConst(wireName: r'sl_hit')
-  static const AnalysisOutcomeStatusEnum slHit = _$analysisOutcomeStatusEnum_slHit;
+  static const AnalysisOutcomeStatusEnum slHit =
+      _$analysisOutcomeStatusEnum_slHit;
+
   /// After-the-fact resolution of the AI's trade plan. `pending` until the background resolver finishes scoring it; `tp1_hit`/`tp2_hit` if price reached the corresponding take-profit; `sl_hit` if the stop-loss was touched first; `expired` if the validity window passed with no trigger touched; `invalidated` when the plan levels were unparseable or internally inconsistent.
   @BuiltValueEnumConst(wireName: r'expired')
-  static const AnalysisOutcomeStatusEnum expired = _$analysisOutcomeStatusEnum_expired;
+  static const AnalysisOutcomeStatusEnum expired =
+      _$analysisOutcomeStatusEnum_expired;
+
   /// After-the-fact resolution of the AI's trade plan. `pending` until the background resolver finishes scoring it; `tp1_hit`/`tp2_hit` if price reached the corresponding take-profit; `sl_hit` if the stop-loss was touched first; `expired` if the validity window passed with no trigger touched; `invalidated` when the plan levels were unparseable or internally inconsistent.
   @BuiltValueEnumConst(wireName: r'invalidated')
-  static const AnalysisOutcomeStatusEnum invalidated = _$analysisOutcomeStatusEnum_invalidated;
+  static const AnalysisOutcomeStatusEnum invalidated =
+      _$analysisOutcomeStatusEnum_invalidated;
 
-  static Serializer<AnalysisOutcomeStatusEnum> get serializer => _$analysisOutcomeStatusEnumSerializer;
+  static Serializer<AnalysisOutcomeStatusEnum> get serializer =>
+      _$analysisOutcomeStatusEnumSerializer;
 
-  const AnalysisOutcomeStatusEnum._(String name): super(name);
+  const AnalysisOutcomeStatusEnum._(String name) : super(name);
 
-  static BuiltSet<AnalysisOutcomeStatusEnum> get values => _$analysisOutcomeStatusEnumValues;
-  static AnalysisOutcomeStatusEnum valueOf(String name) => _$analysisOutcomeStatusEnumValueOf(name);
+  static BuiltSet<AnalysisOutcomeStatusEnum> get values =>
+      _$analysisOutcomeStatusEnumValues;
+  static AnalysisOutcomeStatusEnum valueOf(String name) =>
+      _$analysisOutcomeStatusEnumValueOf(name);
 }
-

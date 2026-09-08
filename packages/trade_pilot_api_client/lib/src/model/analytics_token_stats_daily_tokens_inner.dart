@@ -11,11 +11,14 @@ part 'analytics_token_stats_daily_tokens_inner.g.dart';
 /// AnalyticsTokenStatsDailyTokensInner
 ///
 /// Properties:
-/// * [date] 
-/// * [totalTokens] 
-/// * [estimatedCostUsd] 
+/// * [date]
+/// * [totalTokens]
+/// * [estimatedCostUsd]
 @BuiltValue()
-abstract class AnalyticsTokenStatsDailyTokensInner implements Built<AnalyticsTokenStatsDailyTokensInner, AnalyticsTokenStatsDailyTokensInnerBuilder> {
+abstract class AnalyticsTokenStatsDailyTokensInner
+    implements
+        Built<AnalyticsTokenStatsDailyTokensInner,
+            AnalyticsTokenStatsDailyTokensInnerBuilder> {
   @BuiltValueField(wireName: r'date')
   String get date;
 
@@ -27,18 +30,25 @@ abstract class AnalyticsTokenStatsDailyTokensInner implements Built<AnalyticsTok
 
   AnalyticsTokenStatsDailyTokensInner._();
 
-  factory AnalyticsTokenStatsDailyTokensInner([void updates(AnalyticsTokenStatsDailyTokensInnerBuilder b)]) = _$AnalyticsTokenStatsDailyTokensInner;
+  factory AnalyticsTokenStatsDailyTokensInner(
+          [void updates(AnalyticsTokenStatsDailyTokensInnerBuilder b)]) =
+      _$AnalyticsTokenStatsDailyTokensInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AnalyticsTokenStatsDailyTokensInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AnalyticsTokenStatsDailyTokensInner> get serializer => _$AnalyticsTokenStatsDailyTokensInnerSerializer();
+  static Serializer<AnalyticsTokenStatsDailyTokensInner> get serializer =>
+      _$AnalyticsTokenStatsDailyTokensInnerSerializer();
 }
 
-class _$AnalyticsTokenStatsDailyTokensInnerSerializer implements PrimitiveSerializer<AnalyticsTokenStatsDailyTokensInner> {
+class _$AnalyticsTokenStatsDailyTokensInnerSerializer
+    implements PrimitiveSerializer<AnalyticsTokenStatsDailyTokensInner> {
   @override
-  final Iterable<Type> types = const [AnalyticsTokenStatsDailyTokensInner, _$AnalyticsTokenStatsDailyTokensInner];
+  final Iterable<Type> types = const [
+    AnalyticsTokenStatsDailyTokensInner,
+    _$AnalyticsTokenStatsDailyTokensInner
+  ];
 
   @override
   final String wireName = r'AnalyticsTokenStatsDailyTokensInner';
@@ -71,7 +81,9 @@ class _$AnalyticsTokenStatsDailyTokensInnerSerializer implements PrimitiveSerial
     AnalyticsTokenStatsDailyTokensInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -135,4 +147,3 @@ class _$AnalyticsTokenStatsDailyTokensInnerSerializer implements PrimitiveSerial
     return result.build();
   }
 }
-

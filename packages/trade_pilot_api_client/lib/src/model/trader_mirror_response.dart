@@ -14,11 +14,12 @@ part 'trader_mirror_response.g.dart';
 /// TraderMirrorResponse
 ///
 /// Properties:
-/// * [insights] 
-/// * [highlights] 
-/// * [timezone] 
+/// * [insights]
+/// * [highlights]
+/// * [timezone]
 @BuiltValue()
-abstract class TraderMirrorResponse implements Built<TraderMirrorResponse, TraderMirrorResponseBuilder> {
+abstract class TraderMirrorResponse
+    implements Built<TraderMirrorResponse, TraderMirrorResponseBuilder> {
   @BuiltValueField(wireName: r'insights')
   TraderMirrorInsights get insights;
 
@@ -30,18 +31,24 @@ abstract class TraderMirrorResponse implements Built<TraderMirrorResponse, Trade
 
   TraderMirrorResponse._();
 
-  factory TraderMirrorResponse([void updates(TraderMirrorResponseBuilder b)]) = _$TraderMirrorResponse;
+  factory TraderMirrorResponse([void updates(TraderMirrorResponseBuilder b)]) =
+      _$TraderMirrorResponse;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(TraderMirrorResponseBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<TraderMirrorResponse> get serializer => _$TraderMirrorResponseSerializer();
+  static Serializer<TraderMirrorResponse> get serializer =>
+      _$TraderMirrorResponseSerializer();
 }
 
-class _$TraderMirrorResponseSerializer implements PrimitiveSerializer<TraderMirrorResponse> {
+class _$TraderMirrorResponseSerializer
+    implements PrimitiveSerializer<TraderMirrorResponse> {
   @override
-  final Iterable<Type> types = const [TraderMirrorResponse, _$TraderMirrorResponse];
+  final Iterable<Type> types = const [
+    TraderMirrorResponse,
+    _$TraderMirrorResponse
+  ];
 
   @override
   final String wireName = r'TraderMirrorResponse';
@@ -59,7 +66,8 @@ class _$TraderMirrorResponseSerializer implements PrimitiveSerializer<TraderMirr
     yield r'highlights';
     yield serializers.serialize(
       object.highlights,
-      specifiedType: const FullType(BuiltList, [FullType(TraderMirrorHighlight)]),
+      specifiedType:
+          const FullType(BuiltList, [FullType(TraderMirrorHighlight)]),
     );
     yield r'timezone';
     yield serializers.serialize(
@@ -74,7 +82,9 @@ class _$TraderMirrorResponseSerializer implements PrimitiveSerializer<TraderMirr
     TraderMirrorResponse object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -99,7 +109,8 @@ class _$TraderMirrorResponseSerializer implements PrimitiveSerializer<TraderMirr
         case r'highlights':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltList, [FullType(TraderMirrorHighlight)]),
+            specifiedType:
+                const FullType(BuiltList, [FullType(TraderMirrorHighlight)]),
           ) as BuiltList<TraderMirrorHighlight>;
           result.highlights.replace(valueDes);
           break;
@@ -138,4 +149,3 @@ class _$TraderMirrorResponseSerializer implements PrimitiveSerializer<TraderMirr
     return result.build();
   }
 }
-

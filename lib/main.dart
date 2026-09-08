@@ -19,6 +19,7 @@ import 'l10n/l10n.dart';
 import 'models/notification_action.dart';
 import 'providers/analysis_provider.dart';
 import 'providers/auth_provider.dart';
+import 'providers/credit_provider.dart';
 import 'providers/market_provider.dart';
 import 'providers/notifications_provider.dart';
 import 'providers/price_alert_provider.dart';
@@ -26,6 +27,7 @@ import 'providers/progression_provider.dart';
 import 'providers/watchlist_provider.dart';
 import 'repositories/market_repository.dart';
 import 'repositories/price_alert_repository.dart';
+import 'repositories/topup_repository.dart';
 import 'repositories/watchlist_repository.dart';
 import 'screens/analysis/analysis_detail_screen.dart';
 import 'screens/daily_summary/daily_summary_screen.dart';
@@ -130,6 +132,20 @@ class TradePilotApp extends StatelessWidget {
           update: (context, auth, previous) {
             return previous ??
                 PriceAlertProvider(auth, PriceAlertRepository(auth.client));
+          },
+        ),
+
+        // =====================================================================
+        // CREDIT & TOP-UP
+        // =====================================================================
+        ChangeNotifierProxyProvider<AuthProvider, CreditProvider>(
+          create: (context) {
+            final auth = context.read<AuthProvider>();
+            return CreditProvider(auth, TopupRepository(auth.client));
+          },
+          update: (context, auth, previous) {
+            return previous ??
+                CreditProvider(auth, TopupRepository(auth.client));
           },
         ),
 

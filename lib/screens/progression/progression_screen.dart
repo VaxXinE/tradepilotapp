@@ -24,7 +24,9 @@ class _ProgressionScreenState extends State<ProgressionScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      unawaited(context.read<AuthProvider>().telemetry.pageView('/progression'));
+      unawaited(
+        context.read<AuthProvider>().telemetry.pageView('/progression'),
+      );
       unawaited(context.read<ProgressionProvider>().refresh());
     });
   }

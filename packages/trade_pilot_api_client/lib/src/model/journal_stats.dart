@@ -13,16 +13,17 @@ part 'journal_stats.g.dart';
 /// Summary stats for the user's trade journal, computed over the optional from/to date range.
 ///
 /// Properties:
-/// * [totals] 
+/// * [totals]
 /// * [winRate] - wins / (wins + losses); null when no resolved trades.
-/// * [avgPnlPercent] 
-/// * [avgPnlAmount] 
-/// * [bestInstrument] 
-/// * [worstInstrument] 
-/// * [bestSession] 
-/// * [worstSession] 
+/// * [avgPnlPercent]
+/// * [avgPnlAmount]
+/// * [bestInstrument]
+/// * [worstInstrument]
+/// * [bestSession]
+/// * [worstSession]
 @BuiltValue()
-abstract class JournalStats implements Built<JournalStats, JournalStatsBuilder> {
+abstract class JournalStats
+    implements Built<JournalStats, JournalStatsBuilder> {
   @BuiltValueField(wireName: r'totals')
   JournalStatsTotals get totals;
 
@@ -133,7 +134,9 @@ class _$JournalStatsSerializer implements PrimitiveSerializer<JournalStats> {
     JournalStats object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -239,4 +242,3 @@ class _$JournalStatsSerializer implements PrimitiveSerializer<JournalStats> {
     return result.build();
   }
 }
-

@@ -12,14 +12,15 @@ part 'create_user_body.g.dart';
 /// CreateUserBody
 ///
 /// Properties:
-/// * [email] 
-/// * [password] 
-/// * [displayName] 
-/// * [role] 
-/// * [securityQuestion] 
-/// * [securityAnswer] 
+/// * [email]
+/// * [password]
+/// * [displayName]
+/// * [role]
+/// * [securityQuestion]
+/// * [securityAnswer]
 @BuiltValue()
-abstract class CreateUserBody implements Built<CreateUserBody, CreateUserBodyBuilder> {
+abstract class CreateUserBody
+    implements Built<CreateUserBody, CreateUserBodyBuilder> {
   @BuiltValueField(wireName: r'email')
   String get email;
 
@@ -41,19 +42,22 @@ abstract class CreateUserBody implements Built<CreateUserBody, CreateUserBodyBui
 
   CreateUserBody._();
 
-  factory CreateUserBody([void updates(CreateUserBodyBuilder b)]) = _$CreateUserBody;
+  factory CreateUserBody([void updates(CreateUserBodyBuilder b)]) =
+      _$CreateUserBody;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(CreateUserBodyBuilder b) => b
-      ..role = CreateUserBodyRoleEnum.valueOf('user')
-      ..securityQuestion = 'Nama hewan peliharaan pertama kamu?'
-      ..securityAnswer = 'default';
+    ..role = CreateUserBodyRoleEnum.valueOf('user')
+    ..securityQuestion = 'Nama hewan peliharaan pertama kamu?'
+    ..securityAnswer = 'default';
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<CreateUserBody> get serializer => _$CreateUserBodySerializer();
+  static Serializer<CreateUserBody> get serializer =>
+      _$CreateUserBodySerializer();
 }
 
-class _$CreateUserBodySerializer implements PrimitiveSerializer<CreateUserBody> {
+class _$CreateUserBodySerializer
+    implements PrimitiveSerializer<CreateUserBody> {
   @override
   final Iterable<Type> types = const [CreateUserBody, _$CreateUserBody];
 
@@ -109,7 +113,9 @@ class _$CreateUserBodySerializer implements PrimitiveSerializer<CreateUserBody> 
     CreateUserBody object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -199,19 +205,21 @@ class _$CreateUserBodySerializer implements PrimitiveSerializer<CreateUserBody> 
 }
 
 class CreateUserBodyRoleEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'user')
   static const CreateUserBodyRoleEnum user = _$createUserBodyRoleEnum_user;
   @BuiltValueEnumConst(wireName: r'admin')
   static const CreateUserBodyRoleEnum admin = _$createUserBodyRoleEnum_admin;
   @BuiltValueEnumConst(wireName: r'super_admin')
-  static const CreateUserBodyRoleEnum superAdmin = _$createUserBodyRoleEnum_superAdmin;
+  static const CreateUserBodyRoleEnum superAdmin =
+      _$createUserBodyRoleEnum_superAdmin;
 
-  static Serializer<CreateUserBodyRoleEnum> get serializer => _$createUserBodyRoleEnumSerializer;
+  static Serializer<CreateUserBodyRoleEnum> get serializer =>
+      _$createUserBodyRoleEnumSerializer;
 
-  const CreateUserBodyRoleEnum._(String name): super(name);
+  const CreateUserBodyRoleEnum._(String name) : super(name);
 
-  static BuiltSet<CreateUserBodyRoleEnum> get values => _$createUserBodyRoleEnumValues;
-  static CreateUserBodyRoleEnum valueOf(String name) => _$createUserBodyRoleEnumValueOf(name);
+  static BuiltSet<CreateUserBodyRoleEnum> get values =>
+      _$createUserBodyRoleEnumValues;
+  static CreateUserBodyRoleEnum valueOf(String name) =>
+      _$createUserBodyRoleEnumValueOf(name);
 }
-

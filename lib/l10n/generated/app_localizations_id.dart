@@ -1528,4 +1528,169 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get sourceDocument => 'Dokumen sumber';
+
+  @override
+  String get topUpCredit => 'Top Up Credit';
+
+  @override
+  String get analysisQuotaHourTitle => 'Batas per jam tercapai';
+
+  @override
+  String get analysisQuotaHourMessage =>
+      'Kuota analisis per jam kamu sudah habis. Coba lagi setelah waktu tunggu berakhir.';
+
+  @override
+  String get analysisQuotaDayTitle => 'Batas harian tercapai';
+
+  @override
+  String get analysisQuotaDayMessage =>
+      'Kuota gratis harian kamu sudah habis. Gunakan credit atau coba lagi besok.';
+
+  @override
+  String get analysisQuotaConcurrentTitle => 'Analisis masih diproses';
+
+  @override
+  String get analysisQuotaConcurrentMessage =>
+      'Tunggu analisis sebelumnya selesai sebelum membuat analisis baru.';
+
+  @override
+  String get analysisQuotaUnknownTitle => 'Analisis belum dapat dibuat';
+
+  @override
+  String get analysisQuotaUnknownMessage =>
+      'Batas analisis sedang berlaku. Silakan coba lagi nanti.';
+
+  @override
+  String analysisQuotaUsage(int used, int limit) {
+    return 'Terpakai $used dari $limit';
+  }
+
+  @override
+  String analysisRetryAfter(String duration) {
+    return 'Coba lagi dalam $duration';
+  }
+
+  @override
+  String analysisSeconds(int count) {
+    return '$count detik';
+  }
+
+  @override
+  String analysisMinutes(int count) {
+    return '$count menit';
+  }
+
+  @override
+  String analysisQuotaBalances(int hourly, int daily, int credits) {
+    return 'Per jam: $hourly • Harian: $daily • Credit: $credits';
+  }
+
+  @override
+  String analysisCreditConsumed(int balance) {
+    return '1 credit dipakai. Sisa saldo: $balance credit.';
+  }
+
+  @override
+  String get analysisCreditConsumedUnknownBalance =>
+      '1 credit dipakai. Saldo sedang diperbarui.';
+
+  @override
+  String get creditBalance => 'Saldo credit';
+
+  @override
+  String get creditBalanceFailed => 'Saldo gagal dimuat.';
+
+  @override
+  String get topUpScanQris =>
+      'Pindai QRIS ini lewat aplikasi bank atau e-wallet kamu, lalu kirim permintaan di bawah.';
+
+  @override
+  String get topUpQrisUnavailable => 'Kode QRIS gagal dimuat.';
+
+  @override
+  String topUpRatePerCredit(String amount) {
+    return '$amount per credit';
+  }
+
+  @override
+  String get topUpAmountLabel => 'Nominal (Rupiah)';
+
+  @override
+  String get topUpAmountHint => 'mis. 50000';
+
+  @override
+  String topUpCreditsPreview(int credits) {
+    return 'Kamu akan menerima $credits credit';
+  }
+
+  @override
+  String get topUpAmountRequired => 'Masukkan nominal yang kamu bayar.';
+
+  @override
+  String topUpAmountTooSmall(String amount) {
+    return 'Top-up minimal $amount.';
+  }
+
+  @override
+  String get topUpReferenceLabel => 'Referensi pembayaran (opsional)';
+
+  @override
+  String get topUpReferenceHint =>
+      'mis. nama pengirim atau nomor referensi transfer';
+
+  @override
+  String get topUpProofLabel => 'Bukti pembayaran (opsional)';
+
+  @override
+  String get topUpAddProof => 'Lampirkan bukti';
+
+  @override
+  String get topUpChangeProof => 'Ganti bukti';
+
+  @override
+  String get topUpProofAttached => 'Bukti terlampir';
+
+  @override
+  String get topUpSubmit => 'Kirim permintaan top-up';
+
+  @override
+  String get topUpSubmitted =>
+      'Permintaan top-up terkirim. Akan segera ditinjau.';
+
+  @override
+  String get topUpProofFailed =>
+      'Bukti pembayaran gagal diunggah. Permintaan tidak dikirim.';
+
+  @override
+  String get topUpConfigFailed => 'Konfigurasi top-up gagal dimuat.';
+
+  @override
+  String get topUpHistory => 'Riwayat top-up';
+
+  @override
+  String get topUpHistoryEmpty => 'Kamu belum pernah mengajukan top-up.';
+
+  @override
+  String get topUpLoadMore => 'Muat lebih banyak';
+
+  @override
+  String get topUpApproved => 'Disetujui';
+
+  @override
+  String get topUpRejected => 'Ditolak';
+
+  @override
+  String topUpCreditsGranted(int credits) {
+    return '$credits credit ditambahkan';
+  }
+
+  @override
+  String topUpReviewNote(String note) {
+    return 'Catatan admin: $note';
+  }
+
+  @override
+  String topUpRequestedCredits(int credits) {
+    return '$credits credit';
+  }
 }

@@ -12,6 +12,23 @@ import '../models/history_filters.dart';
 import '../models/history_sort.dart';
 import 'auth_provider.dart';
 
+/// Detail rate-limit dari `POST /analyses` untuk ditampilkan UI tanpa
+/// bergantung pada teks error backend.
+@immutable
+class AnalysisQuotaLimit {
+  const AnalysisQuotaLimit({
+    required this.scope,
+    this.limit,
+    this.used,
+    this.retryAfter,
+  });
+
+  final String scope;
+  final int? limit;
+  final int? used;
+  final Duration? retryAfter;
+}
+
 /// Single source of truth untuk seluruh state analisis.
 ///
 /// Tanggung jawab:
@@ -68,6 +85,12 @@ class AnalysisProvider extends ChangeNotifier {
   AnalysesSummary? summary;
 
   AnalysisQuota? quota;
+
+  AnalysisQuotaLimit? quotaLimit;
+
+  bool lastAnalysisConsumedCredit = false;
+
+  int? lastAnalysisCreditBalance;
 
   // ===========================================================================
   // PUBLIC STATE — FILTERED HISTORY
@@ -310,6 +333,12 @@ class AnalysisProvider extends ChangeNotifier {
 
     quota = null;
 
+    quotaLimit = null;
+
+    lastAnalysisConsumedCredit = false;
+
+    lastAnalysisCreditBalance = null;
+
     errorMessage = null;
 
     historyError = null;
@@ -467,6 +496,12 @@ class AnalysisProvider extends ChangeNotifier {
 
     errorMessage = null;
 
+    quotaLimit = null;
+
+    lastAnalysisConsumedCredit = false;
+
+    lastAnalysisCreditBalance = null;
+
     notifyListeners();
 
     try {
@@ -485,6 +520,10 @@ class AnalysisProvider extends ChangeNotifier {
       }
 
       final created = response.data;
+
+      lastAnalysisConsumedCredit = created?.creditConsumed ?? false;
+
+      lastAnalysisCreditBalance = created?.creditBalance;
 
       isSubmitting = false;
 
@@ -532,6 +571,10 @@ class AnalysisProvider extends ChangeNotifier {
 
         _scheduleTimeoutRevalidation(epoch: epoch, userId: _activeUserId);
       } else {
+        if (error is DioException && error.response?.statusCode == 429) {
+          quotaLimit = _parseQuotaLimit(error);
+        }
+
         errorMessage = _friendlyError(error);
       }
 
@@ -1209,7 +1252,7 @@ class AnalysisProvider extends ChangeNotifier {
       }
 
       final normalized = saved.note.trim();
-      final updated = analysis.rebuild(
+      final updated = _toBuildableAnalysis(analysis).rebuild(
         (builder) => builder
           ..userNote = normalized.isEmpty ? null : saved.note
           ..userNoteUpdatedAt = normalized.isEmpty ? null : saved.updatedAt
@@ -1492,6 +1535,51 @@ class AnalysisProvider extends ChangeNotifier {
     }
 
     return 'Analisis gagal. Silakan coba lagi.';
+  }
+
+  AnalysisQuotaLimit _parseQuotaLimit(DioException error) {
+    final body = error.response?.data;
+    final quotaData = body is Map ? body['quota'] : null;
+    final quota = quotaData is Map ? quotaData : const <Object?, Object?>{};
+    final scopeValue = quota['scope'];
+    final scope =
+        scopeValue == 'hour' ||
+            scopeValue == 'day' ||
+            scopeValue == 'concurrent'
+        ? scopeValue as String
+        : 'unknown';
+    final retryValue = error.response?.headers.value('retry-after');
+    final retrySeconds = int.tryParse(retryValue ?? '');
+
+    return AnalysisQuotaLimit(
+      scope: scope,
+      limit: _asInt(quota['limit']),
+      used: _asInt(quota['used']),
+      retryAfter: retrySeconds == null || retrySeconds < 0
+          ? null
+          : Duration(seconds: retrySeconds),
+    );
+  }
+
+  int? _asInt(Object? value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse('$value');
+  }
+
+  /// `Analysis` adalah interface non-instantiable pada generated client, karena
+  /// `CreateAnalysisResult` mewarisinya lewat `allOf`. Hanya `$Analysis` yang
+  /// punya `rebuild`, jadi implementasi lain (mis. hasil `POST /analyses`)
+  /// dinormalisasi dulu lewat serializer bersama.
+  $Analysis _toBuildableAnalysis(Analysis analysis) {
+    if (analysis is $Analysis) {
+      return analysis;
+    }
+
+    return standardSerializers.deserializeWith(
+      $Analysis.serializer,
+      standardSerializers.serializeWith(Analysis.serializer, analysis),
+    )!;
   }
 
   String _friendlyNoteError(Object error) {

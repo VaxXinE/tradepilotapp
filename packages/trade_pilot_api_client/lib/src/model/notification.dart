@@ -12,19 +12,20 @@ part 'notification.g.dart';
 /// Notification
 ///
 /// Properties:
-/// * [id] 
-/// * [userId] 
-/// * [targetRole] 
-/// * [title] 
-/// * [message] 
-/// * [type] 
-/// * [readAt] 
+/// * [id]
+/// * [userId]
+/// * [targetRole]
+/// * [title]
+/// * [message]
+/// * [type]
+/// * [readAt]
 /// * [category] - Category slug used by the anti-annoyance/frequency-cap engine (e.g. \"market_news\", \"security_alert\"). Informational for clients — not itself a tap-target.
 /// * [actionType] - Allowlisted tap-target. Clients should treat any value they don't recognise the same as null (no special action, just mark read) so new action types can be added without breaking older clients.
 /// * [actionId] - The id `actionType` refers to (e.g. an analysis id for \"open_analysis\").
-/// * [createdAt] 
+/// * [createdAt]
 @BuiltValue()
-abstract class Notification implements Built<Notification, NotificationBuilder> {
+abstract class Notification
+    implements Built<Notification, NotificationBuilder> {
   @BuiltValueField(wireName: r'id')
   int get id;
 
@@ -161,7 +162,9 @@ class _$NotificationSerializer implements PrimitiveSerializer<Notification> {
     Notification object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -289,7 +292,6 @@ class _$NotificationSerializer implements PrimitiveSerializer<Notification> {
 }
 
 class NotificationTypeEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'info')
   static const NotificationTypeEnum info = _$notificationTypeEnum_info;
   @BuiltValueEnumConst(wireName: r'warning')
@@ -297,28 +299,35 @@ class NotificationTypeEnum extends EnumClass {
   @BuiltValueEnumConst(wireName: r'error')
   static const NotificationTypeEnum error = _$notificationTypeEnum_error;
 
-  static Serializer<NotificationTypeEnum> get serializer => _$notificationTypeEnumSerializer;
+  static Serializer<NotificationTypeEnum> get serializer =>
+      _$notificationTypeEnumSerializer;
 
-  const NotificationTypeEnum._(String name): super(name);
+  const NotificationTypeEnum._(String name) : super(name);
 
-  static BuiltSet<NotificationTypeEnum> get values => _$notificationTypeEnumValues;
-  static NotificationTypeEnum valueOf(String name) => _$notificationTypeEnumValueOf(name);
+  static BuiltSet<NotificationTypeEnum> get values =>
+      _$notificationTypeEnumValues;
+  static NotificationTypeEnum valueOf(String name) =>
+      _$notificationTypeEnumValueOf(name);
 }
 
 class NotificationActionTypeEnum extends EnumClass {
-
   /// Allowlisted tap-target. Clients should treat any value they don't recognise the same as null (no special action, just mark read) so new action types can be added without breaking older clients.
   @BuiltValueEnumConst(wireName: r'open_notification')
-  static const NotificationActionTypeEnum openNotification = _$notificationActionTypeEnum_openNotification;
+  static const NotificationActionTypeEnum openNotification =
+      _$notificationActionTypeEnum_openNotification;
+
   /// Allowlisted tap-target. Clients should treat any value they don't recognise the same as null (no special action, just mark read) so new action types can be added without breaking older clients.
   @BuiltValueEnumConst(wireName: r'open_analysis')
-  static const NotificationActionTypeEnum openAnalysis = _$notificationActionTypeEnum_openAnalysis;
+  static const NotificationActionTypeEnum openAnalysis =
+      _$notificationActionTypeEnum_openAnalysis;
 
-  static Serializer<NotificationActionTypeEnum> get serializer => _$notificationActionTypeEnumSerializer;
+  static Serializer<NotificationActionTypeEnum> get serializer =>
+      _$notificationActionTypeEnumSerializer;
 
-  const NotificationActionTypeEnum._(String name): super(name);
+  const NotificationActionTypeEnum._(String name) : super(name);
 
-  static BuiltSet<NotificationActionTypeEnum> get values => _$notificationActionTypeEnumValues;
-  static NotificationActionTypeEnum valueOf(String name) => _$notificationActionTypeEnumValueOf(name);
+  static BuiltSet<NotificationActionTypeEnum> get values =>
+      _$notificationActionTypeEnumValues;
+  static NotificationActionTypeEnum valueOf(String name) =>
+      _$notificationActionTypeEnumValueOf(name);
 }
-

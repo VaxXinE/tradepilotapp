@@ -13,9 +13,9 @@ part 'trade_plan.g.dart';
 /// Structured trade plan with both buy and sell side levels suggested by the AI. preferredSide indicates which side aligns with the trading bias; 'wait' means neither side is recommended yet (e.g. neutral bias or pending high-impact event).
 ///
 /// Properties:
-/// * [preferredSide] 
-/// * [buy] 
-/// * [sell] 
+/// * [preferredSide]
+/// * [buy]
+/// * [sell]
 @BuiltValue()
 abstract class TradePlan implements Built<TradePlan, TradePlanBuilder> {
   @BuiltValueField(wireName: r'preferredSide')
@@ -74,7 +74,9 @@ class _$TradePlanSerializer implements PrimitiveSerializer<TradePlan> {
     TradePlan object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -140,19 +142,23 @@ class _$TradePlanSerializer implements PrimitiveSerializer<TradePlan> {
 }
 
 class TradePlanPreferredSideEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'buy')
-  static const TradePlanPreferredSideEnum buy = _$tradePlanPreferredSideEnum_buy;
+  static const TradePlanPreferredSideEnum buy =
+      _$tradePlanPreferredSideEnum_buy;
   @BuiltValueEnumConst(wireName: r'sell')
-  static const TradePlanPreferredSideEnum sell = _$tradePlanPreferredSideEnum_sell;
+  static const TradePlanPreferredSideEnum sell =
+      _$tradePlanPreferredSideEnum_sell;
   @BuiltValueEnumConst(wireName: r'wait')
-  static const TradePlanPreferredSideEnum wait = _$tradePlanPreferredSideEnum_wait;
+  static const TradePlanPreferredSideEnum wait =
+      _$tradePlanPreferredSideEnum_wait;
 
-  static Serializer<TradePlanPreferredSideEnum> get serializer => _$tradePlanPreferredSideEnumSerializer;
+  static Serializer<TradePlanPreferredSideEnum> get serializer =>
+      _$tradePlanPreferredSideEnumSerializer;
 
-  const TradePlanPreferredSideEnum._(String name): super(name);
+  const TradePlanPreferredSideEnum._(String name) : super(name);
 
-  static BuiltSet<TradePlanPreferredSideEnum> get values => _$tradePlanPreferredSideEnumValues;
-  static TradePlanPreferredSideEnum valueOf(String name) => _$tradePlanPreferredSideEnumValueOf(name);
+  static BuiltSet<TradePlanPreferredSideEnum> get values =>
+      _$tradePlanPreferredSideEnumValues;
+  static TradePlanPreferredSideEnum valueOf(String name) =>
+      _$tradePlanPreferredSideEnumValueOf(name);
 }
-

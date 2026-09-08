@@ -11,26 +11,35 @@ part 'forgot_password_question_body.g.dart';
 /// ForgotPasswordQuestionBody
 ///
 /// Properties:
-/// * [email] 
+/// * [email]
 @BuiltValue()
-abstract class ForgotPasswordQuestionBody implements Built<ForgotPasswordQuestionBody, ForgotPasswordQuestionBodyBuilder> {
+abstract class ForgotPasswordQuestionBody
+    implements
+        Built<ForgotPasswordQuestionBody, ForgotPasswordQuestionBodyBuilder> {
   @BuiltValueField(wireName: r'email')
   String get email;
 
   ForgotPasswordQuestionBody._();
 
-  factory ForgotPasswordQuestionBody([void updates(ForgotPasswordQuestionBodyBuilder b)]) = _$ForgotPasswordQuestionBody;
+  factory ForgotPasswordQuestionBody(
+          [void updates(ForgotPasswordQuestionBodyBuilder b)]) =
+      _$ForgotPasswordQuestionBody;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ForgotPasswordQuestionBodyBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ForgotPasswordQuestionBody> get serializer => _$ForgotPasswordQuestionBodySerializer();
+  static Serializer<ForgotPasswordQuestionBody> get serializer =>
+      _$ForgotPasswordQuestionBodySerializer();
 }
 
-class _$ForgotPasswordQuestionBodySerializer implements PrimitiveSerializer<ForgotPasswordQuestionBody> {
+class _$ForgotPasswordQuestionBodySerializer
+    implements PrimitiveSerializer<ForgotPasswordQuestionBody> {
   @override
-  final Iterable<Type> types = const [ForgotPasswordQuestionBody, _$ForgotPasswordQuestionBody];
+  final Iterable<Type> types = const [
+    ForgotPasswordQuestionBody,
+    _$ForgotPasswordQuestionBody
+  ];
 
   @override
   final String wireName = r'ForgotPasswordQuestionBody';
@@ -53,7 +62,9 @@ class _$ForgotPasswordQuestionBodySerializer implements PrimitiveSerializer<Forg
     ForgotPasswordQuestionBody object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -103,4 +114,3 @@ class _$ForgotPasswordQuestionBodySerializer implements PrimitiveSerializer<Forg
     return result.build();
   }
 }
-

@@ -11,7 +11,9 @@ import 'package:tradepilotapp/core/localization/locale_controller.dart';
 import 'package:tradepilotapp/core/preferences/mental_checklist_controller.dart';
 import 'package:tradepilotapp/l10n/l10n.dart';
 import 'package:tradepilotapp/providers/auth_provider.dart';
+import 'package:tradepilotapp/providers/credit_provider.dart';
 import 'package:tradepilotapp/providers/progression_provider.dart';
+import 'package:tradepilotapp/repositories/topup_repository.dart';
 import 'package:tradepilotapp/screens/home/tabs/profile_tab.dart';
 import 'package:tradepilotapp/screens/profile/change_password_screen.dart';
 import 'package:tradepilotapp/screens/profile/delete_account_screen.dart';
@@ -49,6 +51,8 @@ void main() {
     );
     final progression = ProgressionProvider(auth);
     addTearDown(progression.dispose);
+    final credit = CreditProvider(auth, TopupRepository(auth.client));
+    addTearDown(credit.dispose);
 
     await tester.pumpWidget(
       MultiProvider(
@@ -58,6 +62,7 @@ void main() {
           ChangeNotifierProvider.value(value: locale),
           ChangeNotifierProvider.value(value: checklist),
           ChangeNotifierProvider.value(value: progression),
+          ChangeNotifierProvider.value(value: credit),
         ],
         child: const _LocalizedApp(home: ProfileTab()),
       ),
@@ -77,6 +82,7 @@ void main() {
       isTrue,
     );
     expect(find.textContaining('Current: Beginner'), findsOneWidget);
+    expect(find.text('Top Up Credit'), findsOneWidget);
     expect(find.text('Change Password'), findsOneWidget);
     expect(find.text('Privacy Policy'), findsOneWidget);
     expect(find.text('Terms of Service'), findsOneWidget);
@@ -179,6 +185,8 @@ void main() {
     );
     final progression = ProgressionProvider(auth);
     addTearDown(progression.dispose);
+    final credit = CreditProvider(auth, TopupRepository(auth.client));
+    addTearDown(credit.dispose);
 
     await tester.pumpWidget(
       MultiProvider(
@@ -188,6 +196,7 @@ void main() {
           ChangeNotifierProvider.value(value: locale),
           ChangeNotifierProvider.value(value: checklist),
           ChangeNotifierProvider.value(value: progression),
+          ChangeNotifierProvider.value(value: credit),
         ],
         child: const _LocalizedApp(home: ProfileTab()),
       ),

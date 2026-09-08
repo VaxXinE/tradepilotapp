@@ -12,10 +12,12 @@ part 'fundamental_drift_citation.g.dart';
 /// A single original AI citation that no longer matches anything in the freshly-fetched news/calendar window.
 ///
 /// Properties:
-/// * [kind] 
-/// * [label] 
+/// * [kind]
+/// * [label]
 @BuiltValue()
-abstract class FundamentalDriftCitation implements Built<FundamentalDriftCitation, FundamentalDriftCitationBuilder> {
+abstract class FundamentalDriftCitation
+    implements
+        Built<FundamentalDriftCitation, FundamentalDriftCitationBuilder> {
   @BuiltValueField(wireName: r'kind')
   FundamentalDriftCitationKindEnum get kind;
   // enum kindEnum {  news,  calendar,  };
@@ -25,18 +27,25 @@ abstract class FundamentalDriftCitation implements Built<FundamentalDriftCitatio
 
   FundamentalDriftCitation._();
 
-  factory FundamentalDriftCitation([void updates(FundamentalDriftCitationBuilder b)]) = _$FundamentalDriftCitation;
+  factory FundamentalDriftCitation(
+          [void updates(FundamentalDriftCitationBuilder b)]) =
+      _$FundamentalDriftCitation;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(FundamentalDriftCitationBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<FundamentalDriftCitation> get serializer => _$FundamentalDriftCitationSerializer();
+  static Serializer<FundamentalDriftCitation> get serializer =>
+      _$FundamentalDriftCitationSerializer();
 }
 
-class _$FundamentalDriftCitationSerializer implements PrimitiveSerializer<FundamentalDriftCitation> {
+class _$FundamentalDriftCitationSerializer
+    implements PrimitiveSerializer<FundamentalDriftCitation> {
   @override
-  final Iterable<Type> types = const [FundamentalDriftCitation, _$FundamentalDriftCitation];
+  final Iterable<Type> types = const [
+    FundamentalDriftCitation,
+    _$FundamentalDriftCitation
+  ];
 
   @override
   final String wireName = r'FundamentalDriftCitation';
@@ -64,7 +73,9 @@ class _$FundamentalDriftCitationSerializer implements PrimitiveSerializer<Fundam
     FundamentalDriftCitation object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -123,17 +134,20 @@ class _$FundamentalDriftCitationSerializer implements PrimitiveSerializer<Fundam
 }
 
 class FundamentalDriftCitationKindEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'news')
-  static const FundamentalDriftCitationKindEnum news = _$fundamentalDriftCitationKindEnum_news;
+  static const FundamentalDriftCitationKindEnum news =
+      _$fundamentalDriftCitationKindEnum_news;
   @BuiltValueEnumConst(wireName: r'calendar')
-  static const FundamentalDriftCitationKindEnum calendar = _$fundamentalDriftCitationKindEnum_calendar;
+  static const FundamentalDriftCitationKindEnum calendar =
+      _$fundamentalDriftCitationKindEnum_calendar;
 
-  static Serializer<FundamentalDriftCitationKindEnum> get serializer => _$fundamentalDriftCitationKindEnumSerializer;
+  static Serializer<FundamentalDriftCitationKindEnum> get serializer =>
+      _$fundamentalDriftCitationKindEnumSerializer;
 
-  const FundamentalDriftCitationKindEnum._(String name): super(name);
+  const FundamentalDriftCitationKindEnum._(String name) : super(name);
 
-  static BuiltSet<FundamentalDriftCitationKindEnum> get values => _$fundamentalDriftCitationKindEnumValues;
-  static FundamentalDriftCitationKindEnum valueOf(String name) => _$fundamentalDriftCitationKindEnumValueOf(name);
+  static BuiltSet<FundamentalDriftCitationKindEnum> get values =>
+      _$fundamentalDriftCitationKindEnumValues;
+  static FundamentalDriftCitationKindEnum valueOf(String name) =>
+      _$fundamentalDriftCitationKindEnumValueOf(name);
 }
-

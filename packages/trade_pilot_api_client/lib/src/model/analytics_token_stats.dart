@@ -17,14 +17,15 @@ part 'analytics_token_stats.g.dart';
 /// AnalyticsTokenStats
 ///
 /// Properties:
-/// * [windowDays] 
-/// * [dailyTokens] 
-/// * [byModel] 
-/// * [byInstrument] 
-/// * [topUsers] 
-/// * [totals] 
+/// * [windowDays]
+/// * [dailyTokens]
+/// * [byModel]
+/// * [byInstrument]
+/// * [topUsers]
+/// * [totals]
 @BuiltValue()
-abstract class AnalyticsTokenStats implements Built<AnalyticsTokenStats, AnalyticsTokenStatsBuilder> {
+abstract class AnalyticsTokenStats
+    implements Built<AnalyticsTokenStats, AnalyticsTokenStatsBuilder> {
   @BuiltValueField(wireName: r'windowDays')
   int get windowDays;
 
@@ -45,18 +46,24 @@ abstract class AnalyticsTokenStats implements Built<AnalyticsTokenStats, Analyti
 
   AnalyticsTokenStats._();
 
-  factory AnalyticsTokenStats([void updates(AnalyticsTokenStatsBuilder b)]) = _$AnalyticsTokenStats;
+  factory AnalyticsTokenStats([void updates(AnalyticsTokenStatsBuilder b)]) =
+      _$AnalyticsTokenStats;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AnalyticsTokenStatsBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AnalyticsTokenStats> get serializer => _$AnalyticsTokenStatsSerializer();
+  static Serializer<AnalyticsTokenStats> get serializer =>
+      _$AnalyticsTokenStatsSerializer();
 }
 
-class _$AnalyticsTokenStatsSerializer implements PrimitiveSerializer<AnalyticsTokenStats> {
+class _$AnalyticsTokenStatsSerializer
+    implements PrimitiveSerializer<AnalyticsTokenStats> {
   @override
-  final Iterable<Type> types = const [AnalyticsTokenStats, _$AnalyticsTokenStats];
+  final Iterable<Type> types = const [
+    AnalyticsTokenStats,
+    _$AnalyticsTokenStats
+  ];
 
   @override
   final String wireName = r'AnalyticsTokenStats';
@@ -74,22 +81,26 @@ class _$AnalyticsTokenStatsSerializer implements PrimitiveSerializer<AnalyticsTo
     yield r'dailyTokens';
     yield serializers.serialize(
       object.dailyTokens,
-      specifiedType: const FullType(BuiltList, [FullType(AnalyticsTokenStatsDailyTokensInner)]),
+      specifiedType: const FullType(
+          BuiltList, [FullType(AnalyticsTokenStatsDailyTokensInner)]),
     );
     yield r'byModel';
     yield serializers.serialize(
       object.byModel,
-      specifiedType: const FullType(BuiltList, [FullType(AnalyticsTokenStatsByModelInner)]),
+      specifiedType: const FullType(
+          BuiltList, [FullType(AnalyticsTokenStatsByModelInner)]),
     );
     yield r'byInstrument';
     yield serializers.serialize(
       object.byInstrument,
-      specifiedType: const FullType(BuiltList, [FullType(AnalyticsTokenStatsByInstrumentInner)]),
+      specifiedType: const FullType(
+          BuiltList, [FullType(AnalyticsTokenStatsByInstrumentInner)]),
     );
     yield r'topUsers';
     yield serializers.serialize(
       object.topUsers,
-      specifiedType: const FullType(BuiltList, [FullType(AnalyticsTokenStatsTopUsersInner)]),
+      specifiedType: const FullType(
+          BuiltList, [FullType(AnalyticsTokenStatsTopUsersInner)]),
     );
     yield r'totals';
     yield serializers.serialize(
@@ -104,7 +115,9 @@ class _$AnalyticsTokenStatsSerializer implements PrimitiveSerializer<AnalyticsTo
     AnalyticsTokenStats object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -129,28 +142,32 @@ class _$AnalyticsTokenStatsSerializer implements PrimitiveSerializer<AnalyticsTo
         case r'dailyTokens':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltList, [FullType(AnalyticsTokenStatsDailyTokensInner)]),
+            specifiedType: const FullType(
+                BuiltList, [FullType(AnalyticsTokenStatsDailyTokensInner)]),
           ) as BuiltList<AnalyticsTokenStatsDailyTokensInner>;
           result.dailyTokens.replace(valueDes);
           break;
         case r'byModel':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltList, [FullType(AnalyticsTokenStatsByModelInner)]),
+            specifiedType: const FullType(
+                BuiltList, [FullType(AnalyticsTokenStatsByModelInner)]),
           ) as BuiltList<AnalyticsTokenStatsByModelInner>;
           result.byModel.replace(valueDes);
           break;
         case r'byInstrument':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltList, [FullType(AnalyticsTokenStatsByInstrumentInner)]),
+            specifiedType: const FullType(
+                BuiltList, [FullType(AnalyticsTokenStatsByInstrumentInner)]),
           ) as BuiltList<AnalyticsTokenStatsByInstrumentInner>;
           result.byInstrument.replace(valueDes);
           break;
         case r'topUsers':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltList, [FullType(AnalyticsTokenStatsTopUsersInner)]),
+            specifiedType: const FullType(
+                BuiltList, [FullType(AnalyticsTokenStatsTopUsersInner)]),
           ) as BuiltList<AnalyticsTokenStatsTopUsersInner>;
           result.topUsers.replace(valueDes);
           break;
@@ -189,4 +206,3 @@ class _$AnalyticsTokenStatsSerializer implements PrimitiveSerializer<AnalyticsTo
     return result.build();
   }
 }
-

@@ -16,7 +16,6 @@ import 'package:trade_pilot_api_client/src/model/filter_preset_list.dart';
 import 'package:trade_pilot_api_client/src/model/rename_filter_preset_body.dart';
 
 class FilterPresetsApi {
-
   final Dio _dio;
 
   final Serializers _serializers;
@@ -24,10 +23,10 @@ class FilterPresetsApi {
   const FilterPresetsApi(this._dio, this._serializers);
 
   /// Save the current filter combination as a named preset
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [createFilterPresetBody] 
+  /// * [createFilterPresetBody]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -37,7 +36,7 @@ class FilterPresetsApi {
   ///
   /// Returns a [Future] containing a [Response] with a [FilterPreset] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<FilterPreset>> createFilterPreset({ 
+  Future<Response<FilterPreset>> createFilterPreset({
     required CreateFilterPresetBody createFilterPresetBody,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -64,11 +63,11 @@ class FilterPresetsApi {
 
     try {
       const _type = FullType(CreateFilterPresetBody);
-      _bodyData = _serializers.serialize(createFilterPresetBody, specifiedType: _type);
-
-    } catch(error, stackTrace) {
+      _bodyData =
+          _serializers.serialize(createFilterPresetBody, specifiedType: _type);
+    } catch (error, stackTrace) {
       throw DioException(
-         requestOptions: _options.compose(
+        requestOptions: _options.compose(
           _dio.options,
           _path,
         ),
@@ -91,11 +90,12 @@ class FilterPresetsApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(FilterPreset),
-      ) as FilterPreset;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(FilterPreset),
+            ) as FilterPreset;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -119,10 +119,10 @@ class FilterPresetsApi {
   }
 
   /// Delete a preset
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [id] 
+  /// * [id]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -132,7 +132,7 @@ class FilterPresetsApi {
   ///
   /// Returns a [Future]
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<void>> deleteFilterPreset({ 
+  Future<Response<void>> deleteFilterPreset({
     required int id,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -141,7 +141,8 @@ class FilterPresetsApi {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    final _path = r'/filter-presets/{id}'.replaceAll('{' r'id' '}', encodeQueryParameter(_serializers, id, const FullType(int)).toString());
+    final _path = r'/filter-presets/{id}'.replaceAll('{' r'id' '}',
+        encodeQueryParameter(_serializers, id, const FullType(int)).toString());
     final _options = Options(
       method: r'DELETE',
       headers: <String, dynamic>{
@@ -166,7 +167,7 @@ class FilterPresetsApi {
   }
 
   /// List the signed-in user&#39;s saved filter presets
-  /// 
+  ///
   ///
   /// Parameters:
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
@@ -178,7 +179,7 @@ class FilterPresetsApi {
   ///
   /// Returns a [Future] containing a [Response] with a [FilterPresetList] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<FilterPresetList>> listFilterPresets({ 
+  Future<Response<FilterPresetList>> listFilterPresets({
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -211,11 +212,12 @@ class FilterPresetsApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(FilterPresetList),
-      ) as FilterPresetList;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(FilterPresetList),
+            ) as FilterPresetList;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -239,11 +241,11 @@ class FilterPresetsApi {
   }
 
   /// Rename an existing preset
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [id] 
-  /// * [renameFilterPresetBody] 
+  /// * [id]
+  /// * [renameFilterPresetBody]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -253,7 +255,7 @@ class FilterPresetsApi {
   ///
   /// Returns a [Future] containing a [Response] with a [FilterPreset] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<FilterPreset>> renameFilterPreset({ 
+  Future<Response<FilterPreset>> renameFilterPreset({
     required int id,
     required RenameFilterPresetBody renameFilterPresetBody,
     CancelToken? cancelToken,
@@ -263,7 +265,8 @@ class FilterPresetsApi {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    final _path = r'/filter-presets/{id}'.replaceAll('{' r'id' '}', encodeQueryParameter(_serializers, id, const FullType(int)).toString());
+    final _path = r'/filter-presets/{id}'.replaceAll('{' r'id' '}',
+        encodeQueryParameter(_serializers, id, const FullType(int)).toString());
     final _options = Options(
       method: r'PATCH',
       headers: <String, dynamic>{
@@ -281,11 +284,11 @@ class FilterPresetsApi {
 
     try {
       const _type = FullType(RenameFilterPresetBody);
-      _bodyData = _serializers.serialize(renameFilterPresetBody, specifiedType: _type);
-
-    } catch(error, stackTrace) {
+      _bodyData =
+          _serializers.serialize(renameFilterPresetBody, specifiedType: _type);
+    } catch (error, stackTrace) {
       throw DioException(
-         requestOptions: _options.compose(
+        requestOptions: _options.compose(
           _dio.options,
           _path,
         ),
@@ -308,11 +311,12 @@ class FilterPresetsApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(FilterPreset),
-      ) as FilterPreset;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(FilterPreset),
+            ) as FilterPreset;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -334,5 +338,4 @@ class FilterPresetsApi {
       extra: _response.extra,
     );
   }
-
 }

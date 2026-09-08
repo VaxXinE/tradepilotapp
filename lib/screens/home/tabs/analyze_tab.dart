@@ -12,6 +12,7 @@ import '../../../l10n/l10n.dart';
 import '../../../models/market_models.dart';
 import '../../../providers/analysis_provider.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../providers/credit_provider.dart';
 import '../../../providers/market_provider.dart';
 import '../../../providers/progression_provider.dart';
 import '../../../providers/watchlist_provider.dart';
@@ -24,10 +25,12 @@ import '../../../widgets/market_mini_chart.dart';
 import '../../../widgets/watchlist/instrument_picker_sheet.dart';
 import '../../../widgets/journal_sentiment_card.dart';
 import '../../../widgets/cooling_off_breathing_dialog.dart';
+import '../../../widgets/analysis_quota_dialog.dart';
 import '../../analysis/analysis_detail_screen.dart';
 import '../../../widgets/price_alert/price_alert_sheet.dart';
 import '../../../widgets/risk/risk_tools_section.dart';
 import '../../price_alert/price_alert_list_screen.dart';
+import '../../topup/topup_screen.dart';
 
 // =============================================================================
 // TIMEFRAMES
@@ -275,7 +278,39 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
       userInputContext: note.isEmpty ? null : note,
     );
 
-    if (result != null && mounted) {
+    if (!mounted) return;
+
+    if (result == null) {
+      final limit = analysisProvider.quotaLimit;
+      if (limit != null) {
+        final openTopUp = await showAnalysisQuotaDialog(context, limit);
+        if (openTopUp && mounted) {
+          await Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const TopUpScreen()));
+          if (mounted) {
+            unawaited(analysisProvider.loadQuota());
+          }
+        }
+      }
+      return;
+    }
+
+    if (analysisProvider.lastAnalysisConsumedCredit) {
+      final balance = analysisProvider.lastAnalysisCreditBalance;
+      unawaited(context.read<CreditProvider>().loadBalance(silent: true));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            balance == null
+                ? context.l10n.analysisCreditConsumedUnknownBalance
+                : context.l10n.analysisCreditConsumed(balance),
+          ),
+        ),
+      );
+    }
+
+    if (mounted) {
       unawaited(
         auth.telemetry.track(
           AnalyticsEventBodyEventTypeEnum.analysisCreated,
@@ -756,8 +791,10 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
                 const SizedBox(height: 10),
                 Center(
                   child: Text(
-                    l10n.analysesRemainingToday(
+                    l10n.analysisQuotaBalances(
+                      analysis.quota!.hourly.remaining,
                       analysis.quota!.daily.remaining,
+                      analysis.quota!.credits.balance,
                     ),
                     style: TextStyle(color: muted, fontSize: 12.5),
                   ),

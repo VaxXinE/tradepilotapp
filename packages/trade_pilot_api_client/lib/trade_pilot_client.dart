@@ -97,6 +97,7 @@ class TradePilotClient {
   ProgressionApi get progression => _client.getProgressionApi();
   PushApi get push => _client.getPushApi();
   StorageApi get storage => _client.getStorageApi();
+  TopupsApi get topups => _client.getTopupsApi();
   TradeJournalApi get tradeJournal => _client.getTradeJournalApi();
   TraderMirrorApi get traderMirror => _client.getTraderMirrorApi();
   TradingRulesApi get tradingRules => _client.getTradingRulesApi();

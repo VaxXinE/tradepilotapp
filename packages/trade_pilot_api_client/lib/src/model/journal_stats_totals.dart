@@ -11,15 +11,16 @@ part 'journal_stats_totals.g.dart';
 /// JournalStatsTotals
 ///
 /// Properties:
-/// * [entries] 
-/// * [wins] 
-/// * [losses] 
-/// * [breakevens] 
-/// * [open] 
-/// * [skipped] 
-/// * [resolved] 
+/// * [entries]
+/// * [wins]
+/// * [losses]
+/// * [breakevens]
+/// * [open]
+/// * [skipped]
+/// * [resolved]
 @BuiltValue()
-abstract class JournalStatsTotals implements Built<JournalStatsTotals, JournalStatsTotalsBuilder> {
+abstract class JournalStatsTotals
+    implements Built<JournalStatsTotals, JournalStatsTotalsBuilder> {
   @BuiltValueField(wireName: r'entries')
   int get entries;
 
@@ -43,16 +44,19 @@ abstract class JournalStatsTotals implements Built<JournalStatsTotals, JournalSt
 
   JournalStatsTotals._();
 
-  factory JournalStatsTotals([void updates(JournalStatsTotalsBuilder b)]) = _$JournalStatsTotals;
+  factory JournalStatsTotals([void updates(JournalStatsTotalsBuilder b)]) =
+      _$JournalStatsTotals;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(JournalStatsTotalsBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<JournalStatsTotals> get serializer => _$JournalStatsTotalsSerializer();
+  static Serializer<JournalStatsTotals> get serializer =>
+      _$JournalStatsTotalsSerializer();
 }
 
-class _$JournalStatsTotalsSerializer implements PrimitiveSerializer<JournalStatsTotals> {
+class _$JournalStatsTotalsSerializer
+    implements PrimitiveSerializer<JournalStatsTotals> {
   @override
   final Iterable<Type> types = const [JournalStatsTotals, _$JournalStatsTotals];
 
@@ -107,7 +111,9 @@ class _$JournalStatsTotalsSerializer implements PrimitiveSerializer<JournalStats
     JournalStatsTotals object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -199,4 +205,3 @@ class _$JournalStatsTotalsSerializer implements PrimitiveSerializer<JournalStats
     return result.build();
   }
 }
-

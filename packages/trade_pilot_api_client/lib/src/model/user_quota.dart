@@ -11,9 +11,9 @@ part 'user_quota.g.dart';
 /// UserQuota
 ///
 /// Properties:
-/// * [id] 
-/// * [customQuotaPerHour] 
-/// * [customQuotaPerDay] 
+/// * [id]
+/// * [customQuotaPerHour]
+/// * [customQuotaPerDay]
 @BuiltValue()
 abstract class UserQuota implements Built<UserQuota, UserQuotaBuilder> {
   @BuiltValueField(wireName: r'id')
@@ -71,7 +71,9 @@ class _$UserQuotaSerializer implements PrimitiveSerializer<UserQuota> {
     UserQuota object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -135,4 +137,3 @@ class _$UserQuotaSerializer implements PrimitiveSerializer<UserQuota> {
     return result.build();
   }
 }
-

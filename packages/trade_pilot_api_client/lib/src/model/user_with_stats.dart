@@ -12,18 +12,19 @@ part 'user_with_stats.g.dart';
 /// UserWithStats
 ///
 /// Properties:
-/// * [id] 
-/// * [email] 
-/// * [displayName] 
-/// * [role] 
-/// * [selectedMode] 
-/// * [analysisCount] 
-/// * [tags] 
+/// * [id]
+/// * [email]
+/// * [displayName]
+/// * [role]
+/// * [selectedMode]
+/// * [analysisCount]
+/// * [tags]
 /// * [customQuotaPerHour] - Per-user analysis-quota override. Null = uses the global default.
 /// * [customQuotaPerDay] - Per-user analysis-quota override. Null = uses the global default.
-/// * [createdAt] 
+/// * [createdAt]
 @BuiltValue()
-abstract class UserWithStats implements Built<UserWithStats, UserWithStatsBuilder> {
+abstract class UserWithStats
+    implements Built<UserWithStats, UserWithStatsBuilder> {
   @BuiltValueField(wireName: r'id')
   int get id;
 
@@ -60,13 +61,15 @@ abstract class UserWithStats implements Built<UserWithStats, UserWithStatsBuilde
 
   UserWithStats._();
 
-  factory UserWithStats([void updates(UserWithStatsBuilder b)]) = _$UserWithStats;
+  factory UserWithStats([void updates(UserWithStatsBuilder b)]) =
+      _$UserWithStats;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(UserWithStatsBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<UserWithStats> get serializer => _$UserWithStatsSerializer();
+  static Serializer<UserWithStats> get serializer =>
+      _$UserWithStatsSerializer();
 }
 
 class _$UserWithStatsSerializer implements PrimitiveSerializer<UserWithStats> {
@@ -143,7 +146,9 @@ class _$UserWithStatsSerializer implements PrimitiveSerializer<UserWithStats> {
     UserWithStats object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -260,34 +265,40 @@ class _$UserWithStatsSerializer implements PrimitiveSerializer<UserWithStats> {
 }
 
 class UserWithStatsRoleEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'user')
   static const UserWithStatsRoleEnum user = _$userWithStatsRoleEnum_user;
   @BuiltValueEnumConst(wireName: r'admin')
   static const UserWithStatsRoleEnum admin = _$userWithStatsRoleEnum_admin;
   @BuiltValueEnumConst(wireName: r'super_admin')
-  static const UserWithStatsRoleEnum superAdmin = _$userWithStatsRoleEnum_superAdmin;
+  static const UserWithStatsRoleEnum superAdmin =
+      _$userWithStatsRoleEnum_superAdmin;
 
-  static Serializer<UserWithStatsRoleEnum> get serializer => _$userWithStatsRoleEnumSerializer;
+  static Serializer<UserWithStatsRoleEnum> get serializer =>
+      _$userWithStatsRoleEnumSerializer;
 
-  const UserWithStatsRoleEnum._(String name): super(name);
+  const UserWithStatsRoleEnum._(String name) : super(name);
 
-  static BuiltSet<UserWithStatsRoleEnum> get values => _$userWithStatsRoleEnumValues;
-  static UserWithStatsRoleEnum valueOf(String name) => _$userWithStatsRoleEnumValueOf(name);
+  static BuiltSet<UserWithStatsRoleEnum> get values =>
+      _$userWithStatsRoleEnumValues;
+  static UserWithStatsRoleEnum valueOf(String name) =>
+      _$userWithStatsRoleEnumValueOf(name);
 }
 
 class UserWithStatsSelectedModeEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'beginner')
-  static const UserWithStatsSelectedModeEnum beginner = _$userWithStatsSelectedModeEnum_beginner;
+  static const UserWithStatsSelectedModeEnum beginner =
+      _$userWithStatsSelectedModeEnum_beginner;
   @BuiltValueEnumConst(wireName: r'pro')
-  static const UserWithStatsSelectedModeEnum pro = _$userWithStatsSelectedModeEnum_pro;
+  static const UserWithStatsSelectedModeEnum pro =
+      _$userWithStatsSelectedModeEnum_pro;
 
-  static Serializer<UserWithStatsSelectedModeEnum> get serializer => _$userWithStatsSelectedModeEnumSerializer;
+  static Serializer<UserWithStatsSelectedModeEnum> get serializer =>
+      _$userWithStatsSelectedModeEnumSerializer;
 
-  const UserWithStatsSelectedModeEnum._(String name): super(name);
+  const UserWithStatsSelectedModeEnum._(String name) : super(name);
 
-  static BuiltSet<UserWithStatsSelectedModeEnum> get values => _$userWithStatsSelectedModeEnumValues;
-  static UserWithStatsSelectedModeEnum valueOf(String name) => _$userWithStatsSelectedModeEnumValueOf(name);
+  static BuiltSet<UserWithStatsSelectedModeEnum> get values =>
+      _$userWithStatsSelectedModeEnumValues;
+  static UserWithStatsSelectedModeEnum valueOf(String name) =>
+      _$userWithStatsSelectedModeEnumValueOf(name);
 }
-

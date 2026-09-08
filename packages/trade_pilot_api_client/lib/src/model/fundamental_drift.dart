@@ -16,7 +16,8 @@ part 'fundamental_drift.g.dart';
 /// * [totalCitations] - Total citations the AI emitted at analysis time (newsTitles + calendarEvents).
 /// * [missingCitations] - Original citations that no longer match any item in the fresh snapshot.
 @BuiltValue()
-abstract class FundamentalDrift implements Built<FundamentalDrift, FundamentalDriftBuilder> {
+abstract class FundamentalDrift
+    implements Built<FundamentalDrift, FundamentalDriftBuilder> {
   /// Total citations the AI emitted at analysis time (newsTitles + calendarEvents).
   @BuiltValueField(wireName: r'totalCitations')
   int get totalCitations;
@@ -27,16 +28,19 @@ abstract class FundamentalDrift implements Built<FundamentalDrift, FundamentalDr
 
   FundamentalDrift._();
 
-  factory FundamentalDrift([void updates(FundamentalDriftBuilder b)]) = _$FundamentalDrift;
+  factory FundamentalDrift([void updates(FundamentalDriftBuilder b)]) =
+      _$FundamentalDrift;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(FundamentalDriftBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<FundamentalDrift> get serializer => _$FundamentalDriftSerializer();
+  static Serializer<FundamentalDrift> get serializer =>
+      _$FundamentalDriftSerializer();
 }
 
-class _$FundamentalDriftSerializer implements PrimitiveSerializer<FundamentalDrift> {
+class _$FundamentalDriftSerializer
+    implements PrimitiveSerializer<FundamentalDrift> {
   @override
   final Iterable<Type> types = const [FundamentalDrift, _$FundamentalDrift];
 
@@ -56,7 +60,8 @@ class _$FundamentalDriftSerializer implements PrimitiveSerializer<FundamentalDri
     yield r'missingCitations';
     yield serializers.serialize(
       object.missingCitations,
-      specifiedType: const FullType(BuiltList, [FullType(FundamentalDriftCitation)]),
+      specifiedType:
+          const FullType(BuiltList, [FullType(FundamentalDriftCitation)]),
     );
   }
 
@@ -66,7 +71,9 @@ class _$FundamentalDriftSerializer implements PrimitiveSerializer<FundamentalDri
     FundamentalDrift object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -91,7 +98,8 @@ class _$FundamentalDriftSerializer implements PrimitiveSerializer<FundamentalDri
         case r'missingCitations':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltList, [FullType(FundamentalDriftCitation)]),
+            specifiedType:
+                const FullType(BuiltList, [FullType(FundamentalDriftCitation)]),
           ) as BuiltList<FundamentalDriftCitation>;
           result.missingCitations.replace(valueDes);
           break;
@@ -123,4 +131,3 @@ class _$FundamentalDriftSerializer implements PrimitiveSerializer<FundamentalDri
     return result.build();
   }
 }
-

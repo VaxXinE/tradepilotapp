@@ -12,15 +12,18 @@ import '../../l10n/l10n.dart';
 import '../../models/market_models.dart';
 import '../../providers/analysis_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/credit_provider.dart';
 import '../../providers/market_provider.dart';
 import '../../providers/progression_provider.dart';
 import '../../services/native_push_service.dart';
 import '../../widgets/adaptive_position_plan_card.dart';
 import '../../widgets/analysis_levels_chart.dart';
 import '../../widgets/analysis_note_card.dart';
+import '../../widgets/analysis_quota_dialog.dart';
 import '../../widgets/risk/risk_tools_section.dart';
 import '../journal/trade_journal_screen.dart';
 import '../mindset/mindset_screen.dart';
+import '../topup/topup_screen.dart';
 
 const _analysisTimeframes = ['1m', '5m', '15m', '30m', '1h', '4h', '1D', '1W'];
 
@@ -288,7 +291,8 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
       _reanalyzing = true;
       _selectedTimeframe = selected;
     });
-    final created = await context.read<AnalysisProvider>().createAnalysis(
+    final analysisProvider = context.read<AnalysisProvider>();
+    final created = await analysisProvider.createAnalysis(
       instrument: analysis.instrument,
       timeframe: _timeframeEnum(selected),
       mode: analysis.mode == AnalysisModeEnum.pro
@@ -299,10 +303,35 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
     if (!mounted) return;
     setState(() => _reanalyzing = false);
     if (created == null) {
+      final limit = analysisProvider.quotaLimit;
+      if (limit != null) {
+        final openTopUp = await showAnalysisQuotaDialog(context, limit);
+        if (openTopUp && mounted) {
+          await Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const TopUpScreen()));
+          if (mounted) unawaited(analysisProvider.loadQuota());
+        }
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Analisis baru gagal dibuat.')),
       );
       return;
+    }
+
+    if (analysisProvider.lastAnalysisConsumedCredit) {
+      final balance = analysisProvider.lastAnalysisCreditBalance;
+      unawaited(context.read<CreditProvider>().loadBalance(silent: true));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            balance == null
+                ? context.l10n.analysisCreditConsumedUnknownBalance
+                : context.l10n.analysisCreditConsumed(balance),
+          ),
+        ),
+      );
     }
 
     unawaited(

@@ -12,17 +12,18 @@ part 'feedback_with_details.g.dart';
 /// FeedbackWithDetails
 ///
 /// Properties:
-/// * [id] 
-/// * [analysisId] 
-/// * [instrument] 
-/// * [userId] 
-/// * [userEmail] 
-/// * [feedbackType] 
-/// * [outcome] 
-/// * [note] 
-/// * [createdAt] 
+/// * [id]
+/// * [analysisId]
+/// * [instrument]
+/// * [userId]
+/// * [userEmail]
+/// * [feedbackType]
+/// * [outcome]
+/// * [note]
+/// * [createdAt]
 @BuiltValue()
-abstract class FeedbackWithDetails implements Built<FeedbackWithDetails, FeedbackWithDetailsBuilder> {
+abstract class FeedbackWithDetails
+    implements Built<FeedbackWithDetails, FeedbackWithDetailsBuilder> {
   @BuiltValueField(wireName: r'id')
   int get id;
 
@@ -54,18 +55,24 @@ abstract class FeedbackWithDetails implements Built<FeedbackWithDetails, Feedbac
 
   FeedbackWithDetails._();
 
-  factory FeedbackWithDetails([void updates(FeedbackWithDetailsBuilder b)]) = _$FeedbackWithDetails;
+  factory FeedbackWithDetails([void updates(FeedbackWithDetailsBuilder b)]) =
+      _$FeedbackWithDetails;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(FeedbackWithDetailsBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<FeedbackWithDetails> get serializer => _$FeedbackWithDetailsSerializer();
+  static Serializer<FeedbackWithDetails> get serializer =>
+      _$FeedbackWithDetailsSerializer();
 }
 
-class _$FeedbackWithDetailsSerializer implements PrimitiveSerializer<FeedbackWithDetails> {
+class _$FeedbackWithDetailsSerializer
+    implements PrimitiveSerializer<FeedbackWithDetails> {
   @override
-  final Iterable<Type> types = const [FeedbackWithDetails, _$FeedbackWithDetails];
+  final Iterable<Type> types = const [
+    FeedbackWithDetails,
+    _$FeedbackWithDetails
+  ];
 
   @override
   final String wireName = r'FeedbackWithDetails';
@@ -132,7 +139,9 @@ class _$FeedbackWithDetailsSerializer implements PrimitiveSerializer<FeedbackWit
     FeedbackWithDetails object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -192,7 +201,8 @@ class _$FeedbackWithDetailsSerializer implements PrimitiveSerializer<FeedbackWit
         case r'outcome':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(FeedbackWithDetailsOutcomeEnum),
+            specifiedType:
+                const FullType.nullable(FeedbackWithDetailsOutcomeEnum),
           ) as FeedbackWithDetailsOutcomeEnum?;
           if (valueDes == null) continue;
           result.outcome = valueDes;
@@ -242,34 +252,42 @@ class _$FeedbackWithDetailsSerializer implements PrimitiveSerializer<FeedbackWit
 }
 
 class FeedbackWithDetailsFeedbackTypeEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'useful')
-  static const FeedbackWithDetailsFeedbackTypeEnum useful = _$feedbackWithDetailsFeedbackTypeEnum_useful;
+  static const FeedbackWithDetailsFeedbackTypeEnum useful =
+      _$feedbackWithDetailsFeedbackTypeEnum_useful;
   @BuiltValueEnumConst(wireName: r'not_useful')
-  static const FeedbackWithDetailsFeedbackTypeEnum notUseful = _$feedbackWithDetailsFeedbackTypeEnum_notUseful;
+  static const FeedbackWithDetailsFeedbackTypeEnum notUseful =
+      _$feedbackWithDetailsFeedbackTypeEnum_notUseful;
 
-  static Serializer<FeedbackWithDetailsFeedbackTypeEnum> get serializer => _$feedbackWithDetailsFeedbackTypeEnumSerializer;
+  static Serializer<FeedbackWithDetailsFeedbackTypeEnum> get serializer =>
+      _$feedbackWithDetailsFeedbackTypeEnumSerializer;
 
-  const FeedbackWithDetailsFeedbackTypeEnum._(String name): super(name);
+  const FeedbackWithDetailsFeedbackTypeEnum._(String name) : super(name);
 
-  static BuiltSet<FeedbackWithDetailsFeedbackTypeEnum> get values => _$feedbackWithDetailsFeedbackTypeEnumValues;
-  static FeedbackWithDetailsFeedbackTypeEnum valueOf(String name) => _$feedbackWithDetailsFeedbackTypeEnumValueOf(name);
+  static BuiltSet<FeedbackWithDetailsFeedbackTypeEnum> get values =>
+      _$feedbackWithDetailsFeedbackTypeEnumValues;
+  static FeedbackWithDetailsFeedbackTypeEnum valueOf(String name) =>
+      _$feedbackWithDetailsFeedbackTypeEnumValueOf(name);
 }
 
 class FeedbackWithDetailsOutcomeEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'correct')
-  static const FeedbackWithDetailsOutcomeEnum correct = _$feedbackWithDetailsOutcomeEnum_correct;
+  static const FeedbackWithDetailsOutcomeEnum correct =
+      _$feedbackWithDetailsOutcomeEnum_correct;
   @BuiltValueEnumConst(wireName: r'wrong')
-  static const FeedbackWithDetailsOutcomeEnum wrong = _$feedbackWithDetailsOutcomeEnum_wrong;
+  static const FeedbackWithDetailsOutcomeEnum wrong =
+      _$feedbackWithDetailsOutcomeEnum_wrong;
   @BuiltValueEnumConst(wireName: r'unknown')
-  static const FeedbackWithDetailsOutcomeEnum unknown = _$feedbackWithDetailsOutcomeEnum_unknown;
+  static const FeedbackWithDetailsOutcomeEnum unknown =
+      _$feedbackWithDetailsOutcomeEnum_unknown;
 
-  static Serializer<FeedbackWithDetailsOutcomeEnum> get serializer => _$feedbackWithDetailsOutcomeEnumSerializer;
+  static Serializer<FeedbackWithDetailsOutcomeEnum> get serializer =>
+      _$feedbackWithDetailsOutcomeEnumSerializer;
 
-  const FeedbackWithDetailsOutcomeEnum._(String name): super(name);
+  const FeedbackWithDetailsOutcomeEnum._(String name) : super(name);
 
-  static BuiltSet<FeedbackWithDetailsOutcomeEnum> get values => _$feedbackWithDetailsOutcomeEnumValues;
-  static FeedbackWithDetailsOutcomeEnum valueOf(String name) => _$feedbackWithDetailsOutcomeEnumValueOf(name);
+  static BuiltSet<FeedbackWithDetailsOutcomeEnum> get values =>
+      _$feedbackWithDetailsOutcomeEnumValues;
+  static FeedbackWithDetailsOutcomeEnum valueOf(String name) =>
+      _$feedbackWithDetailsOutcomeEnumValueOf(name);
 }
-

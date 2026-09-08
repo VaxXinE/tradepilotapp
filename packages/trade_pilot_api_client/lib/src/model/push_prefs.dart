@@ -12,14 +12,14 @@ part 'push_prefs.g.dart';
 /// PushPrefs
 ///
 /// Properties:
-/// * [pushExpiry] 
-/// * [pushBroadcast] 
-/// * [pushDailySummary] 
-/// * [pushMarketNews] 
-/// * [pushCalendarEvents] 
-/// * [pushPriceAnomaly] 
-/// * [pushWeeklyRecap] 
-/// * [pushSignalFlip] 
+/// * [pushExpiry]
+/// * [pushBroadcast]
+/// * [pushDailySummary]
+/// * [pushMarketNews]
+/// * [pushCalendarEvents]
+/// * [pushPriceAnomaly]
+/// * [pushWeeklyRecap]
+/// * [pushSignalFlip]
 /// * [marketOpenSessions] - FX sessions the user wants a 5-min pre-open ping for. Empty = off.
 /// * [pushDormancyNudge] - Opt-in toggle for the weekly \"we miss you\" nudge after 7+ days idle.
 /// * [pushOnboarding] - One-shot 24h-after-signup empty-watchlist nudge.
@@ -203,7 +203,8 @@ class _$PushPrefsSerializer implements PrimitiveSerializer<PushPrefs> {
     yield r'marketOpenSessions';
     yield serializers.serialize(
       object.marketOpenSessions,
-      specifiedType: const FullType(BuiltList, [FullType(PushPrefsMarketOpenSessionsEnum)]),
+      specifiedType: const FullType(
+          BuiltList, [FullType(PushPrefsMarketOpenSessionsEnum)]),
     );
     yield r'pushDormancyNudge';
     yield serializers.serialize(
@@ -300,7 +301,9 @@ class _$PushPrefsSerializer implements PrimitiveSerializer<PushPrefs> {
     PushPrefs object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -374,7 +377,8 @@ class _$PushPrefsSerializer implements PrimitiveSerializer<PushPrefs> {
         case r'marketOpenSessions':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltList, [FullType(PushPrefsMarketOpenSessionsEnum)]),
+            specifiedType: const FullType(
+                BuiltList, [FullType(PushPrefsMarketOpenSessionsEnum)]),
           ) as BuiltList<PushPrefsMarketOpenSessionsEnum>;
           result.marketOpenSessions.replace(valueDes);
           break;
@@ -528,19 +532,23 @@ class _$PushPrefsSerializer implements PrimitiveSerializer<PushPrefs> {
 }
 
 class PushPrefsMarketOpenSessionsEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'tokyo')
-  static const PushPrefsMarketOpenSessionsEnum tokyo = _$pushPrefsMarketOpenSessionsEnum_tokyo;
+  static const PushPrefsMarketOpenSessionsEnum tokyo =
+      _$pushPrefsMarketOpenSessionsEnum_tokyo;
   @BuiltValueEnumConst(wireName: r'london')
-  static const PushPrefsMarketOpenSessionsEnum london = _$pushPrefsMarketOpenSessionsEnum_london;
+  static const PushPrefsMarketOpenSessionsEnum london =
+      _$pushPrefsMarketOpenSessionsEnum_london;
   @BuiltValueEnumConst(wireName: r'newyork')
-  static const PushPrefsMarketOpenSessionsEnum newyork = _$pushPrefsMarketOpenSessionsEnum_newyork;
+  static const PushPrefsMarketOpenSessionsEnum newyork =
+      _$pushPrefsMarketOpenSessionsEnum_newyork;
 
-  static Serializer<PushPrefsMarketOpenSessionsEnum> get serializer => _$pushPrefsMarketOpenSessionsEnumSerializer;
+  static Serializer<PushPrefsMarketOpenSessionsEnum> get serializer =>
+      _$pushPrefsMarketOpenSessionsEnumSerializer;
 
-  const PushPrefsMarketOpenSessionsEnum._(String name): super(name);
+  const PushPrefsMarketOpenSessionsEnum._(String name) : super(name);
 
-  static BuiltSet<PushPrefsMarketOpenSessionsEnum> get values => _$pushPrefsMarketOpenSessionsEnumValues;
-  static PushPrefsMarketOpenSessionsEnum valueOf(String name) => _$pushPrefsMarketOpenSessionsEnumValueOf(name);
+  static BuiltSet<PushPrefsMarketOpenSessionsEnum> get values =>
+      _$pushPrefsMarketOpenSessionsEnumValues;
+  static PushPrefsMarketOpenSessionsEnum valueOf(String name) =>
+      _$pushPrefsMarketOpenSessionsEnumValueOf(name);
 }
-

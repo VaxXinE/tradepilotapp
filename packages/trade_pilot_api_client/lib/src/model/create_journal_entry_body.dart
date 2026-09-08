@@ -13,20 +13,21 @@ part 'create_journal_entry_body.g.dart';
 /// CreateJournalEntryBody
 ///
 /// Properties:
-/// * [analysisId] 
-/// * [instrument] 
-/// * [side] 
-/// * [entryPrice] 
-/// * [exitPrice] 
-/// * [quantity] 
-/// * [pnlAmount] 
-/// * [pnlPercent] 
-/// * [outcome] 
-/// * [mood] 
-/// * [note] 
-/// * [tradedAt] 
+/// * [analysisId]
+/// * [instrument]
+/// * [side]
+/// * [entryPrice]
+/// * [exitPrice]
+/// * [quantity]
+/// * [pnlAmount]
+/// * [pnlPercent]
+/// * [outcome]
+/// * [mood]
+/// * [note]
+/// * [tradedAt]
 @BuiltValue()
-abstract class CreateJournalEntryBody implements Built<CreateJournalEntryBody, CreateJournalEntryBodyBuilder> {
+abstract class CreateJournalEntryBody
+    implements Built<CreateJournalEntryBody, CreateJournalEntryBodyBuilder> {
   @BuiltValueField(wireName: r'analysisId')
   int? get analysisId;
 
@@ -67,18 +68,25 @@ abstract class CreateJournalEntryBody implements Built<CreateJournalEntryBody, C
 
   CreateJournalEntryBody._();
 
-  factory CreateJournalEntryBody([void updates(CreateJournalEntryBodyBuilder b)]) = _$CreateJournalEntryBody;
+  factory CreateJournalEntryBody(
+          [void updates(CreateJournalEntryBodyBuilder b)]) =
+      _$CreateJournalEntryBody;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(CreateJournalEntryBodyBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<CreateJournalEntryBody> get serializer => _$CreateJournalEntryBodySerializer();
+  static Serializer<CreateJournalEntryBody> get serializer =>
+      _$CreateJournalEntryBodySerializer();
 }
 
-class _$CreateJournalEntryBodySerializer implements PrimitiveSerializer<CreateJournalEntryBody> {
+class _$CreateJournalEntryBodySerializer
+    implements PrimitiveSerializer<CreateJournalEntryBody> {
   @override
-  final Iterable<Type> types = const [CreateJournalEntryBody, _$CreateJournalEntryBody];
+  final Iterable<Type> types = const [
+    CreateJournalEntryBody,
+    _$CreateJournalEntryBody
+  ];
 
   @override
   final String wireName = r'CreateJournalEntryBody';
@@ -176,7 +184,9 @@ class _$CreateJournalEntryBodySerializer implements PrimitiveSerializer<CreateJo
     CreateJournalEntryBody object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -216,7 +226,8 @@ class _$CreateJournalEntryBodySerializer implements PrimitiveSerializer<CreateJo
         case r'entryPrice':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(CreateJournalEntryBodyEntryPrice),
+            specifiedType:
+                const FullType.nullable(CreateJournalEntryBodyEntryPrice),
           ) as CreateJournalEntryBodyEntryPrice?;
           if (valueDes == null) continue;
           result.entryPrice.replace(valueDes);
@@ -224,7 +235,8 @@ class _$CreateJournalEntryBodySerializer implements PrimitiveSerializer<CreateJo
         case r'exitPrice':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(CreateJournalEntryBodyEntryPrice),
+            specifiedType:
+                const FullType.nullable(CreateJournalEntryBodyEntryPrice),
           ) as CreateJournalEntryBodyEntryPrice?;
           if (valueDes == null) continue;
           result.exitPrice.replace(valueDes);
@@ -232,7 +244,8 @@ class _$CreateJournalEntryBodySerializer implements PrimitiveSerializer<CreateJo
         case r'quantity':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(CreateJournalEntryBodyEntryPrice),
+            specifiedType:
+                const FullType.nullable(CreateJournalEntryBodyEntryPrice),
           ) as CreateJournalEntryBodyEntryPrice?;
           if (valueDes == null) continue;
           result.quantity.replace(valueDes);
@@ -240,7 +253,8 @@ class _$CreateJournalEntryBodySerializer implements PrimitiveSerializer<CreateJo
         case r'pnlAmount':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(CreateJournalEntryBodyEntryPrice),
+            specifiedType:
+                const FullType.nullable(CreateJournalEntryBodyEntryPrice),
           ) as CreateJournalEntryBodyEntryPrice?;
           if (valueDes == null) continue;
           result.pnlAmount.replace(valueDes);
@@ -248,7 +262,8 @@ class _$CreateJournalEntryBodySerializer implements PrimitiveSerializer<CreateJo
         case r'pnlPercent':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(CreateJournalEntryBodyEntryPrice),
+            specifiedType:
+                const FullType.nullable(CreateJournalEntryBodyEntryPrice),
           ) as CreateJournalEntryBodyEntryPrice?;
           if (valueDes == null) continue;
           result.pnlPercent.replace(valueDes);
@@ -256,7 +271,8 @@ class _$CreateJournalEntryBodySerializer implements PrimitiveSerializer<CreateJo
         case r'outcome':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(CreateJournalEntryBodyOutcomeEnum),
+            specifiedType:
+                const FullType.nullable(CreateJournalEntryBodyOutcomeEnum),
           ) as CreateJournalEntryBodyOutcomeEnum?;
           if (valueDes == null) continue;
           result.outcome = valueDes;
@@ -315,38 +331,48 @@ class _$CreateJournalEntryBodySerializer implements PrimitiveSerializer<CreateJo
 }
 
 class CreateJournalEntryBodySideEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'buy')
-  static const CreateJournalEntryBodySideEnum buy = _$createJournalEntryBodySideEnum_buy;
+  static const CreateJournalEntryBodySideEnum buy =
+      _$createJournalEntryBodySideEnum_buy;
   @BuiltValueEnumConst(wireName: r'sell')
-  static const CreateJournalEntryBodySideEnum sell = _$createJournalEntryBodySideEnum_sell;
+  static const CreateJournalEntryBodySideEnum sell =
+      _$createJournalEntryBodySideEnum_sell;
 
-  static Serializer<CreateJournalEntryBodySideEnum> get serializer => _$createJournalEntryBodySideEnumSerializer;
+  static Serializer<CreateJournalEntryBodySideEnum> get serializer =>
+      _$createJournalEntryBodySideEnumSerializer;
 
-  const CreateJournalEntryBodySideEnum._(String name): super(name);
+  const CreateJournalEntryBodySideEnum._(String name) : super(name);
 
-  static BuiltSet<CreateJournalEntryBodySideEnum> get values => _$createJournalEntryBodySideEnumValues;
-  static CreateJournalEntryBodySideEnum valueOf(String name) => _$createJournalEntryBodySideEnumValueOf(name);
+  static BuiltSet<CreateJournalEntryBodySideEnum> get values =>
+      _$createJournalEntryBodySideEnumValues;
+  static CreateJournalEntryBodySideEnum valueOf(String name) =>
+      _$createJournalEntryBodySideEnumValueOf(name);
 }
 
 class CreateJournalEntryBodyOutcomeEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'win')
-  static const CreateJournalEntryBodyOutcomeEnum win = _$createJournalEntryBodyOutcomeEnum_win;
+  static const CreateJournalEntryBodyOutcomeEnum win =
+      _$createJournalEntryBodyOutcomeEnum_win;
   @BuiltValueEnumConst(wireName: r'loss')
-  static const CreateJournalEntryBodyOutcomeEnum loss = _$createJournalEntryBodyOutcomeEnum_loss;
+  static const CreateJournalEntryBodyOutcomeEnum loss =
+      _$createJournalEntryBodyOutcomeEnum_loss;
   @BuiltValueEnumConst(wireName: r'breakeven')
-  static const CreateJournalEntryBodyOutcomeEnum breakeven = _$createJournalEntryBodyOutcomeEnum_breakeven;
+  static const CreateJournalEntryBodyOutcomeEnum breakeven =
+      _$createJournalEntryBodyOutcomeEnum_breakeven;
   @BuiltValueEnumConst(wireName: r'open')
-  static const CreateJournalEntryBodyOutcomeEnum open = _$createJournalEntryBodyOutcomeEnum_open;
+  static const CreateJournalEntryBodyOutcomeEnum open =
+      _$createJournalEntryBodyOutcomeEnum_open;
   @BuiltValueEnumConst(wireName: r'skipped')
-  static const CreateJournalEntryBodyOutcomeEnum skipped = _$createJournalEntryBodyOutcomeEnum_skipped;
+  static const CreateJournalEntryBodyOutcomeEnum skipped =
+      _$createJournalEntryBodyOutcomeEnum_skipped;
 
-  static Serializer<CreateJournalEntryBodyOutcomeEnum> get serializer => _$createJournalEntryBodyOutcomeEnumSerializer;
+  static Serializer<CreateJournalEntryBodyOutcomeEnum> get serializer =>
+      _$createJournalEntryBodyOutcomeEnumSerializer;
 
-  const CreateJournalEntryBodyOutcomeEnum._(String name): super(name);
+  const CreateJournalEntryBodyOutcomeEnum._(String name) : super(name);
 
-  static BuiltSet<CreateJournalEntryBodyOutcomeEnum> get values => _$createJournalEntryBodyOutcomeEnumValues;
-  static CreateJournalEntryBodyOutcomeEnum valueOf(String name) => _$createJournalEntryBodyOutcomeEnumValueOf(name);
+  static BuiltSet<CreateJournalEntryBodyOutcomeEnum> get values =>
+      _$createJournalEntryBodyOutcomeEnumValues;
+  static CreateJournalEntryBodyOutcomeEnum valueOf(String name) =>
+      _$createJournalEntryBodyOutcomeEnumValueOf(name);
 }
-

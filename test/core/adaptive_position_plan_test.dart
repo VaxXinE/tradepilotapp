@@ -38,7 +38,7 @@ void main() {
   });
 }
 
-Analysis _analysis() => Analysis(
+Analysis _analysis() => $Analysis(
   (builder) => builder
     ..id = 1
     ..userId = 1

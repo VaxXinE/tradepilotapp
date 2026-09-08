@@ -195,7 +195,7 @@ User _user(int id) => User(
 );
 
 Analysis _analysis(int id, {required int confidence, required int day}) {
-  return Analysis(
+  return $Analysis(
     (builder) => builder
       ..id = id
       ..userId = 1

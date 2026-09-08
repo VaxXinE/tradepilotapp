@@ -11,10 +11,12 @@ part 'verify_security_answer_body.g.dart';
 /// VerifySecurityAnswerBody
 ///
 /// Properties:
-/// * [email] 
-/// * [securityAnswer] 
+/// * [email]
+/// * [securityAnswer]
 @BuiltValue()
-abstract class VerifySecurityAnswerBody implements Built<VerifySecurityAnswerBody, VerifySecurityAnswerBodyBuilder> {
+abstract class VerifySecurityAnswerBody
+    implements
+        Built<VerifySecurityAnswerBody, VerifySecurityAnswerBodyBuilder> {
   @BuiltValueField(wireName: r'email')
   String get email;
 
@@ -23,18 +25,25 @@ abstract class VerifySecurityAnswerBody implements Built<VerifySecurityAnswerBod
 
   VerifySecurityAnswerBody._();
 
-  factory VerifySecurityAnswerBody([void updates(VerifySecurityAnswerBodyBuilder b)]) = _$VerifySecurityAnswerBody;
+  factory VerifySecurityAnswerBody(
+          [void updates(VerifySecurityAnswerBodyBuilder b)]) =
+      _$VerifySecurityAnswerBody;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(VerifySecurityAnswerBodyBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<VerifySecurityAnswerBody> get serializer => _$VerifySecurityAnswerBodySerializer();
+  static Serializer<VerifySecurityAnswerBody> get serializer =>
+      _$VerifySecurityAnswerBodySerializer();
 }
 
-class _$VerifySecurityAnswerBodySerializer implements PrimitiveSerializer<VerifySecurityAnswerBody> {
+class _$VerifySecurityAnswerBodySerializer
+    implements PrimitiveSerializer<VerifySecurityAnswerBody> {
   @override
-  final Iterable<Type> types = const [VerifySecurityAnswerBody, _$VerifySecurityAnswerBody];
+  final Iterable<Type> types = const [
+    VerifySecurityAnswerBody,
+    _$VerifySecurityAnswerBody
+  ];
 
   @override
   final String wireName = r'VerifySecurityAnswerBody';
@@ -62,7 +71,9 @@ class _$VerifySecurityAnswerBodySerializer implements PrimitiveSerializer<Verify
     VerifySecurityAnswerBody object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -119,4 +130,3 @@ class _$VerifySecurityAnswerBodySerializer implements PrimitiveSerializer<Verify
     return result.build();
   }
 }
-

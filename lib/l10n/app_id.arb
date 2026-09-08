@@ -58,7 +58,13 @@
   "safeWaitFailed": "Keputusan menunggu tidak dapat disimpan. Coba lagi.",
   "coolingOffBreathingTitle": "Tarik napas dulu",
   "coolingOffBreathingBody": "Kamu baru loss {loss}%. Ikuti pola napas ini sebelum memilih. Setup-nya tidak ke mana-mana.",
-  "@coolingOffBreathingBody": {"placeholders": {"loss": {"type": "String"}}},
+  "@coolingOffBreathingBody": {
+    "placeholders": {
+      "loss": {
+        "type": "String"
+      }
+    }
+  },
   "coolingOffBreathingBodyGeneric": "Ikuti pola napas ini sebelum memilih. Setup-nya tidak ke mana-mana.",
   "coolingOffBreathingInhale": "Tarik napas",
   "coolingOffBreathingHold": "Tahan",
@@ -66,7 +72,16 @@
   "coolingOffBreathingWait": "Tunggu dulu",
   "coolingOffBreathingContinue": "Lanjut saja",
   "xpAwarded": "+{xp} XP untuk {activity}",
-  "@xpAwarded": {"placeholders": {"xp": {"type": "int"}, "activity": {"type": "String"}}},
+  "@xpAwarded": {
+    "placeholders": {
+      "xp": {
+        "type": "int"
+      },
+      "activity": {
+        "type": "String"
+      }
+    }
+  },
   "checklistActivity": "menyelesaikan checklist pra-analisis",
   "guideComplete": "Tandai selesai",
   "guideReading": "Baca materi sampai tombol selesai aktif.",
@@ -88,21 +103,60 @@
   "progressionCurrentStreak": "Streak aktif",
   "progressionLongestStreak": "Streak terpanjang",
   "progressionLevel": "Level {level}",
-  "@progressionLevel": {"placeholders": {"level": {"type": "int"}}},
+  "@progressionLevel": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
   "progressionMastery": "Mastery {level}",
-  "@progressionMastery": {"placeholders": {"level": {"type": "int"}}},
+  "@progressionMastery": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
   "progressionRank": "Rank: {rank}",
-  "@progressionRank": {"placeholders": {"rank": {"type": "String"}}},
+  "@progressionRank": {
+    "placeholders": {
+      "rank": {
+        "type": "String"
+      }
+    }
+  },
   "progressionXpToNext": "{xp} XP menuju level berikutnya",
-  "@progressionXpToNext": {"placeholders": {"xp": {"type": "int"}}},
+  "@progressionXpToNext": {
+    "placeholders": {
+      "xp": {
+        "type": "int"
+      }
+    }
+  },
   "progressionUnlocked": "Terbuka {date}",
-  "@progressionUnlocked": {"placeholders": {"date": {"type": "String"}}},
+  "@progressionUnlocked": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "progressionLocked": "Terkunci",
   "progressionNoAchievements": "Selesaikan aktivitas untuk membuka pencapaian.",
   "progressionNoHistory": "Belum ada aktivitas. Mulai bangun rutinitas kedisiplinanmu.",
   "progressionPrivate": "Progress ini privat. XP menghargai proses, bukan profit, win rate, atau besar modal.",
   "progressionActivity": "+{xp} XP karena {reason}",
-  "@progressionActivity": {"placeholders": {"xp": {"type": "int"}, "reason": {"type": "String"}}},
+  "@progressionActivity": {
+    "placeholders": {
+      "xp": {
+        "type": "int"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "mindsetDisclaimer": "Materi edukasi saja. Bukan nasihat finansial atau psikologis.",
   "signOut": "Keluar",
   "signOutConfirmation": "Yakin ingin keluar dari akun ini?",
@@ -714,7 +768,13 @@
   "riskWait": "Tunggu",
   "riskSelected": "Terpilih",
   "useTimeframe": "Gunakan {timeframe}",
-  "@useTimeframe": {"placeholders": {"timeframe": {"type": "String"}}},
+  "@useTimeframe": {
+    "placeholders": {
+      "timeframe": {
+        "type": "String"
+      }
+    }
+  },
   "standardRulesTitle": "TP Standard Trading Rules",
   "standardRulesDescription": "Aturan broker-neutral yang menjadi dasar estimasi Trade Pilot.",
   "standardRulesLoading": "Memuat aturan trading standar...",
@@ -736,5 +796,74 @@
   "minimumDeposit": "Deposit minimum",
   "marginControls": "Kontrol margin",
   "profitLossFormula": "Formula P/L",
-  "sourceDocument": "Dokumen sumber"
+  "sourceDocument": "Dokumen sumber",
+  "topUpCredit": "Top Up Credit",
+  "analysisQuotaHourTitle": "Batas per jam tercapai",
+  "analysisQuotaHourMessage": "Kuota analisis per jam kamu sudah habis. Coba lagi setelah waktu tunggu berakhir.",
+  "analysisQuotaDayTitle": "Batas harian tercapai",
+  "analysisQuotaDayMessage": "Kuota gratis harian kamu sudah habis. Gunakan credit atau coba lagi besok.",
+  "analysisQuotaConcurrentTitle": "Analisis masih diproses",
+  "analysisQuotaConcurrentMessage": "Tunggu analisis sebelumnya selesai sebelum membuat analisis baru.",
+  "analysisQuotaUnknownTitle": "Analisis belum dapat dibuat",
+  "analysisQuotaUnknownMessage": "Batas analisis sedang berlaku. Silakan coba lagi nanti.",
+  "analysisQuotaUsage": "Terpakai {used} dari {limit}",
+  "@analysisQuotaUsage": {
+    "placeholders": {
+      "used": { "type": "int" },
+      "limit": { "type": "int" }
+    }
+  },
+  "analysisRetryAfter": "Coba lagi dalam {duration}",
+  "@analysisRetryAfter": {
+    "placeholders": { "duration": { "type": "String" } }
+  },
+  "analysisSeconds": "{count} detik",
+  "@analysisSeconds": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "analysisMinutes": "{count} menit",
+  "@analysisMinutes": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "analysisQuotaBalances": "Per jam: {hourly} • Harian: {daily} • Credit: {credits}",
+  "@analysisQuotaBalances": {
+    "placeholders": {
+      "hourly": { "type": "int" },
+      "daily": { "type": "int" },
+      "credits": { "type": "int" }
+    }
+  },
+  "analysisCreditConsumed": "1 credit dipakai. Sisa saldo: {balance} credit.",
+  "@analysisCreditConsumed": {
+    "placeholders": { "balance": { "type": "int" } }
+  },
+  "analysisCreditConsumedUnknownBalance": "1 credit dipakai. Saldo sedang diperbarui.",
+  "creditBalance": "Saldo credit",
+  "creditBalanceFailed": "Saldo gagal dimuat.",
+  "topUpScanQris": "Pindai QRIS ini lewat aplikasi bank atau e-wallet kamu, lalu kirim permintaan di bawah.",
+  "topUpQrisUnavailable": "Kode QRIS gagal dimuat.",
+  "topUpRatePerCredit": "{amount} per credit",
+  "topUpAmountLabel": "Nominal (Rupiah)",
+  "topUpAmountHint": "mis. 50000",
+  "topUpCreditsPreview": "Kamu akan menerima {credits} credit",
+  "topUpAmountRequired": "Masukkan nominal yang kamu bayar.",
+  "topUpAmountTooSmall": "Top-up minimal {amount}.",
+  "topUpReferenceLabel": "Referensi pembayaran (opsional)",
+  "topUpReferenceHint": "mis. nama pengirim atau nomor referensi transfer",
+  "topUpProofLabel": "Bukti pembayaran (opsional)",
+  "topUpAddProof": "Lampirkan bukti",
+  "topUpChangeProof": "Ganti bukti",
+  "topUpProofAttached": "Bukti terlampir",
+  "topUpSubmit": "Kirim permintaan top-up",
+  "topUpSubmitted": "Permintaan top-up terkirim. Akan segera ditinjau.",
+  "topUpProofFailed": "Bukti pembayaran gagal diunggah. Permintaan tidak dikirim.",
+  "topUpConfigFailed": "Konfigurasi top-up gagal dimuat.",
+  "topUpHistory": "Riwayat top-up",
+  "topUpHistoryEmpty": "Kamu belum pernah mengajukan top-up.",
+  "topUpLoadMore": "Muat lebih banyak",
+  "topUpApproved": "Disetujui",
+  "topUpRejected": "Ditolak",
+  "topUpCreditsGranted": "{credits} credit ditambahkan",
+  "topUpReviewNote": "Catatan admin: {note}",
+  "topUpRequestedCredits": "{credits} credit"
 }

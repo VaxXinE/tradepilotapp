@@ -13,12 +13,13 @@ part 'feedback_list.g.dart';
 /// FeedbackList
 ///
 /// Properties:
-/// * [feedback] 
-/// * [total] 
-/// * [page] 
-/// * [limit] 
+/// * [feedback]
+/// * [total]
+/// * [page]
+/// * [limit]
 @BuiltValue()
-abstract class FeedbackList implements Built<FeedbackList, FeedbackListBuilder> {
+abstract class FeedbackList
+    implements Built<FeedbackList, FeedbackListBuilder> {
   @BuiltValueField(wireName: r'feedback')
   BuiltList<FeedbackWithDetails> get feedback;
 
@@ -82,7 +83,9 @@ class _$FeedbackListSerializer implements PrimitiveSerializer<FeedbackList> {
     FeedbackList object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -100,7 +103,8 @@ class _$FeedbackListSerializer implements PrimitiveSerializer<FeedbackList> {
         case r'feedback':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltList, [FullType(FeedbackWithDetails)]),
+            specifiedType:
+                const FullType(BuiltList, [FullType(FeedbackWithDetails)]),
           ) as BuiltList<FeedbackWithDetails>;
           result.feedback.replace(valueDes);
           break;
@@ -153,4 +157,3 @@ class _$FeedbackListSerializer implements PrimitiveSerializer<FeedbackList> {
     return result.build();
   }
 }
-

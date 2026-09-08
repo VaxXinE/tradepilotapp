@@ -11,14 +11,15 @@ part 'fundamental_news_item.g.dart';
 /// A single news headline included in the fundamental snapshot persisted on an analysis row. Captured from Newsmaker.id and Yahoo Finance RSS at analysis time.
 ///
 /// Properties:
-/// * [id] 
-/// * [title] 
-/// * [summary] 
+/// * [id]
+/// * [title]
+/// * [summary]
 /// * [source_] - Human-readable source label, e.g. 'Newsmaker.id' or 'Yahoo Finance'.
-/// * [url] 
-/// * [publishedAt] 
+/// * [url]
+/// * [publishedAt]
 @BuiltValue()
-abstract class FundamentalNewsItem implements Built<FundamentalNewsItem, FundamentalNewsItemBuilder> {
+abstract class FundamentalNewsItem
+    implements Built<FundamentalNewsItem, FundamentalNewsItemBuilder> {
   @BuiltValueField(wireName: r'id')
   String get id;
 
@@ -40,18 +41,24 @@ abstract class FundamentalNewsItem implements Built<FundamentalNewsItem, Fundame
 
   FundamentalNewsItem._();
 
-  factory FundamentalNewsItem([void updates(FundamentalNewsItemBuilder b)]) = _$FundamentalNewsItem;
+  factory FundamentalNewsItem([void updates(FundamentalNewsItemBuilder b)]) =
+      _$FundamentalNewsItem;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(FundamentalNewsItemBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<FundamentalNewsItem> get serializer => _$FundamentalNewsItemSerializer();
+  static Serializer<FundamentalNewsItem> get serializer =>
+      _$FundamentalNewsItemSerializer();
 }
 
-class _$FundamentalNewsItemSerializer implements PrimitiveSerializer<FundamentalNewsItem> {
+class _$FundamentalNewsItemSerializer
+    implements PrimitiveSerializer<FundamentalNewsItem> {
   @override
-  final Iterable<Type> types = const [FundamentalNewsItem, _$FundamentalNewsItem];
+  final Iterable<Type> types = const [
+    FundamentalNewsItem,
+    _$FundamentalNewsItem
+  ];
 
   @override
   final String wireName = r'FundamentalNewsItem';
@@ -101,7 +108,9 @@ class _$FundamentalNewsItemSerializer implements PrimitiveSerializer<Fundamental
     FundamentalNewsItem object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(

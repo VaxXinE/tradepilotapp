@@ -11,10 +11,13 @@ part 'outbound_click_stats_by_target_inner.g.dart';
 /// OutboundClickStatsByTargetInner
 ///
 /// Properties:
-/// * [target] 
-/// * [count] 
+/// * [target]
+/// * [count]
 @BuiltValue()
-abstract class OutboundClickStatsByTargetInner implements Built<OutboundClickStatsByTargetInner, OutboundClickStatsByTargetInnerBuilder> {
+abstract class OutboundClickStatsByTargetInner
+    implements
+        Built<OutboundClickStatsByTargetInner,
+            OutboundClickStatsByTargetInnerBuilder> {
   @BuiltValueField(wireName: r'target')
   String get target;
 
@@ -23,18 +26,25 @@ abstract class OutboundClickStatsByTargetInner implements Built<OutboundClickSta
 
   OutboundClickStatsByTargetInner._();
 
-  factory OutboundClickStatsByTargetInner([void updates(OutboundClickStatsByTargetInnerBuilder b)]) = _$OutboundClickStatsByTargetInner;
+  factory OutboundClickStatsByTargetInner(
+          [void updates(OutboundClickStatsByTargetInnerBuilder b)]) =
+      _$OutboundClickStatsByTargetInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(OutboundClickStatsByTargetInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<OutboundClickStatsByTargetInner> get serializer => _$OutboundClickStatsByTargetInnerSerializer();
+  static Serializer<OutboundClickStatsByTargetInner> get serializer =>
+      _$OutboundClickStatsByTargetInnerSerializer();
 }
 
-class _$OutboundClickStatsByTargetInnerSerializer implements PrimitiveSerializer<OutboundClickStatsByTargetInner> {
+class _$OutboundClickStatsByTargetInnerSerializer
+    implements PrimitiveSerializer<OutboundClickStatsByTargetInner> {
   @override
-  final Iterable<Type> types = const [OutboundClickStatsByTargetInner, _$OutboundClickStatsByTargetInner];
+  final Iterable<Type> types = const [
+    OutboundClickStatsByTargetInner,
+    _$OutboundClickStatsByTargetInner
+  ];
 
   @override
   final String wireName = r'OutboundClickStatsByTargetInner';
@@ -62,7 +72,9 @@ class _$OutboundClickStatsByTargetInnerSerializer implements PrimitiveSerializer
     OutboundClickStatsByTargetInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -119,4 +131,3 @@ class _$OutboundClickStatsByTargetInnerSerializer implements PrimitiveSerializer
     return result.build();
   }
 }
-

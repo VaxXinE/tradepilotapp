@@ -13,11 +13,13 @@ part 'refresh_fundamentals_response.g.dart';
 /// Response from POST /analyses/{id}/refresh-fundamentals — the freshly-fetched fundamental snapshot plus a drift report against the AI's original citations.
 ///
 /// Properties:
-/// * [fundamentalContext] 
+/// * [fundamentalContext]
 /// * [refreshedAt] - Server-side timestamp at which the fresh snapshot was captured. Used by the UI to render the 'updated N minutes ago' banner.
-/// * [drift] 
+/// * [drift]
 @BuiltValue()
-abstract class RefreshFundamentalsResponse implements Built<RefreshFundamentalsResponse, RefreshFundamentalsResponseBuilder> {
+abstract class RefreshFundamentalsResponse
+    implements
+        Built<RefreshFundamentalsResponse, RefreshFundamentalsResponseBuilder> {
   @BuiltValueField(wireName: r'fundamentalContext')
   FundamentalContext get fundamentalContext;
 
@@ -30,18 +32,25 @@ abstract class RefreshFundamentalsResponse implements Built<RefreshFundamentalsR
 
   RefreshFundamentalsResponse._();
 
-  factory RefreshFundamentalsResponse([void updates(RefreshFundamentalsResponseBuilder b)]) = _$RefreshFundamentalsResponse;
+  factory RefreshFundamentalsResponse(
+          [void updates(RefreshFundamentalsResponseBuilder b)]) =
+      _$RefreshFundamentalsResponse;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(RefreshFundamentalsResponseBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<RefreshFundamentalsResponse> get serializer => _$RefreshFundamentalsResponseSerializer();
+  static Serializer<RefreshFundamentalsResponse> get serializer =>
+      _$RefreshFundamentalsResponseSerializer();
 }
 
-class _$RefreshFundamentalsResponseSerializer implements PrimitiveSerializer<RefreshFundamentalsResponse> {
+class _$RefreshFundamentalsResponseSerializer
+    implements PrimitiveSerializer<RefreshFundamentalsResponse> {
   @override
-  final Iterable<Type> types = const [RefreshFundamentalsResponse, _$RefreshFundamentalsResponse];
+  final Iterable<Type> types = const [
+    RefreshFundamentalsResponse,
+    _$RefreshFundamentalsResponse
+  ];
 
   @override
   final String wireName = r'RefreshFundamentalsResponse';
@@ -74,7 +83,9 @@ class _$RefreshFundamentalsResponseSerializer implements PrimitiveSerializer<Ref
     RefreshFundamentalsResponse object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -138,4 +149,3 @@ class _$RefreshFundamentalsResponseSerializer implements PrimitiveSerializer<Ref
     return result.build();
   }
 }
-

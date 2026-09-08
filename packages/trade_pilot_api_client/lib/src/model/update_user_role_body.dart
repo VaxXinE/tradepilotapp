@@ -12,25 +12,29 @@ part 'update_user_role_body.g.dart';
 /// UpdateUserRoleBody
 ///
 /// Properties:
-/// * [role] 
+/// * [role]
 @BuiltValue()
-abstract class UpdateUserRoleBody implements Built<UpdateUserRoleBody, UpdateUserRoleBodyBuilder> {
+abstract class UpdateUserRoleBody
+    implements Built<UpdateUserRoleBody, UpdateUserRoleBodyBuilder> {
   @BuiltValueField(wireName: r'role')
   UpdateUserRoleBodyRoleEnum get role;
   // enum roleEnum {  user,  admin,  super_admin,  };
 
   UpdateUserRoleBody._();
 
-  factory UpdateUserRoleBody([void updates(UpdateUserRoleBodyBuilder b)]) = _$UpdateUserRoleBody;
+  factory UpdateUserRoleBody([void updates(UpdateUserRoleBodyBuilder b)]) =
+      _$UpdateUserRoleBody;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(UpdateUserRoleBodyBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<UpdateUserRoleBody> get serializer => _$UpdateUserRoleBodySerializer();
+  static Serializer<UpdateUserRoleBody> get serializer =>
+      _$UpdateUserRoleBodySerializer();
 }
 
-class _$UpdateUserRoleBodySerializer implements PrimitiveSerializer<UpdateUserRoleBody> {
+class _$UpdateUserRoleBodySerializer
+    implements PrimitiveSerializer<UpdateUserRoleBody> {
   @override
   final Iterable<Type> types = const [UpdateUserRoleBody, _$UpdateUserRoleBody];
 
@@ -55,7 +59,9 @@ class _$UpdateUserRoleBodySerializer implements PrimitiveSerializer<UpdateUserRo
     UpdateUserRoleBody object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -107,19 +113,23 @@ class _$UpdateUserRoleBodySerializer implements PrimitiveSerializer<UpdateUserRo
 }
 
 class UpdateUserRoleBodyRoleEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'user')
-  static const UpdateUserRoleBodyRoleEnum user = _$updateUserRoleBodyRoleEnum_user;
+  static const UpdateUserRoleBodyRoleEnum user =
+      _$updateUserRoleBodyRoleEnum_user;
   @BuiltValueEnumConst(wireName: r'admin')
-  static const UpdateUserRoleBodyRoleEnum admin = _$updateUserRoleBodyRoleEnum_admin;
+  static const UpdateUserRoleBodyRoleEnum admin =
+      _$updateUserRoleBodyRoleEnum_admin;
   @BuiltValueEnumConst(wireName: r'super_admin')
-  static const UpdateUserRoleBodyRoleEnum superAdmin = _$updateUserRoleBodyRoleEnum_superAdmin;
+  static const UpdateUserRoleBodyRoleEnum superAdmin =
+      _$updateUserRoleBodyRoleEnum_superAdmin;
 
-  static Serializer<UpdateUserRoleBodyRoleEnum> get serializer => _$updateUserRoleBodyRoleEnumSerializer;
+  static Serializer<UpdateUserRoleBodyRoleEnum> get serializer =>
+      _$updateUserRoleBodyRoleEnumSerializer;
 
-  const UpdateUserRoleBodyRoleEnum._(String name): super(name);
+  const UpdateUserRoleBodyRoleEnum._(String name) : super(name);
 
-  static BuiltSet<UpdateUserRoleBodyRoleEnum> get values => _$updateUserRoleBodyRoleEnumValues;
-  static UpdateUserRoleBodyRoleEnum valueOf(String name) => _$updateUserRoleBodyRoleEnumValueOf(name);
+  static BuiltSet<UpdateUserRoleBodyRoleEnum> get values =>
+      _$updateUserRoleBodyRoleEnumValues;
+  static UpdateUserRoleBodyRoleEnum valueOf(String name) =>
+      _$updateUserRoleBodyRoleEnumValueOf(name);
 }
-

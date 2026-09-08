@@ -1534,4 +1534,168 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sourceDocument => 'Source document';
+
+  @override
+  String get topUpCredit => 'Top Up Credit';
+
+  @override
+  String get analysisQuotaHourTitle => 'Hourly limit reached';
+
+  @override
+  String get analysisQuotaHourMessage =>
+      'Your hourly analysis quota is used up. Try again after the wait period ends.';
+
+  @override
+  String get analysisQuotaDayTitle => 'Daily limit reached';
+
+  @override
+  String get analysisQuotaDayMessage =>
+      'Your free daily quota is used up. Use a credit or try again tomorrow.';
+
+  @override
+  String get analysisQuotaConcurrentTitle => 'Analysis still in progress';
+
+  @override
+  String get analysisQuotaConcurrentMessage =>
+      'Wait for the previous analysis to finish before creating another one.';
+
+  @override
+  String get analysisQuotaUnknownTitle => 'Analysis could not be created';
+
+  @override
+  String get analysisQuotaUnknownMessage =>
+      'An analysis limit is active. Please try again later.';
+
+  @override
+  String analysisQuotaUsage(int used, int limit) {
+    return 'Used $used of $limit';
+  }
+
+  @override
+  String analysisRetryAfter(String duration) {
+    return 'Try again in $duration';
+  }
+
+  @override
+  String analysisSeconds(int count) {
+    return '$count seconds';
+  }
+
+  @override
+  String analysisMinutes(int count) {
+    return '$count minutes';
+  }
+
+  @override
+  String analysisQuotaBalances(int hourly, int daily, int credits) {
+    return 'Hourly: $hourly • Daily: $daily • Credits: $credits';
+  }
+
+  @override
+  String analysisCreditConsumed(int balance) {
+    return '1 credit used. Remaining balance: $balance credits.';
+  }
+
+  @override
+  String get analysisCreditConsumedUnknownBalance =>
+      '1 credit used. Your balance is being refreshed.';
+
+  @override
+  String get creditBalance => 'Credit balance';
+
+  @override
+  String get creditBalanceFailed => 'Balance could not be loaded.';
+
+  @override
+  String get topUpScanQris =>
+      'Scan this QRIS with your banking or e-wallet app, then submit the request below.';
+
+  @override
+  String get topUpQrisUnavailable => 'The QRIS code could not be loaded.';
+
+  @override
+  String topUpRatePerCredit(String amount) {
+    return '$amount per credit';
+  }
+
+  @override
+  String get topUpAmountLabel => 'Amount (Rupiah)';
+
+  @override
+  String get topUpAmountHint => 'e.g. 50000';
+
+  @override
+  String topUpCreditsPreview(int credits) {
+    return 'You will receive $credits credit';
+  }
+
+  @override
+  String get topUpAmountRequired => 'Enter the amount you paid.';
+
+  @override
+  String topUpAmountTooSmall(String amount) {
+    return 'Minimum top-up is $amount.';
+  }
+
+  @override
+  String get topUpReferenceLabel => 'Payment reference (optional)';
+
+  @override
+  String get topUpReferenceHint => 'e.g. sender name or transfer reference';
+
+  @override
+  String get topUpProofLabel => 'Payment proof (optional)';
+
+  @override
+  String get topUpAddProof => 'Attach proof';
+
+  @override
+  String get topUpChangeProof => 'Change proof';
+
+  @override
+  String get topUpProofAttached => 'Proof attached';
+
+  @override
+  String get topUpSubmit => 'Submit top-up request';
+
+  @override
+  String get topUpSubmitted =>
+      'Top-up request submitted. It will be reviewed shortly.';
+
+  @override
+  String get topUpProofFailed =>
+      'Payment proof could not be uploaded. The request was not submitted.';
+
+  @override
+  String get topUpConfigFailed => 'Top-up configuration could not be loaded.';
+
+  @override
+  String get topUpHistory => 'Top-up history';
+
+  @override
+  String get topUpHistoryEmpty => 'You have not made any top-up requests yet.';
+
+  @override
+  String get topUpLoadMore => 'Load more';
+
+  @override
+  String get topUpApproved => 'Approved';
+
+  @override
+  String get topUpRejected => 'Rejected';
+
+  @override
+  String topUpCreditsGranted(int credits) {
+    return '$credits credit added';
+  }
+
+  @override
+  String topUpReviewNote(String note) {
+    return 'Admin note: $note';
+  }
+
+  @override
+  String topUpRequestedCredits(int credits) {
+    return '$credits credit';
+  }
 }
