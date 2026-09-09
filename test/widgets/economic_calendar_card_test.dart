@@ -18,6 +18,8 @@ void main() {
     expect(find.text('High Impact'), findsOneWidget);
     expect(find.text('Forecast: 5.25%'), findsOneWidget);
     expect(find.text('Actual: 5.50%'), findsOneWidget);
+    expect(find.byKey(const ValueKey('currency-flag-us')), findsOneWidget);
+    expect(find.text('US'), findsOneWidget);
     expect(find.textContaining('affects Gold'), findsOneWidget);
   });
 
