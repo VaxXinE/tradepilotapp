@@ -4,6 +4,7 @@
   "tradePilotLogo": "Trade Pilot logo",
   "aiTradingAssistant": "AI-powered trading analysis",
   "dashboard": "Dashboard",
+  "dashboardDescription": "Market overview, watchlist, and latest analyses",
   "analysis": "Analysis",
   "analysisNotFound": "Analysis not found",
   "analysisCreateFailed": "A new analysis could not be created.",
@@ -112,6 +113,15 @@
   "riskModerateGuidance": "Opportunity and uncertainty are both present. Wait for a clear setup and use a measured position size.",
   "reanalyze": "Analyze again",
   "history": "History",
+  "historyPageTitle": "History & Analysis Performance",
+  "historyTotalAnalyses": "{count} analyses total",
+  "@historyTotalAnalyses": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "profile": "Profile",
   "account": "Account",
   "profileInformation": "Profile Information",
@@ -121,6 +131,12 @@
   "english": "English",
   "indonesian": "Bahasa Indonesia",
   "darkTheme": "Dark theme",
+  "appearance": "Appearance",
+  "lightMode": "Light",
+  "darkMode": "Dark",
+  "roleUser": "User",
+  "roleAdmin": "Admin",
+  "roleSuperAdmin": "Super Admin",
   "darkThemeEnabled": "Enabled • comfortable in low light",
   "darkThemeDisabled": "Disabled • using light appearance",
   "analysisMode": "Analysis mode",
@@ -135,6 +151,10 @@
   "notAvailable": "Not available",
   "legalAndHelp": "Legal & Help",
   "privacyPolicy": "Privacy Policy",
+  "appFooterDisclaimer": "TradePilot is a decision-support tool, not financial advice or a trading service.",
+  "sponsoredBy": "Sponsored by",
+  "newsDataVia": "News data via newsmaker.id",
+  "marketNews": "Market news",
   "termsOfService": "Terms of Service",
   "support": "Support",
   "deleteAccount": "Delete Account",
@@ -303,6 +323,8 @@
   "traderMindset": "Trader's Mindset",
   "traderMindsetDescription": "Short lessons for disciplined decisions",
   "guide": "Guide Center",
+  "guideNavLabel": "Guide",
+  "back": "Back",
   "guideDescription": "Guides to features, analysis, risk, and trading discipline",
   "mentalChecklistPreference": "Pre-analysis mental checklist",
   "mentalChecklistPreferenceHint": "Show four discipline reminders before creating an analysis",
@@ -445,15 +467,17 @@
   "currentPasswordRequired": "Current password is required",
   "passwordMinimumCharacters": "Password must be at least 8 characters",
   "passwordConfirmationMismatch": "Password confirmation does not match",
-  "welcomeBack": "Welcome back",
-  "loginDescription": "Sign in to continue your market analysis.",
-  "emailHint": "name@email.com",
+  "welcomeBack": "Welcome Back",
+  "loginDescription": "Sign in to continue your analysis",
+  "usernameEmail": "Username / Email",
+  "usernameEmailHint": "Your username or email",
+  "emailHint": "your@email.com",
   "invalidEmail": "Enter a valid email address",
   "password": "Password",
   "passwordRequired": "Password is required",
-  "rememberMe": "Remember my email",
+  "rememberMe": "Remember Me",
   "forgotPassword": "Forgot password?",
-  "signIn": "Sign In",
+  "signIn": "Sign In to Dashboard",
   "or": "or",
   "continueWithGoogle": "Continue with Google",
   "googleDeleteReauthDescription": "To protect your account, verify your identity with Google before deletion.",
@@ -465,7 +489,7 @@
   "verifying": "Verifying...",
   "signInWithBiometrics": "Sign in with fingerprint / face",
   "noAccount": "Don't have an account? ",
-  "register": "Register",
+  "register": "Register free",
   "biometricReason": "Verify your identity to sign in to Trade Pilot",
   "biometricUnavailable": "Biometrics are unavailable. Use your email and password.",
   "createAccount": "Create Account",
@@ -505,6 +529,7 @@
   "newPasswordDescription": "Use at least 8 characters and do not reuse your old password.",
   "savePassword": "Save Password",
   "myPriceAlerts": "My Price Alerts",
+  "priceAlertsSubtitle": "Price alerts you've set across instruments",
   "notifications": "Notifications",
   "markAllRead": "Mark all as read",
   "realtimeActive": "Realtime connected",
@@ -677,6 +702,12 @@
   },
   "alertNeedsLivePrice": "A price alert requires a live price. A live price is not available for this instrument.",
   "aiAnalysis": "AI Analysis",
+  "analyzeTitle": "New Analysis",
+  "otherInstrument": "Other instrument…",
+  "quotaHour": "Hourly remaining",
+  "quotaDay": "Daily remaining",
+  "quotaHourShort": "/hr",
+  "quotaDayShort": "/day",
   "selectInstrument": "Select Instrument",
   "selectMarketDescription": "Select the market you want to understand.",
   "tapToChangeInstrument": "Tap to change the instrument",
@@ -1264,6 +1295,17 @@
   },
   "topUpAmountLabel": "Amount (Rupiah)",
   "topUpAmountHint": "e.g. 50000",
+  "topUpChooseAmount": "Choose a top-up amount",
+  "topUpContinuePayment": "Continue to payment",
+  "topUpPayment": "Payment details",
+  "topUpChangeAmount": "Change amount",
+  "topUpPaymentSummary": "Pay {amount} to receive {credits} credit",
+  "@topUpPaymentSummary": {
+    "placeholders": {
+      "amount": {"type": "String"},
+      "credits": {"type": "int"}
+    }
+  },
   "topUpCreditsPreview": "You will receive {credits} credit",
   "@topUpCreditsPreview": {
     "placeholders": {
@@ -1462,6 +1504,8 @@
   "analyticsLoadFailed": "Analytics could not be loaded. Please try again.",
   "sessionChangedReopen": "Your session changed. Please reopen this page.",
   "analyticsDisclaimer": "These statistics describe analysis habits, not trading profit.",
+  "analyticsActivitySummary": "Activity summary",
+  "analyticsWeeklyActivity": "Weekly activity",
   "metricAllAnalyses": "All analyses",
   "metricThisMonth": "This month",
   "metricThisWeek": "This week",
@@ -1522,6 +1566,17 @@
   "traderMirrorSessions": "Market sessions",
   "traderMirrorInstruments": "Instrument concentration",
   "traderMirrorTiming": "Analysis timing",
+  "traderMirrorPostLoss": "Patterns after a negative outcome",
+  "traderMirrorEvaluationDiscipline": "Evaluation discipline",
+  "traderMirrorProcessReflection": "Process reflection",
+  "traderMirrorSamples": "{count} samples",
+  "@traderMirrorSamples": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "traderMirrorBasedOn": "Based on {count} analyses currently loaded on this device.",
   "@traderMirrorBasedOn": {
     "placeholders": {
@@ -1556,6 +1611,19 @@
     }
   },
   "dailySummaryDeliveryTime": "Delivery time",
+  "dailySummaryFullDigest": "Full digest",
+  "dailySummaryQuotaOnly": "Quota only",
+  "dailySummaryPreferredSide": "Preferred side: {side}",
+  "@dailySummaryPreferredSide": {
+    "placeholders": {
+      "side": {
+        "type": "String"
+      }
+    }
+  },
+  "guideSearchHint": "Search guide...",
+  "guideSubtitle": "Knowledge, features, and mindset.",
+  "guideNoResults": "No articles found.",
   "marketChartUnavailable": "The market chart is not available yet.",
   "journalCheckFailed": "The journal could not be checked.",
   "alertStatusLoadFailed": "Alert status could not be loaded.",

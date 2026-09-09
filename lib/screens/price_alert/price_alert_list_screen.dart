@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/l10n.dart';
 import '../../providers/price_alert_provider.dart';
 import '../../widgets/price_alert/price_alert_card.dart';
 
@@ -48,7 +49,7 @@ class _PriceAlertListScreenState extends State<PriceAlertListScreen> {
     final provider = context.watch<PriceAlertProvider>();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Price Alert Saya')),
+      appBar: AppBar(title: Text(context.l10n.myPriceAlerts)),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: provider.loadAlerts,
@@ -56,6 +57,34 @@ class _PriceAlertListScreenState extends State<PriceAlertListScreen> {
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(16),
             children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.notifications_active_outlined,
+                    size: 20,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      context.l10n.myPriceAlerts,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                context.l10n.priceAlertsSubtitle,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 16),
               PriceAlertCard(
                 alerts: provider.alerts,
                 isLoading: provider.isLoading,

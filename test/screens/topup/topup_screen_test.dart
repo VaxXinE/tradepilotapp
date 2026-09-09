@@ -80,6 +80,7 @@ void main() {
     final harness = await _pump(tester);
 
     await _type(tester, _amountField, '50000');
+    await _tap(tester, 'Continue to payment');
     await _type(tester, _referenceField, 'BCA 1234');
 
     await _tap(tester, 'Submit top-up request');
@@ -108,6 +109,7 @@ void main() {
     final harness = await _pump(tester, picker: _FakePicker());
 
     await _type(tester, _amountField, '50000');
+    await _tap(tester, 'Continue to payment');
 
     await _tap(tester, 'Attach proof');
     expect(find.text('Proof attached'), findsOneWidget);
@@ -137,6 +139,7 @@ void main() {
     harness.adapter.failUpload = true;
 
     await _type(tester, _amountField, '50000');
+    await _tap(tester, 'Continue to payment');
 
     await _tap(tester, 'Attach proof');
 
@@ -165,6 +168,9 @@ void main() {
       picker: _FakePicker(bytes: Uint8List(5 * 1024 * 1024 + 1)),
     );
 
+    await _type(tester, _amountField, '50000');
+    await _tap(tester, 'Continue to payment');
+
     await _tap(tester, 'Attach proof');
 
     expect(
@@ -186,6 +192,9 @@ void main() {
       picker: _FakePicker(name: 'statement.pdf', mimeType: 'application/pdf'),
     );
 
+    await _type(tester, _amountField, '50000');
+    await _tap(tester, 'Continue to payment');
+
     await _tap(tester, 'Attach proof');
 
     expect(
@@ -204,6 +213,7 @@ void main() {
     final harness = await _pump(tester);
 
     await _type(tester, _amountField, '50000');
+    await _tap(tester, 'Continue to payment');
 
     final submit = find.text('Submit top-up request');
     await tester.ensureVisible(submit);
@@ -223,11 +233,11 @@ void main() {
   testWidgets('validates the amount against the backend rate', (tester) async {
     final harness = await _pump(tester);
 
-    await _tap(tester, 'Submit top-up request');
+    await _tap(tester, 'Continue to payment');
     expect(find.text('Enter the amount you paid.'), findsOneWidget);
 
     await _type(tester, _amountField, '1000');
-    await _tap(tester, 'Submit top-up request');
+    await _tap(tester, 'Continue to payment');
     expect(find.textContaining('Minimum top-up is Rp5.000'), findsOneWidget);
 
     expect(

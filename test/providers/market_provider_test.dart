@@ -30,6 +30,57 @@ void main() {
         .setMockMethodCallHandler(storageChannel, null);
   });
 
+  test('analyze instrument groups follow the web allowlist', () {
+    expect(
+      MarketProvider.analyzeVisibleInstruments,
+      {'XAU/USD', 'BRENT', 'NIKKEI', 'HSI'},
+    );
+    // Only the futures category still has visible symbols, so the picker has
+    // no category tabs to show — matching VISIBLE_INSTRUMENT_CATEGORIES.
+    expect(MarketProvider.analyzeInstrumentGroups.keys, ['Futures']);
+    expect(
+      MarketProvider.analyzeInstrumentGroups['Futures'],
+      ['XAU/USD', 'BRENT', 'HSI', 'NIKKEI'],
+    );
+    for (final instrument in MarketProvider.analyzeVisibleInstruments) {
+      expect(MarketProvider.supportedInstruments, contains(instrument));
+    }
+  });
+
+  test('a typed instrument is kept without asking the market API', () async {
+    final auth = AuthProvider();
+    await Future<void>.delayed(Duration.zero);
+    auth
+      ..status = AuthStatus.authenticated
+      ..user = _user(1);
+    final repository = _FakeMarketRepository();
+    final provider = MarketProvider(auth, repository);
+    addTearDown(provider.dispose);
+
+    // Without the opt-in the symbol is still refused, as before.
+    await provider.selectInstrument('NASDAQ100');
+    expect(provider.selectedInstrument, 'XAU/USD');
+    expect(provider.isCustomInstrument, isFalse);
+    expect(provider.marketError, isNotNull);
+
+    await provider.selectInstrument('nasdaq100', allowUnsupported: true);
+    expect(provider.selectedInstrument, 'NASDAQ100');
+    expect(provider.isCustomInstrument, isTrue);
+    expect(provider.marketError, isNull);
+    expect(provider.selectedCandles, isEmpty);
+    expect(provider.selectedTechnical, isNull);
+    expect(repository.candleRequests, isEmpty);
+
+    // Changing the timeframe must not start a request either.
+    await provider.selectTimeframe('4h');
+    expect(provider.selectedTimeframe, '4h');
+    expect(repository.candleRequests, isEmpty);
+
+    // Going back to a supported symbol clears the custom flag.
+    await provider.selectInstrument('XAU/USD');
+    expect(provider.isCustomInstrument, isFalse);
+  });
+
   test('logout resets user-scoped and selected market state', () async {
     final auth = AuthProvider();
     await Future<void>.delayed(Duration.zero);

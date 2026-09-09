@@ -24,7 +24,6 @@ class EconomicCalendarCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final muted = Theme.of(context).colorScheme.onSurfaceVariant;
-    final visibleEvents = events.take(6).toList();
 
     return Card(
       child: Padding(
@@ -69,20 +68,28 @@ class EconomicCalendarCard extends StatelessWidget {
                   ],
                 ),
               )
-            else if (visibleEvents.isEmpty)
+            else if (events.isEmpty)
               Text(
                 l10n.noUpcomingEconomicEvents,
                 style: TextStyle(color: muted),
               )
             else
-              for (var index = 0; index < visibleEvents.length; index++) ...[
-                EconomicEventTile(
-                  event: visibleEvents[index],
-                  instrument: instrument,
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 430),
+                child: Scrollbar(
+                  child: ListView.separated(
+                    key: const Key('economic-calendar-event-list'),
+                    primary: false,
+                    shrinkWrap: true,
+                    itemCount: events.length,
+                    itemBuilder: (_, index) => EconomicEventTile(
+                      event: events[index],
+                      instrument: instrument,
+                    ),
+                    separatorBuilder: (_, _) => const Divider(height: 24),
+                  ),
                 ),
-                if (index != visibleEvents.length - 1)
-                  const Divider(height: 24),
-              ],
+              ),
           ],
         ),
       ),

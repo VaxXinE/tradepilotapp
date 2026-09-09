@@ -123,7 +123,10 @@ class AnalysisLevelsChart extends StatelessWidget {
   }
 
   double? _parsePriceLevel(String raw) {
-    final matches = RegExp(r'\d[\d.,]*').allMatches(raw);
+    final cleaned = raw
+        .replaceAll(RegExp(r'\b[HMDWhmdw]\d{1,3}\b'), ' ')
+        .replaceAll(RegExp(r'\b\d{1,3}[mhdwMHDW]\b'), ' ');
+    final matches = RegExp(r'\d[\d.,]*').allMatches(cleaned);
 
     final values = <double>[];
 

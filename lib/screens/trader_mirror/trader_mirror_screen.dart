@@ -6,6 +6,7 @@ import '../../core/mindset/mindset_engine.dart';
 import '../../providers/analysis_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../l10n/l10n.dart';
+import '../../widgets/responsive_page.dart';
 
 class TraderMirrorScreen extends StatefulWidget {
   const TraderMirrorScreen({super.key});
@@ -51,7 +52,7 @@ class _TraderMirrorScreenState extends State<TraderMirrorScreen> {
     final currentUserId = context.watch<AuthProvider>().user?.id;
     if (_ownerUserId != null && currentUserId != _ownerUserId) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Trader Mirror')),
+        appBar: AppBar(title: Text(context.l10n.traderMirror)),
         body: Center(child: Text(context.l10n.sessionChangedReopen)),
       );
     }
@@ -59,7 +60,7 @@ class _TraderMirrorScreenState extends State<TraderMirrorScreen> {
     final reflections = const MindsetEngine().evaluate(analysis.history);
     final data = _data;
     return Scaffold(
-      appBar: AppBar(title: const Text('Trader Mirror')),
+      appBar: AppBar(title: Text(context.l10n.traderMirror)),
       body: RefreshIndicator(
         onRefresh: _load,
         child: _loading && data == null
@@ -83,7 +84,8 @@ class _TraderMirrorScreenState extends State<TraderMirrorScreen> {
                 ],
               )
             : ListView(
-                padding: const EdgeInsets.all(16),
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: responsivePagePadding(context),
                 children: [
                   Text(context.l10n.traderMirrorDisclaimer),
                   const SizedBox(height: 16),
@@ -129,17 +131,20 @@ class _TraderMirrorScreenState extends State<TraderMirrorScreen> {
                     insight: data.insights.timing,
                   ),
                   _GateRow(
-                    label: 'Pola setelah outcome negatif',
+                    label: context.l10n.traderMirrorPostLoss,
                     insight: data.insights.postLoss,
                   ),
                   _GateRow(
-                    label: 'Disiplin evaluasi',
+                    label: context.l10n.traderMirrorEvaluationDiscipline,
                     insight: data.insights.exitDiscipline,
                   ),
                   const SizedBox(height: 22),
-                  const Text(
-                    'Refleksi proses',
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
+                  Text(
+                    context.l10n.traderMirrorProcessReflection,
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                   Text(
                     context.l10n.traderMirrorBasedOn(analysis.history.length),
@@ -201,7 +206,7 @@ class _GateRow extends StatelessWidget {
                     (entry) => ListTile(
                       dense: true,
                       title: Text(_label(entry.key)),
-                      subtitle: Text(_summary(entry.value?.value)),
+                      subtitle: Text(_summary(context, entry.value?.value)),
                     ),
                   )
                   .toList(),
@@ -216,13 +221,14 @@ class _GateRow extends StatelessWidget {
         : '${normalized[0].toUpperCase()}${normalized.substring(1)}';
   }
 
-  static String _summary(Object? value) {
+  static String _summary(BuildContext context, Object? value) {
     if (value is Map) {
       final key = value['key'];
       final rate = value['winRate'];
       final total = value['total'];
       if (key != null && rate is num) {
-        return '$key · ${(rate * 100).round()}% · ${total ?? 0} sampel';
+        return '$key · ${(rate * 100).round()}% · '
+            '${context.l10n.traderMirrorSamples((total as num?)?.round() ?? 0)}';
       }
       return value.entries
           .map((entry) => '${_label('${entry.key}')}: ${entry.value}')

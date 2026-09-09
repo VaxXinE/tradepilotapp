@@ -27,10 +27,14 @@ class TopUpScreen extends StatefulWidget {
 }
 
 class _TopUpScreenState extends State<TopUpScreen> {
+  // Nominal preset mengikuti mobile web (PRESET_AMOUNTS pada pages/topup.tsx).
+  static const _presetAmounts = [5000, 10000, 15000, 20000];
+
   final _amountController = TextEditingController();
   final _referenceController = TextEditingController();
 
   _PickedProof? _proof;
+  bool _paymentStep = false;
   bool _uploadingProof = false;
   String? _proofError;
 
@@ -59,6 +63,21 @@ class _TopUpScreenState extends State<TopUpScreen> {
 
   bool get _isBusy =>
       _uploadingProof || context.read<CreditProvider>().isSubmitting;
+
+  void _continueToPayment() {
+    final amount = _amount;
+    final rate = context.read<CreditProvider>().config?.rupiahPerCredit;
+    if (amount == null || amount <= 0) {
+      _showMessage(context.l10n.topUpAmountRequired);
+      return;
+    }
+    if (rate != null && amount < rate) {
+      _showMessage(context.l10n.topUpAmountTooSmall(_rupiah(rate)));
+      return;
+    }
+    FocusScope.of(context).unfocus();
+    setState(() => _paymentStep = true);
+  }
 
   Future<void> _pickProof() async {
     final picker = widget.imagePicker ?? ImagePicker();
@@ -184,6 +203,7 @@ class _TopUpScreenState extends State<TopUpScreen> {
     setState(() {
       _proof = null;
       _proofError = null;
+      _paymentStep = false;
     });
 
     _showMessage(l10n.topUpSubmitted);
@@ -217,9 +237,10 @@ class _TopUpScreenState extends State<TopUpScreen> {
                   children: [
                     _BalanceCard(credit: credit),
                     const SizedBox(height: 16),
-                    _QrisCard(credit: credit),
-                    const SizedBox(height: 16),
-                    _buildForm(context, credit, theme),
+                    if (_paymentStep)
+                      _buildPaymentStep(context, credit, theme)
+                    else
+                      _buildAmountStep(context, credit, theme),
                     const SizedBox(height: 24),
                     Text(
                       l10n.topUpHistory,
@@ -239,7 +260,7 @@ class _TopUpScreenState extends State<TopUpScreen> {
     );
   }
 
-  Widget _buildForm(
+  Widget _buildAmountStep(
     BuildContext context,
     CreditProvider credit,
     ThemeData theme,
@@ -247,64 +268,159 @@ class _TopUpScreenState extends State<TopUpScreen> {
     final l10n = context.l10n;
     final amount = _amount;
     final credits = amount == null ? null : credit.creditsFor(amount);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(l10n.topUpChooseAmount, style: theme.textTheme.titleMedium),
+            const SizedBox(height: 12),
+            GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              childAspectRatio: 2.7,
+              mainAxisSpacing: 8,
+              crossAxisSpacing: 8,
+              children: [
+                for (final preset in _presetAmounts)
+                  OutlinedButton(
+                    onPressed: () {
+                      _amountController.text = '$preset';
+                      setState(() {});
+                    },
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: amount == preset
+                          ? theme.colorScheme.primary.withValues(alpha: .10)
+                          : null,
+                      side: BorderSide(
+                        color: amount == preset
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.outline,
+                      ),
+                    ),
+                    child: Text(_rupiah(preset)),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _amountController,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration: InputDecoration(
+                labelText: l10n.topUpAmountLabel,
+                hintText: l10n.topUpAmountHint,
+                prefixText: 'Rp ',
+              ),
+              onChanged: (_) => setState(() {}),
+            ),
+            if (credits != null && credits > 0) ...[
+              const SizedBox(height: 8),
+              Text(
+                l10n.topUpCreditsPreview(credits),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+            ],
+            if (credit.config case final config?) ...[
+              const SizedBox(height: 4),
+              Text(
+                l10n.topUpRatePerCredit(_rupiah(config.rupiahPerCredit)),
+                style: theme.textTheme.bodySmall,
+              ),
+            ],
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: _continueToPayment,
+              child: Text(l10n.topUpContinuePayment),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPaymentStep(
+    BuildContext context,
+    CreditProvider credit,
+    ThemeData theme,
+  ) {
+    final l10n = context.l10n;
+    final amount = _amount ?? 0;
+    final credits = credit.creditsFor(amount) ?? 0;
     final busy = _uploadingProof || credit.isSubmitting;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        ErrorBanner(message: credit.submitError),
-        ErrorBanner(message: _proofError),
-        TextField(
-          controller: _amountController,
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          enabled: !busy,
-          decoration: InputDecoration(
-            labelText: l10n.topUpAmountLabel,
-            hintText: l10n.topUpAmountHint,
-            prefixText: 'Rp ',
-            border: const OutlineInputBorder(),
-          ),
-          onChanged: (_) => setState(() {}),
-        ),
-        if (credits != null && credits > 0) ...[
-          const SizedBox(height: 8),
-          Text(
-            l10n.topUpCreditsPreview(credits),
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: theme.colorScheme.primary,
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        l10n.topUpPayment,
+                        style: theme.textTheme.titleMedium,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: busy
+                          ? null
+                          : () => setState(() => _paymentStep = false),
+                      child: Text(l10n.topUpChangeAmount),
+                    ),
+                  ],
+                ),
+                Text(
+                  l10n.topUpPaymentSummary(_rupiah(amount), credits),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _QrisCard(credit: credit, embedded: true),
+                const SizedBox(height: 16),
+                ErrorBanner(message: credit.submitError),
+                ErrorBanner(message: _proofError),
+                TextField(
+                  controller: _referenceController,
+                  enabled: !busy,
+                  maxLength: 200,
+                  decoration: InputDecoration(
+                    labelText: l10n.topUpReferenceLabel,
+                    hintText: l10n.topUpReferenceHint,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _ProofField(
+                  proof: _proof,
+                  busy: busy,
+                  onPick: _pickProof,
+                  onRemove: _removeProof,
+                ),
+                const SizedBox(height: 16),
+                FilledButton(
+                  onPressed: busy ? null : _submit,
+                  child: busy
+                      ? const SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text(l10n.topUpSubmit),
+                ),
+              ],
             ),
           ),
-        ],
-        const SizedBox(height: 16),
-        TextField(
-          controller: _referenceController,
-          enabled: !busy,
-          maxLength: 200,
-          decoration: InputDecoration(
-            labelText: l10n.topUpReferenceLabel,
-            hintText: l10n.topUpReferenceHint,
-            border: const OutlineInputBorder(),
-          ),
-        ),
-        const SizedBox(height: 8),
-        _ProofField(
-          proof: _proof,
-          busy: busy,
-          onPick: _pickProof,
-          onRemove: _removeProof,
-        ),
-        const SizedBox(height: 16),
-        FilledButton(
-          onPressed: busy ? null : _submit,
-          child: busy
-              ? const SizedBox(
-                  height: 18,
-                  width: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Text(l10n.topUpSubmit),
         ),
       ],
     );
@@ -385,9 +501,10 @@ class _BalanceCard extends StatelessWidget {
 }
 
 class _QrisCard extends StatelessWidget {
-  const _QrisCard({required this.credit});
+  const _QrisCard({required this.credit, this.embedded = false});
 
   final CreditProvider credit;
+  final bool embedded;
 
   @override
   Widget build(BuildContext context) {
@@ -426,43 +543,42 @@ class _QrisCard extends StatelessWidget {
       );
     }
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Text(
-              l10n.topUpScanQris,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodySmall,
-            ),
-            const SizedBox(height: 12),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                config.qrisImageUrl,
-                height: 220,
-                fit: BoxFit.contain,
-                errorBuilder: (context, _, _) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: Text(
-                    l10n.topUpQrisUnavailable,
-                    style: theme.textTheme.bodySmall,
-                  ),
+    final content = Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          Text(
+            l10n.topUpScanQris,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall,
+          ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.network(
+              config.qrisImageUrl,
+              height: 220,
+              fit: BoxFit.contain,
+              errorBuilder: (context, _, _) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Text(
+                  l10n.topUpQrisUnavailable,
+                  style: theme.textTheme.bodySmall,
                 ),
               ),
             ),
-            const SizedBox(height: 12),
-            Text(
-              l10n.topUpRatePerCredit(_rupiah(config.rupiahPerCredit)),
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            l10n.topUpRatePerCredit(_rupiah(config.rupiahPerCredit)),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
+    return embedded ? content : Card(child: content);
   }
 }
 

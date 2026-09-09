@@ -44,6 +44,8 @@ void main() {
 
     await _pump(tester, auth, const AnalyticsScreen(), analysis: analysis);
     expect(find.text('12'), findsOneWidget);
+    expect(find.text('Activity summary'), findsOneWidget);
+    expect(find.text('Ringkasan Aktivitas'), findsNothing);
     expect(find.textContaining('Counting only 1 of 3'), findsOneWidget);
   });
 
@@ -56,6 +58,8 @@ void main() {
     addTearDown(analysis.dispose);
 
     await _pump(tester, auth, const DailySummaryScreen());
+    expect(find.text('Daily Summary'), findsWidgets);
+    expect(find.text('Ringkasan Harian'), findsNothing);
     expect(find.text('No briefing for today yet.'), findsOneWidget);
     expect(find.textContaining('Asia/Jakarta'), findsOneWidget);
 
@@ -65,6 +69,49 @@ void main() {
       findsOneWidget,
     );
     expect(find.textContaining('Needs 5 data points'), findsWidgets);
+    expect(find.text('Patterns after a negative outcome'), findsOneWidget);
+    expect(find.text('Evaluation discipline'), findsOneWidget);
+  });
+
+  testWidgets('secondary screens fit a small phone with larger text', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(360, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final auth = await _auth(tester);
+    auth.client.dio.httpClientAdapter = _P3Adapter();
+    final analysis = AnalysisProvider(auth)
+      ..history = [_analysis()]
+      ..historyTotal = 3;
+    addTearDown(analysis.dispose);
+    const media = MediaQueryData(
+      size: Size(360, 800),
+      textScaler: TextScaler.linear(1.3),
+    );
+
+    await _pump(
+      tester,
+      auth,
+      const MediaQuery(data: media, child: AnalyticsScreen()),
+      analysis: analysis,
+    );
+    expect(tester.takeException(), isNull);
+
+    await _pump(
+      tester,
+      auth,
+      const MediaQuery(data: media, child: DailySummaryScreen()),
+    );
+    expect(tester.takeException(), isNull);
+
+    await _pump(
+      tester,
+      auth,
+      const MediaQuery(data: media, child: TraderMirrorScreen()),
+      analysis: analysis,
+    );
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('journal loads empty state and creates a server-backed entry', (

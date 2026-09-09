@@ -6,6 +6,7 @@ import '../../core/analytics/analysis_analytics.dart';
 import '../../providers/analysis_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../l10n/l10n.dart';
+import '../../widgets/responsive_page.dart';
 
 class AnalyticsScreen extends StatefulWidget {
   const AnalyticsScreen({super.key});
@@ -52,7 +53,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     final currentUserId = context.watch<AuthProvider>().user?.id;
     if (_ownerUserId != null && currentUserId != _ownerUserId) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Analytics')),
+        appBar: AppBar(title: Text(context.l10n.analytics)),
         body: Center(child: Text(context.l10n.sessionChangedReopen)),
       );
     }
@@ -62,15 +63,16 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       serverTotal: analysis.historyTotal,
     );
     return Scaffold(
-      appBar: AppBar(title: const Text('Analytics')),
+      appBar: AppBar(title: Text(context.l10n.analytics)),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: responsivePagePadding(context),
           children: [
-            const Text(
-              'Ringkasan Aktivitas',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+            Text(
+              context.l10n.analyticsActivitySummary,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: 4),
             Text(context.l10n.analyticsDisclaimer),
@@ -136,9 +138,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Aktivitas mingguan',
-                          style: TextStyle(fontWeight: FontWeight.w800),
+                        Text(
+                          context.l10n.analyticsWeeklyActivity,
+                          style: const TextStyle(fontWeight: FontWeight.w800),
                         ),
                         const SizedBox(height: 12),
                         ...data.weeklyData.map(

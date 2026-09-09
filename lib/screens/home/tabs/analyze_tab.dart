@@ -17,26 +17,19 @@ import '../../../providers/market_provider.dart';
 import '../../../providers/progression_provider.dart';
 import '../../../providers/watchlist_provider.dart';
 import '../../../widgets/error_banner.dart';
-import '../../../widgets/chart/timeframe_selector.dart';
-import '../../../widgets/calendar/economic_calendar_card.dart';
-import '../../../widgets/context/market_context_card.dart';
-import '../../../widgets/technical/technical_summary_card.dart';
+import '../../../widgets/app_footer.dart';
 import '../../../widgets/market_mini_chart.dart';
-import '../../../widgets/watchlist/instrument_picker_sheet.dart';
-import '../../../widgets/journal_sentiment_card.dart';
 import '../../../widgets/cooling_off_breathing_dialog.dart';
 import '../../../widgets/analysis_quota_dialog.dart';
 import '../../analysis/analysis_detail_screen.dart';
 import '../../../widgets/price_alert/price_alert_sheet.dart';
-import '../../../widgets/risk/risk_tools_section.dart';
-import '../../price_alert/price_alert_list_screen.dart';
 import '../../topup/topup_screen.dart';
+import '../../progression/progression_screen.dart';
+import '../../../widgets/progression/progression_emblem.dart';
 
 // =============================================================================
 // TIMEFRAMES
 // =============================================================================
-
-const _timeframes = ['1m', '5m', '15m', '30m', '1h', '4h', '1D', '1W'];
 
 CreateAnalysisBodyTimeframeEnum _analysisTimeframe(String timeframe) {
   switch (timeframe) {
@@ -82,10 +75,10 @@ class AnalyzeTab extends StatefulWidget {
 
 class _AnalyzeTabState extends State<AnalyzeTab> {
   final TextEditingController _contextController = TextEditingController();
+  Analysis? _resultAnalysis;
   String? _guardrailInstrument;
   List<Map<String, dynamic>> _guardrails = const [];
   final Map<String, int> _guardrailTelemetryIds = {};
-  bool _isRecordingWait = false;
   String? _checklistContext;
   final Set<int> _checkedMentalItems = {};
   String? _checklistEvidenceToken;
@@ -321,12 +314,7 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
           },
         ),
       );
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) =>
-              AnalysisDetailScreen(analysisId: result.id, preloaded: result),
-        ),
-      );
+      setState(() => _resultAnalysis = result);
     }
   }
 
@@ -431,22 +419,7 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
     final analysis = context.watch<AnalysisProvider>();
 
     final market = context.watch<MarketProvider>();
-    final watchlist = context.watch<WatchlistProvider>();
     final mentalChecklist = context.watch<MentalChecklistController>();
-    final isPro =
-        context.watch<AuthProvider>().user?.selectedMode ==
-        UserSelectedModeEnum.pro;
-
-    final recentInstruments = analysis.history
-        .map((item) => item.instrument)
-        .toSet()
-        .take(5)
-        .toList();
-    final favoriteInstruments = watchlist.items
-        .map((item) => item.instrument)
-        .take(5)
-        .toList();
-
     final instrument = market.selectedInstrument;
 
     if (_guardrailInstrument != instrument) {
@@ -478,62 +451,64 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
     final highImpactSoon = _findHighImpactSoon(market.highImpactEvents);
     final l10n = context.l10n;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.aiAnalysis),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_active_outlined),
-            tooltip: l10n.myPriceAlerts,
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const PriceAlertListScreen()),
-              );
-            },
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(999),
-                  color: isDark
-                      ? AppColors.darkSecondary
-                      : AppColors.lightSecondary,
-                ),
-                child: Text(
-                  isPro ? l10n.proMode : l10n.beginnerMode,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                  ),
+    if (_resultAnalysis case final result?) {
+      return Scaffold(
+        body: SafeArea(
+          top: false,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        l10n.analyzeTitle,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    OutlinedButton.icon(
+                      key: const Key('new-analysis-button'),
+                      onPressed: () => setState(() => _resultAnalysis = null),
+                      icon: const Icon(Icons.add_rounded, size: 17),
+                      label: Text(l10n.analyzeTitle),
+                    ),
+                  ],
                 ),
               ),
-            ),
+              Expanded(
+                child: AnalysisDetailScreen(
+                  key: ValueKey('embedded-analysis-${result.id}'),
+                  analysisId: result.id,
+                  preloaded: result,
+                  embedded: true,
+                  onAnalysisCreated: (created) =>
+                      setState(() => _resultAnalysis = created),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      );
+    }
+
+    return Scaffold(
       body: SafeArea(
+        top: false,
         child: RefreshIndicator(
           onRefresh: _refresh,
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(16),
             children: [
+              _AnalyzeHeader(title: l10n.analyzeTitle, quota: analysis.quota),
+              const SizedBox(height: 14),
               ErrorBanner(message: analysis.errorMessage),
 
               ErrorBanner(message: market.marketError),
-
-              // ---------------------------------------------------------------
-              // MODE INTRO
-              // ---------------------------------------------------------------
-              _ModeIntroCard(muted: muted, isPro: isPro),
-
-              const SizedBox(height: 20),
 
               // ---------------------------------------------------------------
               // INSTRUMENT
@@ -543,153 +518,17 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
                 subtitle: l10n.selectMarketDescription,
               ),
 
-              if (recentInstruments.isNotEmpty) ...[
-                const SizedBox(height: 10),
-                _InstrumentShortcuts(
-                  title: l10n.recentMarkets,
-                  instruments: recentInstruments,
-                  selected: instrument,
-                  onSelected: market.selectInstrument,
-                ),
-              ],
-
-              if (favoriteInstruments.isNotEmpty) ...[
-                const SizedBox(height: 10),
-                _InstrumentShortcuts(
-                  title: l10n.favoriteMarkets,
-                  instruments: favoriteInstruments,
-                  selected: instrument,
-                  onSelected: market.selectInstrument,
-                ),
-              ],
-
               const SizedBox(height: 10),
 
-              Card(
-                clipBehavior: Clip.antiAlias,
-                child: ListTile(
-                  leading: const Icon(Icons.show_chart_rounded),
-                  title: Text(
-                    instrument,
-                    style: const TextStyle(fontWeight: FontWeight.w800),
-                  ),
-                  subtitle: Text(l10n.tapToChangeInstrument),
-                  trailing: const Icon(Icons.expand_more_rounded),
-                  onTap: () {
-                    InstrumentPickerSheet.show(
-                      context,
-                      title: l10n.selectInstrument,
-                      selectedInstrument: instrument,
-                      onSelected: market.selectInstrument,
-                    );
-                  },
-                ),
-              ),
-
-              // ---------------------------------------------------------------
-              // TIMEFRAME
-              // ---------------------------------------------------------------
-              const SizedBox(height: 18),
-
-              _SectionTitle(
-                title: l10n.timeframe,
-                subtitle: l10n.timeframeDescription,
+              _InstrumentSelector(
+                selected: instrument,
+                isCustom: market.isCustomInstrument,
+                onSelected: market.selectInstrument,
+                onSelectedCustom: (symbol) =>
+                    market.selectInstrument(symbol, allowUnsupported: true),
               ),
 
               const SizedBox(height: 12),
-
-              TimeframeSelector(
-                timeframes: _timeframes,
-                selected: timeframe,
-                isLoading: market.isLoadingSelectedMarket,
-                onSelected: (item) {
-                  unawaited(market.selectTimeframe(item));
-                },
-              ),
-
-              RiskToolsSection(
-                key: ValueKey(instrument),
-                instrument: instrument,
-                selectedTimeframe: timeframe,
-                onSelectTimeframe: (value) {
-                  unawaited(market.selectTimeframe(value));
-                },
-              ),
-
-              const SizedBox(height: 10),
-
-              JournalSentimentCard(
-                key: ValueKey('sentiment-$instrument'),
-                instrument: instrument,
-              ),
-
-              const SizedBox(height: 22),
-
-              // ---------------------------------------------------------------
-              // MARKET OVERVIEW
-              // ---------------------------------------------------------------
-              _MarketOverviewCard(
-                market: market,
-                onToggleWatchlist: () {
-                  unawaited(_toggleWatchlist(instrument));
-                },
-              ),
-
-              const SizedBox(height: 14),
-
-              // ---------------------------------------------------------------
-              // MARKET CONTEXT
-              // ---------------------------------------------------------------
-              MarketContextCard(
-                instrument: instrument,
-                marketContext: market.selectedMarketContext,
-                isLoading: market.isLoadingSelectedMarket,
-                hasError:
-                    market.marketError != null &&
-                    market.selectedCandles.isEmpty,
-                onRetry: () {
-                  unawaited(market.loadSelectedMarketData(force: true));
-                },
-              ),
-
-              const SizedBox(height: 14),
-
-              // ---------------------------------------------------------------
-              // TECHNICAL SUMMARY
-              // ---------------------------------------------------------------
-              TechnicalSummaryCard(
-                summary: market.selectedTechnicalSummary,
-                isLoading: market.isLoadingSelectedMarket,
-                hasError:
-                    market.marketError != null &&
-                    market.selectedTechnical == null,
-                onRetry: () {
-                  unawaited(market.loadSelectedMarketData(force: true));
-                },
-              ),
-
-              const SizedBox(height: 14),
-
-              // ---------------------------------------------------------------
-              // ECONOMIC CALENDAR
-              // ---------------------------------------------------------------
-              EconomicCalendarCard(
-                instrument: instrument,
-                events: market.selectedCalendar,
-                isLoading: market.isLoadingSelectedMarket,
-                hasError:
-                    market.marketError != null &&
-                    market.selectedCalendar.isEmpty,
-                onRetry: () {
-                  unawaited(market.loadSelectedMarketData(force: true));
-                },
-              ),
-
-              const SizedBox(height: 14),
-
-              // ---------------------------------------------------------------
-              // ALERT
-              // ---------------------------------------------------------------
               OutlinedButton.icon(
                 onPressed: () {
                   unawaited(_openPriceAlert(instrument, quote));
@@ -713,25 +552,14 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
 
               const SizedBox(height: 22),
 
-              // ---------------------------------------------------------------
-              // USER CONTEXT
-              // ---------------------------------------------------------------
-              _SectionTitle(
-                title: l10n.additionalNotes,
-                subtitle: l10n.additionalNotesDescription,
+              _MarketOverviewCard(
+                market: market,
+                onToggleWatchlist: () {
+                  unawaited(_toggleWatchlist(instrument));
+                },
               ),
 
-              const SizedBox(height: 10),
-
-              TextField(
-                controller: _contextController,
-                maxLines: 3,
-                maxLength: 500,
-                textInputAction: TextInputAction.newline,
-                decoration: InputDecoration(hintText: l10n.additionalNotesHint),
-              ),
-
-              const SizedBox(height: 10),
+              const SizedBox(height: 22),
 
               // ---------------------------------------------------------------
               // HIGH IMPACT PRE-TRADE WARNING
@@ -739,20 +567,6 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
               if (highImpactSoon != null) ...[
                 _PreTradeWarning(event: highImpactSoon),
 
-                const SizedBox(height: 14),
-              ],
-
-              if (_guardrails.isNotEmpty) ...[
-                _GuardrailCard(
-                  signals: _guardrails,
-                  isWaiting: _isRecordingWait,
-                  onWait:
-                      _guardrails.any(
-                        (signal) => signal['kind'] == 'high_risk_window',
-                      )
-                      ? _recordSafeWait
-                      : null,
-                ),
                 const SizedBox(height: 14),
               ],
 
@@ -789,14 +603,11 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
 
               if (analysis.quota != null && !analysis.quota!.unlimited) ...[
                 const SizedBox(height: 10),
-                Center(
-                  child: Text(
-                    l10n.analysisQuotaBalances(
-                      analysis.quota!.hourly.remaining,
-                      analysis.quota!.daily.remaining,
-                      analysis.quota!.credits.balance,
-                    ),
-                    style: TextStyle(color: muted, fontSize: 12.5),
+                _QuotaSummaryCard(
+                  summary: l10n.analysisQuotaBalances(
+                    analysis.quota!.hourly.remaining,
+                    analysis.quota!.daily.remaining,
+                    analysis.quota!.credits.balance,
                   ),
                 ),
               ],
@@ -809,7 +620,7 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
                 style: TextStyle(color: muted, fontSize: 11, height: 1.4),
               ),
 
-              const SizedBox(height: 28),
+              const AppFooter(),
             ],
           ),
         ),
@@ -891,185 +702,6 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
       // Guardrail tetap tampil walau pencatatan impresi gagal.
     }
   }
-
-  Future<void> _recordSafeWait() async {
-    if (_isRecordingWait) return;
-    final signal = _guardrails.cast<Map<String, dynamic>?>().firstWhere(
-      (item) => item?['kind'] == 'high_risk_window',
-      orElse: () => null,
-    );
-    if (signal == null) return;
-    setState(() => _isRecordingWait = true);
-    try {
-      final auth = context.read<AuthProvider>();
-      var telemetryId = _guardrailTelemetryIds[_guardrailKey(signal)];
-      if (telemetryId == null) {
-        final response = await auth.client.analyses.recordGuardrailTelemetry(
-          recordGuardrailTelemetryRequest: RecordGuardrailTelemetryRequest(
-            (b) => b
-              ..kind = signal['kind'] as String
-              ..instrument = _guardrailInstrument
-              ..proceeded = false,
-          ),
-        );
-        telemetryId = response.data?.id;
-      }
-      if (telemetryId == null) throw StateError('Missing telemetry id');
-      final award = (await auth.client.analyses.waitGuardrail(
-        id: telemetryId,
-      )).data;
-      if (!mounted) return;
-      if (award?.awarded == true) {
-        unawaited(context.read<ProgressionProvider>().refresh(silent: true));
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            award?.awarded == true
-                ? context.l10n.xpAwarded(award!.xp, context.l10n.safeWait)
-                : context.l10n.safeWaitRecorded,
-          ),
-        ),
-      );
-      setState(
-        () => _guardrails = _guardrails
-            .where((item) => item['kind'] != 'high_risk_window')
-            .toList(),
-      );
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(context.l10n.safeWaitFailed)));
-      }
-    } finally {
-      if (mounted) setState(() => _isRecordingWait = false);
-    }
-  }
-}
-
-class _InstrumentShortcuts extends StatelessWidget {
-  const _InstrumentShortcuts({
-    required this.title,
-    required this.instruments,
-    required this.selected,
-    required this.onSelected,
-  });
-
-  final String title;
-  final List<String> instruments;
-  final String selected;
-  final Future<void> Function(String) onSelected;
-
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(title, style: Theme.of(context).textTheme.labelMedium),
-      const SizedBox(height: 6),
-      Wrap(
-        spacing: 8,
-        runSpacing: 6,
-        children: instruments
-            .map(
-              (item) => ChoiceChip(
-                label: Text(item),
-                selected: item == selected,
-                onSelected: (_) => unawaited(onSelected(item)),
-              ),
-            )
-            .toList(),
-      ),
-    ],
-  );
-}
-
-class _GuardrailCard extends StatelessWidget {
-  const _GuardrailCard({
-    required this.signals,
-    required this.isWaiting,
-    this.onWait,
-  });
-  final List<Map<String, dynamic>> signals;
-  final bool isWaiting;
-  final Future<void> Function()? onWait;
-
-  @override
-  Widget build(BuildContext context) => Card(
-    color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: .35),
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.shield_outlined),
-              const SizedBox(width: 8),
-              Text(
-                context.l10n.decisionGuardrails,
-                style: const TextStyle(fontWeight: FontWeight.w900),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          ...signals.map(
-            (signal) => Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Text('• ${_message(context, signal)}'),
-            ),
-          ),
-          Text(
-            context.l10n.guardrailHint,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          if (onWait != null) ...[
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: isWaiting ? null : () => unawaited(onWait!()),
-                icon: isWaiting
-                    ? const SizedBox.square(
-                        dimension: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.pause_circle_outline_rounded),
-                label: Text(context.l10n.safeWait),
-              ),
-            ),
-            Text(
-              context.l10n.safeWaitHint,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
-        ],
-      ),
-    ),
-  );
-
-  static String _message(BuildContext context, Map<String, dynamic> signal) {
-    return switch (signal['kind']) {
-      'revenge' => context.l10n.guardrailRevenge(
-        '${signal['minutesSinceLoss'] ?? '—'}',
-      ),
-      'overtrading' => context.l10n.guardrailOvertrading(
-        '${signal['count'] ?? '—'}',
-        '${signal['limit'] ?? '—'}',
-      ),
-      'high_risk_window' => context.l10n.guardrailHighRisk(
-        '${(signal['event'] as Map?)?['name'] ?? '—'}',
-        '${signal['minutesUntil'] ?? '—'}',
-      ),
-      'unusual_hour' => context.l10n.guardrailUnusualHour(
-        '${signal['hourUtc'] ?? '—'}',
-      ),
-      'cooling_off' => context.l10n.guardrailCoolingOff(
-        '${signal['minutesRemaining'] ?? '—'}',
-      ),
-      _ => context.l10n.guardrailGeneric,
-    };
-  }
 }
 
 class _MentalChecklistCard extends StatelessWidget {
@@ -1148,63 +780,6 @@ class _MentalChecklistCard extends StatelessWidget {
             Text(
               context.l10n.mentalChecklistHint,
               style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// =============================================================================
-// MODE INTRO
-// =============================================================================
-
-class _ModeIntroCard extends StatelessWidget {
-  const _ModeIntroCard({required this.muted, required this.isPro});
-
-  final Color muted;
-  final bool isPro;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(
-              isPro ? Icons.query_stats_rounded : Icons.school_outlined,
-              size: 22,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    isPro
-                        ? context.l10n.proMode
-                        : context.l10n.understandMarketBeforeEntry,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    isPro
-                        ? context.l10n.proModeHelp
-                        : context.l10n.beginnerAnalysisIntro,
-                    style: TextStyle(
-                      color: muted,
-                      fontSize: 12.5,
-                      height: 1.45,
-                    ),
-                  ),
-                ],
-              ),
             ),
           ],
         ),
@@ -1685,6 +1260,507 @@ class _SectionTitle extends StatelessWidget {
         const SizedBox(height: 3),
         Text(subtitle, style: TextStyle(color: muted, fontSize: 11.5)),
       ],
+    );
+  }
+}
+
+class _QuotaSummaryCard extends StatelessWidget {
+  const _QuotaSummaryCard({required this.summary});
+
+  final String summary;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          children: [
+            Icon(Icons.account_balance_wallet_outlined, color: colors.primary),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.l10n.analysisQuota,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    summary,
+                    style: TextStyle(
+                      color: colors.onSurfaceVariant,
+                      fontSize: 12.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// INSTRUMENT SELECTOR
+// =============================================================================
+
+/// Pemilih instrumen inline seperti mobile web: tiga kategori yang dapat
+/// dibuka-tutup, lalu grid dua kolom berisi instrumen kategori tersebut.
+class _InstrumentSelector extends StatefulWidget {
+  const _InstrumentSelector({
+    required this.selected,
+    required this.isCustom,
+    required this.onSelected,
+    required this.onSelectedCustom,
+  });
+
+  final String selected;
+
+  /// True ketika [selected] berasal dari input bebas, bukan dari grid.
+  final bool isCustom;
+  final Future<void> Function(String instrument) onSelected;
+  final Future<void> Function(String instrument) onSelectedCustom;
+
+  @override
+  State<_InstrumentSelector> createState() => _InstrumentSelectorState();
+}
+
+class _InstrumentSelectorState extends State<_InstrumentSelector> {
+  static final _groups = MarketProvider.analyzeInstrumentGroups;
+
+  late String? _openCategory = _categoryOf(widget.selected);
+  final TextEditingController _customController = TextEditingController();
+  Timer? _customDebounce;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.isCustom) _customController.text = widget.selected;
+  }
+
+  @override
+  void dispose() {
+    _customDebounce?.cancel();
+    _customController.dispose();
+    super.dispose();
+  }
+
+  static String? _categoryOf(String instrument) {
+    for (final entry in _groups.entries) {
+      if (entry.value.contains(instrument)) return entry.key;
+    }
+    return _groups.keys.isEmpty ? null : _groups.keys.first;
+  }
+
+  @override
+  void didUpdateWidget(covariant _InstrumentSelector oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selected == widget.selected) return;
+    if (!widget.isCustom && _customController.text.isNotEmpty) {
+      _customController.clear();
+    }
+    final category = _categoryOf(widget.selected);
+    if (category != null && category != _openCategory) {
+      setState(() => _openCategory = category);
+    }
+  }
+
+  void _onCustomChanged(String value) {
+    _customDebounce?.cancel();
+    _customDebounce = Timer(
+      const Duration(milliseconds: 600),
+      () => _applyCustom(value),
+    );
+  }
+
+  void _applyCustom(String value) {
+    final symbol = value.trim().toUpperCase();
+    if (symbol.isEmpty || symbol == widget.selected) return;
+    unawaited(widget.onSelectedCustom(symbol));
+  }
+
+  void _selectFromGrid(String instrument) {
+    _customDebounce?.cancel();
+    if (_customController.text.isNotEmpty) _customController.clear();
+    unawaited(widget.onSelected(instrument));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Web hanya menampilkan tab kategori ketika lebih dari satu kategori punya
+    // instrumen yang terlihat; kalau hanya satu, gridnya langsung ditampilkan.
+    final showCategories = _groups.length > 1;
+    final open = showCategories ? _openCategory : _groups.keys.firstOrNull;
+    final instruments = open == null
+        ? const <String>[]
+        : _groups[open] ?? const [];
+    final gridSelection = widget.isCustom ? null : widget.selected;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (showCategories) ...[
+          Row(
+            children: [
+              for (final category in _groups.keys) ...[
+                Expanded(
+                  child: _CategoryTab(
+                    label: category,
+                    isOpen: open == category,
+                    onTap: () => setState(
+                      () => _openCategory = open == category ? null : category,
+                    ),
+                  ),
+                ),
+                if (category != _groups.keys.last) const SizedBox(width: 8),
+              ],
+            ],
+          ),
+          const SizedBox(height: 10),
+        ],
+        if (instruments.isNotEmpty)
+          LayoutBuilder(
+            builder: (context, constraints) {
+              const spacing = 8.0;
+              final width = (constraints.maxWidth - spacing) / 2;
+              return Wrap(
+                spacing: spacing,
+                runSpacing: spacing,
+                children: [
+                  for (final item in instruments)
+                    SizedBox(
+                      width: width,
+                      child: _InstrumentOption(
+                        instrument: item,
+                        selected: item == gridSelection,
+                        onTap: () => _selectFromGrid(item),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+        const SizedBox(height: 12),
+        TextField(
+          key: const Key('custom-instrument-field'),
+          controller: _customController,
+          textCapitalization: TextCapitalization.characters,
+          textInputAction: TextInputAction.done,
+          autocorrect: false,
+          onChanged: _onCustomChanged,
+          onSubmitted: (value) {
+            _customDebounce?.cancel();
+            _applyCustom(value);
+          },
+          decoration: InputDecoration(
+            hintText: context.l10n.otherInstrument,
+            prefixIcon: const Icon(Icons.edit_outlined, size: 18),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CategoryTab extends StatelessWidget {
+  const _CategoryTab({
+    required this.label,
+    required this.isOpen,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool isOpen;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Semantics(
+      button: true,
+      expanded: isOpen,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+          decoration: BoxDecoration(
+            color: isOpen ? colors.primary : colors.surface,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: isOpen ? colors.primary : colors.outlineVariant,
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: isOpen ? colors.onPrimary : colors.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 2),
+              Icon(
+                isOpen
+                    ? Icons.keyboard_arrow_up_rounded
+                    : Icons.keyboard_arrow_down_rounded,
+                size: 18,
+                color: isOpen ? colors.onPrimary : colors.onSurfaceVariant,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _InstrumentOption extends StatelessWidget {
+  const _InstrumentOption({
+    required this.instrument,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String instrument;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          decoration: BoxDecoration(
+            color: selected
+                ? colors.primary.withValues(alpha: 0.1)
+                : colors.surface,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: selected ? colors.primary : colors.outlineVariant,
+            ),
+          ),
+          child: Text(
+            instrument,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: selected ? colors.primary : colors.onSurface,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// ANALYZE HEADER
+// =============================================================================
+
+/// Baris judul Analyze mengikuti mobile web: judul di kiri, lalu chip
+/// progression dan chip kuota di kanan.
+class _AnalyzeHeader extends StatelessWidget {
+  const _AnalyzeHeader({required this.title, required this.quota});
+
+  final String title;
+  final AnalysisQuota? quota;
+
+  @override
+  Widget build(BuildContext context) {
+    final summary = context.watch<ProgressionProvider>().summary;
+    final showQuota = quota != null && !quota!.unlimited;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: Text(
+            title,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+          ),
+        ),
+        // Chip dibungkus Wrap agar turun baris pada layar sempit, sama seperti
+        // `flex-wrap` pada header web.
+        Flexible(
+          child: Wrap(
+            alignment: WrapAlignment.end,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 6,
+            children: [
+              if (summary != null) _ProgressionChip(summary: summary),
+              if (showQuota) _QuotaChip(quota: quota!),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ProgressionChip extends StatelessWidget {
+  const _ProgressionChip({required this.summary});
+
+  final ProgressionSummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = Theme.of(context).colorScheme;
+    final levelLabel = summary.masteryLevel > 0
+        ? l10n.progressionMastery(summary.masteryLevel)
+        : l10n.progressionLevel(summary.level);
+
+    return Semantics(
+      button: true,
+      label:
+          '${l10n.progressionTitle}: $levelLabel, '
+          '${l10n.progressionRank(summary.rank)}',
+      child: InkWell(
+        key: const Key('analyze-progression-chip'),
+        borderRadius: BorderRadius.circular(999),
+        onTap: () => Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const ProgressionScreen())),
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 176),
+          padding: const EdgeInsets.fromLTRB(4, 4, 12, 4),
+          decoration: BoxDecoration(
+            color: colors.secondary.withValues(alpha: 0.25),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: colors.outlineVariant.withValues(alpha: 0.6),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ProgressionEmblem(
+                level: summary.level,
+                masteryLevel: summary.masteryLevel,
+                size: 28,
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      levelLabel.toUpperCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 9,
+                        height: 1.1,
+                        letterSpacing: 0.8,
+                        fontWeight: FontWeight.w700,
+                        color: colors.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      l10n.progressionRank(summary.rank),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        height: 1.15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _QuotaChip extends StatelessWidget {
+  const _QuotaChip({required this.quota});
+
+  final AnalysisQuota quota;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = Theme.of(context).colorScheme;
+    final hourly = quota.hourly;
+    final daily = quota.daily;
+
+    final (background, border, foreground) = switch ((
+      hourly.remaining,
+      daily.remaining,
+    )) {
+      (0, _) || (_, 0) => (
+        colors.error.withValues(alpha: 0.1),
+        colors.error.withValues(alpha: 0.4),
+        colors.error,
+      ),
+      (final h, final d) when h <= 1 || d <= 3 => (
+        const Color(0xFFF59E0B).withValues(alpha: 0.1),
+        const Color(0xFFF59E0B).withValues(alpha: 0.4),
+        Theme.of(context).brightness == Brightness.dark
+            ? const Color(0xFFFBBF24)
+            : const Color(0xFFB45309),
+      ),
+      _ => (
+        colors.primary.withValues(alpha: 0.1),
+        colors.primary.withValues(alpha: 0.3),
+        colors.primary,
+      ),
+    };
+
+    return Tooltip(
+      message:
+          '${l10n.quotaHour}: ${hourly.remaining}/${hourly.limit} • '
+          '${l10n.quotaDay}: ${daily.remaining}/${daily.limit}',
+      child: Container(
+        key: const Key('analyze-quota-chip'),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: background,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: border),
+        ),
+        child: Text(
+          '${hourly.remaining}/${hourly.limit}${l10n.quotaHourShort} · '
+          '${daily.remaining}/${daily.limit}${l10n.quotaDayShort}',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: foreground,
+          ),
+        ),
+      ),
     );
   }
 }

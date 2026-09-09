@@ -72,15 +72,10 @@ void main() {
     expect(find.text('user@example.com'), findsOneWidget);
     expect(find.text('Profile Information'), findsOneWidget);
     expect(find.text('Analysis mode'), findsOneWidget);
-    expect(find.text('Dark theme'), findsOneWidget);
-    expect(
-      tester
-          .widget<SwitchListTile>(
-            find.widgetWithText(SwitchListTile, 'Dark theme'),
-          )
-          .value,
-      isTrue,
-    );
+    expect(find.text('Appearance'), findsOneWidget);
+    expect(find.byKey(const Key('profile-theme-segmented')), findsOneWidget);
+    expect(find.text('Light'), findsOneWidget);
+    expect(find.text('Dark'), findsOneWidget);
     expect(find.textContaining('Current: Beginner'), findsOneWidget);
     expect(find.text('Top Up Credit'), findsOneWidget);
     expect(find.text('Change Password'), findsOneWidget);

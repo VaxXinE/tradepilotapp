@@ -14,6 +14,7 @@ import '../../../providers/analysis_provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/market_provider.dart';
 import '../../../widgets/error_banner.dart';
+import '../../../widgets/app_footer.dart';
 import '../../../widgets/history/history_analysis_card.dart';
 import '../../../widgets/history/history_summary_card.dart';
 import '../../analysis/analysis_detail_screen.dart';
@@ -335,9 +336,30 @@ class _HistoryTabState extends State<HistoryTab> {
     final l10n = context.l10n;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.history)),
       body: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.historyPageTitle,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  provider.visibleHistoryTotal > 0
+                      ? l10n.historyTotalAnalyses(provider.visibleHistoryTotal)
+                      : l10n.noAnalyses,
+                  style: TextStyle(fontSize: 12, color: muted),
+                ),
+              ],
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             child: Row(
@@ -529,7 +551,7 @@ class _HistoryTabState extends State<HistoryTab> {
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
       itemCount:
-          items.length + 1 + (provider.isLoadingMoreVisibleHistory ? 1 : 0),
+          items.length + 2 + (provider.isLoadingMoreVisibleHistory ? 1 : 0),
       separatorBuilder: (_, _) {
         return const SizedBox(height: 10);
       },
@@ -546,10 +568,14 @@ class _HistoryTabState extends State<HistoryTab> {
         final itemIndex = index - 1;
 
         if (itemIndex >= items.length) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16),
-            child: Center(child: CircularProgressIndicator(strokeWidth: 2.4)),
-          );
+          final tailIndex = itemIndex - items.length;
+          if (provider.isLoadingMoreVisibleHistory && tailIndex == 0) {
+            return const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Center(child: CircularProgressIndicator(strokeWidth: 2.4)),
+            );
+          }
+          return const AppFooter();
         }
 
         final analysis = items[itemIndex];

@@ -43,6 +43,33 @@ class MarketProvider extends ChangeNotifier {
     'Crypto': ['BTC/USD', 'ETH/USD', 'SOL/USD', 'BNB/USD', 'XRP/USD'],
   };
 
+  /// Instrumen yang boleh dipilih pada layar Analisis.
+  ///
+  /// Mengikuti `VISIBLE_INSTRUMENTS` pada `pages/analyze.tsx` di web. Daftar
+  /// penuh di atas tetap dipakai untuk quote, watchlist, dan riwayat, sehingga
+  /// data lama pengguna tidak hilang ketika daftar ini dipersempit.
+  static const analyzeVisibleInstruments = {
+    'XAU/USD',
+    'BRENT',
+    'NIKKEI',
+    'HSI',
+  };
+
+  /// [instrumentGroups] yang sudah disaring oleh [analyzeVisibleInstruments].
+  ///
+  /// Kategori tanpa instrumen yang terlihat ikut dihilangkan, sama seperti
+  /// `VISIBLE_INSTRUMENT_CATEGORIES` pada web.
+  static Map<String, List<String>> get analyzeInstrumentGroups {
+    final groups = <String, List<String>>{};
+    for (final entry in instrumentGroups.entries) {
+      final visible = entry.value
+          .where(analyzeVisibleInstruments.contains)
+          .toList();
+      if (visible.isNotEmpty) groups[entry.key] = visible;
+    }
+    return groups;
+  }
+
   static final Set<String> supportedInstruments = {
     for (final group in instrumentGroups.values) ...group,
   };
@@ -63,6 +90,15 @@ class MarketProvider extends ChangeNotifier {
   // ===========================================================================
 
   String selectedInstrument = 'XAU/USD';
+
+  /// True ketika instrumen aktif diketik sendiri dan bukan bagian dari
+  /// [supportedInstruments].
+  ///
+  /// Web mengirim simbol yang diketik apa adanya ke endpoint analisis dan tidak
+  /// punya data chart untuk simbol itu. Mobile mengikuti hal yang sama: simbol
+  /// tetap dipakai untuk analisis, tetapi permintaan candle, teknikal, dan
+  /// kalender dilewati agar tidak memunculkan error dari backend.
+  bool isCustomInstrument = false;
 
   String selectedTimeframe = '1h';
 
@@ -195,6 +231,8 @@ class MarketProvider extends ChangeNotifier {
     _selectionGeneration++;
 
     selectedInstrument = 'XAU/USD';
+
+    isCustomInstrument = false;
     selectedTimeframe = '1h';
     selectedCandles = const [];
     selectedTechnical = null;
@@ -319,10 +357,12 @@ class MarketProvider extends ChangeNotifier {
     String instrument, {
     String? timeframe,
     bool force = false,
+    bool allowUnsupported = false,
   }) async {
     final normalized = _normalizeInstrument(instrument);
+    final isSupported = supportedInstruments.contains(normalized);
 
-    if (!supportedInstruments.contains(normalized)) {
+    if (!isSupported && !allowUnsupported) {
       marketError = AppMessages.l10n.errInstrumentUnsupported;
 
       notifyListeners();
@@ -340,6 +380,8 @@ class MarketProvider extends ChangeNotifier {
 
     selectedInstrument = normalized;
 
+    isCustomInstrument = !isSupported;
+
     selectedTimeframe = nextTimeframe;
 
     selectedCandles = const [];
@@ -347,6 +389,16 @@ class MarketProvider extends ChangeNotifier {
     selectedTechnical = null;
 
     selectedCalendar = const [];
+
+    if (isCustomInstrument) {
+      // Tidak ada feed market untuk simbol bebas; hentikan di sini agar layar
+      // menampilkan status kosong, bukan error backend.
+      isLoadingSelectedMarket = false;
+      marketError = null;
+
+      notifyListeners();
+      return;
+    }
 
     await loadSelectedMarketData(force: force);
   }
@@ -363,6 +415,11 @@ class MarketProvider extends ChangeNotifier {
 
     selectedCandles = const [];
     selectedTechnical = null;
+
+    if (isCustomInstrument) {
+      notifyListeners();
+      return;
+    }
 
     await loadSelectedTechnicalData(force: force);
   }

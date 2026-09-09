@@ -21,6 +21,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboard => 'Dashboard';
 
   @override
+  String get dashboardDescription =>
+      'Market overview, watchlist, and latest analyses';
+
+  @override
   String get analysis => 'Analysis';
 
   @override
@@ -290,6 +294,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get history => 'History';
 
   @override
+  String get historyPageTitle => 'History & Analysis Performance';
+
+  @override
+  String historyTotalAnalyses(int count) {
+    return '$count analyses total';
+  }
+
+  @override
   String get profile => 'Profile';
 
   @override
@@ -315,6 +327,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get darkTheme => 'Dark theme';
+
+  @override
+  String get appearance => 'Appearance';
+
+  @override
+  String get lightMode => 'Light';
+
+  @override
+  String get darkMode => 'Dark';
+
+  @override
+  String get roleUser => 'User';
+
+  @override
+  String get roleAdmin => 'Admin';
+
+  @override
+  String get roleSuperAdmin => 'Super Admin';
 
   @override
   String get darkThemeEnabled => 'Enabled • comfortable in low light';
@@ -358,6 +388,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyPolicy => 'Privacy Policy';
+
+  @override
+  String get appFooterDisclaimer =>
+      'TradePilot is a decision-support tool, not financial advice or a trading service.';
+
+  @override
+  String get sponsoredBy => 'Sponsored by';
+
+  @override
+  String get newsDataVia => 'News data via newsmaker.id';
+
+  @override
+  String get marketNews => 'Market news';
 
   @override
   String get termsOfService => 'Terms of Service';
@@ -637,6 +680,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get guide => 'Guide Center';
+
+  @override
+  String get guideNavLabel => 'Guide';
+
+  @override
+  String get back => 'Back';
 
   @override
   String get guideDescription =>
@@ -919,13 +968,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'Password confirmation does not match';
 
   @override
-  String get welcomeBack => 'Welcome back';
+  String get welcomeBack => 'Welcome Back';
 
   @override
-  String get loginDescription => 'Sign in to continue your market analysis.';
+  String get loginDescription => 'Sign in to continue your analysis';
 
   @override
-  String get emailHint => 'name@email.com';
+  String get usernameEmail => 'Username / Email';
+
+  @override
+  String get usernameEmailHint => 'Your username or email';
+
+  @override
+  String get emailHint => 'your@email.com';
 
   @override
   String get invalidEmail => 'Enter a valid email address';
@@ -937,13 +992,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordRequired => 'Password is required';
 
   @override
-  String get rememberMe => 'Remember my email';
+  String get rememberMe => 'Remember Me';
 
   @override
   String get forgotPassword => 'Forgot password?';
 
   @override
-  String get signIn => 'Sign In';
+  String get signIn => 'Sign In to Dashboard';
 
   @override
   String get or => 'or';
@@ -984,7 +1039,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noAccount => 'Don\'t have an account? ';
 
   @override
-  String get register => 'Register';
+  String get register => 'Register free';
 
   @override
   String get biometricReason =>
@@ -1090,6 +1145,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get myPriceAlerts => 'My Price Alerts';
+
+  @override
+  String get priceAlertsSubtitle =>
+      'Price alerts you\'ve set across instruments';
 
   @override
   String get notifications => 'Notifications';
@@ -1422,6 +1481,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiAnalysis => 'AI Analysis';
+
+  @override
+  String get analyzeTitle => 'New Analysis';
+
+  @override
+  String get otherInstrument => 'Other instrument…';
+
+  @override
+  String get quotaHour => 'Hourly remaining';
+
+  @override
+  String get quotaDay => 'Daily remaining';
+
+  @override
+  String get quotaHourShort => '/hr';
+
+  @override
+  String get quotaDayShort => '/day';
 
   @override
   String get selectInstrument => 'Select Instrument';
@@ -2331,6 +2408,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get topUpAmountHint => 'e.g. 50000';
 
   @override
+  String get topUpChooseAmount => 'Choose a top-up amount';
+
+  @override
+  String get topUpContinuePayment => 'Continue to payment';
+
+  @override
+  String get topUpPayment => 'Payment details';
+
+  @override
+  String get topUpChangeAmount => 'Change amount';
+
+  @override
+  String topUpPaymentSummary(String amount, int credits) {
+    return 'Pay $amount to receive $credits credit';
+  }
+
+  @override
   String topUpCreditsPreview(int credits) {
     return 'You will receive $credits credit';
   }
@@ -2747,6 +2841,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'These statistics describe analysis habits, not trading profit.';
 
   @override
+  String get analyticsActivitySummary => 'Activity summary';
+
+  @override
+  String get analyticsWeeklyActivity => 'Weekly activity';
+
+  @override
   String get metricAllAnalyses => 'All analyses';
 
   @override
@@ -2835,6 +2935,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get traderMirrorTiming => 'Analysis timing';
 
   @override
+  String get traderMirrorPostLoss => 'Patterns after a negative outcome';
+
+  @override
+  String get traderMirrorEvaluationDiscipline => 'Evaluation discipline';
+
+  @override
+  String get traderMirrorProcessReflection => 'Process reflection';
+
+  @override
+  String traderMirrorSamples(int count) {
+    return '$count samples';
+  }
+
+  @override
   String traderMirrorBasedOn(int count) {
     return 'Based on $count analyses currently loaded on this device.';
   }
@@ -2871,6 +2985,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dailySummaryDeliveryTime => 'Delivery time';
+
+  @override
+  String get dailySummaryFullDigest => 'Full digest';
+
+  @override
+  String get dailySummaryQuotaOnly => 'Quota only';
+
+  @override
+  String dailySummaryPreferredSide(String side) {
+    return 'Preferred side: $side';
+  }
+
+  @override
+  String get guideSearchHint => 'Search guide...';
+
+  @override
+  String get guideSubtitle => 'Knowledge, features, and mindset.';
+
+  @override
+  String get guideNoResults => 'No articles found.';
 
   @override
   String get marketChartUnavailable => 'The market chart is not available yet.';

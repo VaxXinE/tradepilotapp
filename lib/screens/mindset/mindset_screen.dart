@@ -8,11 +8,21 @@ import '../../core/localization/locale_controller.dart';
 import '../../l10n/l10n.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/progression_provider.dart';
+import '../../widgets/app_footer.dart';
+import '../../widgets/responsive_page.dart';
 
 class MindsetScreen extends StatefulWidget {
-  const MindsetScreen({this.initialGuideId, super.key});
+  const MindsetScreen({
+    this.initialGuideId,
+    this.embedded = false,
+    super.key,
+  });
 
   final ProgressionEvidenceStartInputGuideIdEnum? initialGuideId;
+
+  /// Ketika dipakai sebagai tab di dalam app shell, header dan footer
+  /// aplikasi sudah disediakan oleh shell sehingga AppBar tidak dipakai.
+  final bool embedded;
 
   @override
   State<MindsetScreen> createState() => _MindsetScreenState();
@@ -20,6 +30,7 @@ class MindsetScreen extends StatefulWidget {
 
 class _MindsetScreenState extends State<MindsetScreen> {
   String _query = '';
+  String? _selectedCategory;
   bool _openedInitialGuide = false;
 
   @override
@@ -54,20 +65,82 @@ class _MindsetScreenState extends State<MindsetScreen> {
           .toLowerCase()
           .contains(query);
     }).toList();
-    final categories = filtered.map((module) => module.category).toSet();
+    final allCategories = _modules.map((module) => module.category).toSet();
+    final visible = _selectedCategory == null
+        ? filtered
+        : filtered
+              .where((module) => module.category == _selectedCategory)
+              .toList();
+    final categories = visible.map((module) => module.category).toSet();
+    final l10n = context.l10n;
+
     return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.guide)),
+      appBar: widget.embedded ? null : AppBar(title: Text(l10n.guide)),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: responsivePagePadding(context),
         children: [
+          if (widget.embedded) ...[
+            Text(
+              l10n.guide,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              l10n.guideSubtitle,
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 14),
+          ],
           TextField(
             onChanged: (value) => setState(() => _query = value),
             decoration: InputDecoration(
               prefixIcon: const Icon(Icons.search_rounded),
-              hintText: id ? 'Cari materi panduan' : 'Search guide material',
+              hintText: l10n.guideSearchHint,
+            ),
+          ),
+          const SizedBox(height: 12),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ChoiceChip(
+                    label: Text(l10n.all),
+                    selected: _selectedCategory == null,
+                    onSelected: (_) =>
+                        setState(() => _selectedCategory = null),
+                  ),
+                ),
+                for (final category in allCategories)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ChoiceChip(
+                      avatar: Icon(_categoryIcon(category), size: 16),
+                      label: Text(_categoryName(category, id)),
+                      selected: _selectedCategory == category,
+                      onSelected: (_) =>
+                          setState(() => _selectedCategory = category),
+                    ),
+                  ),
+              ],
             ),
           ),
           const SizedBox(height: 18),
+          if (visible.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 40),
+              child: Text(
+                l10n.guideNoResults,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
           for (final category in categories) ...[
             Padding(
               padding: const EdgeInsets.only(top: 4, bottom: 8),
@@ -78,7 +151,7 @@ class _MindsetScreenState extends State<MindsetScreen> {
                 ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
               ),
             ),
-            for (final module in filtered.where(
+            for (final module in visible.where(
               (item) => item.category == category,
             )) ...[
               Card(
@@ -103,11 +176,12 @@ class _MindsetScreenState extends State<MindsetScreen> {
           Padding(
             padding: const EdgeInsets.all(12),
             child: Text(
-              context.l10n.mindsetDisclaimer,
+              l10n.mindsetDisclaimer,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ),
+          if (widget.embedded) const AppFooter(),
         ],
       ),
     );
@@ -241,7 +315,7 @@ class _MindsetModuleScreenState extends State<_MindsetModuleScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(id ? module.titleId : module.titleEn)),
       body: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: responsivePagePadding(context, horizontal: 20),
         children: [
           Text(
             id ? module.bodyId : module.bodyEn,

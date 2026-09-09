@@ -5,6 +5,7 @@ import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 import '../../providers/auth_provider.dart';
 import '../analysis/analysis_detail_screen.dart';
 import '../../l10n/l10n.dart';
+import '../../widgets/responsive_page.dart';
 
 class DailySummaryScreen extends StatefulWidget {
   const DailySummaryScreen({super.key});
@@ -100,13 +101,13 @@ class _DailySummaryScreenState extends State<DailySummaryScreen> {
     final currentUserId = context.watch<AuthProvider>().user?.id;
     if (_ownerUserId != null && currentUserId != _ownerUserId) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Ringkasan Harian')),
+        appBar: AppBar(title: Text(context.l10n.dailySummary)),
         body: Center(child: Text(context.l10n.sessionChangedReopen)),
       );
     }
     final data = _data;
     return Scaffold(
-      appBar: AppBar(title: const Text('Ringkasan Harian')),
+      appBar: AppBar(title: Text(context.l10n.dailySummary)),
       body: RefreshIndicator(
         onRefresh: _load,
         child: _loading && data == null
@@ -130,14 +131,15 @@ class _DailySummaryScreenState extends State<DailySummaryScreen> {
                 ],
               )
             : ListView(
-                padding: const EdgeInsets.all(16),
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: responsivePagePadding(context),
                 children: [
                   SwitchListTile.adaptive(
                     value: data!.settings.enabled,
                     onChanged: _saving
                         ? null
                         : (value) => _update(enabled: value),
-                    title: const Text('Ringkasan harian'),
+                    title: Text(context.l10n.dailySummary),
                     subtitle: Text(
                       context.l10n.dailySummaryTimezone(data.settings.timezone),
                     ),
@@ -162,8 +164,8 @@ class _DailySummaryScreenState extends State<DailySummaryScreen> {
                         Chip(
                           label: Text(
                             today.kind == DailySummaryTodayKindEnum.full
-                                ? 'Full digest'
-                                : 'Quota only',
+                                ? context.l10n.dailySummaryFullDigest
+                                : context.l10n.dailySummaryQuotaOnly,
                           ),
                         ),
                       ],
@@ -228,13 +230,18 @@ class _DailySummaryScreenState extends State<DailySummaryScreen> {
                                         analysis.confidenceMax != null)
                                       Chip(
                                         label: Text(
-                                          '${analysis.confidenceMin}–${analysis.confidenceMax}%',
+                                          context.l10n.confidenceValue(
+                                            '${analysis.confidenceMin}–${analysis.confidenceMax}%',
+                                          ),
                                         ),
                                       ),
                                     if (analysis.preferredSide != null)
                                       Chip(
                                         label: Text(
-                                          'Side: ${analysis.preferredSide}',
+                                          context.l10n
+                                              .dailySummaryPreferredSide(
+                                                analysis.preferredSide!,
+                                              ),
                                         ),
                                       ),
                                   ],

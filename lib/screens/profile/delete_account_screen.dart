@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../l10n/l10n.dart';
 import '../../widgets/error_banner.dart';
+import '../../widgets/responsive_page.dart';
 
 class DeleteAccountScreen extends StatefulWidget {
   const DeleteAccountScreen({super.key});
@@ -57,7 +58,11 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
       appBar: AppBar(title: Text(l10n.deleteAccount)),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: responsivePagePadding(
+            context,
+            horizontal: 24,
+            maxWidth: 480,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

@@ -98,6 +98,9 @@ class _ChangeSecurityQuestionScreenState
                     decoration: InputDecoration(
                       labelText: l10n.newSecurityAnswer,
                       suffixIcon: IconButton(
+                        tooltip: _obscureAnswer
+                            ? l10n.showPassword
+                            : l10n.hidePassword,
                         onPressed: () =>
                             setState(() => _obscureAnswer = !_obscureAnswer),
                         icon: Icon(
@@ -118,6 +121,9 @@ class _ChangeSecurityQuestionScreenState
                     decoration: InputDecoration(
                       labelText: l10n.currentPassword,
                       suffixIcon: IconButton(
+                        tooltip: _obscurePassword
+                            ? l10n.showPassword
+                            : l10n.hidePassword,
                         onPressed: () => setState(
                           () => _obscurePassword = !_obscurePassword,
                         ),

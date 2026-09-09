@@ -122,6 +122,12 @@ abstract class AppLocalizations {
   /// **'Dashboard'**
   String get dashboard;
 
+  /// No description provided for @dashboardDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Market overview, watchlist, and latest analyses'**
+  String get dashboardDescription;
+
   /// No description provided for @analysis.
   ///
   /// In en, this message translates to:
@@ -608,6 +614,18 @@ abstract class AppLocalizations {
   /// **'History'**
   String get history;
 
+  /// No description provided for @historyPageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'History & Analysis Performance'**
+  String get historyPageTitle;
+
+  /// No description provided for @historyTotalAnalyses.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} analyses total'**
+  String historyTotalAnalyses(int count);
+
   /// No description provided for @profile.
   ///
   /// In en, this message translates to:
@@ -661,6 +679,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Dark theme'**
   String get darkTheme;
+
+  /// No description provided for @appearance.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get appearance;
+
+  /// No description provided for @lightMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get lightMode;
+
+  /// No description provided for @darkMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get darkMode;
+
+  /// No description provided for @roleUser.
+  ///
+  /// In en, this message translates to:
+  /// **'User'**
+  String get roleUser;
+
+  /// No description provided for @roleAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get roleAdmin;
+
+  /// No description provided for @roleSuperAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Super Admin'**
+  String get roleSuperAdmin;
 
   /// No description provided for @darkThemeEnabled.
   ///
@@ -745,6 +799,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Privacy Policy'**
   String get privacyPolicy;
+
+  /// No description provided for @appFooterDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'TradePilot is a decision-support tool, not financial advice or a trading service.'**
+  String get appFooterDisclaimer;
+
+  /// No description provided for @sponsoredBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Sponsored by'**
+  String get sponsoredBy;
+
+  /// No description provided for @newsDataVia.
+  ///
+  /// In en, this message translates to:
+  /// **'News data via newsmaker.id'**
+  String get newsDataVia;
+
+  /// No description provided for @marketNews.
+  ///
+  /// In en, this message translates to:
+  /// **'Market news'**
+  String get marketNews;
 
   /// No description provided for @termsOfService.
   ///
@@ -1256,6 +1334,18 @@ abstract class AppLocalizations {
   /// **'Guide Center'**
   String get guide;
 
+  /// No description provided for @guideNavLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Guide'**
+  String get guideNavLabel;
+
+  /// No description provided for @back.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get back;
+
   /// No description provided for @guideDescription.
   ///
   /// In en, this message translates to:
@@ -1739,19 +1829,31 @@ abstract class AppLocalizations {
   /// No description provided for @welcomeBack.
   ///
   /// In en, this message translates to:
-  /// **'Welcome back'**
+  /// **'Welcome Back'**
   String get welcomeBack;
 
   /// No description provided for @loginDescription.
   ///
   /// In en, this message translates to:
-  /// **'Sign in to continue your market analysis.'**
+  /// **'Sign in to continue your analysis'**
   String get loginDescription;
+
+  /// No description provided for @usernameEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Username / Email'**
+  String get usernameEmail;
+
+  /// No description provided for @usernameEmailHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Your username or email'**
+  String get usernameEmailHint;
 
   /// No description provided for @emailHint.
   ///
   /// In en, this message translates to:
-  /// **'name@email.com'**
+  /// **'your@email.com'**
   String get emailHint;
 
   /// No description provided for @invalidEmail.
@@ -1775,7 +1877,7 @@ abstract class AppLocalizations {
   /// No description provided for @rememberMe.
   ///
   /// In en, this message translates to:
-  /// **'Remember my email'**
+  /// **'Remember Me'**
   String get rememberMe;
 
   /// No description provided for @forgotPassword.
@@ -1787,7 +1889,7 @@ abstract class AppLocalizations {
   /// No description provided for @signIn.
   ///
   /// In en, this message translates to:
-  /// **'Sign In'**
+  /// **'Sign In to Dashboard'**
   String get signIn;
 
   /// No description provided for @or.
@@ -1859,7 +1961,7 @@ abstract class AppLocalizations {
   /// No description provided for @register.
   ///
   /// In en, this message translates to:
-  /// **'Register'**
+  /// **'Register free'**
   String get register;
 
   /// No description provided for @biometricReason.
@@ -2053,6 +2155,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'My Price Alerts'**
   String get myPriceAlerts;
+
+  /// No description provided for @priceAlertsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Price alerts you\'ve set across instruments'**
+  String get priceAlertsSubtitle;
 
   /// No description provided for @notifications.
   ///
@@ -2623,6 +2731,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'AI Analysis'**
   String get aiAnalysis;
+
+  /// No description provided for @analyzeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New Analysis'**
+  String get analyzeTitle;
+
+  /// No description provided for @otherInstrument.
+  ///
+  /// In en, this message translates to:
+  /// **'Other instrument…'**
+  String get otherInstrument;
+
+  /// No description provided for @quotaHour.
+  ///
+  /// In en, this message translates to:
+  /// **'Hourly remaining'**
+  String get quotaHour;
+
+  /// No description provided for @quotaDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily remaining'**
+  String get quotaDay;
+
+  /// No description provided for @quotaHourShort.
+  ///
+  /// In en, this message translates to:
+  /// **'/hr'**
+  String get quotaHourShort;
+
+  /// No description provided for @quotaDayShort.
+  ///
+  /// In en, this message translates to:
+  /// **'/day'**
+  String get quotaDayShort;
 
   /// No description provided for @selectInstrument.
   ///
@@ -4208,6 +4352,36 @@ abstract class AppLocalizations {
   /// **'e.g. 50000'**
   String get topUpAmountHint;
 
+  /// No description provided for @topUpChooseAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a top-up amount'**
+  String get topUpChooseAmount;
+
+  /// No description provided for @topUpContinuePayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue to payment'**
+  String get topUpContinuePayment;
+
+  /// No description provided for @topUpPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment details'**
+  String get topUpPayment;
+
+  /// No description provided for @topUpChangeAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Change amount'**
+  String get topUpChangeAmount;
+
+  /// No description provided for @topUpPaymentSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay {amount} to receive {credits} credit'**
+  String topUpPaymentSummary(String amount, int credits);
+
   /// No description provided for @topUpCreditsPreview.
   ///
   /// In en, this message translates to:
@@ -4904,6 +5078,18 @@ abstract class AppLocalizations {
   /// **'These statistics describe analysis habits, not trading profit.'**
   String get analyticsDisclaimer;
 
+  /// No description provided for @analyticsActivitySummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity summary'**
+  String get analyticsActivitySummary;
+
+  /// No description provided for @analyticsWeeklyActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly activity'**
+  String get analyticsWeeklyActivity;
+
   /// No description provided for @metricAllAnalyses.
   ///
   /// In en, this message translates to:
@@ -5060,6 +5246,30 @@ abstract class AppLocalizations {
   /// **'Analysis timing'**
   String get traderMirrorTiming;
 
+  /// No description provided for @traderMirrorPostLoss.
+  ///
+  /// In en, this message translates to:
+  /// **'Patterns after a negative outcome'**
+  String get traderMirrorPostLoss;
+
+  /// No description provided for @traderMirrorEvaluationDiscipline.
+  ///
+  /// In en, this message translates to:
+  /// **'Evaluation discipline'**
+  String get traderMirrorEvaluationDiscipline;
+
+  /// No description provided for @traderMirrorProcessReflection.
+  ///
+  /// In en, this message translates to:
+  /// **'Process reflection'**
+  String get traderMirrorProcessReflection;
+
+  /// No description provided for @traderMirrorSamples.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} samples'**
+  String traderMirrorSamples(int count);
+
   /// No description provided for @traderMirrorBasedOn.
   ///
   /// In en, this message translates to:
@@ -5119,6 +5329,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delivery time'**
   String get dailySummaryDeliveryTime;
+
+  /// No description provided for @dailySummaryFullDigest.
+  ///
+  /// In en, this message translates to:
+  /// **'Full digest'**
+  String get dailySummaryFullDigest;
+
+  /// No description provided for @dailySummaryQuotaOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Quota only'**
+  String get dailySummaryQuotaOnly;
+
+  /// No description provided for @dailySummaryPreferredSide.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred side: {side}'**
+  String dailySummaryPreferredSide(String side);
+
+  /// No description provided for @guideSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search guide...'**
+  String get guideSearchHint;
+
+  /// No description provided for @guideSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Knowledge, features, and mindset.'**
+  String get guideSubtitle;
+
+  /// No description provided for @guideNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No articles found.'**
+  String get guideNoResults;
 
   /// No description provided for @marketChartUnavailable.
   ///

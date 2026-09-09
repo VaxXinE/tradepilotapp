@@ -7,6 +7,7 @@ import '../../core/storage/signed_upload.dart';
 import '../../providers/auth_provider.dart';
 import '../../l10n/l10n.dart';
 import '../../widgets/error_banner.dart';
+import '../../widgets/responsive_page.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -106,7 +107,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       appBar: AppBar(title: Text(l10n.editProfile)),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: responsivePagePadding(
+            context,
+            horizontal: 24,
+            maxWidth: 480,
+          ),
           child: Form(
             key: _formKey,
             child: Column(

@@ -66,10 +66,14 @@ class AnalysisDetailScreen extends StatefulWidget {
     super.key,
     required this.analysisId,
     this.preloaded,
+    this.embedded = false,
+    this.onAnalysisCreated,
   });
 
   final int analysisId;
   final Analysis? preloaded;
+  final bool embedded;
+  final ValueChanged<Analysis>? onAnalysisCreated;
 
   @override
   State<AnalysisDetailScreen> createState() => _AnalysisDetailScreenState();
@@ -341,12 +345,16 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
         metadata: {'instrument': created.instrument, 'timeframe': selected},
       ),
     );
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) =>
-            AnalysisDetailScreen(analysisId: created.id, preloaded: created),
-      ),
-    );
+    if (widget.onAnalysisCreated case final callback?) {
+      callback(created);
+    } else {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) =>
+              AnalysisDetailScreen(analysisId: created.id, preloaded: created),
+        ),
+      );
+    }
   }
 
   Future<void> _refreshFundamentals() async {
@@ -705,21 +713,22 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
         : AppColors.lightMutedForeground;
 
     if (_loading && _analysis == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      const loading = Center(child: CircularProgressIndicator());
+      return widget.embedded ? loading : const Scaffold(body: loading);
     }
 
     final analysis = _analysis;
 
     if (analysis == null) {
-      return Scaffold(
-        appBar: AppBar(),
-        body: Center(
-          child: Text(
-            context.l10n.analysisNotFound,
-            style: TextStyle(color: muted),
-          ),
+      final missing = Center(
+        child: Text(
+          context.l10n.analysisNotFound,
+          style: TextStyle(color: muted),
         ),
       );
+      return widget.embedded
+          ? missing
+          : Scaffold(appBar: AppBar(), body: missing);
     }
 
     final bias = (analysis.tradingBias ?? '').toLowerCase();
@@ -757,6 +766,353 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
         ? analysis.invalidationConditions
         : analysis.failureConditions;
 
+    final body = RefreshIndicator(
+      onRefresh: _refresh,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        children: [
+          _HeaderCard(
+            analysis: analysis,
+            biasColor: biasColor,
+            biasLabel: biasLabel,
+            isExpired: isExpired,
+            muted: muted,
+            isPro: isPro,
+          ),
+
+          const SizedBox(height: 14),
+
+          _TimeframeCard(
+            current: analysis.timeframe,
+            selected: _selectedTimeframe,
+            loading: _reanalyzing,
+            onSelect: (value) => setState(() => _selectedTimeframe = value),
+            onAnalyze: () =>
+                _reanalyze(_selectedTimeframe ?? analysis.timeframe),
+          ),
+
+          const SizedBox(height: 14),
+
+          _ChartCard(
+            analysis: analysis,
+            candles: _candles,
+            isLoading: _marketLoading,
+            error: _marketError,
+            onOpenTradingView: () => _openExternalUrl(
+              Uri.https('www.tradingview.com', '/chart/', {
+                'symbol': _tradingViewSymbol(analysis.instrument),
+              }).toString(),
+            ),
+          ),
+
+          if (supportsRiskMap(analysis.instrument)) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: OutlinedButton.icon(
+                onPressed: _reanalyzing ? null : () => _openRiskMap(analysis),
+                icon: const Icon(Icons.monitor_heart_outlined),
+                label: Text(context.l10n.riskMapTitle),
+              ),
+            ),
+          ],
+
+          if (!isPro) ...[
+            const SizedBox(height: 14),
+            _BeginnerMeaningCard(
+              analysis: analysis,
+              biasLabel: biasLabel,
+              biasColor: biasColor,
+            ),
+          ],
+
+          if (analysis.outcomeStatus != null) ...[
+            const SizedBox(height: 14),
+            _OutcomeCard(analysis: analysis),
+          ],
+
+          const SizedBox(height: 14),
+
+          _RiskCard(analysis: analysis, isPro: isPro),
+          _AnalysisGuideLink(
+            onPressed: () => _openGuide(
+              ProgressionEvidenceStartInputGuideIdEnum.biasConfidenceValidity,
+            ),
+          ),
+
+          if ((isPro ? analysis.uncertaintyNotes : analysis.whyReason)
+                  ?.trim()
+                  .isNotEmpty ==
+              true) ...[
+            const SizedBox(height: 14),
+            _ConfidenceReasonCard(
+              analysis: analysis,
+              reason: (isPro
+                  ? analysis.uncertaintyNotes!
+                  : analysis.whyReason!),
+              onOpenUrl: _openExternalUrl,
+            ),
+          ],
+
+          if (analysis.tradePlan != null) ...[
+            const SizedBox(height: 20),
+            Text(
+              context.l10n.tradingPlanTitle,
+              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+            ),
+            const SizedBox(height: 5),
+            Text(
+              context.l10n.tradingPlanDisclaimer,
+              style: TextStyle(color: muted, fontSize: 11.5, height: 1.4),
+            ),
+            const SizedBox(height: 12),
+            _TradePlanCard(plan: analysis.tradePlan!, isDark: isDark),
+            const SizedBox(height: 14),
+            AdaptivePositionPlanCard(analysis: analysis, candles: _candles),
+            Wrap(
+              spacing: 4,
+              children: [
+                _AnalysisGuideLink(
+                  onPressed: () => _openGuide(
+                    ProgressionEvidenceStartInputGuideIdEnum.standardPlan,
+                  ),
+                ),
+                _AnalysisGuideLink(
+                  label: context.l10n.learnAdaptivePosition,
+                  onPressed: () => _openGuide(
+                    ProgressionEvidenceStartInputGuideIdEnum
+                        .adaptivePositionPlan,
+                  ),
+                ),
+              ],
+            ),
+          ],
+
+          if (analysis.tradePlan != null) ...[
+            const SizedBox(height: 14),
+            _AnalysisAlertsCard(
+              status: _alertStatus,
+              loading: _alertStatusLoading,
+              busy: _alertBusy,
+              error: _alertError,
+              onToggle: _setAnalysisAlerts,
+              onRetry: _loadAlertStatus,
+            ),
+          ],
+
+          const SizedBox(height: 14),
+          Card(
+            child: ExpansionTile(
+              key: const ValueKey('analysis-market-evidence'),
+              initiallyExpanded: false,
+              leading: const Icon(Icons.query_stats_rounded),
+              title: Text(
+                context.l10n.marketEvidence,
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+              subtitle: Text(context.l10n.marketEvidenceDescription),
+              childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+              children: [
+                _MarketSnapshotCard(analysis: analysis),
+                if (analysis.fundamentalContext != null) ...[
+                  const SizedBox(height: 12),
+                  _FundamentalSnapshotCard(
+                    analysis: analysis,
+                    refreshed: _fundamentalRefresh,
+                    refreshing: _refreshingFundamentals,
+                    onRefresh: _refreshFundamentals,
+                    onOpenUrl: _openExternalUrl,
+                  ),
+                  _AnalysisGuideLink(
+                    onPressed: () => _openGuide(
+                      ProgressionEvidenceStartInputGuideIdEnum
+                          .technicalFundamental,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
+          _AnalysisJournalCard(
+            entry: _journalEntry,
+            loading: _journalLoading,
+            error: _journalError,
+            onOpen: () => _openJournal(analysis),
+            onRetry: _loadJournalEntry,
+          ),
+
+          const SizedBox(height: 14),
+
+          Consumer<AnalysisProvider>(
+            builder: (context, provider, _) => AnalysisNoteCard(
+              note: analysis.userNote,
+              isSaving: provider.isSavingNote(analysis.id),
+              onSave: _saveNote,
+            ),
+          ),
+
+          if (_technical != null) ...[
+            const SizedBox(height: 14),
+            Card(
+              child: ExpansionTile(
+                key: const ValueKey('analysis-technical-details'),
+                initiallyExpanded: false,
+                leading: const Icon(Icons.analytics_outlined),
+                title: Text(
+                  context.l10n.technicalDetails,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+                subtitle: Text(context.l10n.technicalDetailsDescription),
+                childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                children: [
+                  _TechnicalIndicatorsCard(
+                    technical: _technical!,
+                    timeframe: analysis.timeframe,
+                    showRawSignals: isPro,
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          if (analysis.userInputContext?.trim().isNotEmpty == true) ...[
+            const SizedBox(height: 14),
+            _SectionCard(
+              title: context.l10n.providedContext,
+              body: analysis.userInputContext!,
+              icon: Icons.chat_bubble_outline,
+            ),
+          ],
+
+          if (invalidation?.trim().isNotEmpty == true) ...[
+            const SizedBox(height: 14),
+            _SectionCard(
+              title: context.l10n.analysisInvalidationTitle,
+              body: invalidation!,
+              icon: Icons.report_gmailerrorred_outlined,
+              isWarning: true,
+            ),
+          ],
+
+          if (analysis.opportunity?.trim().isNotEmpty == true ||
+              analysis.risk?.trim().isNotEmpty == true) ...[
+            const SizedBox(height: 14),
+            _OpportunityRiskCard(analysis: analysis),
+          ],
+
+          if (mainScenario?.trim().isNotEmpty == true) ...[
+            const SizedBox(height: 14),
+            _SectionCard(
+              title: context.l10n.mainScenario,
+              body: mainScenario!,
+              icon: Icons.route_outlined,
+            ),
+          ],
+
+          if (alternativeScenario?.trim().isNotEmpty == true) ...[
+            const SizedBox(height: 12),
+            _SectionCard(
+              title: context.l10n.alternativeScenario,
+              body: alternativeScenario!,
+              icon: Icons.alt_route_rounded,
+            ),
+          ],
+
+          const SizedBox(height: 12),
+          _SectionCard(
+            title: context.l10n.waitScenario,
+            body: context.l10n.waitScenarioBody,
+            icon: Icons.hourglass_empty_rounded,
+          ),
+
+          if (isPro) ...[
+            if (analysis.keyDriversTechnical?.trim().isNotEmpty == true) ...[
+              const SizedBox(height: 12),
+              _SectionCard(
+                title: context.l10n.technicalDrivers,
+                body: analysis.keyDriversTechnical!,
+                icon: Icons.query_stats_rounded,
+              ),
+            ],
+            if (analysis.keyDriversFundamental?.trim().isNotEmpty == true) ...[
+              const SizedBox(height: 12),
+              _SectionCard(
+                title: context.l10n.fundamentalDrivers,
+                body: analysis.keyDriversFundamental!,
+                icon: Icons.newspaper_outlined,
+              ),
+            ],
+            if (analysis.marketContext?.trim().isNotEmpty == true) ...[
+              const SizedBox(height: 12),
+              _SectionCard(
+                title: context.l10n.marketContext,
+                body: analysis.marketContext!,
+                icon: Icons.public_rounded,
+              ),
+            ],
+          ],
+
+          const SizedBox(height: 12),
+          _ExecutionInsightCard(analysis: analysis),
+
+          const SizedBox(height: 24),
+
+          Text(
+            context.l10n.analysisHelpfulQuestion,
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+          ),
+
+          const SizedBox(height: 10),
+
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _submittingFeedback
+                      ? null
+                      : () {
+                          _openFeedback(FeedbackBodyFeedbackTypeEnum.useful);
+                        },
+                  icon: const Icon(Icons.thumb_up_alt_outlined, size: 18),
+                  label: Text(context.l10n.helpful),
+                ),
+              ),
+
+              const SizedBox(width: 10),
+
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _submittingFeedback
+                      ? null
+                      : () {
+                          _openFeedback(FeedbackBodyFeedbackTypeEnum.notUseful);
+                        },
+                  icon: const Icon(Icons.thumb_down_alt_outlined, size: 18),
+                  label: Text(context.l10n.notHelpful),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 14),
+
+          Text(
+            context.l10n.analysisSafetyDisclaimer,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: muted, fontSize: 10.5, height: 1.4),
+          ),
+
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+
+    if (widget.embedded) return body;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(analysis.instrument),
@@ -773,356 +1129,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
           ),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: _refresh,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
-          children: [
-            _HeaderCard(
-              analysis: analysis,
-              biasColor: biasColor,
-              biasLabel: biasLabel,
-              isExpired: isExpired,
-              muted: muted,
-              isPro: isPro,
-            ),
-
-            const SizedBox(height: 14),
-
-            _TimeframeCard(
-              current: analysis.timeframe,
-              selected: _selectedTimeframe,
-              loading: _reanalyzing,
-              onSelect: (value) => setState(() => _selectedTimeframe = value),
-              onAnalyze: () =>
-                  _reanalyze(_selectedTimeframe ?? analysis.timeframe),
-            ),
-
-            const SizedBox(height: 14),
-
-            _ChartCard(
-              analysis: analysis,
-              candles: _candles,
-              isLoading: _marketLoading,
-              error: _marketError,
-              onOpenTradingView: () => _openExternalUrl(
-                Uri.https('www.tradingview.com', '/chart/', {
-                  'symbol': _tradingViewSymbol(analysis.instrument),
-                }).toString(),
-              ),
-            ),
-
-            if (supportsRiskMap(analysis.instrument)) ...[
-              const SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: OutlinedButton.icon(
-                  onPressed: _reanalyzing ? null : () => _openRiskMap(analysis),
-                  icon: const Icon(Icons.monitor_heart_outlined),
-                  label: Text(context.l10n.riskMapTitle),
-                ),
-              ),
-            ],
-
-            if (!isPro) ...[
-              const SizedBox(height: 14),
-              _BeginnerMeaningCard(
-                analysis: analysis,
-                biasLabel: biasLabel,
-                biasColor: biasColor,
-              ),
-            ],
-
-            if (analysis.outcomeStatus != null) ...[
-              const SizedBox(height: 14),
-              _OutcomeCard(analysis: analysis),
-            ],
-
-            const SizedBox(height: 14),
-
-            _RiskCard(analysis: analysis, isPro: isPro),
-            _AnalysisGuideLink(
-              onPressed: () => _openGuide(
-                ProgressionEvidenceStartInputGuideIdEnum.biasConfidenceValidity,
-              ),
-            ),
-
-            if ((isPro ? analysis.uncertaintyNotes : analysis.whyReason)
-                    ?.trim()
-                    .isNotEmpty ==
-                true) ...[
-              const SizedBox(height: 14),
-              _ConfidenceReasonCard(
-                analysis: analysis,
-                reason: (isPro
-                    ? analysis.uncertaintyNotes!
-                    : analysis.whyReason!),
-                onOpenUrl: _openExternalUrl,
-              ),
-            ],
-
-            if (analysis.tradePlan != null) ...[
-              const SizedBox(height: 20),
-              Text(
-                context.l10n.tradingPlanTitle,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 16,
-                ),
-              ),
-              const SizedBox(height: 5),
-              Text(
-                context.l10n.tradingPlanDisclaimer,
-                style: TextStyle(color: muted, fontSize: 11.5, height: 1.4),
-              ),
-              const SizedBox(height: 12),
-              _TradePlanCard(plan: analysis.tradePlan!, isDark: isDark),
-              const SizedBox(height: 14),
-              AdaptivePositionPlanCard(analysis: analysis, candles: _candles),
-              Wrap(
-                spacing: 4,
-                children: [
-                  _AnalysisGuideLink(
-                    onPressed: () => _openGuide(
-                      ProgressionEvidenceStartInputGuideIdEnum.standardPlan,
-                    ),
-                  ),
-                  _AnalysisGuideLink(
-                    label: context.l10n.learnAdaptivePosition,
-                    onPressed: () => _openGuide(
-                      ProgressionEvidenceStartInputGuideIdEnum
-                          .adaptivePositionPlan,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-
-            if (analysis.tradePlan != null) ...[
-              const SizedBox(height: 14),
-              _AnalysisAlertsCard(
-                status: _alertStatus,
-                loading: _alertStatusLoading,
-                busy: _alertBusy,
-                error: _alertError,
-                onToggle: _setAnalysisAlerts,
-                onRetry: _loadAlertStatus,
-              ),
-            ],
-
-            const SizedBox(height: 14),
-            Card(
-              child: ExpansionTile(
-                key: const ValueKey('analysis-market-evidence'),
-                initiallyExpanded: false,
-                leading: const Icon(Icons.query_stats_rounded),
-                title: Text(
-                  context.l10n.marketEvidence,
-                  style: const TextStyle(fontWeight: FontWeight.w800),
-                ),
-                subtitle: Text(context.l10n.marketEvidenceDescription),
-                childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                children: [
-                  _MarketSnapshotCard(analysis: analysis),
-                  if (analysis.fundamentalContext != null) ...[
-                    const SizedBox(height: 12),
-                    _FundamentalSnapshotCard(
-                      analysis: analysis,
-                      refreshed: _fundamentalRefresh,
-                      refreshing: _refreshingFundamentals,
-                      onRefresh: _refreshFundamentals,
-                      onOpenUrl: _openExternalUrl,
-                    ),
-                    _AnalysisGuideLink(
-                      onPressed: () => _openGuide(
-                        ProgressionEvidenceStartInputGuideIdEnum
-                            .technicalFundamental,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 14),
-
-            _AnalysisJournalCard(
-              entry: _journalEntry,
-              loading: _journalLoading,
-              error: _journalError,
-              onOpen: () => _openJournal(analysis),
-              onRetry: _loadJournalEntry,
-            ),
-
-            const SizedBox(height: 14),
-
-            Consumer<AnalysisProvider>(
-              builder: (context, provider, _) => AnalysisNoteCard(
-                note: analysis.userNote,
-                isSaving: provider.isSavingNote(analysis.id),
-                onSave: _saveNote,
-              ),
-            ),
-
-            if (_technical != null) ...[
-              const SizedBox(height: 14),
-              Card(
-                child: ExpansionTile(
-                  key: const ValueKey('analysis-technical-details'),
-                  initiallyExpanded: false,
-                  leading: const Icon(Icons.analytics_outlined),
-                  title: Text(
-                    context.l10n.technicalDetails,
-                    style: const TextStyle(fontWeight: FontWeight.w800),
-                  ),
-                  subtitle: Text(context.l10n.technicalDetailsDescription),
-                  childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                  children: [
-                    _TechnicalIndicatorsCard(
-                      technical: _technical!,
-                      timeframe: analysis.timeframe,
-                      showRawSignals: isPro,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-
-            if (analysis.userInputContext?.trim().isNotEmpty == true) ...[
-              const SizedBox(height: 14),
-              _SectionCard(
-                title: context.l10n.providedContext,
-                body: analysis.userInputContext!,
-                icon: Icons.chat_bubble_outline,
-              ),
-            ],
-
-            if (invalidation?.trim().isNotEmpty == true) ...[
-              const SizedBox(height: 14),
-              _SectionCard(
-                title: context.l10n.analysisInvalidationTitle,
-                body: invalidation!,
-                icon: Icons.report_gmailerrorred_outlined,
-                isWarning: true,
-              ),
-            ],
-
-            if (analysis.opportunity?.trim().isNotEmpty == true ||
-                analysis.risk?.trim().isNotEmpty == true) ...[
-              const SizedBox(height: 14),
-              _OpportunityRiskCard(analysis: analysis),
-            ],
-
-            if (mainScenario?.trim().isNotEmpty == true) ...[
-              const SizedBox(height: 14),
-              _SectionCard(
-                title: context.l10n.mainScenario,
-                body: mainScenario!,
-                icon: Icons.route_outlined,
-              ),
-            ],
-
-            if (alternativeScenario?.trim().isNotEmpty == true) ...[
-              const SizedBox(height: 12),
-              _SectionCard(
-                title: context.l10n.alternativeScenario,
-                body: alternativeScenario!,
-                icon: Icons.alt_route_rounded,
-              ),
-            ],
-
-            const SizedBox(height: 12),
-            _SectionCard(
-              title: context.l10n.waitScenario,
-              body: context.l10n.waitScenarioBody,
-              icon: Icons.hourglass_empty_rounded,
-            ),
-
-            if (isPro) ...[
-              if (analysis.keyDriversTechnical?.trim().isNotEmpty == true) ...[
-                const SizedBox(height: 12),
-                _SectionCard(
-                  title: context.l10n.technicalDrivers,
-                  body: analysis.keyDriversTechnical!,
-                  icon: Icons.query_stats_rounded,
-                ),
-              ],
-              if (analysis.keyDriversFundamental?.trim().isNotEmpty ==
-                  true) ...[
-                const SizedBox(height: 12),
-                _SectionCard(
-                  title: context.l10n.fundamentalDrivers,
-                  body: analysis.keyDriversFundamental!,
-                  icon: Icons.newspaper_outlined,
-                ),
-              ],
-              if (analysis.marketContext?.trim().isNotEmpty == true) ...[
-                const SizedBox(height: 12),
-                _SectionCard(
-                  title: context.l10n.marketContext,
-                  body: analysis.marketContext!,
-                  icon: Icons.public_rounded,
-                ),
-              ],
-            ],
-
-            const SizedBox(height: 12),
-            _ExecutionInsightCard(analysis: analysis),
-
-            const SizedBox(height: 24),
-
-            Text(
-              context.l10n.analysisHelpfulQuestion,
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-            ),
-
-            const SizedBox(height: 10),
-
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _submittingFeedback
-                        ? null
-                        : () {
-                            _openFeedback(FeedbackBodyFeedbackTypeEnum.useful);
-                          },
-                    icon: const Icon(Icons.thumb_up_alt_outlined, size: 18),
-                    label: Text(context.l10n.helpful),
-                  ),
-                ),
-
-                const SizedBox(width: 10),
-
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _submittingFeedback
-                        ? null
-                        : () {
-                            _openFeedback(
-                              FeedbackBodyFeedbackTypeEnum.notUseful,
-                            );
-                          },
-                    icon: const Icon(Icons.thumb_down_alt_outlined, size: 18),
-                    label: Text(context.l10n.notHelpful),
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 14),
-
-            Text(
-              context.l10n.analysisSafetyDisclaimer,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: muted, fontSize: 10.5, height: 1.4),
-            ),
-
-            const SizedBox(height: 24),
-          ],
-        ),
-      ),
+      body: body,
     );
   }
 }

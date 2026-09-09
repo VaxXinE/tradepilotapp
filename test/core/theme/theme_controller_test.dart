@@ -26,6 +26,10 @@ void main() {
     expect(AppTheme.dark.colorScheme.outline, AppColors.darkBorder);
     expect(AppTheme.light.scaffoldBackgroundColor, AppColors.lightBackground);
     expect(AppTheme.light.colorScheme.primary, AppColors.lightPrimary);
+    expect(AppTheme.light.textTheme.bodyMedium?.fontFamily, 'Inter');
+    expect(AppTheme.dark.textTheme.bodyMedium?.fontFamily, 'Inter');
+    expect(AppTheme.light.textTheme.bodyMedium?.fontWeight, FontWeight.w500);
+    expect(AppColors.radius, 12);
     expect(AppColors.entry, const Color(0xFFF59E0B));
     expect(AppColors.stopLoss, const Color(0xFFEF4444));
     expect(AppColors.takeProfit, const Color(0xFF10B981));

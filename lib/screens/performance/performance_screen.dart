@@ -7,6 +7,7 @@ import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
 import '../../l10n/l10n.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/responsive_page.dart';
 
 class PerformanceScreen extends StatefulWidget {
   const PerformanceScreen({super.key});
@@ -76,7 +77,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
       onRefresh: _load,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
+        padding: responsivePagePadding(context),
         children: [
           Text(
             context.l10n.performanceDescription,

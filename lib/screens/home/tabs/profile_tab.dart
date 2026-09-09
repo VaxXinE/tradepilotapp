@@ -18,11 +18,13 @@ import '../../../providers/credit_provider.dart';
 import '../../../providers/progression_provider.dart';
 import '../../../services/native_push_service.dart';
 import '../../../widgets/progression/progression_emblem.dart';
+import '../../../widgets/app_footer.dart';
 // import '../../../screens/notifications/notifications_screen.dart';
 import '../../profile/change_password_screen.dart';
 import '../../profile/change_security_question_screen.dart';
 import '../../profile/delete_account_screen.dart';
 import '../../profile/edit_profile_screen.dart';
+import '../../price_alert/price_alert_list_screen.dart';
 import '../../topup/topup_screen.dart';
 import '../../analytics/analytics_screen.dart';
 import '../../daily_summary/daily_summary_screen.dart';
@@ -181,7 +183,6 @@ class ProfileTab extends StatelessWidget {
     final isPro = user.selectedMode == UserSelectedModeEnum.pro;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.profile)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -191,9 +192,15 @@ class ProfileTab extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  Text(
+                    l10n.profile,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 14),
                   _ProfileHeader(
                     name: user.displayName,
                     email: user.email,
+                    role: user.role,
                     avatarUrl: user.avatarUrl,
                     primary: primary,
                     onPrimary: onPrimary,
@@ -237,22 +244,40 @@ class ProfileTab extends StatelessWidget {
                         ),
                       ),
                       const Divider(height: 1),
-                      SwitchListTile(
-                        secondary: Icon(
-                          themeController.isDarkMode
-                              ? Icons.dark_mode_outlined
-                              : Icons.light_mode_outlined,
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  themeController.isDarkMode
+                                      ? Icons.dark_mode_outlined
+                                      : Icons.light_mode_outlined,
+                                  size: 20,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  l10n.appearance,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            _ThemeSegmentedControl(
+                              isDarkMode: themeController.isDarkMode,
+                              enabled: !auth.isUpdatingProfile,
+                              onSelected: (dark) => _toggleTheme(context, dark),
+                            ),
+                          ],
                         ),
-                        title: Text(l10n.darkTheme),
-                        subtitle: Text(
-                          themeController.isDarkMode
-                              ? l10n.darkThemeEnabled
-                              : l10n.darkThemeDisabled,
-                        ),
-                        value: themeController.isDarkMode,
-                        onChanged: auth.isUpdatingProfile
-                            ? null
-                            : (value) => _toggleTheme(context, value),
                       ),
                       const Divider(height: 1),
                       SwitchListTile(
@@ -376,6 +401,21 @@ class ProfileTab extends StatelessWidget {
                   _Section(
                     title: l10n.insightsAndJournal,
                     children: [
+                      ListTile(
+                        key: const Key('profile-my-alerts'),
+                        leading: const Icon(
+                          Icons.notifications_active_outlined,
+                        ),
+                        title: Text(l10n.myPriceAlerts),
+                        subtitle: Text(l10n.priceAlertsSubtitle),
+                        trailing: const Icon(Icons.chevron_right_rounded),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const PriceAlertListScreen(),
+                          ),
+                        ),
+                      ),
+                      const Divider(height: 1),
                       ListTile(
                         leading: const Icon(Icons.menu_book_outlined),
                         title: Text(l10n.tradeJournal),
@@ -504,6 +544,7 @@ class ProfileTab extends StatelessWidget {
               ),
             ),
           ),
+          const AppFooter(),
         ],
       ),
     );
@@ -584,6 +625,7 @@ class _ProfileHeader extends StatelessWidget {
   const _ProfileHeader({
     required this.name,
     required this.email,
+    required this.role,
     required this.avatarUrl,
     required this.primary,
     required this.onPrimary,
@@ -592,10 +634,17 @@ class _ProfileHeader extends StatelessWidget {
 
   final String name;
   final String email;
+  final UserRoleEnum role;
   final String? avatarUrl;
   final Color primary;
   final Color onPrimary;
   final Color muted;
+
+  String _roleLabel(BuildContext context) => switch (role) {
+    UserRoleEnum.superAdmin => context.l10n.roleSuperAdmin,
+    UserRoleEnum.admin => context.l10n.roleAdmin,
+    _ => context.l10n.roleUser,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -632,6 +681,26 @@ class _ProfileHeader extends StatelessWidget {
                   ),
                   const SizedBox(height: 3),
                   Text(email, style: TextStyle(color: muted, fontSize: 12.5)),
+                  const SizedBox(height: 6),
+                  Container(
+                    key: const Key('profile-role-badge'),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.secondary,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      _roleLabel(context),
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: Theme.of(context).colorScheme.onSecondary,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -812,6 +881,125 @@ class _TopUpMenuItem extends StatelessWidget {
           await credit.loadBalance(silent: true);
         }
       },
+    );
+  }
+}
+
+// =============================================================================
+// THEME SEGMENTED CONTROL
+// =============================================================================
+
+/// Pilihan tema Terang/Gelap mengikuti kontrol segmented pada mobile web.
+class _ThemeSegmentedControl extends StatelessWidget {
+  const _ThemeSegmentedControl({
+    required this.isDarkMode,
+    required this.enabled,
+    required this.onSelected,
+  });
+
+  final bool isDarkMode;
+  final bool enabled;
+  final ValueChanged<bool> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        key: const Key('profile-theme-segmented'),
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: colors.surfaceContainerHighest.withValues(alpha: 0.25),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: colors.outlineVariant.withValues(alpha: 0.6),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _ThemeSegment(
+              icon: Icons.light_mode_outlined,
+              label: l10n.lightMode,
+              selected: !isDarkMode,
+              onTap: enabled && isDarkMode ? () => onSelected(false) : null,
+            ),
+            const SizedBox(width: 4),
+            _ThemeSegment(
+              icon: Icons.dark_mode_outlined,
+              label: l10n.darkMode,
+              selected: isDarkMode,
+              onTap: enabled && !isDarkMode ? () => onSelected(true) : null,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ThemeSegment extends StatelessWidget {
+  const _ThemeSegment({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(9),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: selected ? colors.surface : Colors.transparent,
+            borderRadius: BorderRadius.circular(9),
+            boxShadow: selected
+                ? const [
+                    BoxShadow(
+                      color: Color(0x1A000000),
+                      blurRadius: 4,
+                      offset: Offset(0, 1),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 16,
+                color: selected ? colors.primary : colors.onSurfaceVariant,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  color: selected ? colors.onSurface : colors.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

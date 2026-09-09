@@ -21,6 +21,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get dashboard => 'Beranda';
 
   @override
+  String get dashboardDescription =>
+      'Ringkasan market, watchlist, dan analisis terbaru';
+
+  @override
   String get analysis => 'Analisis';
 
   @override
@@ -290,6 +294,14 @@ class AppLocalizationsId extends AppLocalizations {
   String get history => 'Riwayat';
 
   @override
+  String get historyPageTitle => 'Riwayat & Performa Analisis';
+
+  @override
+  String historyTotalAnalyses(int count) {
+    return '$count analisis total';
+  }
+
+  @override
   String get profile => 'Profil';
 
   @override
@@ -315,6 +327,24 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get darkTheme => 'Tema gelap';
+
+  @override
+  String get appearance => 'Tema Tampilan';
+
+  @override
+  String get lightMode => 'Terang';
+
+  @override
+  String get darkMode => 'Gelap';
+
+  @override
+  String get roleUser => 'Pengguna';
+
+  @override
+  String get roleAdmin => 'Admin';
+
+  @override
+  String get roleSuperAdmin => 'Super Admin';
 
   @override
   String get darkThemeEnabled => 'Aktif • nyaman saat cahaya redup';
@@ -360,7 +390,20 @@ class AppLocalizationsId extends AppLocalizations {
   String get privacyPolicy => 'Kebijakan Privasi';
 
   @override
-  String get termsOfService => 'Ketentuan Layanan';
+  String get appFooterDisclaimer =>
+      'TradePilot adalah alat pendukung keputusan, bukan saran keuangan atau layanan trading.';
+
+  @override
+  String get sponsoredBy => 'Disponsori oleh';
+
+  @override
+  String get newsDataVia => 'Data berita via newsmaker.id';
+
+  @override
+  String get marketNews => 'Berita pasar';
+
+  @override
+  String get termsOfService => 'Syarat Layanan';
 
   @override
   String get support => 'Bantuan';
@@ -639,6 +682,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get guide => 'Pusat Panduan';
 
   @override
+  String get guideNavLabel => 'Panduan';
+
+  @override
+  String get back => 'Kembali';
+
+  @override
   String get guideDescription =>
       'Panduan fitur, analisis, risiko, dan disiplin trading';
 
@@ -915,13 +964,19 @@ class AppLocalizationsId extends AppLocalizations {
   String get passwordConfirmationMismatch => 'Konfirmasi password tidak cocok';
 
   @override
-  String get welcomeBack => 'Selamat datang kembali';
+  String get welcomeBack => 'Selamat Datang';
 
   @override
-  String get loginDescription => 'Masuk untuk melanjutkan analisis pasar.';
+  String get loginDescription => 'Masuk untuk melanjutkan analisis';
 
   @override
-  String get emailHint => 'nama@email.com';
+  String get usernameEmail => 'Username / Email';
+
+  @override
+  String get usernameEmailHint => 'Username atau email kamu';
+
+  @override
+  String get emailHint => 'kamu@email.com';
 
   @override
   String get invalidEmail => 'Masukkan alamat email yang valid';
@@ -933,13 +988,13 @@ class AppLocalizationsId extends AppLocalizations {
   String get passwordRequired => 'Password wajib diisi';
 
   @override
-  String get rememberMe => 'Ingat email saya';
+  String get rememberMe => 'Selalu Ingat Saya';
 
   @override
   String get forgotPassword => 'Lupa password?';
 
   @override
-  String get signIn => 'Masuk';
+  String get signIn => 'Masuk ke Dashboard';
 
   @override
   String get or => 'atau';
@@ -980,7 +1035,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get noAccount => 'Belum punya akun? ';
 
   @override
-  String get register => 'Daftar';
+  String get register => 'Daftar gratis';
 
   @override
   String get biometricReason =>
@@ -1085,6 +1140,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get myPriceAlerts => 'Price Alert Saya';
+
+  @override
+  String get priceAlertsSubtitle => 'Alert harga yang sudah kamu pasang';
 
   @override
   String get notifications => 'Notifikasi';
@@ -1417,6 +1475,24 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get aiAnalysis => 'Analisis AI';
+
+  @override
+  String get analyzeTitle => 'Analisis Baru';
+
+  @override
+  String get otherInstrument => 'Instrumen lain…';
+
+  @override
+  String get quotaHour => 'Sisa per jam';
+
+  @override
+  String get quotaDay => 'Sisa per hari';
+
+  @override
+  String get quotaHourShort => '/jam';
+
+  @override
+  String get quotaDayShort => '/hari';
 
   @override
   String get selectInstrument => 'Pilih Instrumen';
@@ -2325,6 +2401,23 @@ class AppLocalizationsId extends AppLocalizations {
   String get topUpAmountHint => 'mis. 50000';
 
   @override
+  String get topUpChooseAmount => 'Pilih nominal top-up';
+
+  @override
+  String get topUpContinuePayment => 'Lanjut ke pembayaran';
+
+  @override
+  String get topUpPayment => 'Detail pembayaran';
+
+  @override
+  String get topUpChangeAmount => 'Ganti nominal';
+
+  @override
+  String topUpPaymentSummary(String amount, int credits) {
+    return 'Bayar $amount untuk menerima $credits credit';
+  }
+
+  @override
   String topUpCreditsPreview(int credits) {
     return 'Kamu akan menerima $credits credit';
   }
@@ -2737,6 +2830,12 @@ class AppLocalizationsId extends AppLocalizations {
       'Statistik ini menjelaskan kebiasaan analisis, bukan hasil profit trading.';
 
   @override
+  String get analyticsActivitySummary => 'Ringkasan aktivitas';
+
+  @override
+  String get analyticsWeeklyActivity => 'Aktivitas mingguan';
+
+  @override
   String get metricAllAnalyses => 'Semua analisis';
 
   @override
@@ -2825,6 +2924,20 @@ class AppLocalizationsId extends AppLocalizations {
   String get traderMirrorTiming => 'Waktu analisis';
 
   @override
+  String get traderMirrorPostLoss => 'Pola setelah outcome negatif';
+
+  @override
+  String get traderMirrorEvaluationDiscipline => 'Disiplin evaluasi';
+
+  @override
+  String get traderMirrorProcessReflection => 'Refleksi proses';
+
+  @override
+  String traderMirrorSamples(int count) {
+    return '$count sampel';
+  }
+
+  @override
   String traderMirrorBasedOn(int count) {
     return 'Berdasarkan $count analisis yang sedang dimuat di perangkat.';
   }
@@ -2860,6 +2973,26 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get dailySummaryDeliveryTime => 'Waktu pengiriman';
+
+  @override
+  String get dailySummaryFullDigest => 'Ringkasan lengkap';
+
+  @override
+  String get dailySummaryQuotaOnly => 'Hanya kuota';
+
+  @override
+  String dailySummaryPreferredSide(String side) {
+    return 'Sisi pilihan: $side';
+  }
+
+  @override
+  String get guideSearchHint => 'Cari panduan...';
+
+  @override
+  String get guideSubtitle => 'Pengetahuan, fitur, dan mindset.';
+
+  @override
+  String get guideNoResults => 'Artikel tidak ditemukan.';
 
   @override
   String get marketChartUnavailable => 'Chart market belum tersedia.';

@@ -65,3 +65,7 @@ flutter:
   assets:
     - assets/images/
     - shorebird.yaml
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-VariableFont_opsz_wght.ttf

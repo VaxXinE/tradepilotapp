@@ -7,33 +7,34 @@ class AppColors {
   AppColors._();
 
   // ---- Light theme ----
-  static const lightText = Color(0xFF211A12);
-  static const lightBackground = Color(0xFFFBFBF8);
-  static const lightCard = Color(0xFFFFFFFF);
+  static const lightText = Color(0xFF0D0D0D);
+  static const lightBackground = Color(0xFFFFFFFF);
+  static const lightCard = Color(0xFFFAFAFA);
+  // Emas gelap dipakai untuk teks/link kecil agar tetap memenuhi kontras AA.
   static const lightPrimary = Color(0xFF8A5900);
-  static const lightPrimaryForeground = Color(0xFFFCFBF7);
-  static const lightSecondary = Color(0xFFF7F4E8);
-  static const lightSecondaryForeground = Color(0xFF281F15);
-  static const lightMuted = Color(0xFFF6F4EE);
-  static const lightMutedForeground = Color(0xFF67594C);
-  static const lightAccent = Color(0xFFF29E0D);
+  static const lightPrimaryForeground = Color(0xFFFFFFFF);
+  static const lightSecondary = Color(0xFFF5F5F5);
+  static const lightSecondaryForeground = Color(0xFF171717);
+  static const lightMuted = Color(0xFFF5F5F5);
+  static const lightMutedForeground = Color(0xFF737373);
+  static const lightAccent = Color(0xFFF0AD05);
   static const lightDestructive = Color(0xFFEF4444);
-  static const lightBorder = Color(0xFFE8E4D9);
+  static const lightBorder = Color(0xFFE6E6E6);
   static const destructiveForeground = Color(0xFFF8FAFC);
 
   // ---- Dark theme ----
   static const darkText = Color(0xFFF8F6F2);
-  static const darkBackground = Color(0xFF0E0D0C);
-  static const darkCard = Color(0xFF161413);
-  static const darkPrimary = Color(0xFFF5C219);
-  static const darkPrimaryForeground = Color(0xFF1B140E);
-  static const darkSecondary = Color(0xFF221F1C);
-  static const darkSecondaryForeground = Color(0xFFF8F6F2);
-  static const darkMuted = Color(0xFF221F1C);
-  static const darkMutedForeground = Color(0xFFC0BAAF);
-  static const darkAccent = Color(0xFFFFAB1A);
+  static const darkBackground = Color(0xFF050505);
+  static const darkCard = Color(0xFF0A0A0A);
+  static const darkPrimary = Color(0xFFFAB505);
+  static const darkPrimaryForeground = Color(0xFF0D0D0D);
+  static const darkSecondary = Color(0xFF1A1A1A);
+  static const darkSecondaryForeground = Color(0xFFFAFAFA);
+  static const darkMuted = Color(0xFF1A1A1A);
+  static const darkMutedForeground = Color(0xFFA6A6A6);
+  static const darkAccent = Color(0xFFFAB505);
   static const darkDestructive = Color(0xFFD02F2F);
-  static const darkBorder = Color(0xFF312C21);
+  static const darkBorder = Color(0xFF1F1F1F);
 
   // ---- Trader-safety signal colors (same in both themes' intent) ----
   static const bullishLight = Color(0xFF059669);
@@ -54,5 +55,5 @@ class AppColors {
   static const chartGridDark = Color(0xFF94A3B8);
   static const chartShadow = Color(0x33000000);
 
-  static const radius = 20.0;
+  static const radius = 12.0;
 }

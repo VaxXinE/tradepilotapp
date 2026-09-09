@@ -16,16 +16,15 @@ import '../../../providers/market_provider.dart';
 import '../../../providers/notifications_provider.dart';
 import '../../../providers/watchlist_provider.dart';
 import '../../../widgets/analysis_card.dart';
+import '../../../widgets/app_footer.dart';
 import '../../../widgets/calendar/economic_calendar_card.dart';
 import '../../../widgets/market/market_overview_card.dart';
 import '../../../widgets/market/market_session_card.dart';
 import '../../../widgets/news_feed_card.dart';
 import '../../../widgets/price_alert/price_alert_sheet.dart';
-import '../../price_alert/price_alert_list_screen.dart';
 import '../../../widgets/watchlist/instrument_picker_sheet.dart';
 import '../../../widgets/watchlist/watchlist_item_card.dart';
 import '../../analysis/analysis_detail_screen.dart';
-import '../../notifications/notifications_screen.dart';
 
 class DashboardTab extends StatefulWidget {
   const DashboardTab({
@@ -175,7 +174,6 @@ class _DashboardTabState extends State<DashboardTab> {
 
     final watchlist = context.watch<WatchlistProvider>();
 
-    final notifications = context.watch<NotificationsProvider>();
     final l10n = context.l10n;
 
     final user = auth.user;
@@ -185,29 +183,6 @@ class _DashboardTabState extends State<DashboardTab> {
     final recentAnalyses = analysisProvider.history.take(5).toList();
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.dashboard),
-        actions: [
-          IconButton(
-            tooltip: l10n.myPriceAlerts,
-            icon: const Icon(Icons.price_check_outlined),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const PriceAlertListScreen()),
-              );
-            },
-          ),
-          IconButton(
-            tooltip: l10n.notifications,
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
-              );
-            },
-            icon: _NotificationIcon(unreadCount: notifications.unreadCount),
-          ),
-        ],
-      ),
       body: RefreshIndicator(
         onRefresh: _refresh,
         child: ListView(
@@ -217,47 +192,84 @@ class _DashboardTabState extends State<DashboardTab> {
             // ---------------------------------------------------------------
             // GREETING
             // ---------------------------------------------------------------
-            Text(
-              l10n.welcomeBack,
-              style: TextStyle(color: muted, fontSize: 12.5),
-            ),
-
-            const SizedBox(height: 3),
-
             Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Expanded(
-                  child: Text(
-                    user?.displayName.trim().isNotEmpty == true
-                        ? user!.displayName.trim()
-                        : l10n.trader,
-                    style: const TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.6,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              l10n.welcomeBack.toUpperCase(),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: muted,
+                                fontSize: 11,
+                                letterSpacing: 1,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.secondary,
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              user?.selectedMode == UserSelectedModeEnum.pro
+                                  ? 'PRO'
+                                  : l10n.beginner.toUpperCase(),
+                              style: TextStyle(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSecondary,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.7,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        user?.displayName.trim().isNotEmpty == true
+                            ? user!.displayName.trim()
+                            : l10n.trader,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.4,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.secondary,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    user?.selectedMode == UserSelectedModeEnum.pro
-                        ? 'PRO'
-                        : l10n.beginner.toUpperCase(),
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSecondary,
-                      fontSize: 9.5,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.7,
+                const SizedBox(width: 10),
+                FilledButton.icon(
+                  key: const Key('dashboard-new-analysis'),
+                  onPressed: () => widget.onOpenAnalyze(null),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    minimumSize: const Size(0, 40),
+                    textStyle: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
+                  icon: const Icon(Icons.add_rounded, size: 18),
+                  label: Text(l10n.analysis),
                 ),
               ],
             ),
@@ -435,7 +447,7 @@ class _DashboardTabState extends State<DashboardTab> {
               style: TextStyle(color: muted, fontSize: 10.5, height: 1.4),
             ),
 
-            const SizedBox(height: 24),
+            const AppFooter(),
           ],
         ),
       ),
@@ -482,9 +494,8 @@ class _AllMarketsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final visible = quotes.take(10).toList();
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    if (visible.isEmpty) return const SizedBox.shrink();
+    if (quotes.isEmpty) return const SizedBox.shrink();
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -496,70 +507,45 @@ class _AllMarketsCard extends StatelessWidget {
               style: const TextStyle(fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: 8),
-            ...visible.map(
-              (quote) => ListTile(
-                dense: true,
-                contentPadding: EdgeInsets.zero,
-                title: Text(quote.instrument),
-                subtitle: Text(_formatPrice(quote.instrument, quote.price)),
-                trailing: Text(
-                  '${quote.changePercent >= 0 ? '+' : ''}${quote.changePercent.toStringAsFixed(2)}%',
-                  style: TextStyle(
-                    color: quote.changePercent >= 0
-                        ? (isDark
-                              ? AppColors.bullishDark
-                              : AppColors.bullishLight)
-                        : (isDark
-                              ? AppColors.bearishDark
-                              : AppColors.bearishLight),
-                    fontWeight: FontWeight.w800,
-                  ),
+            SizedBox(
+              height: quotes.length.clamp(1, 3).toDouble() * 68,
+              child: Scrollbar(
+                child: ListView.builder(
+                  key: const Key('live-markets-list'),
+                  primary: false,
+                  itemExtent: 68,
+                  itemCount: quotes.length,
+                  itemBuilder: (_, index) {
+                    final quote = quotes[index];
+                    return ListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(quote.instrument),
+                      subtitle: Text(
+                        _formatPrice(quote.instrument, quote.price),
+                      ),
+                      trailing: Text(
+                        '${quote.changePercent >= 0 ? '+' : ''}${quote.changePercent.toStringAsFixed(2)}%',
+                        style: TextStyle(
+                          color: quote.changePercent >= 0
+                              ? (isDark
+                                    ? AppColors.bullishDark
+                                    : AppColors.bullishLight)
+                              : (isDark
+                                    ? AppColors.bearishDark
+                                    : AppColors.bearishLight),
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      onTap: () => onOpenInstrument(quote.instrument),
+                    );
+                  },
                 ),
-                onTap: () => onOpenInstrument(quote.instrument),
               ),
             ),
           ],
         ),
       ),
-    );
-  }
-}
-
-class _NotificationIcon extends StatelessWidget {
-  const _NotificationIcon({required this.unreadCount});
-
-  final int unreadCount;
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        const Icon(Icons.notifications_outlined),
-
-        if (unreadCount > 0)
-          Positioned(
-            right: -7,
-            top: -7,
-            child: Container(
-              constraints: const BoxConstraints(minWidth: 17, minHeight: 17),
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.error,
-                borderRadius: BorderRadius.circular(999),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                unreadCount > 99 ? '99+' : '$unreadCount',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onError,
-                  fontSize: 8.5,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ),
-          ),
-      ],
     );
   }
 }
