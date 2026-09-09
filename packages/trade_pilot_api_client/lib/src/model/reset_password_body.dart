@@ -11,10 +11,11 @@ part 'reset_password_body.g.dart';
 /// ResetPasswordBody
 ///
 /// Properties:
-/// * [resetToken] 
-/// * [newPassword] 
+/// * [resetToken]
+/// * [newPassword]
 @BuiltValue()
-abstract class ResetPasswordBody implements Built<ResetPasswordBody, ResetPasswordBodyBuilder> {
+abstract class ResetPasswordBody
+    implements Built<ResetPasswordBody, ResetPasswordBodyBuilder> {
   @BuiltValueField(wireName: r'resetToken')
   String get resetToken;
 
@@ -23,16 +24,19 @@ abstract class ResetPasswordBody implements Built<ResetPasswordBody, ResetPasswo
 
   ResetPasswordBody._();
 
-  factory ResetPasswordBody([void updates(ResetPasswordBodyBuilder b)]) = _$ResetPasswordBody;
+  factory ResetPasswordBody([void updates(ResetPasswordBodyBuilder b)]) =
+      _$ResetPasswordBody;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ResetPasswordBodyBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ResetPasswordBody> get serializer => _$ResetPasswordBodySerializer();
+  static Serializer<ResetPasswordBody> get serializer =>
+      _$ResetPasswordBodySerializer();
 }
 
-class _$ResetPasswordBodySerializer implements PrimitiveSerializer<ResetPasswordBody> {
+class _$ResetPasswordBodySerializer
+    implements PrimitiveSerializer<ResetPasswordBody> {
   @override
   final Iterable<Type> types = const [ResetPasswordBody, _$ResetPasswordBody];
 
@@ -62,7 +66,9 @@ class _$ResetPasswordBodySerializer implements PrimitiveSerializer<ResetPassword
     ResetPasswordBody object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -119,4 +125,3 @@ class _$ResetPasswordBodySerializer implements PrimitiveSerializer<ResetPassword
     return result.build();
   }
 }
-

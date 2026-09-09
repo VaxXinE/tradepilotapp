@@ -6,7 +6,7 @@ import 'package:tradepilotapp/core/history/history_statistics.dart';
 void main() {
   test('calculates success rate correctly', () {
     final analyses = [
-      Analysis(
+      $Analysis(
         (b) => b
           ..id = 1
           ..userId = 1
@@ -20,7 +20,7 @@ void main() {
           ..confidenceMax = 80,
       ),
 
-      Analysis(
+      $Analysis(
         (b) => b
           ..id = 2
           ..userId = 1

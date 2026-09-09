@@ -13,7 +13,7 @@ part 'watchlist.g.dart';
 /// Watchlist
 ///
 /// Properties:
-/// * [items] 
+/// * [items]
 @BuiltValue()
 abstract class Watchlist implements Built<Watchlist, WatchlistBuilder> {
   @BuiltValueField(wireName: r'items')
@@ -55,7 +55,9 @@ class _$WatchlistSerializer implements PrimitiveSerializer<Watchlist> {
     Watchlist object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -105,4 +107,3 @@ class _$WatchlistSerializer implements PrimitiveSerializer<Watchlist> {
     return result.build();
   }
 }
-

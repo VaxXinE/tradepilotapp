@@ -97,7 +97,7 @@ Future<void> _pumpDetail(WidgetTester tester, Analysis analysis) async {
   await tester.pumpAndSettle();
 }
 
-Analysis _analysis(AnalysisModeEnum mode) => Analysis(
+Analysis _analysis(AnalysisModeEnum mode) => $Analysis(
   (builder) => builder
     ..id = mode == AnalysisModeEnum.pro ? 2 : 1
     ..userId = 1

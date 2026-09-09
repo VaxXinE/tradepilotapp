@@ -16,7 +16,6 @@ import 'package:trade_pilot_api_client/src/model/watchlist.dart';
 import 'package:trade_pilot_api_client/src/model/watchlist_item.dart';
 
 class WatchlistApi {
-
   final Dio _dio;
 
   final Serializers _serializers;
@@ -24,10 +23,10 @@ class WatchlistApi {
   const WatchlistApi(this._dio, this._serializers);
 
   /// Star an instrument
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [addWatchlistBody] 
+  /// * [addWatchlistBody]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -37,7 +36,7 @@ class WatchlistApi {
   ///
   /// Returns a [Future] containing a [Response] with a [WatchlistItem] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<WatchlistItem>> addWatchlistItem({ 
+  Future<Response<WatchlistItem>> addWatchlistItem({
     required AddWatchlistBody addWatchlistBody,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -64,11 +63,11 @@ class WatchlistApi {
 
     try {
       const _type = FullType(AddWatchlistBody);
-      _bodyData = _serializers.serialize(addWatchlistBody, specifiedType: _type);
-
-    } catch(error, stackTrace) {
+      _bodyData =
+          _serializers.serialize(addWatchlistBody, specifiedType: _type);
+    } catch (error, stackTrace) {
       throw DioException(
-         requestOptions: _options.compose(
+        requestOptions: _options.compose(
           _dio.options,
           _path,
         ),
@@ -91,11 +90,12 @@ class WatchlistApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(WatchlistItem),
-      ) as WatchlistItem;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(WatchlistItem),
+            ) as WatchlistItem;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -119,7 +119,7 @@ class WatchlistApi {
   }
 
   /// Get the current user&#39;s instrument watchlist
-  /// 
+  ///
   ///
   /// Parameters:
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
@@ -131,7 +131,7 @@ class WatchlistApi {
   ///
   /// Returns a [Future] containing a [Response] with a [Watchlist] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<Watchlist>> getWatchlist({ 
+  Future<Response<Watchlist>> getWatchlist({
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -164,11 +164,12 @@ class WatchlistApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(Watchlist),
-      ) as Watchlist;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(Watchlist),
+            ) as Watchlist;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -192,10 +193,10 @@ class WatchlistApi {
   }
 
   /// Unstar an instrument
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [instrument] 
+  /// * [instrument]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -205,7 +206,7 @@ class WatchlistApi {
   ///
   /// Returns a [Future] containing a [Response] with a [MessageResponse] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<MessageResponse>> removeWatchlistItem({ 
+  Future<Response<MessageResponse>> removeWatchlistItem({
     required String instrument,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -214,7 +215,10 @@ class WatchlistApi {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    final _path = r'/watchlist/{instrument}'.replaceAll('{' r'instrument' '}', encodeQueryParameter(_serializers, instrument, const FullType(String)).toString());
+    final _path = r'/watchlist/{instrument}'.replaceAll(
+        '{' r'instrument' '}',
+        encodeQueryParameter(_serializers, instrument, const FullType(String))
+            .toString());
     final _options = Options(
       method: r'DELETE',
       headers: <String, dynamic>{
@@ -239,11 +243,12 @@ class WatchlistApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(MessageResponse),
-      ) as MessageResponse;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(MessageResponse),
+            ) as MessageResponse;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -265,5 +270,4 @@ class WatchlistApi {
       extra: _response.extra,
     );
   }
-
 }

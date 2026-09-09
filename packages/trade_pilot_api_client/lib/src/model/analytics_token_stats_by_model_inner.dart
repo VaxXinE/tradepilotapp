@@ -11,12 +11,15 @@ part 'analytics_token_stats_by_model_inner.g.dart';
 /// AnalyticsTokenStatsByModelInner
 ///
 /// Properties:
-/// * [model] 
-/// * [totalTokens] 
-/// * [estimatedCostUsd] 
-/// * [callCount] 
+/// * [model]
+/// * [totalTokens]
+/// * [estimatedCostUsd]
+/// * [callCount]
 @BuiltValue()
-abstract class AnalyticsTokenStatsByModelInner implements Built<AnalyticsTokenStatsByModelInner, AnalyticsTokenStatsByModelInnerBuilder> {
+abstract class AnalyticsTokenStatsByModelInner
+    implements
+        Built<AnalyticsTokenStatsByModelInner,
+            AnalyticsTokenStatsByModelInnerBuilder> {
   @BuiltValueField(wireName: r'model')
   String get model;
 
@@ -31,18 +34,25 @@ abstract class AnalyticsTokenStatsByModelInner implements Built<AnalyticsTokenSt
 
   AnalyticsTokenStatsByModelInner._();
 
-  factory AnalyticsTokenStatsByModelInner([void updates(AnalyticsTokenStatsByModelInnerBuilder b)]) = _$AnalyticsTokenStatsByModelInner;
+  factory AnalyticsTokenStatsByModelInner(
+          [void updates(AnalyticsTokenStatsByModelInnerBuilder b)]) =
+      _$AnalyticsTokenStatsByModelInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AnalyticsTokenStatsByModelInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AnalyticsTokenStatsByModelInner> get serializer => _$AnalyticsTokenStatsByModelInnerSerializer();
+  static Serializer<AnalyticsTokenStatsByModelInner> get serializer =>
+      _$AnalyticsTokenStatsByModelInnerSerializer();
 }
 
-class _$AnalyticsTokenStatsByModelInnerSerializer implements PrimitiveSerializer<AnalyticsTokenStatsByModelInner> {
+class _$AnalyticsTokenStatsByModelInnerSerializer
+    implements PrimitiveSerializer<AnalyticsTokenStatsByModelInner> {
   @override
-  final Iterable<Type> types = const [AnalyticsTokenStatsByModelInner, _$AnalyticsTokenStatsByModelInner];
+  final Iterable<Type> types = const [
+    AnalyticsTokenStatsByModelInner,
+    _$AnalyticsTokenStatsByModelInner
+  ];
 
   @override
   final String wireName = r'AnalyticsTokenStatsByModelInner';
@@ -80,7 +90,9 @@ class _$AnalyticsTokenStatsByModelInnerSerializer implements PrimitiveSerializer
     AnalyticsTokenStatsByModelInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -151,4 +163,3 @@ class _$AnalyticsTokenStatsByModelInnerSerializer implements PrimitiveSerializer
     return result.build();
   }
 }
-

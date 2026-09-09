@@ -102,7 +102,7 @@ User _user(int id) => User(
     ..onboardingCompleted = true,
 );
 
-Analysis _analysis() => Analysis(
+Analysis _analysis() => $Analysis(
   (builder) => builder
     ..id = 7
     ..userId = 1

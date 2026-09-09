@@ -1637,7 +1637,7 @@ class _FundamentalSnapshotCard extends StatelessWidget {
                       '${item.source_} • '
                       '${DateFormat('d MMM HH:mm').format(item.publishedAt.toLocal())}',
                   icon: Icons.article_outlined,
-                  onTap: () => onOpenUrl(item.url),
+                  onTap: item.url == null ? null : () => onOpenUrl(item.url!),
                 ),
                 const SizedBox(height: 9),
               ],
@@ -1930,8 +1930,8 @@ class _ConfidenceReasonCard extends StatelessWidget {
                       onPressed: () {
                         for (final item
                             in news ?? const <FundamentalNewsItem>[]) {
-                          if (item.title == title) {
-                            onOpenUrl(item.url);
+                          if (item.title == title && item.url != null) {
+                            onOpenUrl(item.url!);
                             return;
                           }
                         }

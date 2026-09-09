@@ -11,10 +11,13 @@ part 'analytics_usage_stats_feature_breakdown_inner.g.dart';
 /// AnalyticsUsageStatsFeatureBreakdownInner
 ///
 /// Properties:
-/// * [eventType] 
-/// * [count] 
+/// * [eventType]
+/// * [count]
 @BuiltValue()
-abstract class AnalyticsUsageStatsFeatureBreakdownInner implements Built<AnalyticsUsageStatsFeatureBreakdownInner, AnalyticsUsageStatsFeatureBreakdownInnerBuilder> {
+abstract class AnalyticsUsageStatsFeatureBreakdownInner
+    implements
+        Built<AnalyticsUsageStatsFeatureBreakdownInner,
+            AnalyticsUsageStatsFeatureBreakdownInnerBuilder> {
   @BuiltValueField(wireName: r'eventType')
   String get eventType;
 
@@ -23,18 +26,25 @@ abstract class AnalyticsUsageStatsFeatureBreakdownInner implements Built<Analyti
 
   AnalyticsUsageStatsFeatureBreakdownInner._();
 
-  factory AnalyticsUsageStatsFeatureBreakdownInner([void updates(AnalyticsUsageStatsFeatureBreakdownInnerBuilder b)]) = _$AnalyticsUsageStatsFeatureBreakdownInner;
+  factory AnalyticsUsageStatsFeatureBreakdownInner(
+          [void updates(AnalyticsUsageStatsFeatureBreakdownInnerBuilder b)]) =
+      _$AnalyticsUsageStatsFeatureBreakdownInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AnalyticsUsageStatsFeatureBreakdownInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AnalyticsUsageStatsFeatureBreakdownInner> get serializer => _$AnalyticsUsageStatsFeatureBreakdownInnerSerializer();
+  static Serializer<AnalyticsUsageStatsFeatureBreakdownInner> get serializer =>
+      _$AnalyticsUsageStatsFeatureBreakdownInnerSerializer();
 }
 
-class _$AnalyticsUsageStatsFeatureBreakdownInnerSerializer implements PrimitiveSerializer<AnalyticsUsageStatsFeatureBreakdownInner> {
+class _$AnalyticsUsageStatsFeatureBreakdownInnerSerializer
+    implements PrimitiveSerializer<AnalyticsUsageStatsFeatureBreakdownInner> {
   @override
-  final Iterable<Type> types = const [AnalyticsUsageStatsFeatureBreakdownInner, _$AnalyticsUsageStatsFeatureBreakdownInner];
+  final Iterable<Type> types = const [
+    AnalyticsUsageStatsFeatureBreakdownInner,
+    _$AnalyticsUsageStatsFeatureBreakdownInner
+  ];
 
   @override
   final String wireName = r'AnalyticsUsageStatsFeatureBreakdownInner';
@@ -62,7 +72,9 @@ class _$AnalyticsUsageStatsFeatureBreakdownInnerSerializer implements PrimitiveS
     AnalyticsUsageStatsFeatureBreakdownInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -119,4 +131,3 @@ class _$AnalyticsUsageStatsFeatureBreakdownInnerSerializer implements PrimitiveS
     return result.build();
   }
 }
-

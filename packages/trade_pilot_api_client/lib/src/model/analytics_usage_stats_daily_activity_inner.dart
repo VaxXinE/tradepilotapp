@@ -11,10 +11,13 @@ part 'analytics_usage_stats_daily_activity_inner.g.dart';
 /// AnalyticsUsageStatsDailyActivityInner
 ///
 /// Properties:
-/// * [date] 
-/// * [count] 
+/// * [date]
+/// * [count]
 @BuiltValue()
-abstract class AnalyticsUsageStatsDailyActivityInner implements Built<AnalyticsUsageStatsDailyActivityInner, AnalyticsUsageStatsDailyActivityInnerBuilder> {
+abstract class AnalyticsUsageStatsDailyActivityInner
+    implements
+        Built<AnalyticsUsageStatsDailyActivityInner,
+            AnalyticsUsageStatsDailyActivityInnerBuilder> {
   @BuiltValueField(wireName: r'date')
   String get date;
 
@@ -23,18 +26,25 @@ abstract class AnalyticsUsageStatsDailyActivityInner implements Built<AnalyticsU
 
   AnalyticsUsageStatsDailyActivityInner._();
 
-  factory AnalyticsUsageStatsDailyActivityInner([void updates(AnalyticsUsageStatsDailyActivityInnerBuilder b)]) = _$AnalyticsUsageStatsDailyActivityInner;
+  factory AnalyticsUsageStatsDailyActivityInner(
+          [void updates(AnalyticsUsageStatsDailyActivityInnerBuilder b)]) =
+      _$AnalyticsUsageStatsDailyActivityInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AnalyticsUsageStatsDailyActivityInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AnalyticsUsageStatsDailyActivityInner> get serializer => _$AnalyticsUsageStatsDailyActivityInnerSerializer();
+  static Serializer<AnalyticsUsageStatsDailyActivityInner> get serializer =>
+      _$AnalyticsUsageStatsDailyActivityInnerSerializer();
 }
 
-class _$AnalyticsUsageStatsDailyActivityInnerSerializer implements PrimitiveSerializer<AnalyticsUsageStatsDailyActivityInner> {
+class _$AnalyticsUsageStatsDailyActivityInnerSerializer
+    implements PrimitiveSerializer<AnalyticsUsageStatsDailyActivityInner> {
   @override
-  final Iterable<Type> types = const [AnalyticsUsageStatsDailyActivityInner, _$AnalyticsUsageStatsDailyActivityInner];
+  final Iterable<Type> types = const [
+    AnalyticsUsageStatsDailyActivityInner,
+    _$AnalyticsUsageStatsDailyActivityInner
+  ];
 
   @override
   final String wireName = r'AnalyticsUsageStatsDailyActivityInner';
@@ -62,7 +72,9 @@ class _$AnalyticsUsageStatsDailyActivityInnerSerializer implements PrimitiveSeri
     AnalyticsUsageStatsDailyActivityInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -119,4 +131,3 @@ class _$AnalyticsUsageStatsDailyActivityInnerSerializer implements PrimitiveSeri
     return result.build();
   }
 }
-

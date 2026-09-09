@@ -13,24 +13,28 @@ part 'user_price_alert_list.g.dart';
 /// UserPriceAlertList
 ///
 /// Properties:
-/// * [alerts] 
+/// * [alerts]
 @BuiltValue()
-abstract class UserPriceAlertList implements Built<UserPriceAlertList, UserPriceAlertListBuilder> {
+abstract class UserPriceAlertList
+    implements Built<UserPriceAlertList, UserPriceAlertListBuilder> {
   @BuiltValueField(wireName: r'alerts')
   BuiltList<UserPriceAlert> get alerts;
 
   UserPriceAlertList._();
 
-  factory UserPriceAlertList([void updates(UserPriceAlertListBuilder b)]) = _$UserPriceAlertList;
+  factory UserPriceAlertList([void updates(UserPriceAlertListBuilder b)]) =
+      _$UserPriceAlertList;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(UserPriceAlertListBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<UserPriceAlertList> get serializer => _$UserPriceAlertListSerializer();
+  static Serializer<UserPriceAlertList> get serializer =>
+      _$UserPriceAlertListSerializer();
 }
 
-class _$UserPriceAlertListSerializer implements PrimitiveSerializer<UserPriceAlertList> {
+class _$UserPriceAlertListSerializer
+    implements PrimitiveSerializer<UserPriceAlertList> {
   @override
   final Iterable<Type> types = const [UserPriceAlertList, _$UserPriceAlertList];
 
@@ -55,7 +59,9 @@ class _$UserPriceAlertListSerializer implements PrimitiveSerializer<UserPriceAle
     UserPriceAlertList object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -73,7 +79,8 @@ class _$UserPriceAlertListSerializer implements PrimitiveSerializer<UserPriceAle
         case r'alerts':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltList, [FullType(UserPriceAlert)]),
+            specifiedType:
+                const FullType(BuiltList, [FullType(UserPriceAlert)]),
           ) as BuiltList<UserPriceAlert>;
           result.alerts.replace(valueDes);
           break;
@@ -105,4 +112,3 @@ class _$UserPriceAlertListSerializer implements PrimitiveSerializer<UserPriceAle
     return result.build();
   }
 }
-

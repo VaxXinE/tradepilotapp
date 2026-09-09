@@ -11,11 +11,13 @@ part 'change_security_question_body.g.dart';
 /// ChangeSecurityQuestionBody
 ///
 /// Properties:
-/// * [currentPassword] 
-/// * [securityQuestion] 
-/// * [securityAnswer] 
+/// * [currentPassword]
+/// * [securityQuestion]
+/// * [securityAnswer]
 @BuiltValue()
-abstract class ChangeSecurityQuestionBody implements Built<ChangeSecurityQuestionBody, ChangeSecurityQuestionBodyBuilder> {
+abstract class ChangeSecurityQuestionBody
+    implements
+        Built<ChangeSecurityQuestionBody, ChangeSecurityQuestionBodyBuilder> {
   @BuiltValueField(wireName: r'currentPassword')
   String get currentPassword;
 
@@ -27,18 +29,25 @@ abstract class ChangeSecurityQuestionBody implements Built<ChangeSecurityQuestio
 
   ChangeSecurityQuestionBody._();
 
-  factory ChangeSecurityQuestionBody([void updates(ChangeSecurityQuestionBodyBuilder b)]) = _$ChangeSecurityQuestionBody;
+  factory ChangeSecurityQuestionBody(
+          [void updates(ChangeSecurityQuestionBodyBuilder b)]) =
+      _$ChangeSecurityQuestionBody;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ChangeSecurityQuestionBodyBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ChangeSecurityQuestionBody> get serializer => _$ChangeSecurityQuestionBodySerializer();
+  static Serializer<ChangeSecurityQuestionBody> get serializer =>
+      _$ChangeSecurityQuestionBodySerializer();
 }
 
-class _$ChangeSecurityQuestionBodySerializer implements PrimitiveSerializer<ChangeSecurityQuestionBody> {
+class _$ChangeSecurityQuestionBodySerializer
+    implements PrimitiveSerializer<ChangeSecurityQuestionBody> {
   @override
-  final Iterable<Type> types = const [ChangeSecurityQuestionBody, _$ChangeSecurityQuestionBody];
+  final Iterable<Type> types = const [
+    ChangeSecurityQuestionBody,
+    _$ChangeSecurityQuestionBody
+  ];
 
   @override
   final String wireName = r'ChangeSecurityQuestionBody';
@@ -71,7 +80,9 @@ class _$ChangeSecurityQuestionBodySerializer implements PrimitiveSerializer<Chan
     ChangeSecurityQuestionBody object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -135,4 +146,3 @@ class _$ChangeSecurityQuestionBodySerializer implements PrimitiveSerializer<Chan
     return result.build();
   }
 }
-

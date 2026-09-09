@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:trade_pilot_api_client/src/model/analysis_quota_credits.dart';
 import 'package:trade_pilot_api_client/src/model/analysis_quota_hourly.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
@@ -13,10 +14,12 @@ part 'analysis_quota.g.dart';
 ///
 /// Properties:
 /// * [unlimited] - True for admin/super_admin, who bypass quota
-/// * [hourly] 
-/// * [daily] 
+/// * [hourly]
+/// * [daily]
+/// * [credits]
 @BuiltValue()
-abstract class AnalysisQuota implements Built<AnalysisQuota, AnalysisQuotaBuilder> {
+abstract class AnalysisQuota
+    implements Built<AnalysisQuota, AnalysisQuotaBuilder> {
   /// True for admin/super_admin, who bypass quota
   @BuiltValueField(wireName: r'unlimited')
   bool get unlimited;
@@ -27,15 +30,20 @@ abstract class AnalysisQuota implements Built<AnalysisQuota, AnalysisQuotaBuilde
   @BuiltValueField(wireName: r'daily')
   AnalysisQuotaHourly get daily;
 
+  @BuiltValueField(wireName: r'credits')
+  AnalysisQuotaCredits get credits;
+
   AnalysisQuota._();
 
-  factory AnalysisQuota([void updates(AnalysisQuotaBuilder b)]) = _$AnalysisQuota;
+  factory AnalysisQuota([void updates(AnalysisQuotaBuilder b)]) =
+      _$AnalysisQuota;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AnalysisQuotaBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AnalysisQuota> get serializer => _$AnalysisQuotaSerializer();
+  static Serializer<AnalysisQuota> get serializer =>
+      _$AnalysisQuotaSerializer();
 }
 
 class _$AnalysisQuotaSerializer implements PrimitiveSerializer<AnalysisQuota> {
@@ -65,6 +73,11 @@ class _$AnalysisQuotaSerializer implements PrimitiveSerializer<AnalysisQuota> {
       object.daily,
       specifiedType: const FullType(AnalysisQuotaHourly),
     );
+    yield r'credits';
+    yield serializers.serialize(
+      object.credits,
+      specifiedType: const FullType(AnalysisQuotaCredits),
+    );
   }
 
   @override
@@ -73,7 +86,9 @@ class _$AnalysisQuotaSerializer implements PrimitiveSerializer<AnalysisQuota> {
     AnalysisQuota object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -109,6 +124,13 @@ class _$AnalysisQuotaSerializer implements PrimitiveSerializer<AnalysisQuota> {
           ) as AnalysisQuotaHourly;
           result.daily.replace(valueDes);
           break;
+        case r'credits':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(AnalysisQuotaCredits),
+          ) as AnalysisQuotaCredits;
+          result.credits.replace(valueDes);
+          break;
         default:
           unhandled.add(key);
           unhandled.add(value);
@@ -137,4 +159,3 @@ class _$AnalysisQuotaSerializer implements PrimitiveSerializer<AnalysisQuota> {
     return result.build();
   }
 }
-

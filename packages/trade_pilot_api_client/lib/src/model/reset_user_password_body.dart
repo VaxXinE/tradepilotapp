@@ -11,26 +11,33 @@ part 'reset_user_password_body.g.dart';
 /// ResetUserPasswordBody
 ///
 /// Properties:
-/// * [newPassword] 
+/// * [newPassword]
 @BuiltValue()
-abstract class ResetUserPasswordBody implements Built<ResetUserPasswordBody, ResetUserPasswordBodyBuilder> {
+abstract class ResetUserPasswordBody
+    implements Built<ResetUserPasswordBody, ResetUserPasswordBodyBuilder> {
   @BuiltValueField(wireName: r'newPassword')
   String get newPassword;
 
   ResetUserPasswordBody._();
 
-  factory ResetUserPasswordBody([void updates(ResetUserPasswordBodyBuilder b)]) = _$ResetUserPasswordBody;
+  factory ResetUserPasswordBody(
+      [void updates(ResetUserPasswordBodyBuilder b)]) = _$ResetUserPasswordBody;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ResetUserPasswordBodyBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ResetUserPasswordBody> get serializer => _$ResetUserPasswordBodySerializer();
+  static Serializer<ResetUserPasswordBody> get serializer =>
+      _$ResetUserPasswordBodySerializer();
 }
 
-class _$ResetUserPasswordBodySerializer implements PrimitiveSerializer<ResetUserPasswordBody> {
+class _$ResetUserPasswordBodySerializer
+    implements PrimitiveSerializer<ResetUserPasswordBody> {
   @override
-  final Iterable<Type> types = const [ResetUserPasswordBody, _$ResetUserPasswordBody];
+  final Iterable<Type> types = const [
+    ResetUserPasswordBody,
+    _$ResetUserPasswordBody
+  ];
 
   @override
   final String wireName = r'ResetUserPasswordBody';
@@ -53,7 +60,9 @@ class _$ResetUserPasswordBodySerializer implements PrimitiveSerializer<ResetUser
     ResetUserPasswordBody object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -103,4 +112,3 @@ class _$ResetUserPasswordBodySerializer implements PrimitiveSerializer<ResetUser
     return result.build();
   }
 }
-

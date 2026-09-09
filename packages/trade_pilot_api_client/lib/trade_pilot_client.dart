@@ -28,7 +28,8 @@ class _AuthTokenInterceptor extends Interceptor {
   final AuthTokenGetter _getToken;
 
   @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+  void onRequest(
+      RequestOptions options, RequestInterceptorHandler handler) async {
     if (!options.headers.containsKey('Authorization')) {
       final token = await _getToken();
       if (token != null && token.isNotEmpty) {
@@ -90,12 +91,16 @@ class TradePilotClient {
   EventsApi get events => _client.getEventsApi();
   FilterPresetsApi get filterPresets => _client.getFilterPresetsApi();
   HealthApi get health => _client.getHealthApi();
+  NativePushApi get nativePush => _client.getNativePushApi();
   NotificationsApi get notifications => _client.getNotificationsApi();
   PerformanceApi get performance => _client.getPerformanceApi();
+  ProgressionApi get progression => _client.getProgressionApi();
   PushApi get push => _client.getPushApi();
   StorageApi get storage => _client.getStorageApi();
+  TopupsApi get topups => _client.getTopupsApi();
   TradeJournalApi get tradeJournal => _client.getTradeJournalApi();
   TraderMirrorApi get traderMirror => _client.getTraderMirrorApi();
+  TradingRulesApi get tradingRules => _client.getTradingRulesApi();
   UserPriceAlertsApi get userPriceAlerts => _client.getUserPriceAlertsApi();
   WatchlistApi get watchlist => _client.getWatchlistApi();
 }

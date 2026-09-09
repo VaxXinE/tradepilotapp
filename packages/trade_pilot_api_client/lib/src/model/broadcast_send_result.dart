@@ -11,11 +11,12 @@ part 'broadcast_send_result.g.dart';
 /// BroadcastSendResult
 ///
 /// Properties:
-/// * [broadcastId] 
-/// * [recipientCount] 
-/// * [message] 
+/// * [broadcastId]
+/// * [recipientCount]
+/// * [message]
 @BuiltValue()
-abstract class BroadcastSendResult implements Built<BroadcastSendResult, BroadcastSendResultBuilder> {
+abstract class BroadcastSendResult
+    implements Built<BroadcastSendResult, BroadcastSendResultBuilder> {
   @BuiltValueField(wireName: r'broadcastId')
   int get broadcastId;
 
@@ -27,18 +28,24 @@ abstract class BroadcastSendResult implements Built<BroadcastSendResult, Broadca
 
   BroadcastSendResult._();
 
-  factory BroadcastSendResult([void updates(BroadcastSendResultBuilder b)]) = _$BroadcastSendResult;
+  factory BroadcastSendResult([void updates(BroadcastSendResultBuilder b)]) =
+      _$BroadcastSendResult;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(BroadcastSendResultBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<BroadcastSendResult> get serializer => _$BroadcastSendResultSerializer();
+  static Serializer<BroadcastSendResult> get serializer =>
+      _$BroadcastSendResultSerializer();
 }
 
-class _$BroadcastSendResultSerializer implements PrimitiveSerializer<BroadcastSendResult> {
+class _$BroadcastSendResultSerializer
+    implements PrimitiveSerializer<BroadcastSendResult> {
   @override
-  final Iterable<Type> types = const [BroadcastSendResult, _$BroadcastSendResult];
+  final Iterable<Type> types = const [
+    BroadcastSendResult,
+    _$BroadcastSendResult
+  ];
 
   @override
   final String wireName = r'BroadcastSendResult';
@@ -71,7 +78,9 @@ class _$BroadcastSendResultSerializer implements PrimitiveSerializer<BroadcastSe
     BroadcastSendResult object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -135,4 +144,3 @@ class _$BroadcastSendResultSerializer implements PrimitiveSerializer<BroadcastSe
     return result.build();
   }
 }
-

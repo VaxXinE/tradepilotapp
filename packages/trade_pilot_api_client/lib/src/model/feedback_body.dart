@@ -12,11 +12,12 @@ part 'feedback_body.g.dart';
 /// FeedbackBody
 ///
 /// Properties:
-/// * [feedbackType] 
-/// * [outcome] 
-/// * [note] 
+/// * [feedbackType]
+/// * [outcome]
+/// * [note]
 @BuiltValue()
-abstract class FeedbackBody implements Built<FeedbackBody, FeedbackBodyBuilder> {
+abstract class FeedbackBody
+    implements Built<FeedbackBody, FeedbackBodyBuilder> {
   @BuiltValueField(wireName: r'feedbackType')
   FeedbackBodyFeedbackTypeEnum get feedbackType;
   // enum feedbackTypeEnum {  useful,  not_useful,  };
@@ -78,7 +79,9 @@ class _$FeedbackBodySerializer implements PrimitiveSerializer<FeedbackBody> {
     FeedbackBody object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -146,34 +149,41 @@ class _$FeedbackBodySerializer implements PrimitiveSerializer<FeedbackBody> {
 }
 
 class FeedbackBodyFeedbackTypeEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'useful')
-  static const FeedbackBodyFeedbackTypeEnum useful = _$feedbackBodyFeedbackTypeEnum_useful;
+  static const FeedbackBodyFeedbackTypeEnum useful =
+      _$feedbackBodyFeedbackTypeEnum_useful;
   @BuiltValueEnumConst(wireName: r'not_useful')
-  static const FeedbackBodyFeedbackTypeEnum notUseful = _$feedbackBodyFeedbackTypeEnum_notUseful;
+  static const FeedbackBodyFeedbackTypeEnum notUseful =
+      _$feedbackBodyFeedbackTypeEnum_notUseful;
 
-  static Serializer<FeedbackBodyFeedbackTypeEnum> get serializer => _$feedbackBodyFeedbackTypeEnumSerializer;
+  static Serializer<FeedbackBodyFeedbackTypeEnum> get serializer =>
+      _$feedbackBodyFeedbackTypeEnumSerializer;
 
-  const FeedbackBodyFeedbackTypeEnum._(String name): super(name);
+  const FeedbackBodyFeedbackTypeEnum._(String name) : super(name);
 
-  static BuiltSet<FeedbackBodyFeedbackTypeEnum> get values => _$feedbackBodyFeedbackTypeEnumValues;
-  static FeedbackBodyFeedbackTypeEnum valueOf(String name) => _$feedbackBodyFeedbackTypeEnumValueOf(name);
+  static BuiltSet<FeedbackBodyFeedbackTypeEnum> get values =>
+      _$feedbackBodyFeedbackTypeEnumValues;
+  static FeedbackBodyFeedbackTypeEnum valueOf(String name) =>
+      _$feedbackBodyFeedbackTypeEnumValueOf(name);
 }
 
 class FeedbackBodyOutcomeEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'correct')
-  static const FeedbackBodyOutcomeEnum correct = _$feedbackBodyOutcomeEnum_correct;
+  static const FeedbackBodyOutcomeEnum correct =
+      _$feedbackBodyOutcomeEnum_correct;
   @BuiltValueEnumConst(wireName: r'wrong')
   static const FeedbackBodyOutcomeEnum wrong = _$feedbackBodyOutcomeEnum_wrong;
   @BuiltValueEnumConst(wireName: r'unknown')
-  static const FeedbackBodyOutcomeEnum unknown = _$feedbackBodyOutcomeEnum_unknown;
+  static const FeedbackBodyOutcomeEnum unknown =
+      _$feedbackBodyOutcomeEnum_unknown;
 
-  static Serializer<FeedbackBodyOutcomeEnum> get serializer => _$feedbackBodyOutcomeEnumSerializer;
+  static Serializer<FeedbackBodyOutcomeEnum> get serializer =>
+      _$feedbackBodyOutcomeEnumSerializer;
 
-  const FeedbackBodyOutcomeEnum._(String name): super(name);
+  const FeedbackBodyOutcomeEnum._(String name) : super(name);
 
-  static BuiltSet<FeedbackBodyOutcomeEnum> get values => _$feedbackBodyOutcomeEnumValues;
-  static FeedbackBodyOutcomeEnum valueOf(String name) => _$feedbackBodyOutcomeEnumValueOf(name);
+  static BuiltSet<FeedbackBodyOutcomeEnum> get values =>
+      _$feedbackBodyOutcomeEnumValues;
+  static FeedbackBodyOutcomeEnum valueOf(String name) =>
+      _$feedbackBodyOutcomeEnumValueOf(name);
 }
-

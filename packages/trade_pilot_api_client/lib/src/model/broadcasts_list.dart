@@ -13,12 +13,13 @@ part 'broadcasts_list.g.dart';
 /// BroadcastsList
 ///
 /// Properties:
-/// * [broadcasts] 
-/// * [total] 
-/// * [page] 
-/// * [limit] 
+/// * [broadcasts]
+/// * [total]
+/// * [page]
+/// * [limit]
 @BuiltValue()
-abstract class BroadcastsList implements Built<BroadcastsList, BroadcastsListBuilder> {
+abstract class BroadcastsList
+    implements Built<BroadcastsList, BroadcastsListBuilder> {
   @BuiltValueField(wireName: r'broadcasts')
   BuiltList<Broadcast> get broadcasts;
 
@@ -33,16 +34,19 @@ abstract class BroadcastsList implements Built<BroadcastsList, BroadcastsListBui
 
   BroadcastsList._();
 
-  factory BroadcastsList([void updates(BroadcastsListBuilder b)]) = _$BroadcastsList;
+  factory BroadcastsList([void updates(BroadcastsListBuilder b)]) =
+      _$BroadcastsList;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(BroadcastsListBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<BroadcastsList> get serializer => _$BroadcastsListSerializer();
+  static Serializer<BroadcastsList> get serializer =>
+      _$BroadcastsListSerializer();
 }
 
-class _$BroadcastsListSerializer implements PrimitiveSerializer<BroadcastsList> {
+class _$BroadcastsListSerializer
+    implements PrimitiveSerializer<BroadcastsList> {
   @override
   final Iterable<Type> types = const [BroadcastsList, _$BroadcastsList];
 
@@ -82,7 +86,9 @@ class _$BroadcastsListSerializer implements PrimitiveSerializer<BroadcastsList> 
     BroadcastsList object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -153,4 +159,3 @@ class _$BroadcastsListSerializer implements PrimitiveSerializer<BroadcastsList> 
     return result.build();
   }
 }
-

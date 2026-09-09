@@ -12,11 +12,12 @@ part 'auth_response.g.dart';
 /// AuthResponse
 ///
 /// Properties:
-/// * [user] 
-/// * [message] 
+/// * [user]
+/// * [message]
 /// * [token] - Session token for mobile Bearer auth. Only present when a new session was created (login or register).
 @BuiltValue()
-abstract class AuthResponse implements Built<AuthResponse, AuthResponseBuilder> {
+abstract class AuthResponse
+    implements Built<AuthResponse, AuthResponseBuilder> {
   @BuiltValueField(wireName: r'user')
   User get user;
 
@@ -77,7 +78,9 @@ class _$AuthResponseSerializer implements PrimitiveSerializer<AuthResponse> {
     AuthResponse object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -143,4 +146,3 @@ class _$AuthResponseSerializer implements PrimitiveSerializer<AuthResponse> {
     return result.build();
   }
 }
-

@@ -11,19 +11,20 @@ part 'analysis_outcomes_summary.g.dart';
 /// Outcome roll-up powering the dashboard's AI accuracy card. Counts every analysis created in the last `rangeDays` days; `scored` is the resolved + non-invalidated subset that the hit-rate percentages are computed against.
 ///
 /// Properties:
-/// * [rangeDays] 
-/// * [total] 
-/// * [pending] 
-/// * [tp1Hit] 
-/// * [tp2Hit] 
-/// * [slHit] 
-/// * [expired] 
-/// * [invalidated] 
+/// * [rangeDays]
+/// * [total]
+/// * [pending]
+/// * [tp1Hit]
+/// * [tp2Hit]
+/// * [slHit]
+/// * [expired]
+/// * [invalidated]
 /// * [scored] - Denominator used for tpHitRate / slHitRate. Equals tp1Hit + tp2Hit + slHit + expired (excludes pending and invalidated).
 /// * [tpHitRate] - (tp1Hit + tp2Hit) / scored. Null when scored == 0.
 /// * [slHitRate] - slHit / scored. Null when scored == 0.
 @BuiltValue()
-abstract class AnalysisOutcomesSummary implements Built<AnalysisOutcomesSummary, AnalysisOutcomesSummaryBuilder> {
+abstract class AnalysisOutcomesSummary
+    implements Built<AnalysisOutcomesSummary, AnalysisOutcomesSummaryBuilder> {
   @BuiltValueField(wireName: r'rangeDays')
   int get rangeDays;
 
@@ -62,18 +63,25 @@ abstract class AnalysisOutcomesSummary implements Built<AnalysisOutcomesSummary,
 
   AnalysisOutcomesSummary._();
 
-  factory AnalysisOutcomesSummary([void updates(AnalysisOutcomesSummaryBuilder b)]) = _$AnalysisOutcomesSummary;
+  factory AnalysisOutcomesSummary(
+          [void updates(AnalysisOutcomesSummaryBuilder b)]) =
+      _$AnalysisOutcomesSummary;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AnalysisOutcomesSummaryBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AnalysisOutcomesSummary> get serializer => _$AnalysisOutcomesSummarySerializer();
+  static Serializer<AnalysisOutcomesSummary> get serializer =>
+      _$AnalysisOutcomesSummarySerializer();
 }
 
-class _$AnalysisOutcomesSummarySerializer implements PrimitiveSerializer<AnalysisOutcomesSummary> {
+class _$AnalysisOutcomesSummarySerializer
+    implements PrimitiveSerializer<AnalysisOutcomesSummary> {
   @override
-  final Iterable<Type> types = const [AnalysisOutcomesSummary, _$AnalysisOutcomesSummary];
+  final Iterable<Type> types = const [
+    AnalysisOutcomesSummary,
+    _$AnalysisOutcomesSummary
+  ];
 
   @override
   final String wireName = r'AnalysisOutcomesSummary';
@@ -150,7 +158,9 @@ class _$AnalysisOutcomesSummarySerializer implements PrimitiveSerializer<Analysi
     AnalysisOutcomesSummary object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -272,4 +282,3 @@ class _$AnalysisOutcomesSummarySerializer implements PrimitiveSerializer<Analysi
     return result.build();
   }
 }
-

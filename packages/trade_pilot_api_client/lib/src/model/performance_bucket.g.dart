@@ -20,9 +20,9 @@ class _$PerformanceBucket extends PerformanceBucket {
   @override
   final int total;
   @override
-  final num winRate;
+  final num? winRate;
   @override
-  final num hitRate;
+  final num? hitRate;
 
   factory _$PerformanceBucket(
           [void Function(PerformanceBucketBuilder)? updates]) =>
@@ -35,8 +35,8 @@ class _$PerformanceBucket extends PerformanceBucket {
       required this.losses,
       required this.expired,
       required this.total,
-      required this.winRate,
-      required this.hitRate})
+      this.winRate,
+      this.hitRate})
       : super._();
   @override
   PerformanceBucket rebuild(void Function(PerformanceBucketBuilder) updates) =>
@@ -174,10 +174,8 @@ class PerformanceBucketBuilder
               expired, r'PerformanceBucket', 'expired'),
           total: BuiltValueNullFieldError.checkNotNull(
               total, r'PerformanceBucket', 'total'),
-          winRate: BuiltValueNullFieldError.checkNotNull(
-              winRate, r'PerformanceBucket', 'winRate'),
-          hitRate: BuiltValueNullFieldError.checkNotNull(
-              hitRate, r'PerformanceBucket', 'hitRate'),
+          winRate: winRate,
+          hitRate: hitRate,
         );
     replace(_$result);
     return _$result;

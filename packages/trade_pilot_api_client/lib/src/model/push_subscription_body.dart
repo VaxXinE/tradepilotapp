@@ -12,10 +12,11 @@ part 'push_subscription_body.g.dart';
 /// PushSubscriptionBody
 ///
 /// Properties:
-/// * [endpoint] 
-/// * [keys] 
+/// * [endpoint]
+/// * [keys]
 @BuiltValue()
-abstract class PushSubscriptionBody implements Built<PushSubscriptionBody, PushSubscriptionBodyBuilder> {
+abstract class PushSubscriptionBody
+    implements Built<PushSubscriptionBody, PushSubscriptionBodyBuilder> {
   @BuiltValueField(wireName: r'endpoint')
   String get endpoint;
 
@@ -24,18 +25,24 @@ abstract class PushSubscriptionBody implements Built<PushSubscriptionBody, PushS
 
   PushSubscriptionBody._();
 
-  factory PushSubscriptionBody([void updates(PushSubscriptionBodyBuilder b)]) = _$PushSubscriptionBody;
+  factory PushSubscriptionBody([void updates(PushSubscriptionBodyBuilder b)]) =
+      _$PushSubscriptionBody;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(PushSubscriptionBodyBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<PushSubscriptionBody> get serializer => _$PushSubscriptionBodySerializer();
+  static Serializer<PushSubscriptionBody> get serializer =>
+      _$PushSubscriptionBodySerializer();
 }
 
-class _$PushSubscriptionBodySerializer implements PrimitiveSerializer<PushSubscriptionBody> {
+class _$PushSubscriptionBodySerializer
+    implements PrimitiveSerializer<PushSubscriptionBody> {
   @override
-  final Iterable<Type> types = const [PushSubscriptionBody, _$PushSubscriptionBody];
+  final Iterable<Type> types = const [
+    PushSubscriptionBody,
+    _$PushSubscriptionBody
+  ];
 
   @override
   final String wireName = r'PushSubscriptionBody';
@@ -63,7 +70,9 @@ class _$PushSubscriptionBodySerializer implements PrimitiveSerializer<PushSubscr
     PushSubscriptionBody object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -120,4 +129,3 @@ class _$PushSubscriptionBodySerializer implements PrimitiveSerializer<PushSubscr
     return result.build();
   }
 }
-

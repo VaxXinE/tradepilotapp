@@ -16,15 +16,15 @@ class _$JournalSentiment extends JournalSentiment {
   @override
   final int minDistinctTraders;
   @override
-  final int sampleSize;
+  final int? sampleSize;
   @override
-  final int distinctTraders;
+  final int? distinctTraders;
   @override
   final bool gated;
   @override
-  final int buyPct;
+  final int? buyPct;
   @override
-  final int sellPct;
+  final int? sellPct;
 
   factory _$JournalSentiment(
           [void Function(JournalSentimentBuilder)? updates]) =>
@@ -35,11 +35,11 @@ class _$JournalSentiment extends JournalSentiment {
       required this.windowDays,
       required this.minSampleSize,
       required this.minDistinctTraders,
-      required this.sampleSize,
-      required this.distinctTraders,
+      this.sampleSize,
+      this.distinctTraders,
       required this.gated,
-      required this.buyPct,
-      required this.sellPct})
+      this.buyPct,
+      this.sellPct})
       : super._();
   @override
   JournalSentiment rebuild(void Function(JournalSentimentBuilder) updates) =>
@@ -184,16 +184,12 @@ class JournalSentimentBuilder
               minSampleSize, r'JournalSentiment', 'minSampleSize'),
           minDistinctTraders: BuiltValueNullFieldError.checkNotNull(
               minDistinctTraders, r'JournalSentiment', 'minDistinctTraders'),
-          sampleSize: BuiltValueNullFieldError.checkNotNull(
-              sampleSize, r'JournalSentiment', 'sampleSize'),
-          distinctTraders: BuiltValueNullFieldError.checkNotNull(
-              distinctTraders, r'JournalSentiment', 'distinctTraders'),
+          sampleSize: sampleSize,
+          distinctTraders: distinctTraders,
           gated: BuiltValueNullFieldError.checkNotNull(
               gated, r'JournalSentiment', 'gated'),
-          buyPct: BuiltValueNullFieldError.checkNotNull(
-              buyPct, r'JournalSentiment', 'buyPct'),
-          sellPct: BuiltValueNullFieldError.checkNotNull(
-              sellPct, r'JournalSentiment', 'sellPct'),
+          buyPct: buyPct,
+          sellPct: sellPct,
         );
     replace(_$result);
     return _$result;

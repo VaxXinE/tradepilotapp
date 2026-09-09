@@ -13,10 +13,11 @@ part 'notifications_list.g.dart';
 /// NotificationsList
 ///
 /// Properties:
-/// * [notifications] 
-/// * [unreadCount] 
+/// * [notifications]
+/// * [unreadCount]
 @BuiltValue()
-abstract class NotificationsList implements Built<NotificationsList, NotificationsListBuilder> {
+abstract class NotificationsList
+    implements Built<NotificationsList, NotificationsListBuilder> {
   @BuiltValueField(wireName: r'notifications')
   BuiltList<Notification> get notifications;
 
@@ -25,16 +26,19 @@ abstract class NotificationsList implements Built<NotificationsList, Notificatio
 
   NotificationsList._();
 
-  factory NotificationsList([void updates(NotificationsListBuilder b)]) = _$NotificationsList;
+  factory NotificationsList([void updates(NotificationsListBuilder b)]) =
+      _$NotificationsList;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(NotificationsListBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<NotificationsList> get serializer => _$NotificationsListSerializer();
+  static Serializer<NotificationsList> get serializer =>
+      _$NotificationsListSerializer();
 }
 
-class _$NotificationsListSerializer implements PrimitiveSerializer<NotificationsList> {
+class _$NotificationsListSerializer
+    implements PrimitiveSerializer<NotificationsList> {
   @override
   final Iterable<Type> types = const [NotificationsList, _$NotificationsList];
 
@@ -64,7 +68,9 @@ class _$NotificationsListSerializer implements PrimitiveSerializer<Notifications
     NotificationsList object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -121,4 +127,3 @@ class _$NotificationsListSerializer implements PrimitiveSerializer<Notifications
     return result.build();
   }
 }
-

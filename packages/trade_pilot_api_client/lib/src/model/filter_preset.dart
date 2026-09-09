@@ -12,13 +12,14 @@ part 'filter_preset.g.dart';
 /// FilterPreset
 ///
 /// Properties:
-/// * [id] 
-/// * [name] 
-/// * [filters] 
-/// * [createdAt] 
-/// * [updatedAt] 
+/// * [id]
+/// * [name]
+/// * [filters]
+/// * [createdAt]
+/// * [updatedAt]
 @BuiltValue()
-abstract class FilterPreset implements Built<FilterPreset, FilterPresetBuilder> {
+abstract class FilterPreset
+    implements Built<FilterPreset, FilterPresetBuilder> {
   @BuiltValueField(wireName: r'id')
   int get id;
 
@@ -90,7 +91,9 @@ class _$FilterPresetSerializer implements PrimitiveSerializer<FilterPreset> {
     FilterPreset object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -168,4 +171,3 @@ class _$FilterPresetSerializer implements PrimitiveSerializer<FilterPreset> {
     return result.build();
   }
 }
-

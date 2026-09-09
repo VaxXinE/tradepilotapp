@@ -11,10 +11,13 @@ part 'personal_analytics_weekly_data_inner.g.dart';
 /// PersonalAnalyticsWeeklyDataInner
 ///
 /// Properties:
-/// * [week] 
-/// * [count] 
+/// * [week]
+/// * [count]
 @BuiltValue()
-abstract class PersonalAnalyticsWeeklyDataInner implements Built<PersonalAnalyticsWeeklyDataInner, PersonalAnalyticsWeeklyDataInnerBuilder> {
+abstract class PersonalAnalyticsWeeklyDataInner
+    implements
+        Built<PersonalAnalyticsWeeklyDataInner,
+            PersonalAnalyticsWeeklyDataInnerBuilder> {
   @BuiltValueField(wireName: r'week')
   String get week;
 
@@ -23,18 +26,25 @@ abstract class PersonalAnalyticsWeeklyDataInner implements Built<PersonalAnalyti
 
   PersonalAnalyticsWeeklyDataInner._();
 
-  factory PersonalAnalyticsWeeklyDataInner([void updates(PersonalAnalyticsWeeklyDataInnerBuilder b)]) = _$PersonalAnalyticsWeeklyDataInner;
+  factory PersonalAnalyticsWeeklyDataInner(
+          [void updates(PersonalAnalyticsWeeklyDataInnerBuilder b)]) =
+      _$PersonalAnalyticsWeeklyDataInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(PersonalAnalyticsWeeklyDataInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<PersonalAnalyticsWeeklyDataInner> get serializer => _$PersonalAnalyticsWeeklyDataInnerSerializer();
+  static Serializer<PersonalAnalyticsWeeklyDataInner> get serializer =>
+      _$PersonalAnalyticsWeeklyDataInnerSerializer();
 }
 
-class _$PersonalAnalyticsWeeklyDataInnerSerializer implements PrimitiveSerializer<PersonalAnalyticsWeeklyDataInner> {
+class _$PersonalAnalyticsWeeklyDataInnerSerializer
+    implements PrimitiveSerializer<PersonalAnalyticsWeeklyDataInner> {
   @override
-  final Iterable<Type> types = const [PersonalAnalyticsWeeklyDataInner, _$PersonalAnalyticsWeeklyDataInner];
+  final Iterable<Type> types = const [
+    PersonalAnalyticsWeeklyDataInner,
+    _$PersonalAnalyticsWeeklyDataInner
+  ];
 
   @override
   final String wireName = r'PersonalAnalyticsWeeklyDataInner';
@@ -62,7 +72,9 @@ class _$PersonalAnalyticsWeeklyDataInnerSerializer implements PrimitiveSerialize
     PersonalAnalyticsWeeklyDataInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -119,4 +131,3 @@ class _$PersonalAnalyticsWeeklyDataInnerSerializer implements PrimitiveSerialize
     return result.build();
   }
 }
-

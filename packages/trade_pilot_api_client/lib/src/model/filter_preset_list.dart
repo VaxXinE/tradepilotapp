@@ -13,24 +13,28 @@ part 'filter_preset_list.g.dart';
 /// FilterPresetList
 ///
 /// Properties:
-/// * [presets] 
+/// * [presets]
 @BuiltValue()
-abstract class FilterPresetList implements Built<FilterPresetList, FilterPresetListBuilder> {
+abstract class FilterPresetList
+    implements Built<FilterPresetList, FilterPresetListBuilder> {
   @BuiltValueField(wireName: r'presets')
   BuiltList<FilterPreset> get presets;
 
   FilterPresetList._();
 
-  factory FilterPresetList([void updates(FilterPresetListBuilder b)]) = _$FilterPresetList;
+  factory FilterPresetList([void updates(FilterPresetListBuilder b)]) =
+      _$FilterPresetList;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(FilterPresetListBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<FilterPresetList> get serializer => _$FilterPresetListSerializer();
+  static Serializer<FilterPresetList> get serializer =>
+      _$FilterPresetListSerializer();
 }
 
-class _$FilterPresetListSerializer implements PrimitiveSerializer<FilterPresetList> {
+class _$FilterPresetListSerializer
+    implements PrimitiveSerializer<FilterPresetList> {
   @override
   final Iterable<Type> types = const [FilterPresetList, _$FilterPresetList];
 
@@ -55,7 +59,9 @@ class _$FilterPresetListSerializer implements PrimitiveSerializer<FilterPresetLi
     FilterPresetList object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -105,4 +111,3 @@ class _$FilterPresetListSerializer implements PrimitiveSerializer<FilterPresetLi
     return result.build();
   }
 }
-

@@ -11,10 +11,11 @@ part 'admin_stats_mode_breakdown.g.dart';
 /// AdminStatsModeBreakdown
 ///
 /// Properties:
-/// * [beginner] 
-/// * [pro] 
+/// * [beginner]
+/// * [pro]
 @BuiltValue()
-abstract class AdminStatsModeBreakdown implements Built<AdminStatsModeBreakdown, AdminStatsModeBreakdownBuilder> {
+abstract class AdminStatsModeBreakdown
+    implements Built<AdminStatsModeBreakdown, AdminStatsModeBreakdownBuilder> {
   @BuiltValueField(wireName: r'beginner')
   int get beginner;
 
@@ -23,18 +24,25 @@ abstract class AdminStatsModeBreakdown implements Built<AdminStatsModeBreakdown,
 
   AdminStatsModeBreakdown._();
 
-  factory AdminStatsModeBreakdown([void updates(AdminStatsModeBreakdownBuilder b)]) = _$AdminStatsModeBreakdown;
+  factory AdminStatsModeBreakdown(
+          [void updates(AdminStatsModeBreakdownBuilder b)]) =
+      _$AdminStatsModeBreakdown;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AdminStatsModeBreakdownBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AdminStatsModeBreakdown> get serializer => _$AdminStatsModeBreakdownSerializer();
+  static Serializer<AdminStatsModeBreakdown> get serializer =>
+      _$AdminStatsModeBreakdownSerializer();
 }
 
-class _$AdminStatsModeBreakdownSerializer implements PrimitiveSerializer<AdminStatsModeBreakdown> {
+class _$AdminStatsModeBreakdownSerializer
+    implements PrimitiveSerializer<AdminStatsModeBreakdown> {
   @override
-  final Iterable<Type> types = const [AdminStatsModeBreakdown, _$AdminStatsModeBreakdown];
+  final Iterable<Type> types = const [
+    AdminStatsModeBreakdown,
+    _$AdminStatsModeBreakdown
+  ];
 
   @override
   final String wireName = r'AdminStatsModeBreakdown';
@@ -62,7 +70,9 @@ class _$AdminStatsModeBreakdownSerializer implements PrimitiveSerializer<AdminSt
     AdminStatsModeBreakdown object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -119,4 +129,3 @@ class _$AdminStatsModeBreakdownSerializer implements PrimitiveSerializer<AdminSt
     return result.build();
   }
 }
-

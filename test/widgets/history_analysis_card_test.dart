@@ -67,7 +67,7 @@ Analysis _analysis({
   String? bias = 'neutral',
   bool hasNote = false,
 }) {
-  return Analysis(
+  return $Analysis(
     (builder) => builder
       ..id = 1
       ..userId = 1

@@ -11,11 +11,14 @@ part 'analytics_token_stats_by_instrument_inner.g.dart';
 /// AnalyticsTokenStatsByInstrumentInner
 ///
 /// Properties:
-/// * [instrument] 
-/// * [totalTokens] 
-/// * [estimatedCostUsd] 
+/// * [instrument]
+/// * [totalTokens]
+/// * [estimatedCostUsd]
 @BuiltValue()
-abstract class AnalyticsTokenStatsByInstrumentInner implements Built<AnalyticsTokenStatsByInstrumentInner, AnalyticsTokenStatsByInstrumentInnerBuilder> {
+abstract class AnalyticsTokenStatsByInstrumentInner
+    implements
+        Built<AnalyticsTokenStatsByInstrumentInner,
+            AnalyticsTokenStatsByInstrumentInnerBuilder> {
   @BuiltValueField(wireName: r'instrument')
   String get instrument;
 
@@ -27,18 +30,25 @@ abstract class AnalyticsTokenStatsByInstrumentInner implements Built<AnalyticsTo
 
   AnalyticsTokenStatsByInstrumentInner._();
 
-  factory AnalyticsTokenStatsByInstrumentInner([void updates(AnalyticsTokenStatsByInstrumentInnerBuilder b)]) = _$AnalyticsTokenStatsByInstrumentInner;
+  factory AnalyticsTokenStatsByInstrumentInner(
+          [void updates(AnalyticsTokenStatsByInstrumentInnerBuilder b)]) =
+      _$AnalyticsTokenStatsByInstrumentInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AnalyticsTokenStatsByInstrumentInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AnalyticsTokenStatsByInstrumentInner> get serializer => _$AnalyticsTokenStatsByInstrumentInnerSerializer();
+  static Serializer<AnalyticsTokenStatsByInstrumentInner> get serializer =>
+      _$AnalyticsTokenStatsByInstrumentInnerSerializer();
 }
 
-class _$AnalyticsTokenStatsByInstrumentInnerSerializer implements PrimitiveSerializer<AnalyticsTokenStatsByInstrumentInner> {
+class _$AnalyticsTokenStatsByInstrumentInnerSerializer
+    implements PrimitiveSerializer<AnalyticsTokenStatsByInstrumentInner> {
   @override
-  final Iterable<Type> types = const [AnalyticsTokenStatsByInstrumentInner, _$AnalyticsTokenStatsByInstrumentInner];
+  final Iterable<Type> types = const [
+    AnalyticsTokenStatsByInstrumentInner,
+    _$AnalyticsTokenStatsByInstrumentInner
+  ];
 
   @override
   final String wireName = r'AnalyticsTokenStatsByInstrumentInner';
@@ -71,7 +81,9 @@ class _$AnalyticsTokenStatsByInstrumentInnerSerializer implements PrimitiveSeria
     AnalyticsTokenStatsByInstrumentInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -135,4 +147,3 @@ class _$AnalyticsTokenStatsByInstrumentInnerSerializer implements PrimitiveSeria
     return result.build();
   }
 }
-

@@ -12,15 +12,16 @@ part 'performance_banner.g.dart';
 /// Honesty banner comparing the last `recentDays` hit-rate against the 30-day baseline. `severity: warn` fires only when recent is >=15pp below baseline AND both windows cleared the minimum-sample guardrail.
 ///
 /// Properties:
-/// * [severity] 
-/// * [recentDays] 
-/// * [recentSample] 
-/// * [baselineSample] 
-/// * [recentHitRate] 
-/// * [baselineHitRate] 
-/// * [delta] 
+/// * [severity]
+/// * [recentDays]
+/// * [recentSample]
+/// * [baselineSample]
+/// * [recentHitRate]
+/// * [baselineHitRate]
+/// * [delta]
 @BuiltValue()
-abstract class PerformanceBanner implements Built<PerformanceBanner, PerformanceBannerBuilder> {
+abstract class PerformanceBanner
+    implements Built<PerformanceBanner, PerformanceBannerBuilder> {
   @BuiltValueField(wireName: r'severity')
   PerformanceBannerSeverityEnum get severity;
   // enum severityEnum {  ok,  watch,  warn,  };
@@ -35,26 +36,29 @@ abstract class PerformanceBanner implements Built<PerformanceBanner, Performance
   int get baselineSample;
 
   @BuiltValueField(wireName: r'recentHitRate')
-  num get recentHitRate;
+  num? get recentHitRate;
 
   @BuiltValueField(wireName: r'baselineHitRate')
-  num get baselineHitRate;
+  num? get baselineHitRate;
 
   @BuiltValueField(wireName: r'delta')
-  num get delta;
+  num? get delta;
 
   PerformanceBanner._();
 
-  factory PerformanceBanner([void updates(PerformanceBannerBuilder b)]) = _$PerformanceBanner;
+  factory PerformanceBanner([void updates(PerformanceBannerBuilder b)]) =
+      _$PerformanceBanner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(PerformanceBannerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<PerformanceBanner> get serializer => _$PerformanceBannerSerializer();
+  static Serializer<PerformanceBanner> get serializer =>
+      _$PerformanceBannerSerializer();
 }
 
-class _$PerformanceBannerSerializer implements PrimitiveSerializer<PerformanceBanner> {
+class _$PerformanceBannerSerializer
+    implements PrimitiveSerializer<PerformanceBanner> {
   @override
   final Iterable<Type> types = const [PerformanceBanner, _$PerformanceBanner];
 
@@ -89,17 +93,17 @@ class _$PerformanceBannerSerializer implements PrimitiveSerializer<PerformanceBa
     yield r'recentHitRate';
     yield serializers.serialize(
       object.recentHitRate,
-      specifiedType: const FullType(num),
+      specifiedType: const FullType.nullable(num),
     );
     yield r'baselineHitRate';
     yield serializers.serialize(
       object.baselineHitRate,
-      specifiedType: const FullType(num),
+      specifiedType: const FullType.nullable(num),
     );
     yield r'delta';
     yield serializers.serialize(
       object.delta,
-      specifiedType: const FullType(num),
+      specifiedType: const FullType.nullable(num),
     );
   }
 
@@ -109,7 +113,9 @@ class _$PerformanceBannerSerializer implements PrimitiveSerializer<PerformanceBa
     PerformanceBanner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -155,22 +161,22 @@ class _$PerformanceBannerSerializer implements PrimitiveSerializer<PerformanceBa
         case r'recentHitRate':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(num),
-          ) as num;
+            specifiedType: const FullType.nullable(num),
+          ) as num?;
           result.recentHitRate = valueDes;
           break;
         case r'baselineHitRate':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(num),
-          ) as num;
+            specifiedType: const FullType.nullable(num),
+          ) as num?;
           result.baselineHitRate = valueDes;
           break;
         case r'delta':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(num),
-          ) as num;
+            specifiedType: const FullType.nullable(num),
+          ) as num?;
           result.delta = valueDes;
           break;
         default:
@@ -203,19 +209,23 @@ class _$PerformanceBannerSerializer implements PrimitiveSerializer<PerformanceBa
 }
 
 class PerformanceBannerSeverityEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'ok')
-  static const PerformanceBannerSeverityEnum ok = _$performanceBannerSeverityEnum_ok;
+  static const PerformanceBannerSeverityEnum ok =
+      _$performanceBannerSeverityEnum_ok;
   @BuiltValueEnumConst(wireName: r'watch')
-  static const PerformanceBannerSeverityEnum watch = _$performanceBannerSeverityEnum_watch;
+  static const PerformanceBannerSeverityEnum watch =
+      _$performanceBannerSeverityEnum_watch;
   @BuiltValueEnumConst(wireName: r'warn')
-  static const PerformanceBannerSeverityEnum warn = _$performanceBannerSeverityEnum_warn;
+  static const PerformanceBannerSeverityEnum warn =
+      _$performanceBannerSeverityEnum_warn;
 
-  static Serializer<PerformanceBannerSeverityEnum> get serializer => _$performanceBannerSeverityEnumSerializer;
+  static Serializer<PerformanceBannerSeverityEnum> get serializer =>
+      _$performanceBannerSeverityEnumSerializer;
 
-  const PerformanceBannerSeverityEnum._(String name): super(name);
+  const PerformanceBannerSeverityEnum._(String name) : super(name);
 
-  static BuiltSet<PerformanceBannerSeverityEnum> get values => _$performanceBannerSeverityEnumValues;
-  static PerformanceBannerSeverityEnum valueOf(String name) => _$performanceBannerSeverityEnumValueOf(name);
+  static BuiltSet<PerformanceBannerSeverityEnum> get values =>
+      _$performanceBannerSeverityEnumValues;
+  static PerformanceBannerSeverityEnum valueOf(String name) =>
+      _$performanceBannerSeverityEnumValueOf(name);
 }
-

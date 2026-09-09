@@ -13,23 +13,27 @@ part 'push_test_result.g.dart';
 /// Properties:
 /// * [delivered] - Number of subscription endpoints the test push was dispatched to
 @BuiltValue()
-abstract class PushTestResult implements Built<PushTestResult, PushTestResultBuilder> {
+abstract class PushTestResult
+    implements Built<PushTestResult, PushTestResultBuilder> {
   /// Number of subscription endpoints the test push was dispatched to
   @BuiltValueField(wireName: r'delivered')
   int get delivered;
 
   PushTestResult._();
 
-  factory PushTestResult([void updates(PushTestResultBuilder b)]) = _$PushTestResult;
+  factory PushTestResult([void updates(PushTestResultBuilder b)]) =
+      _$PushTestResult;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(PushTestResultBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<PushTestResult> get serializer => _$PushTestResultSerializer();
+  static Serializer<PushTestResult> get serializer =>
+      _$PushTestResultSerializer();
 }
 
-class _$PushTestResultSerializer implements PrimitiveSerializer<PushTestResult> {
+class _$PushTestResultSerializer
+    implements PrimitiveSerializer<PushTestResult> {
   @override
   final Iterable<Type> types = const [PushTestResult, _$PushTestResult];
 
@@ -54,7 +58,9 @@ class _$PushTestResultSerializer implements PrimitiveSerializer<PushTestResult> 
     PushTestResult object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -104,4 +110,3 @@ class _$PushTestResultSerializer implements PrimitiveSerializer<PushTestResult> 
     return result.build();
   }
 }
-

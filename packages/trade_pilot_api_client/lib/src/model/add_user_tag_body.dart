@@ -11,24 +11,28 @@ part 'add_user_tag_body.g.dart';
 /// AddUserTagBody
 ///
 /// Properties:
-/// * [tag] 
+/// * [tag]
 @BuiltValue()
-abstract class AddUserTagBody implements Built<AddUserTagBody, AddUserTagBodyBuilder> {
+abstract class AddUserTagBody
+    implements Built<AddUserTagBody, AddUserTagBodyBuilder> {
   @BuiltValueField(wireName: r'tag')
   String get tag;
 
   AddUserTagBody._();
 
-  factory AddUserTagBody([void updates(AddUserTagBodyBuilder b)]) = _$AddUserTagBody;
+  factory AddUserTagBody([void updates(AddUserTagBodyBuilder b)]) =
+      _$AddUserTagBody;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AddUserTagBodyBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AddUserTagBody> get serializer => _$AddUserTagBodySerializer();
+  static Serializer<AddUserTagBody> get serializer =>
+      _$AddUserTagBodySerializer();
 }
 
-class _$AddUserTagBodySerializer implements PrimitiveSerializer<AddUserTagBody> {
+class _$AddUserTagBodySerializer
+    implements PrimitiveSerializer<AddUserTagBody> {
   @override
   final Iterable<Type> types = const [AddUserTagBody, _$AddUserTagBody];
 
@@ -53,7 +57,9 @@ class _$AddUserTagBodySerializer implements PrimitiveSerializer<AddUserTagBody> 
     AddUserTagBody object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -103,4 +109,3 @@ class _$AddUserTagBodySerializer implements PrimitiveSerializer<AddUserTagBody> 
     return result.build();
   }
 }
-

@@ -11,21 +11,23 @@ part 'fundamental_calendar_event.g.dart';
 /// A single economic-calendar event included in the fundamental snapshot persisted on an analysis row.
 ///
 /// Properties:
-/// * [date] 
-/// * [time] 
-/// * [currency] 
-/// * [event] 
+/// * [date]
+/// * [time]
+/// * [currency]
+/// * [event]
 /// * [impact] - Star-rating string from the upstream feed: ★, ★★ or ★★★. Null when impact is unknown.
-/// * [actual] 
-/// * [forecast] 
-/// * [previous] 
+/// * [actual]
+/// * [forecast]
+/// * [previous]
 @BuiltValue()
-abstract class FundamentalCalendarEvent implements Built<FundamentalCalendarEvent, FundamentalCalendarEventBuilder> {
+abstract class FundamentalCalendarEvent
+    implements
+        Built<FundamentalCalendarEvent, FundamentalCalendarEventBuilder> {
   @BuiltValueField(wireName: r'date')
   String get date;
 
   @BuiltValueField(wireName: r'time')
-  String get time;
+  String? get time;
 
   @BuiltValueField(wireName: r'currency')
   String get currency;
@@ -35,31 +37,38 @@ abstract class FundamentalCalendarEvent implements Built<FundamentalCalendarEven
 
   /// Star-rating string from the upstream feed: ★, ★★ or ★★★. Null when impact is unknown.
   @BuiltValueField(wireName: r'impact')
-  String get impact;
+  String? get impact;
 
   @BuiltValueField(wireName: r'actual')
-  String get actual;
+  String? get actual;
 
   @BuiltValueField(wireName: r'forecast')
-  String get forecast;
+  String? get forecast;
 
   @BuiltValueField(wireName: r'previous')
-  String get previous;
+  String? get previous;
 
   FundamentalCalendarEvent._();
 
-  factory FundamentalCalendarEvent([void updates(FundamentalCalendarEventBuilder b)]) = _$FundamentalCalendarEvent;
+  factory FundamentalCalendarEvent(
+          [void updates(FundamentalCalendarEventBuilder b)]) =
+      _$FundamentalCalendarEvent;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(FundamentalCalendarEventBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<FundamentalCalendarEvent> get serializer => _$FundamentalCalendarEventSerializer();
+  static Serializer<FundamentalCalendarEvent> get serializer =>
+      _$FundamentalCalendarEventSerializer();
 }
 
-class _$FundamentalCalendarEventSerializer implements PrimitiveSerializer<FundamentalCalendarEvent> {
+class _$FundamentalCalendarEventSerializer
+    implements PrimitiveSerializer<FundamentalCalendarEvent> {
   @override
-  final Iterable<Type> types = const [FundamentalCalendarEvent, _$FundamentalCalendarEvent];
+  final Iterable<Type> types = const [
+    FundamentalCalendarEvent,
+    _$FundamentalCalendarEvent
+  ];
 
   @override
   final String wireName = r'FundamentalCalendarEvent';
@@ -74,11 +83,13 @@ class _$FundamentalCalendarEventSerializer implements PrimitiveSerializer<Fundam
       object.date,
       specifiedType: const FullType(String),
     );
-    yield r'time';
-    yield serializers.serialize(
-      object.time,
-      specifiedType: const FullType(String),
-    );
+    if (object.time != null) {
+      yield r'time';
+      yield serializers.serialize(
+        object.time,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
     yield r'currency';
     yield serializers.serialize(
       object.currency,
@@ -89,26 +100,34 @@ class _$FundamentalCalendarEventSerializer implements PrimitiveSerializer<Fundam
       object.event,
       specifiedType: const FullType(String),
     );
-    yield r'impact';
-    yield serializers.serialize(
-      object.impact,
-      specifiedType: const FullType(String),
-    );
-    yield r'actual';
-    yield serializers.serialize(
-      object.actual,
-      specifiedType: const FullType(String),
-    );
-    yield r'forecast';
-    yield serializers.serialize(
-      object.forecast,
-      specifiedType: const FullType(String),
-    );
-    yield r'previous';
-    yield serializers.serialize(
-      object.previous,
-      specifiedType: const FullType(String),
-    );
+    if (object.impact != null) {
+      yield r'impact';
+      yield serializers.serialize(
+        object.impact,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
+    if (object.actual != null) {
+      yield r'actual';
+      yield serializers.serialize(
+        object.actual,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
+    if (object.forecast != null) {
+      yield r'forecast';
+      yield serializers.serialize(
+        object.forecast,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
+    if (object.previous != null) {
+      yield r'previous';
+      yield serializers.serialize(
+        object.previous,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
   }
 
   @override
@@ -117,7 +136,9 @@ class _$FundamentalCalendarEventSerializer implements PrimitiveSerializer<Fundam
     FundamentalCalendarEvent object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -142,8 +163,9 @@ class _$FundamentalCalendarEventSerializer implements PrimitiveSerializer<Fundam
         case r'time':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(String),
-          ) as String;
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
           result.time = valueDes;
           break;
         case r'currency':
@@ -163,29 +185,33 @@ class _$FundamentalCalendarEventSerializer implements PrimitiveSerializer<Fundam
         case r'impact':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(String),
-          ) as String;
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
           result.impact = valueDes;
           break;
         case r'actual':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(String),
-          ) as String;
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
           result.actual = valueDes;
           break;
         case r'forecast':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(String),
-          ) as String;
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
           result.forecast = valueDes;
           break;
         case r'previous':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(String),
-          ) as String;
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
           result.previous = valueDes;
           break;
         default:
@@ -216,4 +242,3 @@ class _$FundamentalCalendarEventSerializer implements PrimitiveSerializer<Fundam
     return result.build();
   }
 }
-

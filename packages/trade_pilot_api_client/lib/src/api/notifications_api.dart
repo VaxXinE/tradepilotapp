@@ -14,7 +14,6 @@ import 'package:trade_pilot_api_client/src/model/message_response.dart';
 import 'package:trade_pilot_api_client/src/model/notifications_list.dart';
 
 class NotificationsApi {
-
   final Dio _dio;
 
   final Serializers _serializers;
@@ -22,10 +21,10 @@ class NotificationsApi {
   const NotificationsApi(this._dio, this._serializers);
 
   /// Get notifications for current user
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [unreadOnly] 
+  /// * [unreadOnly]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -35,7 +34,7 @@ class NotificationsApi {
   ///
   /// Returns a [Future] containing a [Response] with a [NotificationsList] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<NotificationsList>> getNotifications({ 
+  Future<Response<NotificationsList>> getNotifications({
     bool? unreadOnly,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -58,7 +57,9 @@ class NotificationsApi {
     );
 
     final _queryParameters = <String, dynamic>{
-      if (unreadOnly != null) r'unreadOnly': encodeQueryParameter(_serializers, unreadOnly, const FullType(bool)),
+      if (unreadOnly != null)
+        r'unreadOnly': encodeQueryParameter(
+            _serializers, unreadOnly, const FullType(bool)),
     };
 
     final _response = await _dio.request<Object>(
@@ -74,11 +75,12 @@ class NotificationsApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(NotificationsList),
-      ) as NotificationsList;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(NotificationsList),
+            ) as NotificationsList;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -102,7 +104,7 @@ class NotificationsApi {
   }
 
   /// Mark all notifications as read
-  /// 
+  ///
   ///
   /// Parameters:
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
@@ -114,7 +116,7 @@ class NotificationsApi {
   ///
   /// Returns a [Future] containing a [Response] with a [MessageResponse] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<MessageResponse>> markAllNotificationsRead({ 
+  Future<Response<MessageResponse>> markAllNotificationsRead({
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -147,11 +149,12 @@ class NotificationsApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(MessageResponse),
-      ) as MessageResponse;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(MessageResponse),
+            ) as MessageResponse;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -175,10 +178,10 @@ class NotificationsApi {
   }
 
   /// Mark single notification as read
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [id] 
+  /// * [id]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -188,7 +191,7 @@ class NotificationsApi {
   ///
   /// Returns a [Future] containing a [Response] with a [MessageResponse] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<MessageResponse>> markNotificationRead({ 
+  Future<Response<MessageResponse>> markNotificationRead({
     required int id,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -197,7 +200,8 @@ class NotificationsApi {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    final _path = r'/notifications/{id}/read'.replaceAll('{' r'id' '}', encodeQueryParameter(_serializers, id, const FullType(int)).toString());
+    final _path = r'/notifications/{id}/read'.replaceAll('{' r'id' '}',
+        encodeQueryParameter(_serializers, id, const FullType(int)).toString());
     final _options = Options(
       method: r'PATCH',
       headers: <String, dynamic>{
@@ -222,11 +226,12 @@ class NotificationsApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(MessageResponse),
-      ) as MessageResponse;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(MessageResponse),
+            ) as MessageResponse;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -248,5 +253,4 @@ class NotificationsApi {
       extra: _response.extra,
     );
   }
-
 }

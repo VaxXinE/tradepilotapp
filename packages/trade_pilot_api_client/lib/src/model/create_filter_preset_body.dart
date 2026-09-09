@@ -12,10 +12,11 @@ part 'create_filter_preset_body.g.dart';
 /// CreateFilterPresetBody
 ///
 /// Properties:
-/// * [name] 
-/// * [filters] 
+/// * [name]
+/// * [filters]
 @BuiltValue()
-abstract class CreateFilterPresetBody implements Built<CreateFilterPresetBody, CreateFilterPresetBodyBuilder> {
+abstract class CreateFilterPresetBody
+    implements Built<CreateFilterPresetBody, CreateFilterPresetBodyBuilder> {
   @BuiltValueField(wireName: r'name')
   String get name;
 
@@ -24,18 +25,25 @@ abstract class CreateFilterPresetBody implements Built<CreateFilterPresetBody, C
 
   CreateFilterPresetBody._();
 
-  factory CreateFilterPresetBody([void updates(CreateFilterPresetBodyBuilder b)]) = _$CreateFilterPresetBody;
+  factory CreateFilterPresetBody(
+          [void updates(CreateFilterPresetBodyBuilder b)]) =
+      _$CreateFilterPresetBody;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(CreateFilterPresetBodyBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<CreateFilterPresetBody> get serializer => _$CreateFilterPresetBodySerializer();
+  static Serializer<CreateFilterPresetBody> get serializer =>
+      _$CreateFilterPresetBodySerializer();
 }
 
-class _$CreateFilterPresetBodySerializer implements PrimitiveSerializer<CreateFilterPresetBody> {
+class _$CreateFilterPresetBodySerializer
+    implements PrimitiveSerializer<CreateFilterPresetBody> {
   @override
-  final Iterable<Type> types = const [CreateFilterPresetBody, _$CreateFilterPresetBody];
+  final Iterable<Type> types = const [
+    CreateFilterPresetBody,
+    _$CreateFilterPresetBody
+  ];
 
   @override
   final String wireName = r'CreateFilterPresetBody';
@@ -63,7 +71,9 @@ class _$CreateFilterPresetBodySerializer implements PrimitiveSerializer<CreateFi
     CreateFilterPresetBody object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -120,4 +130,3 @@ class _$CreateFilterPresetBodySerializer implements PrimitiveSerializer<CreateFi
     return result.build();
   }
 }
-

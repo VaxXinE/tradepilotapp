@@ -19,7 +19,6 @@ import 'package:trade_pilot_api_client/src/model/message_response.dart';
 import 'package:trade_pilot_api_client/src/model/update_journal_entry_body.dart';
 
 class TradeJournalApi {
-
   final Dio _dio;
 
   final Serializers _serializers;
@@ -27,10 +26,10 @@ class TradeJournalApi {
   const TradeJournalApi(this._dio, this._serializers);
 
   /// Log a new manual trade-journal entry (optionally linked to an analysis)
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [createJournalEntryBody] 
+  /// * [createJournalEntryBody]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -40,7 +39,7 @@ class TradeJournalApi {
   ///
   /// Returns a [Future] containing a [Response] with a [JournalEntry] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<JournalEntry>> createJournalEntry({ 
+  Future<Response<JournalEntry>> createJournalEntry({
     required CreateJournalEntryBody createJournalEntryBody,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -67,11 +66,11 @@ class TradeJournalApi {
 
     try {
       const _type = FullType(CreateJournalEntryBody);
-      _bodyData = _serializers.serialize(createJournalEntryBody, specifiedType: _type);
-
-    } catch(error, stackTrace) {
+      _bodyData =
+          _serializers.serialize(createJournalEntryBody, specifiedType: _type);
+    } catch (error, stackTrace) {
       throw DioException(
-         requestOptions: _options.compose(
+        requestOptions: _options.compose(
           _dio.options,
           _path,
         ),
@@ -94,11 +93,12 @@ class TradeJournalApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(JournalEntry),
-      ) as JournalEntry;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(JournalEntry),
+            ) as JournalEntry;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -122,10 +122,10 @@ class TradeJournalApi {
   }
 
   /// Delete a journal entry
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [id] 
+  /// * [id]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -135,7 +135,7 @@ class TradeJournalApi {
   ///
   /// Returns a [Future] containing a [Response] with a [MessageResponse] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<MessageResponse>> deleteJournalEntry({ 
+  Future<Response<MessageResponse>> deleteJournalEntry({
     required int id,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -144,7 +144,8 @@ class TradeJournalApi {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    final _path = r'/journal/{id}'.replaceAll('{' r'id' '}', encodeQueryParameter(_serializers, id, const FullType(int)).toString());
+    final _path = r'/journal/{id}'.replaceAll('{' r'id' '}',
+        encodeQueryParameter(_serializers, id, const FullType(int)).toString());
     final _options = Options(
       method: r'DELETE',
       headers: <String, dynamic>{
@@ -169,11 +170,12 @@ class TradeJournalApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(MessageResponse),
-      ) as MessageResponse;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(MessageResponse),
+            ) as MessageResponse;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -200,7 +202,7 @@ class TradeJournalApi {
   /// Returns the first journal entry the authenticated user linked to a specific analysis. Returns 404 when no entry is found.
   ///
   /// Parameters:
-  /// * [analysisId] 
+  /// * [analysisId]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -210,7 +212,7 @@ class TradeJournalApi {
   ///
   /// Returns a [Future] containing a [Response] with a [JournalEntry] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<JournalEntry>> getJournalEntryForAnalysis({ 
+  Future<Response<JournalEntry>> getJournalEntryForAnalysis({
     required int analysisId,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -219,7 +221,10 @@ class TradeJournalApi {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    final _path = r'/journal/for-analysis/{analysisId}'.replaceAll('{' r'analysisId' '}', encodeQueryParameter(_serializers, analysisId, const FullType(int)).toString());
+    final _path = r'/journal/for-analysis/{analysisId}'.replaceAll(
+        '{' r'analysisId' '}',
+        encodeQueryParameter(_serializers, analysisId, const FullType(int))
+            .toString());
     final _options = Options(
       method: r'GET',
       headers: <String, dynamic>{
@@ -244,11 +249,12 @@ class TradeJournalApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(JournalEntry),
-      ) as JournalEntry;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(JournalEntry),
+            ) as JournalEntry;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -272,10 +278,10 @@ class TradeJournalApi {
   }
 
   /// Anonymised long-vs-short aggregate for an instrument across all users (last 7 days)
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [instrument] 
+  /// * [instrument]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -285,7 +291,7 @@ class TradeJournalApi {
   ///
   /// Returns a [Future] containing a [Response] with a [JournalSentiment] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<JournalSentiment>> getJournalSentiment({ 
+  Future<Response<JournalSentiment>> getJournalSentiment({
     required String instrument,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -308,7 +314,8 @@ class TradeJournalApi {
     );
 
     final _queryParameters = <String, dynamic>{
-      r'instrument': encodeQueryParameter(_serializers, instrument, const FullType(String)),
+      r'instrument': encodeQueryParameter(
+          _serializers, instrument, const FullType(String)),
     };
 
     final _response = await _dio.request<Object>(
@@ -324,11 +331,12 @@ class TradeJournalApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(JournalSentiment),
-      ) as JournalSentiment;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(JournalSentiment),
+            ) as JournalSentiment;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -352,11 +360,11 @@ class TradeJournalApi {
   }
 
   /// Summary stats for the user&#39;s trade journal (win rate, avg P/L, best/worst)
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [from] 
-  /// * [to] 
+  /// * [from]
+  /// * [to]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -366,7 +374,7 @@ class TradeJournalApi {
   ///
   /// Returns a [Future] containing a [Response] with a [JournalStats] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<JournalStats>> getJournalStats({ 
+  Future<Response<JournalStats>> getJournalStats({
     DateTime? from,
     DateTime? to,
     CancelToken? cancelToken,
@@ -390,8 +398,11 @@ class TradeJournalApi {
     );
 
     final _queryParameters = <String, dynamic>{
-      if (from != null) r'from': encodeQueryParameter(_serializers, from, const FullType(DateTime)),
-      if (to != null) r'to': encodeQueryParameter(_serializers, to, const FullType(DateTime)),
+      if (from != null)
+        r'from':
+            encodeQueryParameter(_serializers, from, const FullType(DateTime)),
+      if (to != null)
+        r'to': encodeQueryParameter(_serializers, to, const FullType(DateTime)),
     };
 
     final _response = await _dio.request<Object>(
@@ -407,11 +418,12 @@ class TradeJournalApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(JournalStats),
-      ) as JournalStats;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(JournalStats),
+            ) as JournalStats;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -435,14 +447,14 @@ class TradeJournalApi {
   }
 
   /// List the current user&#39;s trade journal entries with optional filters
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [instrument] 
-  /// * [outcome] 
-  /// * [from] 
-  /// * [to] 
-  /// * [limit] 
+  /// * [instrument]
+  /// * [outcome]
+  /// * [from]
+  /// * [to]
+  /// * [limit]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -452,7 +464,7 @@ class TradeJournalApi {
   ///
   /// Returns a [Future] containing a [Response] with a [JournalEntryList] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<JournalEntryList>> listJournalEntries({ 
+  Future<Response<JournalEntryList>> listJournalEntries({
     String? instrument,
     String? outcome,
     DateTime? from,
@@ -479,11 +491,20 @@ class TradeJournalApi {
     );
 
     final _queryParameters = <String, dynamic>{
-      if (instrument != null) r'instrument': encodeQueryParameter(_serializers, instrument, const FullType(String)),
-      if (outcome != null) r'outcome': encodeQueryParameter(_serializers, outcome, const FullType(String)),
-      if (from != null) r'from': encodeQueryParameter(_serializers, from, const FullType(DateTime)),
-      if (to != null) r'to': encodeQueryParameter(_serializers, to, const FullType(DateTime)),
-      if (limit != null) r'limit': encodeQueryParameter(_serializers, limit, const FullType(int)),
+      if (instrument != null)
+        r'instrument': encodeQueryParameter(
+            _serializers, instrument, const FullType(String)),
+      if (outcome != null)
+        r'outcome':
+            encodeQueryParameter(_serializers, outcome, const FullType(String)),
+      if (from != null)
+        r'from':
+            encodeQueryParameter(_serializers, from, const FullType(DateTime)),
+      if (to != null)
+        r'to': encodeQueryParameter(_serializers, to, const FullType(DateTime)),
+      if (limit != null)
+        r'limit':
+            encodeQueryParameter(_serializers, limit, const FullType(int)),
     };
 
     final _response = await _dio.request<Object>(
@@ -499,11 +520,12 @@ class TradeJournalApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(JournalEntryList),
-      ) as JournalEntryList;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(JournalEntryList),
+            ) as JournalEntryList;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -527,11 +549,11 @@ class TradeJournalApi {
   }
 
   /// Update an existing journal entry (e.g. close out an open trade)
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [id] 
-  /// * [updateJournalEntryBody] 
+  /// * [id]
+  /// * [updateJournalEntryBody]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -541,7 +563,7 @@ class TradeJournalApi {
   ///
   /// Returns a [Future] containing a [Response] with a [JournalEntry] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<JournalEntry>> updateJournalEntry({ 
+  Future<Response<JournalEntry>> updateJournalEntry({
     required int id,
     required UpdateJournalEntryBody updateJournalEntryBody,
     CancelToken? cancelToken,
@@ -551,7 +573,8 @@ class TradeJournalApi {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    final _path = r'/journal/{id}'.replaceAll('{' r'id' '}', encodeQueryParameter(_serializers, id, const FullType(int)).toString());
+    final _path = r'/journal/{id}'.replaceAll('{' r'id' '}',
+        encodeQueryParameter(_serializers, id, const FullType(int)).toString());
     final _options = Options(
       method: r'PATCH',
       headers: <String, dynamic>{
@@ -569,11 +592,11 @@ class TradeJournalApi {
 
     try {
       const _type = FullType(UpdateJournalEntryBody);
-      _bodyData = _serializers.serialize(updateJournalEntryBody, specifiedType: _type);
-
-    } catch(error, stackTrace) {
+      _bodyData =
+          _serializers.serialize(updateJournalEntryBody, specifiedType: _type);
+    } catch (error, stackTrace) {
       throw DioException(
-         requestOptions: _options.compose(
+        requestOptions: _options.compose(
           _dio.options,
           _path,
         ),
@@ -596,11 +619,12 @@ class TradeJournalApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(JournalEntry),
-      ) as JournalEntry;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(JournalEntry),
+            ) as JournalEntry;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -622,5 +646,4 @@ class TradeJournalApi {
       extra: _response.extra,
     );
   }
-
 }
