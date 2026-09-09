@@ -414,30 +414,30 @@ lulus dan `flutter analyze` bersih.
 ## 10. Milestone M5 — Google Sign-In native
 
 **Prioritas:** P1
-**Status:** BLOCKED — menunggu endpoint dan kontrak backend
+**Status:** IMPLEMENTED — E2E menunggu deployment backend dan registrasi SHA Android
 **Dependency:** `POST /auth/google/native` dan field profile `hasPassword`
 
 Handoff backend: [`BACKEND_HANDOFF_M5_NATIVE_GOOGLE_SIGN_IN.md`](BACKEND_HANDOFF_M5_NATIVE_GOOGLE_SIGN_IN.md)
 
 ### Backend
 
-- [ ] Sediakan `POST /auth/google/native`.
-- [ ] Verifikasi signature, issuer, audience, expiry, dan `email_verified` ID token.
-- [ ] Kembalikan TradePilot Bearer token dan user profile.
-- [ ] Definisikan aturan akun baru, akun existing, dan linking berdasarkan verified email.
-- [ ] Tambahkan `hasPassword` pada profile/session response.
-- [ ] Sediakan mekanisme reauthentication untuk operasi sensitif.
+- [x] Sediakan `POST /auth/google/native`.
+- [x] Verifikasi signature, issuer, audience, expiry, dan `email_verified` ID token.
+- [x] Kembalikan TradePilot Bearer token dan user profile.
+- [x] Definisikan aturan akun baru, akun existing, dan linking berdasarkan verified email.
+- [x] Tambahkan `hasPassword` pada profile/session response.
+- [x] Sediakan mekanisme reauthentication untuk operasi sensitif.
 
 ### Mobile setelah backend siap
 
-- [ ] Tambahkan `google_sign_in` saja; jangan gunakan Firebase Auth jika backend hanya memerlukan Google ID token.
-- [ ] Konfigurasikan Android OAuth Client ID dan SHA-1/SHA-256 debug/release.
-- [ ] Konfigurasikan iOS OAuth Client ID dan reversed client ID URL scheme.
-- [ ] Kirim Google ID token hanya ke endpoint native backend.
-- [ ] Simpan hanya TradePilot Bearer token di secure storage.
-- [ ] Tangani invalid token, expired token, audience mismatch, dan email belum diverifikasi.
-- [ ] Sembunyikan ganti password/security question pada akun Google-only.
-- [ ] Gunakan reauthentication sebelum hapus akun atau operasi sensitif.
+- [x] Tambahkan `google_sign_in` saja; jangan gunakan Firebase Auth jika backend hanya memerlukan Google ID token.
+- [ ] Konfigurasikan Android OAuth Client ID dan SHA-1/SHA-256 debug/release (client ID siap; fingerprint masih perlu didaftarkan).
+- [x] Konfigurasikan iOS OAuth Client ID dan reversed client ID URL scheme.
+- [x] Kirim Google ID token hanya ke endpoint native backend.
+- [x] Simpan hanya TradePilot Bearer token di secure storage.
+- [x] Tangani invalid token, expired token, audience mismatch, dan email belum diverifikasi.
+- [x] Sembunyikan ganti password/security question pada akun Google-only.
+- [x] Gunakan reauthentication sebelum hapus akun atau operasi sensitif.
 
 ### Larangan security
 

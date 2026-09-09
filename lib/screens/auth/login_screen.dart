@@ -258,6 +258,39 @@ class _LoginScreenState extends State<LoginScreen> {
                                   )
                                 : Text(l10n.signIn),
                           ),
+                          const SizedBox(height: 18),
+                          Row(
+                            children: [
+                              const Expanded(child: Divider()),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                ),
+                                child: Text(
+                                  l10n.or,
+                                  style: TextStyle(color: muted),
+                                ),
+                              ),
+                              const Expanded(child: Divider()),
+                            ],
+                          ),
+                          const SizedBox(height: 18),
+                          OutlinedButton.icon(
+                            key: const Key('google-sign-in-button'),
+                            onPressed: auth.isBusy
+                                ? null
+                                : auth.loginWithGoogle,
+                            icon: const ExcludeSemantics(
+                              child: Text(
+                                'G',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                            label: Text(l10n.continueWithGoogle),
+                          ),
                           // No biometric button here on purpose. Biometrics can
                           // only unlock a session that already exists, and a
                           // user who has one never reaches this screen — they

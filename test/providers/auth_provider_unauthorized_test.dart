@@ -160,9 +160,9 @@ User _user() => User(
     ..role = UserRoleEnum.user
     ..selectedMode = UserSelectedModeEnum.beginner
     ..themePreference = UserThemePreferenceEnum.dark
-    ..securityQuestion = 'Nama hewan pertama?'
     ..createdAt = DateTime.utc(2026)
-    ..onboardingCompleted = true,
+    ..onboardingCompleted = true
+    ..hasPassword = true,
 );
 
 /// Answers 401 to everything, so each test is defined purely by which endpoint

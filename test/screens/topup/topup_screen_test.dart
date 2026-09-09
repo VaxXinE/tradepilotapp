@@ -337,7 +337,8 @@ Future<_Harness> _pump(
         ..selectedMode = UserSelectedModeEnum.beginner
         ..themePreference = UserThemePreferenceEnum.dark
         ..createdAt = DateTime.utc(2026)
-        ..onboardingCompleted = true,
+        ..onboardingCompleted = true
+        ..hasPassword = true,
     );
 
   final adapter = _TopupAdapter(

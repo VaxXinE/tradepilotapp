@@ -247,7 +247,8 @@ User _user(int id) => User(
     ..selectedMode = UserSelectedModeEnum.beginner
     ..themePreference = UserThemePreferenceEnum.dark
     ..createdAt = DateTime.utc(2026)
-    ..onboardingCompleted = true,
+    ..onboardingCompleted = true
+    ..hasPassword = true,
 );
 
 UserPriceAlert _alert({

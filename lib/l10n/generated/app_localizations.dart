@@ -1796,6 +1796,48 @@ abstract class AppLocalizations {
   /// **'or'**
   String get or;
 
+  /// No description provided for @continueWithGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Google'**
+  String get continueWithGoogle;
+
+  /// No description provided for @googleDeleteReauthDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'To protect your account, verify your identity with Google before deletion.'**
+  String get googleDeleteReauthDescription;
+
+  /// No description provided for @verifyGoogleAndDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify with Google and delete'**
+  String get verifyGoogleAndDelete;
+
+  /// No description provided for @errGoogleTokenInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Google could not verify this sign-in. Choose the same account and try again.'**
+  String get errGoogleTokenInvalid;
+
+  /// No description provided for @errGoogleAccountConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'This email is linked to another sign-in method. Sign in with that method first.'**
+  String get errGoogleAccountConflict;
+
+  /// No description provided for @errGoogleUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Sign-In is temporarily unavailable. Please try again later.'**
+  String get errGoogleUnavailable;
+
+  /// No description provided for @errGoogleSignInFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not sign in with Google. Please try again.'**
+  String get errGoogleSignInFailed;
+
   /// No description provided for @verifying.
   ///
   /// In en, this message translates to:

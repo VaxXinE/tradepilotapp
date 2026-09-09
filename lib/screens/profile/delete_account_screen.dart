@@ -34,9 +34,10 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
   void _refresh() => setState(() {});
 
   Future<void> _deleteAccount() async {
-    final success = await context.read<AuthProvider>().deleteAccount(
-      _passwordController.text,
-    );
+    final auth = context.read<AuthProvider>();
+    final success = auth.user?.hasPassword == false
+        ? await auth.deleteGoogleAccount()
+        : await auth.deleteAccount(_passwordController.text);
     if (!mounted || !success) return;
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
@@ -46,9 +47,10 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
     final auth = context.watch<AuthProvider>();
     final l10n = context.l10n;
     final error = Theme.of(context).colorScheme.error;
+    final hasPassword = auth.user?.hasPassword ?? true;
     final canDelete =
         _confirmed &&
-        _passwordController.text.isNotEmpty &&
+        (!hasPassword || _passwordController.text.isNotEmpty) &&
         !auth.isDeletingAccount;
 
     return Scaffold(
@@ -70,27 +72,33 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
               Text(l10n.deleteAccountWarning, textAlign: TextAlign.center),
               const SizedBox(height: 24),
               ErrorBanner(message: auth.profileError),
-              TextField(
-                controller: _passwordController,
-                obscureText: _obscurePassword,
-                autocorrect: false,
-                enableSuggestions: false,
-                decoration: InputDecoration(
-                  labelText: l10n.currentPassword,
-                  suffixIcon: IconButton(
-                    tooltip: _obscurePassword
-                        ? l10n.showPassword
-                        : l10n.hidePassword,
-                    onPressed: () =>
-                        setState(() => _obscurePassword = !_obscurePassword),
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_off_rounded
-                          : Icons.visibility_rounded,
+              if (hasPassword)
+                TextField(
+                  controller: _passwordController,
+                  obscureText: _obscurePassword,
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  decoration: InputDecoration(
+                    labelText: l10n.currentPassword,
+                    suffixIcon: IconButton(
+                      tooltip: _obscurePassword
+                          ? l10n.showPassword
+                          : l10n.hidePassword,
+                      onPressed: () =>
+                          setState(() => _obscurePassword = !_obscurePassword),
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off_rounded
+                            : Icons.visibility_rounded,
+                      ),
                     ),
                   ),
+                )
+              else
+                Text(
+                  l10n.googleDeleteReauthDescription,
+                  textAlign: TextAlign.center,
                 ),
-              ),
               const SizedBox(height: 12),
               CheckboxListTile(
                 contentPadding: EdgeInsets.zero,
@@ -111,7 +119,11 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                         height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2.4),
                       )
-                    : Text(l10n.deleteAccountPermanently),
+                    : Text(
+                        hasPassword
+                            ? l10n.deleteAccountPermanently
+                            : l10n.verifyGoogleAndDelete,
+                      ),
               ),
             ],
           ),

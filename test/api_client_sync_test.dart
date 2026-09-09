@@ -20,13 +20,16 @@ void main() {
           'selectedMode': 'beginner',
           'themePreference': 'dark',
           'onboardingCompleted': true,
+          'hasPassword': true,
+          'createdAt': '2026-01-01T00:00:00.000Z',
           'avatarUrl': null,
         },
       },
     );
 
     expect(response?.token, 'session-token');
-    expect(response?.user.createdAt, isNull);
+    expect(response?.user.hasPassword, isTrue);
+    expect(response?.user.createdAt, DateTime.utc(2026));
   });
 
   test('analysis accepts nullable fundamental feed values', () {

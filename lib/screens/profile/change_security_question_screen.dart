@@ -34,8 +34,7 @@ class _ChangeSecurityQuestionScreenState
   @override
   void initState() {
     super.initState();
-    final current = context.read<AuthProvider>().user?.securityQuestion;
-    _question = _questions.contains(current) ? current! : _questions.first;
+    _question = _questions.first;
   }
 
   @override

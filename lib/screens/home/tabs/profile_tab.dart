@@ -286,34 +286,31 @@ class ProfileTab extends StatelessWidget {
                     title: l10n.security,
                     children: [
                       const _BiometricLockTile(),
-                      const Divider(height: 1),
-                      ListTile(
-                        leading: const Icon(Icons.lock_outline_rounded),
-                        title: Text(l10n.changePassword),
-                        trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const ChangePasswordScreen(),
+                      if (user.hasPassword) ...[
+                        const Divider(height: 1),
+                        ListTile(
+                          leading: const Icon(Icons.lock_outline_rounded),
+                          title: Text(l10n.changePassword),
+                          trailing: const Icon(Icons.chevron_right_rounded),
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const ChangePasswordScreen(),
+                            ),
                           ),
                         ),
-                      ),
-                      const Divider(height: 1),
-                      ListTile(
-                        leading: const Icon(Icons.help_outline_rounded),
-                        title: Text(l10n.securityQuestion),
-                        subtitle: Text(
-                          user.securityQuestion ?? l10n.notAvailable,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                const ChangeSecurityQuestionScreen(),
+                        const Divider(height: 1),
+                        ListTile(
+                          leading: const Icon(Icons.help_outline_rounded),
+                          title: Text(l10n.securityQuestion),
+                          trailing: const Icon(Icons.chevron_right_rounded),
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  const ChangeSecurityQuestionScreen(),
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                   _Section(

@@ -19,8 +19,8 @@ part 'user.g.dart';
 /// * [role]
 /// * [selectedMode]
 /// * [themePreference]
-/// * [securityQuestion]
 /// * [onboardingCompleted]
+/// * [hasPassword] - True when the account has a local password usable for login and for re-authentication. False for Google-only accounts (use POST /auth/reauth/google for sensitive operations).
 /// * [createdAt]
 @BuiltValue()
 abstract class User implements Built<User, UserBuilder> {
@@ -49,14 +49,15 @@ abstract class User implements Built<User, UserBuilder> {
   UserThemePreferenceEnum get themePreference;
   // enum themePreferenceEnum {  light,  dark,  };
 
-  @BuiltValueField(wireName: r'securityQuestion')
-  String? get securityQuestion;
-
   @BuiltValueField(wireName: r'onboardingCompleted')
   bool get onboardingCompleted;
 
+  /// True when the account has a local password usable for login and for re-authentication. False for Google-only accounts (use POST /auth/reauth/google for sensitive operations).
+  @BuiltValueField(wireName: r'hasPassword')
+  bool get hasPassword;
+
   @BuiltValueField(wireName: r'createdAt')
-  DateTime? get createdAt;
+  DateTime get createdAt;
 
   User._();
 
@@ -118,25 +119,21 @@ class _$UserSerializer implements PrimitiveSerializer<User> {
       object.themePreference,
       specifiedType: const FullType(UserThemePreferenceEnum),
     );
-    if (object.securityQuestion != null) {
-      yield r'securityQuestion';
-      yield serializers.serialize(
-        object.securityQuestion,
-        specifiedType: const FullType(String),
-      );
-    }
     yield r'onboardingCompleted';
     yield serializers.serialize(
       object.onboardingCompleted,
       specifiedType: const FullType(bool),
     );
-    if (object.createdAt != null) {
-      yield r'createdAt';
-      yield serializers.serialize(
-        object.createdAt,
-        specifiedType: const FullType.nullable(DateTime),
-      );
-    }
+    yield r'hasPassword';
+    yield serializers.serialize(
+      object.hasPassword,
+      specifiedType: const FullType(bool),
+    );
+    yield r'createdAt';
+    yield serializers.serialize(
+      object.createdAt,
+      specifiedType: const FullType(DateTime),
+    );
   }
 
   @override
@@ -212,14 +209,6 @@ class _$UserSerializer implements PrimitiveSerializer<User> {
           ) as UserThemePreferenceEnum;
           result.themePreference = valueDes;
           break;
-        case r'securityQuestion':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType.nullable(String),
-          ) as String?;
-          if (valueDes == null) continue;
-          result.securityQuestion = valueDes;
-          break;
         case r'onboardingCompleted':
           final valueDes = serializers.deserialize(
             value,
@@ -227,12 +216,18 @@ class _$UserSerializer implements PrimitiveSerializer<User> {
           ) as bool;
           result.onboardingCompleted = valueDes;
           break;
+        case r'hasPassword':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(bool),
+          ) as bool;
+          result.hasPassword = valueDes;
+          break;
         case r'createdAt':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(DateTime),
-          ) as DateTime?;
-          if (valueDes == null) continue;
+            specifiedType: const FullType(DateTime),
+          ) as DateTime;
           result.createdAt = valueDes;
           break;
         default:

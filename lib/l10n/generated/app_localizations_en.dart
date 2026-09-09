@@ -949,6 +949,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get or => 'or';
 
   @override
+  String get continueWithGoogle => 'Continue with Google';
+
+  @override
+  String get googleDeleteReauthDescription =>
+      'To protect your account, verify your identity with Google before deletion.';
+
+  @override
+  String get verifyGoogleAndDelete => 'Verify with Google and delete';
+
+  @override
+  String get errGoogleTokenInvalid =>
+      'Google could not verify this sign-in. Choose the same account and try again.';
+
+  @override
+  String get errGoogleAccountConflict =>
+      'This email is linked to another sign-in method. Sign in with that method first.';
+
+  @override
+  String get errGoogleUnavailable =>
+      'Google Sign-In is temporarily unavailable. Please try again later.';
+
+  @override
+  String get errGoogleSignInFailed =>
+      'Could not sign in with Google. Please try again.';
+
+  @override
   String get verifying => 'Verifying...';
 
   @override

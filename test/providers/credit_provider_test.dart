@@ -286,7 +286,8 @@ Future<(CreditProvider, _TopupsAdapter, AuthProvider)> _provider() async {
         ..selectedMode = UserSelectedModeEnum.beginner
         ..themePreference = UserThemePreferenceEnum.dark
         ..createdAt = DateTime.utc(2026)
-        ..onboardingCompleted = true,
+        ..onboardingCompleted = true
+        ..hasPassword = true,
     );
 
   final adapter = _TopupsAdapter();

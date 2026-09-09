@@ -38,7 +38,8 @@ void main() {
           ..selectedMode = UserSelectedModeEnum.beginner
           ..themePreference = UserThemePreferenceEnum.dark
           ..createdAt = DateTime.utc(2026)
-          ..onboardingCompleted = true,
+          ..onboardingCompleted = true
+          ..hasPassword = true,
       );
     auth.client.dio.httpClientAdapter = _ProgressionAdapter();
     final progression = ProgressionProvider(auth);

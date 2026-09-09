@@ -85,6 +85,9 @@ import 'package:trade_pilot_api_client/src/model/fundamental_drift.dart';
 import 'package:trade_pilot_api_client/src/model/fundamental_drift_citation.dart';
 import 'package:trade_pilot_api_client/src/model/fundamental_news_item.dart';
 import 'package:trade_pilot_api_client/src/model/get_guardrails200_response.dart';
+import 'package:trade_pilot_api_client/src/model/google_native_login_body.dart';
+import 'package:trade_pilot_api_client/src/model/google_reauth_body.dart';
+import 'package:trade_pilot_api_client/src/model/google_reauth_response.dart';
 import 'package:trade_pilot_api_client/src/model/health_status.dart';
 import 'package:trade_pilot_api_client/src/model/journal_entry.dart';
 import 'package:trade_pilot_api_client/src/model/journal_entry_list.dart';
@@ -258,6 +261,9 @@ part 'serializers.g.dart';
   FundamentalDriftCitation,
   FundamentalNewsItem,
   GetGuardrails200Response,
+  GoogleNativeLoginBody,
+  GoogleReauthBody,
+  GoogleReauthResponse,
   HealthStatus,
   JournalEntry,
   JournalEntryList,

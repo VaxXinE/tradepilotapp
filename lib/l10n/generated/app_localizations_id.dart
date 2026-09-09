@@ -945,6 +945,32 @@ class AppLocalizationsId extends AppLocalizations {
   String get or => 'atau';
 
   @override
+  String get continueWithGoogle => 'Lanjutkan dengan Google';
+
+  @override
+  String get googleDeleteReauthDescription =>
+      'Untuk melindungi akunmu, verifikasi identitas dengan Google sebelum penghapusan.';
+
+  @override
+  String get verifyGoogleAndDelete => 'Verifikasi dengan Google dan hapus';
+
+  @override
+  String get errGoogleTokenInvalid =>
+      'Google tidak dapat memverifikasi proses masuk ini. Pilih akun yang sama lalu coba lagi.';
+
+  @override
+  String get errGoogleAccountConflict =>
+      'Email ini terhubung ke metode masuk lain. Masuklah dengan metode tersebut terlebih dahulu.';
+
+  @override
+  String get errGoogleUnavailable =>
+      'Google Sign-In sedang tidak tersedia. Silakan coba lagi nanti.';
+
+  @override
+  String get errGoogleSignInFailed =>
+      'Gagal masuk dengan Google. Silakan coba lagi.';
+
+  @override
   String get verifying => 'Memverifikasi...';
 
   @override

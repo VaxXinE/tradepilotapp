@@ -39,6 +39,7 @@ void main() {
       const Size(120, 80),
     );
     expect(find.text('Welcome back'), findsOneWidget);
+    expect(find.byKey(const Key('google-sign-in-button')), findsOneWidget);
 
     await tester.tap(find.widgetWithText(ElevatedButton, 'Sign In'));
     await tester.pump();
