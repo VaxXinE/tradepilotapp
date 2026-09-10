@@ -35,7 +35,14 @@ class HistorySummaryCard extends StatelessWidget {
             const SizedBox(height: 11),
             LayoutBuilder(
               builder: (context, constraints) {
-                final width = (constraints.maxWidth - 16) / 3;
+                final textScale = MediaQuery.textScalerOf(context).scale(1);
+                final columns = textScale > 1.3
+                    ? 1
+                    : constraints.maxWidth < 330
+                    ? 2
+                    : 3;
+                final width =
+                    (constraints.maxWidth - (columns - 1) * 8) / columns;
                 return Wrap(
                   spacing: 8,
                   runSpacing: 10,

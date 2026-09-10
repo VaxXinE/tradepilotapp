@@ -25,12 +25,12 @@ class HistoryAnalysisCard extends StatelessWidget {
         ? AppColors.darkMutedForeground
         : AppColors.lightMutedForeground;
     final confidence = _confidenceLabel(analysis);
-    final details = [
-      if (analysis.riskLevel?.trim().isNotEmpty == true)
-        context.l10n.riskValue(_riskLabel(context, analysis.riskLevel!)),
-      if (analysis.marketCondition?.trim().isNotEmpty == true)
-        _marketConditionLabel(context, analysis.marketCondition!),
-    ];
+    final risk = analysis.riskLevel?.trim();
+    final marketCondition = analysis.marketCondition?.trim();
+    final createdAt = analysis.createdAt.toLocal();
+    final createdAtLabel =
+        '${MaterialLocalizations.of(context).formatMediumDate(createdAt)}, '
+        '${DateFormat.Hm().format(createdAt)}';
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -74,7 +74,7 @@ class HistoryAnalysisCard extends StatelessWidget {
               const SizedBox(height: 3),
               Text(
                 '${analysis.timeframe} • ${_modeLabel(context, analysis.mode)} • '
-                '${DateFormat('d MMM yyyy, HH:mm').format(analysis.createdAt.toLocal())}',
+                '$createdAtLabel',
                 style: theme.textTheme.bodySmall?.copyWith(color: muted),
               ),
               const SizedBox(height: 10),
@@ -95,13 +95,28 @@ class HistoryAnalysisCard extends StatelessWidget {
                   _OutcomeBadge(status: analysis.outcomeStatus),
                 ],
               ),
-              if (details.isNotEmpty) ...[
+              if (risk?.isNotEmpty == true ||
+                  marketCondition?.isNotEmpty == true) ...[
                 const SizedBox(height: 9),
-                Text(
-                  details.join(' • '),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(color: muted),
+                Wrap(
+                  spacing: 7,
+                  runSpacing: 7,
+                  children: [
+                    if (risk?.isNotEmpty == true)
+                      _InfoChip(
+                        icon: Icons.shield_outlined,
+                        label: context.l10n.riskValue(
+                          _riskLabel(context, risk!),
+                        ),
+                        color: _riskColor(context, risk),
+                      ),
+                    if (marketCondition?.isNotEmpty == true)
+                      _InfoChip(
+                        icon: Icons.query_stats_rounded,
+                        label: _marketConditionLabel(context, marketCondition!),
+                        color: _marketConditionColor(context, marketCondition),
+                      ),
+                  ],
                 ),
               ],
             ],
@@ -153,11 +168,11 @@ class HistoryAnalysisCard extends StatelessWidget {
   static String _riskLabel(BuildContext context, String value) {
     switch (value.trim().toLowerCase()) {
       case 'low':
-        return context.l10n.low.toLowerCase();
+        return context.l10n.low;
       case 'medium':
-        return context.l10n.medium.toLowerCase();
+        return context.l10n.medium;
       case 'high':
-        return context.l10n.high.toLowerCase();
+        return context.l10n.high;
       default:
         return value.trim().replaceAll('_', ' ');
     }
@@ -198,6 +213,26 @@ class HistoryAnalysisCard extends StatelessWidget {
     }
     return dark ? AppColors.neutralDark : AppColors.neutralLight;
   }
+
+  static Color _riskColor(BuildContext context, String value) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return switch (value.trim().toLowerCase()) {
+      'high' => dark ? AppColors.bearishDark : AppColors.bearishLight,
+      'low' => dark ? AppColors.bullishDark : AppColors.bullishLight,
+      _ => dark ? AppColors.neutralDark : AppColors.neutralLight,
+    };
+  }
+
+  static Color _marketConditionColor(BuildContext context, String value) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return switch (value.trim().toLowerCase()) {
+      'trending_up' ||
+      'uptrend' => dark ? AppColors.bullishDark : AppColors.bullishLight,
+      'trending_down' ||
+      'downtrend' => dark ? AppColors.bearishDark : AppColors.bearishLight,
+      _ => dark ? AppColors.neutralDark : AppColors.neutralLight,
+    };
+  }
 }
 
 class _OutcomeBadge extends StatelessWidget {
@@ -214,13 +249,14 @@ class _OutcomeBadge extends StatelessWidget {
         status == AnalysisOutcomeStatusEnum.tp2Hit;
     final negative =
         status == AnalysisOutcomeStatusEnum.slHit ||
-        status == AnalysisOutcomeStatusEnum.expired ||
         status == AnalysisOutcomeStatusEnum.invalidated;
     final color = positive
         ? (dark ? AppColors.bullishDark : AppColors.bullishLight)
         : negative
         ? (dark ? AppColors.bearishDark : AppColors.bearishLight)
-        : theme.colorScheme.primary;
+        : status == AnalysisOutcomeStatusEnum.pending
+        ? theme.colorScheme.primary
+        : theme.colorScheme.onSurfaceVariant;
 
     return _InfoChip(
       icon: Icons.fact_check_outlined,
@@ -278,12 +314,14 @@ class _InfoChip extends StatelessWidget {
         children: [
           Icon(icon, size: 13, color: color),
           const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 10.5,
-              fontWeight: FontWeight.w800,
+          Flexible(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
         ],

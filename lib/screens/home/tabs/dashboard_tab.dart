@@ -198,86 +198,13 @@ class _DashboardTabState extends State<DashboardTab> {
             // ---------------------------------------------------------------
             // GREETING
             // ---------------------------------------------------------------
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              l10n.welcomeBack.toUpperCase(),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: muted,
-                                fontSize: 11,
-                                letterSpacing: 1,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.secondary,
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Text(
-                              user?.selectedMode == UserSelectedModeEnum.pro
-                                  ? 'PRO'
-                                  : l10n.beginner.toUpperCase(),
-                              style: TextStyle(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSecondary,
-                                fontSize: 9,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.7,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        user?.displayName.trim().isNotEmpty == true
-                            ? user!.displayName.trim()
-                            : l10n.trader,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.4,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 10),
-                FilledButton.icon(
-                  key: const Key('dashboard-new-analysis'),
-                  onPressed: () => widget.onOpenAnalyze(null),
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    minimumSize: const Size(0, 40),
-                    textStyle: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  icon: const Icon(Icons.add_rounded, size: 18),
-                  label: Text(l10n.analysis),
-                ),
-              ],
+            _DashboardGreeting(
+              displayName: user?.displayName.trim().isNotEmpty == true
+                  ? user!.displayName.trim()
+                  : l10n.trader,
+              isPro: user?.selectedMode == UserSelectedModeEnum.pro,
+              muted: muted,
+              onAnalyze: () => widget.onOpenAnalyze(null),
             ),
 
             const SizedBox(height: 18),
@@ -443,7 +370,7 @@ class _DashboardTabState extends State<DashboardTab> {
             Text(
               l10n.decisionDisclaimer,
               textAlign: TextAlign.center,
-              style: TextStyle(color: muted, fontSize: 10.5, height: 1.4),
+              style: TextStyle(color: muted, fontSize: 12, height: 1.4),
             ),
 
             const AppFooter(),
@@ -457,6 +384,105 @@ class _DashboardTabState extends State<DashboardTab> {
 // =============================================================================
 // NOTIFICATION ICON
 // =============================================================================
+
+class _DashboardGreeting extends StatelessWidget {
+  const _DashboardGreeting({
+    required this.displayName,
+    required this.isPro,
+    required this.muted,
+    required this.onAnalyze,
+  });
+
+  final String displayName;
+  final bool isPro;
+  final Color muted;
+  final VoidCallback onAnalyze;
+
+  @override
+  Widget build(BuildContext context) {
+    final greeting = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 8,
+          runSpacing: 6,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Text(
+              context.l10n.welcomeBack.toUpperCase(),
+              style: TextStyle(
+                color: muted,
+                fontSize: 12,
+                letterSpacing: 1,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.secondary,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                isPro ? 'PRO' : context.l10n.beginner.toUpperCase(),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSecondary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.7,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          displayName,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.4,
+          ),
+        ),
+      ],
+    );
+    final action = FilledButton.icon(
+      key: const Key('dashboard-new-analysis'),
+      onPressed: onAnalyze,
+      style: FilledButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        minimumSize: const Size(0, 48),
+        textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+      ),
+      icon: const Icon(Icons.add_rounded, size: 18),
+      label: Text(context.l10n.analysis),
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final stack =
+            constraints.maxWidth < 340 ||
+            MediaQuery.textScalerOf(context).scale(1) > 1.3;
+        if (stack) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [greeting, const SizedBox(height: 12), action],
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(child: greeting),
+            const SizedBox(width: 10),
+            action,
+          ],
+        );
+      },
+    );
+  }
+}
 
 class _OnboardingCard extends StatelessWidget {
   const _OnboardingCard({required this.onDone});
@@ -495,6 +521,8 @@ class _AllMarketsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     if (quotes.isEmpty) return const SizedBox.shrink();
+    final itemExtent =
+        68 * MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.6);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -507,12 +535,12 @@ class _AllMarketsCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             SizedBox(
-              height: quotes.length.clamp(1, 3).toDouble() * 68,
+              height: quotes.length.clamp(1, 3) * itemExtent,
               child: Scrollbar(
                 child: ListView.builder(
                   key: const Key('live-markets-list'),
                   primary: false,
-                  itemExtent: 68,
+                  itemExtent: itemExtent,
                   itemCount: quotes.length,
                   itemBuilder: (_, index) {
                     final quote = quotes[index];
@@ -524,15 +552,17 @@ class _AllMarketsCard extends StatelessWidget {
                         _formatPrice(quote.instrument, quote.price),
                       ),
                       trailing: Text(
-                        '${quote.changePercent >= 0 ? '+' : ''}${quote.changePercent.toStringAsFixed(2)}%',
+                        '${quote.changePercent > 0 ? '+' : ''}${quote.changePercent.toStringAsFixed(2)}%',
                         style: TextStyle(
-                          color: quote.changePercent >= 0
+                          color: quote.changePercent > 0
                               ? (isDark
                                     ? AppColors.bullishDark
                                     : AppColors.bullishLight)
-                              : (isDark
+                              : quote.changePercent < 0
+                              ? (isDark
                                     ? AppColors.bearishDark
-                                    : AppColors.bearishLight),
+                                    : AppColors.bearishLight)
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -570,13 +600,15 @@ class _BeginnerHeroCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.auto_awesome_rounded, size: 20),
-                SizedBox(width: 8),
-                Text(
-                  context.l10n.wantMarketAnalysis,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w900,
+                const Icon(Icons.auto_awesome_rounded, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    context.l10n.wantMarketAnalysis,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ),
               ],
@@ -679,28 +711,37 @@ class _WatchlistMarketCard extends StatelessWidget {
 
             Text(
               context.l10n.watchlistDescription,
-              style: TextStyle(color: muted, fontSize: 11),
+              style: TextStyle(color: muted, fontSize: 12),
             ),
 
             const SizedBox(height: 14),
 
             if (instruments.isEmpty)
               _EmptyWatchlist(onAdd: onManageWatchlist)
-            else ...[
-              for (var i = 0; i < instruments.length; i++) ...[
-                _WatchlistRow(
-                  instrument: instruments[i],
-                  quote: market.quoteFor(instruments[i]),
-                  onOpen: () {
-                    onOpenInstrument(instruments[i]);
-                  },
-                  onAlert: (quote) {
-                    onCreateAlert(instruments[i], quote);
-                  },
+            else
+              SizedBox(
+                height:
+                    instruments.length.clamp(1, 3) *
+                    68 *
+                    MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.6),
+                child: Scrollbar(
+                  child: ListView.separated(
+                    key: const Key('dashboard-watchlist-list'),
+                    primary: false,
+                    itemCount: instruments.length,
+                    separatorBuilder: (_, _) => const Divider(height: 18),
+                    itemBuilder: (_, index) {
+                      final instrument = instruments[index];
+                      return _WatchlistRow(
+                        instrument: instrument,
+                        quote: market.quoteFor(instrument),
+                        onOpen: () => onOpenInstrument(instrument),
+                        onAlert: (quote) => onCreateAlert(instrument, quote),
+                      );
+                    },
+                  ),
                 ),
-                if (i != instruments.length - 1) const Divider(height: 18),
-              ],
-            ],
+              ),
 
             if (market.quotesUpdatedAt != null) ...[
               const SizedBox(height: 10),
@@ -710,7 +751,7 @@ class _WatchlistMarketCard extends StatelessWidget {
                     'HH:mm:ss',
                   ).format(market.quotesUpdatedAt!.toLocal()),
                 ),
-                style: TextStyle(color: muted, fontSize: 9.5),
+                style: TextStyle(color: muted, fontSize: 12),
               ),
             ],
           ],
@@ -746,7 +787,12 @@ class _WatchlistRow extends StatelessWidget {
 
     final bearish = isDark ? AppColors.bearishDark : AppColors.bearishLight;
 
-    final changeColor = (quote?.changePercent ?? 0) >= 0 ? bullish : bearish;
+    final change = quote?.changePercent ?? 0;
+    final changeColor = change > 0
+        ? bullish
+        : change < 0
+        ? bearish
+        : muted;
 
     return Row(
       children: [
@@ -783,7 +829,7 @@ class _WatchlistRow extends StatelessWidget {
                         else
                           Text(
                             context.l10n.livePriceUnavailable,
-                            style: TextStyle(color: muted, fontSize: 10.5),
+                            style: TextStyle(color: muted, fontSize: 12),
                           ),
                       ],
                     ),
@@ -800,11 +846,11 @@ class _WatchlistRow extends StatelessWidget {
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
-                        '${quote!.changePercent >= 0 ? '+' : ''}'
+                        '${quote!.changePercent > 0 ? '+' : ''}'
                         '${quote!.changePercent.toStringAsFixed(2)}%',
                         style: TextStyle(
                           color: changeColor,
-                          fontSize: 10,
+                          fontSize: 12,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -904,30 +950,41 @@ class _OutcomeSummaryCard extends StatelessWidget {
               style: const TextStyle(fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _RateTile(
-                    label: context.l10n.targetHitRate,
-                    rate: outcomes.tpHitRate,
-                    count: outcomes.tp1Hit + outcomes.tp2Hit,
-                    total: outcomes.scored,
-                    color: isDark
-                        ? AppColors.bullishDark
-                        : AppColors.bullishLight,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _RateTile(
-                    label: context.l10n.stopHitRate,
-                    rate: outcomes.slHitRate,
-                    count: outcomes.slHit,
-                    total: outcomes.scored,
-                    color: Theme.of(context).colorScheme.error,
-                  ),
-                ),
-              ],
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final stack =
+                    constraints.maxWidth < 330 ||
+                    MediaQuery.textScalerOf(context).scale(1) > 1.3;
+                final target = _RateTile(
+                  label: context.l10n.targetHitRate,
+                  rate: outcomes.tpHitRate,
+                  count: outcomes.tp1Hit + outcomes.tp2Hit,
+                  total: outcomes.scored,
+                  color: isDark
+                      ? AppColors.bullishDark
+                      : AppColors.bullishLight,
+                );
+                final stop = _RateTile(
+                  label: context.l10n.stopHitRate,
+                  rate: outcomes.slHitRate,
+                  count: outcomes.slHit,
+                  total: outcomes.scored,
+                  color: Theme.of(context).colorScheme.error,
+                );
+                if (stack) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [target, const SizedBox(height: 10), stop],
+                  );
+                }
+                return Row(
+                  children: [
+                    Expanded(child: target),
+                    const SizedBox(width: 10),
+                    Expanded(child: stop),
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 10),
             Text(
@@ -966,9 +1023,9 @@ class _RateTile extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(color: color, fontSize: 11)),
+        Text(label, style: TextStyle(color: color, fontSize: 12)),
         Text(
-          '${((rate ?? 0) * 100).round()}%',
+          rate == null ? '—' : '${(rate! * 100).round()}%',
           style: TextStyle(
             color: color,
             fontWeight: FontWeight.w900,
@@ -1063,7 +1120,7 @@ class _StatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // // Glyph/teks memakai nada emas yang terbaca; isian tetap emas web.
+    // Glyph/teks memakai nada emas yang terbaca; isian tetap emas web.
     final primaryText = isDark
         ? AppColors.darkPrimaryText
         : AppColors.lightPrimaryText;
@@ -1093,7 +1150,7 @@ class _StatCard extends StatelessWidget {
             Text(
               label,
               maxLines: 2,
-              style: TextStyle(fontSize: 10, color: muted),
+              style: TextStyle(fontSize: 12, color: muted),
             ),
           ],
         ),
@@ -1219,31 +1276,34 @@ class _QuotaBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final ratio = limit == 0 ? 0.0 : (used / limit).clamp(0, 1).toDouble();
 
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(label, style: TextStyle(fontSize: 11.5, color: muted)),
-            Text(
-              '$used / $limit',
-              style: TextStyle(fontSize: 11.5, color: muted),
-            ),
-          ],
-        ),
-
-        const SizedBox(height: 5),
-
-        ClipRRect(
-          borderRadius: BorderRadius.circular(999),
-          child: LinearProgressIndicator(
-            value: ratio,
-            minHeight: 6,
-            backgroundColor: muted.withValues(alpha: 0.15),
-            valueColor: AlwaysStoppedAnimation(primary),
+    return Semantics(
+      label: '$label, $used / $limit',
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(label, style: TextStyle(fontSize: 12, color: muted)),
+              Text(
+                '$used / $limit',
+                style: TextStyle(fontSize: 12, color: muted),
+              ),
+            ],
           ),
-        ),
-      ],
+
+          const SizedBox(height: 5),
+
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: ratio,
+              minHeight: 6,
+              backgroundColor: muted.withValues(alpha: 0.15),
+              valueColor: AlwaysStoppedAnimation(primary),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

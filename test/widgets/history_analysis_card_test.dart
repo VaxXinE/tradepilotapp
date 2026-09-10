@@ -46,16 +46,40 @@ void main() {
     expect(find.textContaining('WIN'), findsNothing);
     expect(find.textContaining('PROFIT'), findsNothing);
   });
+
+  testWidgets('keeps risk and market context readable at 200% text', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(320, 700));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await _pumpCard(
+      tester,
+      _analysis(outcome: AnalysisOutcomeStatusEnum.expired),
+      textScaler: const TextScaler.linear(2),
+    );
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('Risk Medium'), findsOneWidget);
+    expect(find.text('Trending'), findsOneWidget);
+  });
 }
 
-Future<void> _pumpCard(WidgetTester tester, Analysis analysis) {
+Future<void> _pumpCard(
+  WidgetTester tester,
+  Analysis analysis, {
+  TextScaler textScaler = TextScaler.noScaling,
+}) {
   return tester.pumpWidget(
     MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: Scaffold(
-        body: SingleChildScrollView(
-          child: HistoryAnalysisCard(analysis: analysis, onTap: () {}),
+      home: MediaQuery(
+        data: MediaQueryData(textScaler: textScaler),
+        child: Scaffold(
+          body: SingleChildScrollView(
+            child: HistoryAnalysisCard(analysis: analysis, onTap: () {}),
+          ),
         ),
       ),
     ),

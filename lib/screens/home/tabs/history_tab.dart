@@ -150,43 +150,76 @@ class _HistoryTabState extends State<HistoryTab> {
   Future<void> _showPresets() async {
     await showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
       showDragHandle: true,
       builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(title: Text(context.l10n.savedFilters)),
-            if (_presets.isEmpty)
-              ListTile(title: Text(context.l10n.noSavedFilters))
-            else
-              ..._presets.map(
-                (preset) => ListTile(
-                  title: Text(preset.name),
-                  onTap: () {
-                    Navigator.pop(sheetContext);
-                    _applyPreset(preset);
-                  },
-                  trailing: IconButton(
-                    tooltip: context.l10n.delete,
-                    icon: const Icon(Icons.delete_outline_rounded),
-                    onPressed: () async {
-                      try {
-                        await context
-                            .read<AuthProvider>()
-                            .client
-                            .filterPresets
-                            .deleteFilterPreset(id: preset.id);
-                        if (!mounted || !sheetContext.mounted) return;
-                        Navigator.pop(sheetContext);
-                        await _loadPresets();
-                      } catch (_) {
-                        if (mounted) _showPresetError();
-                      }
-                    },
-                  ),
-                ),
+        child: SizedBox(
+          height: MediaQuery.sizeOf(sheetContext).height * 0.62,
+          child: Column(
+            children: [
+              ListTile(title: Text(context.l10n.savedFilters)),
+              const Divider(height: 1),
+              Expanded(
+                child: _presets.isEmpty
+                    ? Center(child: Text(context.l10n.noSavedFilters))
+                    : ListView.builder(
+                        itemCount: _presets.length,
+                        itemBuilder: (_, index) {
+                          final preset = _presets[index];
+                          return ListTile(
+                            title: Text(preset.name),
+                            onTap: () {
+                              Navigator.pop(sheetContext);
+                              _applyPreset(preset);
+                            },
+                            trailing: IconButton(
+                              tooltip: context.l10n.delete,
+                              icon: const Icon(Icons.delete_outline_rounded),
+                              onPressed: () async {
+                                final confirmed = await showDialog<bool>(
+                                  context: sheetContext,
+                                  builder: (dialogContext) => AlertDialog(
+                                    title: Text(context.l10n.delete),
+                                    content: Text(preset.name),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(dialogContext, false),
+                                        child: Text(context.l10n.cancel),
+                                      ),
+                                      FilledButton(
+                                        onPressed: () =>
+                                            Navigator.pop(dialogContext, true),
+                                        child: Text(context.l10n.delete),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                                if (confirmed != true ||
+                                    !mounted ||
+                                    !sheetContext.mounted) {
+                                  return;
+                                }
+                                try {
+                                  await context
+                                      .read<AuthProvider>()
+                                      .client
+                                      .filterPresets
+                                      .deleteFilterPreset(id: preset.id);
+                                  if (!mounted || !sheetContext.mounted) return;
+                                  Navigator.pop(sheetContext);
+                                  await _loadPresets();
+                                } catch (_) {
+                                  if (mounted) _showPresetError();
+                                }
+                              },
+                            ),
+                          );
+                        },
+                      ),
               ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -406,8 +439,8 @@ class _HistoryTabState extends State<HistoryTab> {
                         top: -3,
                         child: Container(
                           constraints: const BoxConstraints(
-                            minWidth: 18,
-                            minHeight: 18,
+                            minWidth: 22,
+                            minHeight: 22,
                           ),
                           padding: const EdgeInsets.symmetric(horizontal: 4),
                           decoration: BoxDecoration(
@@ -419,7 +452,7 @@ class _HistoryTabState extends State<HistoryTab> {
                             '${filters.activeCategoryCount}',
                             style: TextStyle(
                               color: Theme.of(context).colorScheme.onPrimary,
-                              fontSize: 9,
+                              fontSize: 11,
                               fontWeight: FontWeight.w900,
                             ),
                           ),
@@ -462,6 +495,10 @@ class _HistoryTabState extends State<HistoryTab> {
               onReset: _resetFilters,
             ),
 
+          if (provider.isLoadingVisibleHistory &&
+              provider.visibleHistory.isNotEmpty)
+            const LinearProgressIndicator(minHeight: 2),
+
           if (provider.visibleHistoryError != null)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
@@ -497,6 +534,7 @@ class _HistoryTabState extends State<HistoryTab> {
     if (items.isEmpty && provider.isLoadingVisibleHistory) {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         children: [
           SizedBox(height: MediaQuery.sizeOf(context).height * 0.28),
           const Center(child: CircularProgressIndicator(strokeWidth: 2.4)),
@@ -509,6 +547,7 @@ class _HistoryTabState extends State<HistoryTab> {
 
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         padding: const EdgeInsets.all(24),
         children: [
           SizedBox(height: MediaQuery.sizeOf(context).height * 0.18),
@@ -545,6 +584,16 @@ class _HistoryTabState extends State<HistoryTab> {
                 child: Text(context.l10n.resetFilter),
               ),
             ),
+          ] else if (widget.onNewAnalysis != null) ...[
+            const SizedBox(height: 14),
+            Center(
+              child: FilledButton.icon(
+                key: const Key('history-empty-new-analysis'),
+                onPressed: widget.onNewAnalysis,
+                icon: const Icon(Icons.add_rounded),
+                label: Text(context.l10n.analyzeTitle),
+              ),
+            ),
           ],
         ],
       );
@@ -553,6 +602,7 @@ class _HistoryTabState extends State<HistoryTab> {
     return ListView.separated(
       controller: _scrollController,
       physics: const AlwaysScrollableScrollPhysics(),
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: const EdgeInsets.all(16),
       itemCount:
           items.length + 2 + (provider.isLoadingMoreVisibleHistory ? 1 : 0),
@@ -740,14 +790,15 @@ class _ActiveFilters extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(
-                context.l10n.resultCount(resultCount),
-                style: const TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w700,
+              Expanded(
+                child: Text(
+                  context.l10n.resultCount(resultCount),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
-              const Spacer(),
               TextButton(onPressed: onReset, child: Text(context.l10n.reset)),
             ],
           ),
@@ -1060,7 +1111,7 @@ class _HistoryFilterSheetState extends State<_HistoryFilterSheet> {
                         group.key,
                         style: TextStyle(
                           color: muted,
-                          fontSize: 10.5,
+                          fontSize: 12,
                           fontWeight: FontWeight.w700,
                         ),
                       ),

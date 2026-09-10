@@ -39,19 +39,56 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets('stacks summary metrics at 200% text without overflow', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(320, 700));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    const statistics = HistoryStatistics(
+      total: 12,
+      successCount: 5,
+      failedCount: 3,
+      pendingCount: 4,
+      successRate: 62.5,
+      averageConfidence: 71,
+    );
+    await _pumpSummary(
+      tester,
+      statistics,
+      isPartial: false,
+      textScaler: const TextScaler.linear(2),
+    );
+
+    expect(tester.takeException(), isNull);
+    expect(
+      tester.getTopLeft(find.text('Evaluated')).dy,
+      greaterThan(tester.getBottomLeft(find.text('Visible')).dy),
+    );
+  });
 }
 
 Future<void> _pumpSummary(
   WidgetTester tester,
   HistoryStatistics statistics, {
   required bool isPartial,
+  TextScaler textScaler = TextScaler.noScaling,
 }) {
   return tester.pumpWidget(
     MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: Scaffold(
-        body: HistorySummaryCard(statistics: statistics, isPartial: isPartial),
+      home: MediaQuery(
+        data: MediaQueryData(textScaler: textScaler),
+        child: Scaffold(
+          body: SingleChildScrollView(
+            child: HistorySummaryCard(
+              statistics: statistics,
+              isPartial: isPartial,
+            ),
+          ),
+        ),
       ),
     ),
   );

@@ -827,8 +827,8 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
 
         if (supportsRiskMap(analysis.instrument)) ...[
           const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerLeft,
+          SizedBox(
+            width: double.infinity,
             child: OutlinedButton.icon(
               onPressed: _reanalyzing ? null : () => _openRiskMap(analysis),
               icon: const Icon(Icons.monitor_heart_outlined),
@@ -1067,34 +1067,40 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
 
         const SizedBox(height: 10),
 
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: _submittingFeedback
-                    ? null
-                    : () {
-                        _openFeedback(FeedbackBodyFeedbackTypeEnum.useful);
-                      },
-                icon: const Icon(Icons.thumb_up_alt_outlined, size: 18),
-                label: Text(context.l10n.helpful),
-              ),
-            ),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final stackActions =
+                constraints.maxWidth < 360 ||
+                MediaQuery.textScalerOf(context).scale(1) > 1.3;
+            final helpful = OutlinedButton.icon(
+              onPressed: _submittingFeedback
+                  ? null
+                  : () => _openFeedback(FeedbackBodyFeedbackTypeEnum.useful),
+              icon: const Icon(Icons.thumb_up_alt_outlined, size: 18),
+              label: Text(context.l10n.helpful),
+            );
+            final notHelpful = OutlinedButton.icon(
+              onPressed: _submittingFeedback
+                  ? null
+                  : () => _openFeedback(FeedbackBodyFeedbackTypeEnum.notUseful),
+              icon: const Icon(Icons.thumb_down_alt_outlined, size: 18),
+              label: Text(context.l10n.notHelpful),
+            );
 
-            const SizedBox(width: 10),
-
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: _submittingFeedback
-                    ? null
-                    : () {
-                        _openFeedback(FeedbackBodyFeedbackTypeEnum.notUseful);
-                      },
-                icon: const Icon(Icons.thumb_down_alt_outlined, size: 18),
-                label: Text(context.l10n.notHelpful),
-              ),
-            ),
-          ],
+            if (stackActions) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [helpful, const SizedBox(height: 8), notHelpful],
+              );
+            }
+            return Row(
+              children: [
+                Expanded(child: helpful),
+                const SizedBox(width: 10),
+                Expanded(child: notHelpful),
+              ],
+            );
+          },
         ),
 
         const SizedBox(height: 24),
@@ -1104,28 +1110,40 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
     if (widget.embedded) return content;
 
     final body = RefreshIndicator(onRefresh: _refresh, child: content);
+    final compactAppBarAction =
+        MediaQuery.sizeOf(context).width < 360 ||
+        MediaQuery.textScalerOf(context).scale(1) > 1.3;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(analysis.instrument),
         actions: [
           if (widget.onNewAnalysis case final onNewAnalysis?)
-            TextButton.icon(
-              key: const Key('detail-new-analysis-button'),
-              onPressed: onNewAnalysis,
-              icon: const Icon(Icons.add_rounded, size: 17),
-              label: Text(context.l10n.analyzeTitle),
+            if (compactAppBarAction)
+              IconButton(
+                key: const Key('detail-new-analysis-button'),
+                tooltip: context.l10n.analyzeTitle,
+                onPressed: onNewAnalysis,
+                icon: const Icon(Icons.add_rounded),
+              )
+            else
+              TextButton.icon(
+                key: const Key('detail-new-analysis-button'),
+                onPressed: onNewAnalysis,
+                icon: const Icon(Icons.add_rounded, size: 17),
+                label: Text(context.l10n.analyzeTitle),
+              ),
+          if (isExpired)
+            IconButton(
+              tooltip: context.l10n.reanalyze,
+              onPressed: _reanalyzing ? null : _reanalyze,
+              icon: _reanalyzing
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.refresh_rounded),
             ),
-          IconButton(
-            tooltip: context.l10n.reanalyze,
-            onPressed: _reanalyzing ? null : _reanalyze,
-            icon: _reanalyzing
-                ? const SizedBox.square(
-                    dimension: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.refresh_rounded),
-          ),
         ],
       ),
       body: body,
@@ -1140,9 +1158,9 @@ class _AnalysisGuideLink extends StatelessWidget {
   final String? label;
 
   @override
-  Widget build(BuildContext context) => Align(
-    alignment: Alignment.centerLeft,
-    child: TextButton.icon(
+  Widget build(BuildContext context) => SizedBox(
+    width: double.infinity,
+    child: OutlinedButton.icon(
       onPressed: onPressed,
       icon: const Icon(Icons.menu_book_outlined, size: 17),
       label: Text(label ?? context.l10n.openFullExplanation),
@@ -1233,7 +1251,9 @@ class _AnalysisAlertsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final enabled = status?.enabled ?? false;
+    final activeColor = isDark ? AppColors.bullishDark : AppColors.bullishLight;
 
     return Card(
       key: const ValueKey('analysis-level-alert-card'),
@@ -1250,7 +1270,7 @@ class _AnalysisAlertsCard extends StatelessWidget {
                       ? Icons.notifications_active_outlined
                       : Icons.notifications_off_outlined,
                   size: 20,
-                  color: enabled ? colors.primary : colors.onSurfaceVariant,
+                  color: enabled ? activeColor : colors.onSurfaceVariant,
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -1264,7 +1284,11 @@ class _AnalysisAlertsCard extends StatelessWidget {
                       SizedBox(height: 3),
                       Text(
                         context.l10n.priceLevelAlertsDescription,
-                        style: TextStyle(fontSize: 11, height: 1.35),
+                        style: TextStyle(
+                          color: colors.onSurfaceVariant,
+                          fontSize: 11,
+                          height: 1.35,
+                        ),
                       ),
                     ],
                   ),
@@ -1281,6 +1305,7 @@ class _AnalysisAlertsCard extends StatelessWidget {
                   Switch.adaptive(
                     key: const ValueKey('analysis-level-alert-switch'),
                     value: enabled,
+                    activeTrackColor: activeColor,
                     onChanged: error == null ? onToggle : null,
                   ),
               ],
@@ -1302,46 +1327,69 @@ class _AnalysisAlertsCard extends StatelessWidget {
                 ],
               )
             else ...[
-              Text(
-                enabled
-                    ? context.l10n.priceLevelAlertsOn(status?.armedCount ?? 0)
-                    : context.l10n.priceLevelAlertsOff,
-                style: TextStyle(
-                  color: enabled ? colors.primary : colors.onSurfaceVariant,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              if (status?.levels.isNotEmpty == true) ...[
-                const SizedBox(height: 10),
-                ...status!.levels.map(
-                  (row) => Padding(
-                    padding: const EdgeInsets.only(top: 6),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            '${_alertLevelLabel(row.level)} · ${row.side.name.toUpperCase()}',
-                            style: const TextStyle(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          '@ ${row.price}',
-                          style: const TextStyle(
-                            fontSize: 11.5,
-                            fontFeatures: [FontFeature.tabularFigures()],
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        _AlertStatusBadge(row: row),
-                      ],
+              if (status?.levels.isNotEmpty == true)
+                Theme(
+                  data: Theme.of(
+                    context,
+                  ).copyWith(dividerColor: Colors.transparent),
+                  child: ExpansionTile(
+                    key: const ValueKey('analysis-alert-levels'),
+                    initiallyExpanded: false,
+                    tilePadding: EdgeInsets.zero,
+                    childrenPadding: EdgeInsets.zero,
+                    title: Text(
+                      enabled
+                          ? context.l10n.priceLevelAlertsOn(
+                              status?.armedCount ?? 0,
+                            )
+                          : context.l10n.priceLevelAlertsOff,
+                      style: TextStyle(
+                        color: enabled ? activeColor : colors.onSurfaceVariant,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
+                    children: [
+                      for (final row in status!.levels)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  '${_alertLevelLabel(row.level)} · ${row.side.name.toUpperCase()}',
+                                  style: const TextStyle(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                '@ ${row.price}',
+                                style: const TextStyle(
+                                  fontSize: 11.5,
+                                  fontFeatures: [FontFeature.tabularFigures()],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              _AlertStatusBadge(row: row),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                )
+              else
+                Text(
+                  enabled
+                      ? context.l10n.priceLevelAlertsOn(status?.armedCount ?? 0)
+                      : context.l10n.priceLevelAlertsOff,
+                  style: TextStyle(
+                    color: enabled ? activeColor : colors.onSurfaceVariant,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
-              ],
             ],
           ],
         ),
@@ -1364,11 +1412,21 @@ class _AlertStatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final (label, color) = row.triggeredAt != null
-        ? ('Terpicu', AppColors.bullishLight)
+        ? (
+            context.l10n.triggered,
+            isDark ? AppColors.bullishDark : AppColors.bullishLight,
+          )
         : row.cancelledAt != null
-        ? ('Dibatalkan', Theme.of(context).colorScheme.onSurfaceVariant)
-        : ('Dipantau', Theme.of(context).colorScheme.primary);
+        ? (
+            context.l10n.cancelled,
+            Theme.of(context).colorScheme.onSurfaceVariant,
+          )
+        : (
+            context.l10n.monitored,
+            isDark ? AppColors.bullishDark : AppColors.bullishLight,
+          );
 
     return Text(
       label,
@@ -1411,7 +1469,7 @@ class _TimeframeCard extends StatelessWidget {
               context.l10n.changeTimeframeDescription,
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
-                fontSize: 11,
+                fontSize: 12,
               ),
             ),
             const SizedBox(height: 12),
@@ -1459,13 +1517,17 @@ class _HeaderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final condition = _marketConditionMeta(context, analysis.marketCondition);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -1486,8 +1548,6 @@ class _HeaderCard extends StatelessWidget {
                   ),
                 ),
 
-                const Spacer(),
-
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 9,
@@ -1502,13 +1562,10 @@ class _HeaderCard extends StatelessWidget {
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onPrimaryContainer,
                       fontWeight: FontWeight.w800,
-                      fontSize: 11,
+                      fontSize: 12,
                     ),
                   ),
                 ),
-
-                const SizedBox(width: 8),
-
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 9,
@@ -1523,20 +1580,38 @@ class _HeaderCard extends StatelessWidget {
                     style: TextStyle(
                       color: muted,
                       fontWeight: FontWeight.w700,
-                      fontSize: 11,
+                      fontSize: 12,
                     ),
                   ),
                 ),
               ],
             ),
 
-            if (analysis.marketCondition?.trim().isNotEmpty == true) ...[
+            if (condition != null) ...[
               const SizedBox(height: 12),
-              Text(
-                analysis.marketCondition!,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: condition.$2.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(condition.$3, size: 16, color: condition.$2),
+                    const SizedBox(width: 6),
+                    Text(
+                      condition.$1,
+                      style: TextStyle(
+                        color: condition.$2,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -1600,7 +1675,7 @@ class _HeaderCard extends StatelessWidget {
                       color: isExpired
                           ? Theme.of(context).colorScheme.error
                           : muted,
-                      fontSize: 11.5,
+                      fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -1616,13 +1691,43 @@ class _HeaderCard extends StatelessWidget {
                   'd MMM yyyy, HH:mm',
                 ).format(analysis.createdAt.toLocal()),
               ),
-              style: TextStyle(color: muted, fontSize: 10.5),
+              style: TextStyle(color: muted, fontSize: 12),
             ),
           ],
         ),
       ),
     );
   }
+}
+
+(String, Color, IconData)? _marketConditionMeta(
+  BuildContext context,
+  String? value,
+) {
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  return switch (value?.trim().toLowerCase()) {
+    'trending_up' => (
+      context.l10n.trendingUp,
+      isDark ? AppColors.bullishDark : AppColors.bullishLight,
+      Icons.trending_up_rounded,
+    ),
+    'trending_down' => (
+      context.l10n.trendingDown,
+      isDark ? AppColors.bearishDark : AppColors.bearishLight,
+      Icons.trending_down_rounded,
+    ),
+    'ranging' => (
+      context.l10n.rangingMarket,
+      isDark ? AppColors.neutralDark : AppColors.neutralLight,
+      Icons.swap_horiz_rounded,
+    ),
+    'volatile' => (
+      context.l10n.volatileMarket,
+      isDark ? AppColors.neutralDark : AppColors.neutralLight,
+      Icons.bolt_rounded,
+    ),
+    _ => null,
+  };
 }
 
 // =============================================================================
@@ -1750,17 +1855,11 @@ class _RiskCard extends StatelessWidget {
       label = context.l10n.riskLowLabel;
       guidance = context.l10n.riskLowGuidance;
     } else {
-      // // Glyph/teks memakai nada emas yang terbaca; isian tetap emas web.
+      // Glyph/teks memakai nada emas yang terbaca; isian tetap emas web.
       color = isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText;
-      label = analysis.riskLevel?.trim().isNotEmpty == true
-          ? analysis.riskLevel!
-          : context.l10n.riskModerateLabel;
+      label = context.l10n.riskModerateLabel;
       guidance = context.l10n.riskModerateGuidance;
     }
-
-    final details = [
-      if (analysis.risk?.trim().isNotEmpty == true) analysis.risk!.trim(),
-    ];
 
     return Card(
       child: Padding(
@@ -1789,18 +1888,6 @@ class _RiskCard extends StatelessWidget {
               guidance,
               style: const TextStyle(fontSize: 12.5, height: 1.45),
             ),
-
-            for (final item in details) ...[
-              const SizedBox(height: 8),
-              Text(
-                item,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontSize: 11.5,
-                  height: 1.4,
-                ),
-              ),
-            ],
           ],
         ),
       ),

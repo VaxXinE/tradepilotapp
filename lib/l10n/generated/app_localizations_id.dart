@@ -2132,6 +2132,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get cancelled => 'Dibatalkan';
 
   @override
+  String get monitored => 'Dipantau';
+
+  @override
   String get active => 'Aktif';
 
   @override

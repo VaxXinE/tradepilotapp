@@ -89,6 +89,46 @@ void main() {
     expect(find.text('What does it mean?'), findsNothing);
   });
 
+  testWidgets('market condition uses a localized semantic chip', (
+    tester,
+  ) async {
+    await _pumpDetail(
+      tester,
+      _analysis(AnalysisModeEnum.beginner, marketCondition: 'trending_up'),
+    );
+
+    expect(find.text('Uptrend'), findsOneWidget);
+    expect(find.text('trending_up'), findsNothing);
+    await tester.scrollUntilVisible(
+      find.text('Moderate Risk'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Moderate Risk'), findsOneWidget);
+    expect(find.text('medium'), findsNothing);
+    expect(find.byTooltip('Reanalyze'), findsNothing);
+  });
+
+  testWidgets('analysis summary remains usable with large text', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 700);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await _pumpDetail(
+      tester,
+      _analysis(AnalysisModeEnum.pro, marketCondition: 'trending_up'),
+      onNewAnalysis: () {},
+      textScaler: const TextScaler.linear(2),
+    );
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('XAU/USD'), findsWidgets);
+    expect(find.text('Uptrend'), findsOneWidget);
+  });
+
   testWidgets('the price chart is available without expanding anything', (
     tester,
   ) async {
@@ -241,6 +281,44 @@ void main() {
     expect(find.text('Confidence reason details'), findsOneWidget);
   });
 
+  testWidgets('active alert levels are collapsed until requested', (
+    tester,
+  ) async {
+    final alerts = AlertStatus(
+      (builder) => builder
+        ..enabled = true
+        ..armedCount = 1
+        ..levels.add(
+          AlertLevelRow(
+            (row) => row
+              ..level = AlertLevelRowLevelEnum.entry
+              ..side = AlertLevelRowSideEnum.buy
+              ..price = '4410'
+              ..direction = AlertLevelRowDirectionEnum.above,
+          ),
+        ),
+    );
+    await _pumpDetail(
+      tester,
+      _analysis(AnalysisModeEnum.pro, tradePlan: _tradePlan()),
+      alertStatus: alerts,
+    );
+
+    final levels = find.byKey(const ValueKey('analysis-alert-levels'));
+    await tester.scrollUntilVisible(
+      levels,
+      500,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('@ 4410'), findsNothing);
+
+    await tester.tap(levels);
+    await tester.pumpAndSettle();
+
+    expect(find.text('@ 4410'), findsOneWidget);
+    expect(find.text('Monitored'), findsOneWidget);
+  });
+
   testWidgets('analysis detail shows the journal linked by the server', (
     tester,
   ) async {
@@ -313,11 +391,17 @@ Future<_FakeAnalysisProvider> _pumpDetail(
   Map<String, Object?>? journal,
   ValueChanged<Analysis>? onAnalysisCreated,
   VoidCallback? onNewAnalysis,
+  AlertStatus? alertStatus,
+  TextScaler? textScaler,
 }) async {
   final auth = AuthProvider();
   await tester.runAsync(() => Future<void>.delayed(Duration.zero));
   auth.client.dio.httpClientAdapter = _JournalAdapter(journal);
-  final analysisProvider = _FakeAnalysisProvider(auth, analysis);
+  final analysisProvider = _FakeAnalysisProvider(
+    auth,
+    analysis,
+    alertStatus: alertStatus,
+  );
   final marketProvider = _FakeMarketProvider(auth);
   addTearDown(analysisProvider.dispose);
   addTearDown(marketProvider.dispose);
@@ -330,12 +414,17 @@ Future<_FakeAnalysisProvider> _pumpDetail(
         ChangeNotifierProvider<MarketProvider>.value(value: marketProvider),
       ],
       child: localizedTestApp(
-        home: AnalysisDetailScreen(
-          key: ValueKey(analysis.id),
-          analysisId: analysis.id,
-          preloaded: analysis,
-          onAnalysisCreated: onAnalysisCreated,
-          onNewAnalysis: onNewAnalysis,
+        home: Builder(
+          builder: (context) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(textScaler: textScaler),
+            child: AnalysisDetailScreen(
+              key: ValueKey(analysis.id),
+              analysisId: analysis.id,
+              preloaded: analysis,
+              onAnalysisCreated: onAnalysisCreated,
+              onNewAnalysis: onNewAnalysis,
+            ),
+          ),
         ),
       ),
     ),
@@ -385,6 +474,8 @@ Analysis _analysis(
   String? fundamentalDrivers,
   String? marketContext,
   String? whyReason,
+  String? marketCondition,
+  TradePlan? tradePlan,
 }) => $Analysis(
   (builder) => builder
     ..id = id ?? (mode == AnalysisModeEnum.pro ? 2 : 1)
@@ -403,19 +494,42 @@ Analysis _analysis(
     ..keyDriversFundamental = fundamentalDrivers
     ..marketContext = marketContext
     ..whyReason = whyReason
+    ..marketCondition = marketCondition
+    ..tradePlan = tradePlan?.toBuilder()
     ..validUntil = DateTime.utc(2030)
     ..createdAt = DateTime.utc(2026),
 );
 
+TradePlan _tradePlan() => TradePlan(
+  (plan) => plan
+    ..preferredSide = TradePlanPreferredSideEnum.buy
+    ..buy.replace(_tradeSide('4400'))
+    ..sell.replace(_tradeSide('4420')),
+);
+
+TradeSide _tradeSide(String entry) => TradeSide(
+  (side) => side
+    ..entryZone = entry
+    ..stopLoss = '4380'
+    ..takeProfit1 = '4440'
+    ..takeProfit2 = '4460'
+    ..riskRewardRatio = '1:2'
+    ..rationale = 'Test',
+);
+
 class _FakeAnalysisProvider extends AnalysisProvider {
-  _FakeAnalysisProvider(super.auth, this.analysis);
+  _FakeAnalysisProvider(super.auth, this.analysis, {this.alertStatus});
 
   final Analysis analysis;
+  final AlertStatus? alertStatus;
   final List<CreateAnalysisBodyTimeframeEnum> requestedTimeframes = [];
 
   @override
   Future<Analysis?> getAnalysis(int id, {bool silent = false}) async =>
       analysis;
+
+  @override
+  Future<AlertStatus?> getAnalysisAlerts(int id) async => alertStatus;
 
   @override
   Future<Analysis?> createAnalysis({

@@ -1100,6 +1100,7 @@
   "noPriceAlerts": "No price alerts yet. Create one to be notified when a price reaches a specific level.",
   "triggered": "Triggered",
   "cancelled": "Cancelled",
+  "monitored": "Monitored",
   "active": "Active",
   "deleteAlert": "Delete alert",
   "actual": "Actual",

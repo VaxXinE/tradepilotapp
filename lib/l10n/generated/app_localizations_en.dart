@@ -2138,6 +2138,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cancelled => 'Cancelled';
 
   @override
+  String get monitored => 'Monitored';
+
+  @override
   String get active => 'Active';
 
   @override

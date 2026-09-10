@@ -1099,6 +1099,7 @@
   "noPriceAlerts": "Belum ada price alert. Buat alert untuk menerima pemberitahuan saat harga mencapai level tertentu.",
   "triggered": "Terpicu",
   "cancelled": "Dibatalkan",
+  "monitored": "Dipantau",
   "active": "Aktif",
   "deleteAlert": "Hapus alert",
   "actual": "Aktual",

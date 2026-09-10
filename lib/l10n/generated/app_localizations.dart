@@ -3878,6 +3878,12 @@ abstract class AppLocalizations {
   /// **'Cancelled'**
   String get cancelled;
 
+  /// No description provided for @monitored.
+  ///
+  /// In en, this message translates to:
+  /// **'Monitored'**
+  String get monitored;
+
   /// No description provided for @active.
   ///
   /// In en, this message translates to:
