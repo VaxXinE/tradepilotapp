@@ -170,6 +170,9 @@ class ProfileTab extends StatelessWidget {
         ? AppColors.darkMutedForeground
         : AppColors.lightMutedForeground;
     final primary = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
+    final primaryText = isDark
+        ? AppColors.darkPrimaryText
+        : AppColors.lightPrimaryText;
     final onPrimary = isDark
         ? AppColors.darkPrimaryForeground
         : AppColors.lightPrimaryForeground;
@@ -203,6 +206,7 @@ class ProfileTab extends StatelessWidget {
                     role: user.role,
                     avatarUrl: user.avatarUrl,
                     primary: primary,
+                    primaryText: primaryText,
                     onPrimary: onPrimary,
                     muted: muted,
                   ),
@@ -628,6 +632,7 @@ class _ProfileHeader extends StatelessWidget {
     required this.role,
     required this.avatarUrl,
     required this.primary,
+    required this.primaryText,
     required this.onPrimary,
     required this.muted,
   });
@@ -637,6 +642,9 @@ class _ProfileHeader extends StatelessWidget {
   final UserRoleEnum role;
   final String? avatarUrl;
   final Color primary;
+
+  /// // Glyph/teks memakai nada emas yang terbaca; isian tetap emas web.
+  final Color primaryText;
   final Color onPrimary;
   final Color muted;
 
@@ -704,7 +712,7 @@ class _ProfileHeader extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.verified_user_outlined, color: primary, size: 20),
+            Icon(Icons.verified_user_outlined, color: primaryText, size: 20),
           ],
         ),
       ),

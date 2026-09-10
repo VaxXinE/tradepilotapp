@@ -106,6 +106,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get waitScenario => 'Scenario C — Wait / No Position';
 
   @override
+  String get scenariosTitle => 'Scenarios';
+
+  @override
   String get waitScenarioBody =>
       'If confirmation is weak or an invalidation condition is approaching, waiting for a cleaner setup is the most conservative option.';
 
@@ -114,6 +117,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fundamentalDrivers => 'Fundamental drivers';
+
+  @override
+  String get proAnalysisDetailsTitle => 'Why this analysis?';
+
+  @override
+  String get proAnalysisDetailsDescription =>
+      'Open to see the factors behind the AI conclusion.';
 
   @override
   String get analysisHelpfulQuestion => 'Was this analysis helpful?';
@@ -252,15 +262,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get opportunity => 'Opportunity';
 
   @override
-  String get executionInsight => 'View Execution Insight';
+  String get executionInsight => 'How traders may respond';
 
   @override
   String get executionInsightDescription =>
-      'How to approach the scenario without treating it as a trade instruction.';
+      'How traders may approach each scenario without specific Entry, Stop Loss, or Take Profit levels.';
 
   @override
-  String get executionInsightBody =>
-      'Wait for price-action confirmation, define maximum risk before entry, and cancel the plan when an invalidation condition occurs. Do not chase price outside the planned area.';
+  String get executionScenarioALabel => 'If Scenario A continues';
+
+  @override
+  String get executionScenarioABullish =>
+      'Traders typically watch the nearest support area as a zone of buying interest, with a conceptual exit plan if price breaks below that area.';
+
+  @override
+  String get executionScenarioABearish =>
+      'Traders typically watch the nearest resistance area as a zone of selling interest, with a conceptual exit plan if price breaks above that area.';
+
+  @override
+  String get executionScenarioANeutral =>
+      'With a neutral bias, many traders prefer to wait until there is a clear break out of the current range.';
+
+  @override
+  String get executionScenarioBLabel => 'If Scenario B plays out';
+
+  @override
+  String get executionScenarioBBody =>
+      'If the main assumption is wrong and the alternative scenario unfolds, traders typically re-evaluate the thesis from scratch — not flip the position immediately.';
+
+  @override
+  String get executionScenarioCLabel => 'If waiting is the better choice';
+
+  @override
+  String get executionScenarioCBody =>
+      'Wait until the invalidation conditions above are no longer at risk, or until a stronger signal confluence emerges.';
 
   @override
   String get riskHighLabel => 'High Risk';

@@ -193,6 +193,8 @@ class AnalysisProvider extends ChangeNotifier {
 
   bool _quotaRequestInFlight = false;
 
+  bool _quotaRefreshPending = false;
+
   int _historyRequestId = 0;
 
   int _summaryRequestId = 0;
@@ -278,6 +280,8 @@ class AnalysisProvider extends ChangeNotifier {
 
     _quotaRequestInFlight = false;
 
+    _quotaRefreshPending = false;
+
     _filteredHistoryRequestInFlight = false;
 
     _resetCachedData();
@@ -349,12 +353,13 @@ class AnalysisProvider extends ChangeNotifier {
   // QUOTA
   // ===========================================================================
 
-  Future<void> loadQuota() async {
+  Future<void> loadQuota({bool ensureFresh = false}) async {
     if (_authProvider.status != AuthStatus.authenticated) {
       return;
     }
 
     if (_quotaRequestInFlight) {
+      _quotaRefreshPending |= ensureFresh;
       return;
     }
 
@@ -381,8 +386,15 @@ class AnalysisProvider extends ChangeNotifier {
       if (requestId == _quotaRequestId) {
         _quotaRequestInFlight = false;
 
+        final refreshAgain = _quotaRefreshPending && _isSessionCurrent(epoch);
+        _quotaRefreshPending = false;
+
         if (_isSessionCurrent(epoch)) {
           notifyListeners();
+        }
+
+        if (refreshAgain) {
+          unawaited(loadQuota());
         }
       }
     }
@@ -549,7 +561,7 @@ class AnalysisProvider extends ChangeNotifier {
 
       unawaited(loadSummary(silent: true));
 
-      unawaited(loadQuota());
+      unawaited(loadQuota(ensureFresh: true));
 
       return created;
     } catch (error) {

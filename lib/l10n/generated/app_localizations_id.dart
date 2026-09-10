@@ -106,6 +106,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get waitScenario => 'Skenario C — Tunggu / Tanpa Posisi';
 
   @override
+  String get scenariosTitle => 'Skenario';
+
+  @override
   String get waitScenarioBody =>
       'Jika konfirmasi belum kuat atau kondisi pembatal mendekat, menunggu setup yang lebih bersih adalah pilihan paling konservatif.';
 
@@ -114,6 +117,13 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get fundamentalDrivers => 'Penggerak Fundamental';
+
+  @override
+  String get proAnalysisDetailsTitle => 'Kenapa analisis ini?';
+
+  @override
+  String get proAnalysisDetailsDescription =>
+      'Buka untuk melihat faktor di balik kesimpulan AI.';
 
   @override
   String get analysisHelpfulQuestion => 'Apakah analisis ini membantu?';
@@ -252,15 +262,40 @@ class AppLocalizationsId extends AppLocalizations {
   String get opportunity => 'Peluang';
 
   @override
-  String get executionInsight => 'Lihat Wawasan Eksekusi';
+  String get executionInsight => 'Bagaimana trader biasanya merespons';
 
   @override
   String get executionInsightDescription =>
-      'Cara menyikapi skenario tanpa menganggapnya sebagai perintah transaksi.';
+      'Gambaran cara trader biasanya menyikapi tiap skenario, tanpa level Entry, Stop Loss, atau Take Profit spesifik.';
 
   @override
-  String get executionInsightBody =>
-      'Tunggu konfirmasi price action, tentukan risiko maksimum sebelum entry, dan batalkan rencana ketika kondisi invalidasi terpenuhi. Jangan mengejar harga di luar area rencana.';
+  String get executionScenarioALabel => 'Jika Skenario A berlanjut';
+
+  @override
+  String get executionScenarioABullish =>
+      'Trader biasanya mencari peluang Buy di support terdekat, lalu keluar jika harga break ke bawah area tersebut.';
+
+  @override
+  String get executionScenarioABearish =>
+      'Trader biasanya mencari peluang Sell di resistance terdekat, lalu keluar jika harga break ke atas area tersebut.';
+
+  @override
+  String get executionScenarioANeutral =>
+      'Karena bias netral, banyak trader memilih menunggu sampai ada break yang jelas dari range saat ini.';
+
+  @override
+  String get executionScenarioBLabel => 'Jika Skenario B yang terjadi';
+
+  @override
+  String get executionScenarioBBody =>
+      'Jika asumsi utama salah dan skenario alternatif yang berjalan, biasanya trader mengevaluasi ulang tesis dari awal — bukan langsung membalik posisi.';
+
+  @override
+  String get executionScenarioCLabel => 'Jika lebih baik menunggu';
+
+  @override
+  String get executionScenarioCBody =>
+      'Tunggu sampai kondisi pembatal di atas tidak lagi berisiko, atau sampai muncul konfluensi sinyal yang lebih kuat.';
 
   @override
   String get riskHighLabel => 'Risiko Tinggi';

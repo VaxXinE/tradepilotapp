@@ -20,9 +20,13 @@ import '../../../widgets/history/history_summary_card.dart';
 import '../../analysis/analysis_detail_screen.dart';
 
 class HistoryTab extends StatefulWidget {
-  const HistoryTab({super.key, this.onReanalyze});
+  const HistoryTab({super.key, this.onReanalyze, this.onNewAnalysis});
 
   final void Function(String instrument, String timeframe)? onReanalyze;
+
+  /// Membuka form analisis baru tanpa mengunci instrumen apa pun, sehingga
+  /// trader bebas memilih simbol lain (BRENT, NIKKEI, HSI, ...).
+  final VoidCallback? onNewAnalysis;
 
   @override
   State<HistoryTab> createState() => _HistoryTabState();
@@ -594,6 +598,12 @@ class _HistoryTabState extends State<HistoryTab> {
                 builder: (_) => AnalysisDetailScreen(
                   analysisId: analysis.id,
                   preloaded: analysis,
+                  onNewAnalysis: widget.onNewAnalysis == null
+                      ? null
+                      : () {
+                          Navigator.of(context).pop();
+                          widget.onNewAnalysis!();
+                        },
                 ),
               ),
             );

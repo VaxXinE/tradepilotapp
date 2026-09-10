@@ -36,10 +36,9 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   static const _navIds = {0, 1, 2, 3};
 
   int _index = 0;
+  int _analyzeTabRevision = 0;
 
   Timer? _analysisSyncTimer;
-
-  late final List<Widget> _tabs;
 
   // ===========================================================================
   // LIFECYCLE
@@ -48,17 +47,6 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-
-    _tabs = [
-      DashboardTab(
-        onOpenAnalyze: _openAnalyzeFromDashboard,
-        onOpenHistory: _openHistoryFromDashboard,
-      ),
-      const AnalyzeTab(),
-      HistoryTab(onReanalyze: _openAnalyzeFromHistory),
-      const MindsetScreen(embedded: true),
-      const ProfileTab(),
-    ];
 
     WidgetsBinding.instance.addObserver(this);
 
@@ -373,7 +361,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       unawaited(market.selectInstrument(instrument));
     }
 
-    _onTabSelected(1);
+    _openNewAnalysis();
   }
 
   void _openHistoryFromDashboard() {
@@ -401,7 +389,19 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         timeframe: timeframe,
       ),
     );
-    _onTabSelected(1);
+    _openNewAnalysis();
+  }
+
+  void _openNewAnalysis() {
+    final trackPageView = _index != 1;
+    setState(() {
+      _analyzeTabRevision++;
+      _index = 1;
+    });
+    if (trackPageView) {
+      unawaited(context.read<AuthProvider>().telemetry.pageView(_tabPaths[1]));
+    }
+    _syncTab(1);
   }
 
   // ===========================================================================
@@ -440,6 +440,22 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     final notifications = context.watch<NotificationsProvider>();
     final themeController = context.watch<ThemeController>();
     final user = auth.user;
+    final tabs = [
+      DashboardTab(
+        onOpenAnalyze: _openAnalyzeFromDashboard,
+        onOpenHistory: _openHistoryFromDashboard,
+      ),
+      AnalyzeTab(
+        key: ValueKey(_analyzeTabRevision),
+        onNewAnalysis: _openNewAnalysis,
+      ),
+      HistoryTab(
+        onReanalyze: _openAnalyzeFromHistory,
+        onNewAnalysis: _openNewAnalysis,
+      ),
+      const MindsetScreen(embedded: true),
+      const ProfileTab(),
+    ];
 
     return Scaffold(
       body: Column(
@@ -464,7 +480,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
           ),
           LiveMarketTicker(quotes: market.quotes.values),
           Expanded(
-            child: IndexedStack(index: _index, children: _tabs),
+            child: IndexedStack(index: _index, children: tabs),
           ),
         ],
       ),

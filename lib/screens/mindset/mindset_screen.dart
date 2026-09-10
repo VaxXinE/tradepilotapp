@@ -12,11 +12,7 @@ import '../../widgets/app_footer.dart';
 import '../../widgets/responsive_page.dart';
 
 class MindsetScreen extends StatefulWidget {
-  const MindsetScreen({
-    this.initialGuideId,
-    this.embedded = false,
-    super.key,
-  });
+  const MindsetScreen({this.initialGuideId, this.embedded = false, super.key});
 
   final ProgressionEvidenceStartInputGuideIdEnum? initialGuideId;
 
@@ -111,8 +107,7 @@ class _MindsetScreenState extends State<MindsetScreen> {
                   child: ChoiceChip(
                     label: Text(l10n.all),
                     selected: _selectedCategory == null,
-                    onSelected: (_) =>
-                        setState(() => _selectedCategory = null),
+                    onSelected: (_) => setState(() => _selectedCategory = null),
                   ),
                 ),
                 for (final category in allCategories)

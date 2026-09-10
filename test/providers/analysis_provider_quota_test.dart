@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
@@ -71,11 +72,40 @@ void main() {
       expect(provider.lastAnalysisCreditBalance, 9);
       expect(provider.quotaLimit, isNull);
       expect(adapter.analysisRequests, 1);
+      await pumpEventQueue(times: 20);
+    },
+  );
+
+  test(
+    'queues a fresh quota read when analysis finishes during a load',
+    () async {
+      final adapter = _QuotaRefreshAdapter();
+      final provider = await _provider(adapter);
+      addTearDown(provider.dispose);
+
+      final initialLoad = provider.loadQuota();
+      await pumpEventQueue();
+      expect(adapter.quotaRequests, 1);
+
+      final result = await provider.createAnalysis(
+        instrument: 'XAU/USD',
+        timeframe: CreateAnalysisBodyTimeframeEnum.n1h,
+        mode: CreateAnalysisBodyModeEnum.beginner,
+      );
+      expect(result?.id, 42);
+
+      adapter.completeInitialQuota();
+      await initialLoad;
+      await pumpEventQueue(times: 20);
+
+      expect(adapter.quotaRequests, 2);
+      expect(provider.quota?.hourly.remaining, 4);
+      expect(provider.quota?.daily.remaining, 9);
     },
   );
 }
 
-Future<AnalysisProvider> _provider(_AnalysisAdapter adapter) async {
+Future<AnalysisProvider> _provider(HttpClientAdapter adapter) async {
   final auth = AuthProvider();
   await pumpEventQueue();
   auth
@@ -174,6 +204,63 @@ class _AnalysisAdapter implements HttpClientAdapter {
       },
     );
   }
+
+  @override
+  void close({bool force = false}) {}
+}
+
+class _QuotaRefreshAdapter implements HttpClientAdapter {
+  final Completer<ResponseBody> _initialQuota = Completer<ResponseBody>();
+  int quotaRequests = 0;
+
+  void completeInitialQuota() {
+    _initialQuota.complete(_quotaResponse(hourly: 5, daily: 10));
+  }
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    if (options.path == '/analyses/quota') {
+      quotaRequests++;
+      return quotaRequests == 1
+          ? _initialQuota.future
+          : _quotaResponse(hourly: 4, daily: 9);
+    }
+
+    if (options.path == '/analyses' && options.method == 'POST') {
+      return _json({
+        'id': 42,
+        'userId': 1,
+        'instrument': 'XAU/USD',
+        'timeframe': '1h',
+        'mode': 'beginner',
+        'validUntil': '2026-09-08T12:00:00.000Z',
+        'createdAt': '2026-09-08T10:00:00.000Z',
+        'creditConsumed': false,
+      }, 201);
+    }
+
+    return _json({'message': 'ok'}, 200);
+  }
+
+  ResponseBody _quotaResponse({required int hourly, required int daily}) =>
+      _json({
+        'unlimited': false,
+        'hourly': {'limit': 5, 'used': 5 - hourly, 'remaining': hourly},
+        'daily': {'limit': 10, 'used': 10 - daily, 'remaining': daily},
+        'credits': {'balance': 3},
+      }, 200);
+
+  ResponseBody _json(Object body, int status) => ResponseBody.fromString(
+    jsonEncode(body),
+    status,
+    headers: {
+      Headers.contentTypeHeader: [Headers.jsonContentType],
+    },
+  );
 
   @override
   void close({bool force = false}) {}

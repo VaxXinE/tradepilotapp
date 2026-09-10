@@ -284,6 +284,12 @@ abstract class AppLocalizations {
   /// **'Scenario C — Wait / No Position'**
   String get waitScenario;
 
+  /// No description provided for @scenariosTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scenarios'**
+  String get scenariosTitle;
+
   /// No description provided for @waitScenarioBody.
   ///
   /// In en, this message translates to:
@@ -301,6 +307,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Fundamental drivers'**
   String get fundamentalDrivers;
+
+  /// No description provided for @proAnalysisDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Why this analysis?'**
+  String get proAnalysisDetailsTitle;
+
+  /// No description provided for @proAnalysisDetailsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Open to see the factors behind the AI conclusion.'**
+  String get proAnalysisDetailsDescription;
 
   /// No description provided for @analysisHelpfulQuestion.
   ///
@@ -545,20 +563,62 @@ abstract class AppLocalizations {
   /// No description provided for @executionInsight.
   ///
   /// In en, this message translates to:
-  /// **'View Execution Insight'**
+  /// **'How traders may respond'**
   String get executionInsight;
 
   /// No description provided for @executionInsightDescription.
   ///
   /// In en, this message translates to:
-  /// **'How to approach the scenario without treating it as a trade instruction.'**
+  /// **'How traders may approach each scenario without specific Entry, Stop Loss, or Take Profit levels.'**
   String get executionInsightDescription;
 
-  /// No description provided for @executionInsightBody.
+  /// No description provided for @executionScenarioALabel.
   ///
   /// In en, this message translates to:
-  /// **'Wait for price-action confirmation, define maximum risk before entry, and cancel the plan when an invalidation condition occurs. Do not chase price outside the planned area.'**
-  String get executionInsightBody;
+  /// **'If Scenario A continues'**
+  String get executionScenarioALabel;
+
+  /// No description provided for @executionScenarioABullish.
+  ///
+  /// In en, this message translates to:
+  /// **'Traders typically watch the nearest support area as a zone of buying interest, with a conceptual exit plan if price breaks below that area.'**
+  String get executionScenarioABullish;
+
+  /// No description provided for @executionScenarioABearish.
+  ///
+  /// In en, this message translates to:
+  /// **'Traders typically watch the nearest resistance area as a zone of selling interest, with a conceptual exit plan if price breaks above that area.'**
+  String get executionScenarioABearish;
+
+  /// No description provided for @executionScenarioANeutral.
+  ///
+  /// In en, this message translates to:
+  /// **'With a neutral bias, many traders prefer to wait until there is a clear break out of the current range.'**
+  String get executionScenarioANeutral;
+
+  /// No description provided for @executionScenarioBLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'If Scenario B plays out'**
+  String get executionScenarioBLabel;
+
+  /// No description provided for @executionScenarioBBody.
+  ///
+  /// In en, this message translates to:
+  /// **'If the main assumption is wrong and the alternative scenario unfolds, traders typically re-evaluate the thesis from scratch — not flip the position immediately.'**
+  String get executionScenarioBBody;
+
+  /// No description provided for @executionScenarioCLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'If waiting is the better choice'**
+  String get executionScenarioCLabel;
+
+  /// No description provided for @executionScenarioCBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait until the invalidation conditions above are no longer at risk, or until a stronger signal confluence emerges.'**
+  String get executionScenarioCBody;
 
   /// No description provided for @riskHighLabel.
   ///

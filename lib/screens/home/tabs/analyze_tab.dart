@@ -67,7 +67,9 @@ CreateAnalysisBodyTimeframeEnum _analysisTimeframe(String timeframe) {
 // =============================================================================
 
 class AnalyzeTab extends StatefulWidget {
-  const AnalyzeTab({super.key});
+  const AnalyzeTab({super.key, this.onNewAnalysis});
+
+  final VoidCallback? onNewAnalysis;
 
   @override
   State<AnalyzeTab> createState() => _AnalyzeTabState();
@@ -75,7 +77,11 @@ class AnalyzeTab extends StatefulWidget {
 
 class _AnalyzeTabState extends State<AnalyzeTab> {
   final TextEditingController _contextController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  final GlobalKey _resultSectionKey = GlobalKey();
   Analysis? _resultAnalysis;
+  int _resultRevision = 0;
+  bool _reanalyzingInstrument = false;
   String? _guardrailInstrument;
   List<Map<String, dynamic>> _guardrails = const [];
   final Map<String, int> _guardrailTelemetryIds = {};
@@ -107,6 +113,7 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
   @override
   void dispose() {
     _contextController.dispose();
+    _scrollController.dispose();
 
     super.dispose();
   }
@@ -264,12 +271,18 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
       unawaited(_logGuardrailProceed(auth, signal, market.selectedInstrument));
     }
 
+    // Tombol submit hilang begitu hasil tampil, jadi analisis ulang memakai
+    // popup progres seperti dialog `dialog-reanalyzing` pada web.
+    if (_resultAnalysis != null) _showReanalyzingDialog();
+
     final result = await analysisProvider.createAnalysis(
       instrument: market.selectedInstrument,
       timeframe: _analysisTimeframe(market.selectedTimeframe),
       mode: userMode,
       userInputContext: note.isEmpty ? null : note,
     );
+
+    _dismissReanalyzingDialog();
 
     if (!mounted) return;
 
@@ -315,6 +328,7 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
         ),
       );
       setState(() => _resultAnalysis = result);
+      _scrollToResult();
     }
   }
 
@@ -356,6 +370,107 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
     } catch (_) {
       // Siklus yang sudah selesai/aktif tetap boleh memakai checklist tanpa XP.
     }
+  }
+
+  /// Memilih instrumen dari grid.
+  ///
+  /// Mengikuti `handleInstrumentClick` pada web: ketika sebuah hasil sudah
+  /// tampil di halaman, memilih instrumen lain langsung menjalankan analisis
+  /// baru tanpa menunggu tombol submit (tombol itu memang disembunyikan).
+  /// Analisis pertama tetap butuh tap eksplisit pada tombol.
+  Future<void> _selectInstrument(String symbol) async {
+    final market = context.read<MarketProvider>();
+    final previous = market.selectedInstrument;
+
+    await market.selectInstrument(symbol);
+
+    if (!mounted) return;
+
+    if (_resultAnalysis == null ||
+        market.selectedInstrument == previous ||
+        market.isCustomInstrument ||
+        context.read<AnalysisProvider>().isSubmitting) {
+      return;
+    }
+
+    await _submit();
+  }
+
+  void _showReanalyzingDialog() {
+    _reanalyzingInstrument = true;
+    unawaited(
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => PopScope(
+          canPop: false,
+          child: AlertDialog(
+            key: const Key('reanalyzing-dialog'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(height: 16),
+                Text(
+                  context.l10n.analyzingMarket,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _dismissReanalyzingDialog() {
+    if (!_reanalyzingInstrument) return;
+    _reanalyzingInstrument = false;
+    if (!mounted) return;
+    Navigator.of(context, rootNavigator: true).pop();
+  }
+
+  /// Membawa hasil ke layar, sama seperti `scrollIntoView` pada web.
+  void _scrollToResult() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final anchor = _resultSectionKey.currentContext;
+      if (!mounted || anchor == null) return;
+      unawaited(
+        Scrollable.ensureVisible(
+          anchor,
+          duration: const Duration(milliseconds: 320),
+          curve: Curves.easeOut,
+        ),
+      );
+    });
+  }
+
+  /// Kembali ke form pemilihan instrumen.
+  ///
+  /// Reset lokal selalu dijalankan supaya form pasti muncul, lalu shell
+  /// diberi tahu agar tab Analisis benar-benar dimulai dari state bersih
+  /// (mis. ketika detail dibuka dari tab lain).
+  void _openNewAnalysisForm() {
+    FocusManager.instance.primaryFocus?.unfocus();
+    _contextController.clear();
+    setState(() {
+      _resultRevision++;
+      _resultAnalysis = null;
+      _checkedMentalItems.clear();
+      _checklistEvidenceToken = null;
+      _checklistMinimumCompleteAt = null;
+    });
+    if (_scrollController.hasClients) {
+      unawaited(
+        _scrollController.animateTo(
+          0,
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOut,
+        ),
+      );
+    }
+    widget.onNewAnalysis?.call();
   }
 
   Future<void> _toggleMentalItem(int index) async {
@@ -451,49 +566,11 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
     final highImpactSoon = _findHighImpactSoon(market.highImpactEvents);
     final l10n = context.l10n;
 
-    if (_resultAnalysis case final result?) {
-      return Scaffold(
-        body: SafeArea(
-          top: false,
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        l10n.analyzeTitle,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                    OutlinedButton.icon(
-                      key: const Key('new-analysis-button'),
-                      onPressed: () => setState(() => _resultAnalysis = null),
-                      icon: const Icon(Icons.add_rounded, size: 17),
-                      label: Text(l10n.analyzeTitle),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: AnalysisDetailScreen(
-                  key: ValueKey('embedded-analysis-${result.id}'),
-                  analysisId: result.id,
-                  preloaded: result,
-                  embedded: true,
-                  onAnalysisCreated: (created) =>
-                      setState(() => _resultAnalysis = created),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
+    // Sama seperti web: form tidak pernah diganti oleh hasil analisis. Hasil
+    // dirender di bawah form sehingga trader tetap bisa memilih simbol lain
+    // (BRENT, NIKKEI, HSI, ...) tanpa keluar dari halaman ini.
+    final result = _resultAnalysis;
+    final resultRevision = _resultRevision;
 
     return Scaffold(
       body: SafeArea(
@@ -501,11 +578,16 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
         child: RefreshIndicator(
           onRefresh: _refresh,
           child: ListView(
+            controller: _scrollController,
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(16),
             children: [
-              _AnalyzeHeader(title: l10n.analyzeTitle, quota: analysis.quota),
-              const SizedBox(height: 14),
+              _AnalyzeHeader(
+                title: l10n.analyzeTitle,
+                quota: analysis.quota,
+                onNewAnalysis: result == null ? null : _openNewAnalysisForm,
+              ),
+              const SizedBox(height: 20),
               ErrorBanner(message: analysis.errorMessage),
 
               ErrorBanner(message: market.marketError),
@@ -513,17 +595,14 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
               // ---------------------------------------------------------------
               // INSTRUMENT
               // ---------------------------------------------------------------
-              _SectionTitle(
-                title: l10n.selectInstrument,
-                subtitle: l10n.selectMarketDescription,
-              ),
+              _SectionTitle(title: l10n.selectInstrument),
 
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
 
               _InstrumentSelector(
                 selected: instrument,
                 isCustom: market.isCustomInstrument,
-                onSelected: market.selectInstrument,
+                onSelected: _selectInstrument,
                 onSelectedCustom: (symbol) =>
                     market.selectInstrument(symbol, allowUnsupported: true),
               ),
@@ -533,7 +612,15 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
                 onPressed: () {
                   unawaited(_openPriceAlert(instrument, quote));
                 },
-                icon: const Icon(Icons.notifications_active_outlined),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(40),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  textStyle: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                icon: const Icon(Icons.notifications_active_outlined, size: 15),
                 label: Text(
                   quote == null
                       ? l10n.priceAlertUnavailable
@@ -550,7 +637,7 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
                 ),
               ],
 
-              const SizedBox(height: 22),
+              const SizedBox(height: 20),
 
               _MarketOverviewCard(
                 market: market,
@@ -559,7 +646,7 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
                 },
               ),
 
-              const SizedBox(height: 22),
+              const SizedBox(height: 20),
 
               // ---------------------------------------------------------------
               // HIGH IMPACT PRE-TRADE WARNING
@@ -567,7 +654,7 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
               if (highImpactSoon != null) ...[
                 _PreTradeWarning(event: highImpactSoon),
 
-                const SizedBox(height: 14),
+                const SizedBox(height: 20),
               ],
 
               if (mentalChecklist.enabled) ...[
@@ -576,30 +663,44 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
                   isSaving: _isAwardingChecklist,
                   onToggle: _toggleMentalItem,
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 20),
               ],
 
               // ---------------------------------------------------------------
               // CTA
               // ---------------------------------------------------------------
-              ElevatedButton.icon(
-                onPressed: analysis.isSubmitting ? null : _submit,
-                icon: analysis.isSubmitting
-                    ? SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.2,
-                          color: Theme.of(context).colorScheme.onPrimary,
-                        ),
-                      )
-                    : const Icon(Icons.auto_awesome_rounded, size: 18),
-                label: Text(
-                  analysis.isSubmitting
-                      ? l10n.analyzingMarket
-                      : l10n.getAiAnalysis,
+              // Setelah hasil ada, tombol submit disembunyikan — memilih
+              // instrumen lain langsung menganalisis ulang, persis web.
+              if (result == null)
+                Center(
+                  child: ElevatedButton.icon(
+                    key: const Key('submit-analysis-button'),
+                    onPressed: analysis.isSubmitting ? null : _submit,
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(160, 48),
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      textStyle: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    icon: analysis.isSubmitting
+                        ? SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.2,
+                              color: Theme.of(context).colorScheme.onPrimary,
+                            ),
+                          )
+                        : const Icon(Icons.auto_awesome_rounded, size: 18),
+                    label: Text(
+                      analysis.isSubmitting
+                          ? l10n.analyzingMarket
+                          : l10n.getAiAnalysis,
+                    ),
+                  ),
                 ),
-              ),
 
               if (analysis.quota != null && !analysis.quota!.unlimited) ...[
                 const SizedBox(height: 10),
@@ -619,6 +720,27 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
                 textAlign: TextAlign.center,
                 style: TextStyle(color: muted, fontSize: 11, height: 1.4),
               ),
+
+              if (result != null) ...[
+                const SizedBox(height: 20),
+                const Divider(height: 1),
+                const SizedBox(height: 16),
+                KeyedSubtree(
+                  key: _resultSectionKey,
+                  child: AnalysisDetailScreen(
+                    key: ValueKey('embedded-analysis-${result.id}'),
+                    analysisId: result.id,
+                    preloaded: result,
+                    embedded: true,
+                    onAnalysisCreated: (created) {
+                      if (!mounted || resultRevision != _resultRevision) {
+                        return;
+                      }
+                      setState(() => _resultAnalysis = created);
+                    },
+                  ),
+                ),
+              ],
 
               const AppFooter(),
             ],
@@ -814,7 +936,10 @@ class _MarketOverviewCard extends StatelessWidget {
 
     final bearish = isDark ? AppColors.bearishDark : AppColors.bearishLight;
 
-    final primary = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
+    // // Glyph/teks memakai nada emas yang terbaca; isian tetap emas web.
+    final primary = isDark
+        ? AppColors.darkPrimaryText
+        : AppColors.lightPrimaryText;
 
     final watchlist = context.watch<WatchlistProvider>();
 
@@ -1240,28 +1365,21 @@ class _PreTradeWarning extends StatelessWidget {
 // COMMON UI
 // =============================================================================
 
+/// Judul seksi form, menyalin `h2 text-sm font-semibold` pada web — yang di
+/// sana berdiri sendiri tanpa baris penjelas.
 class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.title, required this.subtitle});
+  const _SectionTitle({required this.title});
 
   final String title;
-  final String subtitle;
 
   @override
-  Widget build(BuildContext context) {
-    final muted = Theme.of(context).colorScheme.onSurfaceVariant;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
-        ),
-        const SizedBox(height: 3),
-        Text(subtitle, style: TextStyle(color: muted, fontSize: 11.5)),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => Align(
+    alignment: Alignment.centerLeft,
+    child: Text(
+      title,
+      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+    ),
+  );
 }
 
 class _QuotaSummaryCard extends StatelessWidget {
@@ -1458,9 +1576,30 @@ class _InstrumentSelectorState extends State<_InstrumentSelector> {
             _customDebounce?.cancel();
             _applyCustom(value);
           },
+          style: const TextStyle(fontSize: 14),
           decoration: InputDecoration(
             hintText: context.l10n.otherInstrument,
             prefixIcon: const Icon(Icons.edit_outlined, size: 18),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 12,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppColors.radiusLg),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppColors.radiusLg),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppColors.radiusLg),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.primary,
+                width: 1.5,
+              ),
+            ),
           ),
         ),
       ],
@@ -1488,12 +1627,12 @@ class _CategoryTab extends StatelessWidget {
       expanded: isOpen,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppColors.radiusLg),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
           decoration: BoxDecoration(
-            color: isOpen ? colors.primary : colors.surface,
-            borderRadius: BorderRadius.circular(10),
+            color: isOpen ? colors.primary : colors.surfaceContainerLowest,
+            borderRadius: BorderRadius.circular(AppColors.radiusLg),
             border: Border.all(
               color: isOpen ? colors.primary : colors.outlineVariant,
             ),
@@ -1549,14 +1688,16 @@ class _InstrumentOption extends StatelessWidget {
       selected: selected,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppColors.radiusLg),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
+            // Web memakai `bg-primary/10` saat terpilih dan `bg-background`
+            // ketika tidak — bukan warna kartu.
             color: selected
                 ? colors.primary.withValues(alpha: 0.1)
-                : colors.surface,
-            borderRadius: BorderRadius.circular(10),
+                : colors.surfaceContainerLowest,
+            borderRadius: BorderRadius.circular(AppColors.radiusLg),
             border: Border.all(
               color: selected ? colors.primary : colors.outlineVariant,
             ),
@@ -1566,9 +1707,9 @@ class _InstrumentOption extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: selected ? colors.primary : colors.onSurface,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: selected ? colors.onPrimaryContainer : colors.onSurface,
             ),
           ),
         ),
@@ -1584,10 +1725,19 @@ class _InstrumentOption extends StatelessWidget {
 /// Baris judul Analyze mengikuti mobile web: judul di kiri, lalu chip
 /// progression dan chip kuota di kanan.
 class _AnalyzeHeader extends StatelessWidget {
-  const _AnalyzeHeader({required this.title, required this.quota});
+  const _AnalyzeHeader({
+    required this.title,
+    required this.quota,
+    this.onNewAnalysis,
+  });
 
   final String title;
   final AnalysisQuota? quota;
+
+  /// Hanya terisi ketika sebuah hasil sedang tampil; menekannya mengosongkan
+  /// hasil dan mengembalikan form ke keadaan bersih, sama seperti tombol
+  /// `button-new-analysis` pada web.
+  final VoidCallback? onNewAnalysis;
 
   @override
   Widget build(BuildContext context) {
@@ -1612,6 +1762,13 @@ class _AnalyzeHeader extends StatelessWidget {
             spacing: 8,
             runSpacing: 6,
             children: [
+              if (onNewAnalysis case final onNewAnalysis?)
+                OutlinedButton.icon(
+                  key: const Key('new-analysis-button'),
+                  onPressed: onNewAnalysis,
+                  icon: const Icon(Icons.add_rounded, size: 17),
+                  label: Text(context.l10n.analyzeTitle),
+                ),
               if (summary != null) _ProgressionChip(summary: summary),
               if (showQuota) _QuotaChip(quota: quota!),
             ],

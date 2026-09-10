@@ -182,6 +182,12 @@ class _DashboardTabState extends State<DashboardTab> {
 
     final recentAnalyses = analysisProvider.history.take(5).toList();
 
+    final isLoadingAnalysisData =
+        (analysisProvider.isLoadingSummary ||
+            analysisProvider.isLoadingHistory) &&
+        summary == null &&
+        analysisProvider.history.isEmpty;
+
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: _refresh,
@@ -311,6 +317,23 @@ class _DashboardTabState extends State<DashboardTab> {
 
             const SizedBox(height: 16),
 
+            if (isLoadingAnalysisData)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 28),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else ...[
+              DashboardStats(summary: summary),
+              const SizedBox(height: 14),
+              if (_outcomes case final outcomes?) ...[
+                _OutcomeSummaryCard(outcomes: outcomes),
+                const SizedBox(height: 14),
+              ],
+              if (analysisProvider.quota != null)
+                _QuotaCard(quota: analysisProvider.quota!),
+              const SizedBox(height: 16),
+            ],
+
             EconomicCalendarCard(
               instrument: market.selectedInstrument,
               events: market.selectedCalendar,
@@ -359,35 +382,7 @@ class _DashboardTabState extends State<DashboardTab> {
 
             const SizedBox(height: 20),
 
-            if ((analysisProvider.isLoadingSummary ||
-                    analysisProvider.isLoadingHistory) &&
-                summary == null &&
-                analysisProvider.history.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 28),
-                child: Center(child: CircularProgressIndicator()),
-              )
-            else ...[
-              // -------------------------------------------------------------
-              // BEGINNER STATS
-              // -------------------------------------------------------------
-              DashboardStats(summary: summary),
-
-              const SizedBox(height: 14),
-
-              if (_outcomes case final outcomes?) ...[
-                _OutcomeSummaryCard(outcomes: outcomes),
-                const SizedBox(height: 14),
-              ],
-
-              // -------------------------------------------------------------
-              // QUOTA
-              // -------------------------------------------------------------
-              if (analysisProvider.quota != null)
-                _QuotaCard(quota: analysisProvider.quota!),
-
-              const SizedBox(height: 22),
-
+            if (!isLoadingAnalysisData) ...[
               // -------------------------------------------------------------
               // RECENT ANALYSIS HEADER
               // -------------------------------------------------------------
@@ -430,6 +425,10 @@ class _DashboardTabState extends State<DashboardTab> {
                             builder: (_) => AnalysisDetailScreen(
                               analysisId: analysis.id,
                               preloaded: analysis,
+                              onNewAnalysis: () {
+                                Navigator.of(context).pop();
+                                widget.onOpenAnalyze(null);
+                              },
                             ),
                           ),
                         );
@@ -1064,7 +1063,10 @@ class _StatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final primary = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
+    // // Glyph/teks memakai nada emas yang terbaca; isian tetap emas web.
+    final primaryText = isDark
+        ? AppColors.darkPrimaryText
+        : AppColors.lightPrimaryText;
 
     final muted = isDark
         ? AppColors.darkMutedForeground
@@ -1076,7 +1078,7 @@ class _StatCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: primary, size: 19),
+            Icon(icon, color: primaryText, size: 19),
 
             const SizedBox(height: 9),
 
@@ -1113,7 +1115,11 @@ class _QuotaCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    // Bar kuota adalah isian, ikon di sebelahnya adalah glyph.
     final primary = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
+    final primaryText = isDark
+        ? AppColors.darkPrimaryText
+        : AppColors.lightPrimaryText;
 
     final muted = isDark
         ? AppColors.darkMutedForeground
@@ -1125,7 +1131,7 @@ class _QuotaCard extends StatelessWidget {
           padding: const EdgeInsets.all(14),
           child: Row(
             children: [
-              Icon(Icons.all_inclusive_rounded, color: primary),
+              Icon(Icons.all_inclusive_rounded, color: primaryText),
               const SizedBox(width: 10),
               Text(
                 context.l10n.unlimitedAnalysisQuota,
@@ -1172,7 +1178,7 @@ class _QuotaCard extends StatelessWidget {
 
             Row(
               children: [
-                Icon(Icons.toll_rounded, size: 16, color: primary),
+                Icon(Icons.toll_rounded, size: 16, color: primaryText),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
