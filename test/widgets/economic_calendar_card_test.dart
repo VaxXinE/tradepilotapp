@@ -68,6 +68,7 @@ void main() {
     final list = find.byKey(const Key('economic-calendar-event-list'));
     expect(tester.getSize(list).height, 430);
     expect(find.text('Economic Event 1'), findsOneWidget);
+    expect(find.text('Swipe to see more'), findsOneWidget);
 
     await tester.drag(list, const Offset(0, -700));
     await tester.pumpAndSettle();

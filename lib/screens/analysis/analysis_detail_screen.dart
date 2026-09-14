@@ -20,6 +20,7 @@ import '../../widgets/adaptive_position_plan_card.dart';
 import '../../widgets/analysis_levels_chart.dart';
 import '../../widgets/analysis_note_card.dart';
 import '../../widgets/analysis_quota_dialog.dart';
+import '../../widgets/error_banner.dart';
 import '../../widgets/risk/risk_tools_section.dart';
 import '../journal/trade_journal_screen.dart';
 import '../mindset/mindset_screen.dart';
@@ -69,6 +70,7 @@ class AnalysisDetailScreen extends StatefulWidget {
     this.embedded = false,
     this.onAnalysisCreated,
     this.onNewAnalysis,
+    this.onCreatePriceAlert,
   });
 
   final int analysisId;
@@ -76,6 +78,7 @@ class AnalysisDetailScreen extends StatefulWidget {
   final bool embedded;
   final ValueChanged<Analysis>? onAnalysisCreated;
   final VoidCallback? onNewAnalysis;
+  final VoidCallback? onCreatePriceAlert;
 
   @override
   State<AnalysisDetailScreen> createState() => _AnalysisDetailScreenState();
@@ -107,7 +110,6 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
   JournalEntry? _journalEntry;
 
   Timer? _pollTimer;
-  Timer? _timeframeTimer;
 
   @override
   void initState() {
@@ -144,9 +146,6 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
   void dispose() {
     _pollTimer?.cancel();
     _pollTimer = null;
-    _timeframeTimer?.cancel();
-    _timeframeTimer = null;
-
     super.dispose();
   }
 
@@ -294,8 +293,6 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
   Future<void> _reanalyze([String? timeframe]) async {
     final analysis = _analysis;
     if (analysis == null || _reanalyzing) return;
-    _timeframeTimer?.cancel();
-    _timeframeTimer = null;
     final auth = context.read<AuthProvider>();
     final selected = timeframe ?? analysis.timeframe;
     setState(() {
@@ -368,20 +365,12 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
     final analysis = _analysis;
     if (analysis == null || _reanalyzing) return;
 
-    _timeframeTimer?.cancel();
-    _timeframeTimer = null;
-
     if (timeframe == analysis.timeframe) {
       setState(() => _selectedTimeframe = null);
       return;
     }
 
     setState(() => _selectedTimeframe = timeframe);
-    _timeframeTimer = Timer(const Duration(milliseconds: 650), () {
-      if (!mounted || _selectedTimeframe != timeframe) return;
-      _timeframeTimer = null;
-      unawaited(_reanalyze(timeframe));
-    });
   }
 
   Future<void> _refreshFundamentals() async {
@@ -436,7 +425,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
               initiallyExpanded: true,
               onSelectTimeframe: (timeframe) {
                 Navigator.of(sheetContext).pop();
-                unawaited(_reanalyze(timeframe));
+                _selectTimeframe(timeframe);
               },
             ),
           ),
@@ -802,6 +791,23 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
           : const AlwaysScrollableScrollPhysics(),
       padding: widget.embedded ? EdgeInsets.zero : const EdgeInsets.all(16),
       children: [
+        _TimeframeCard(
+          current: analysis.timeframe,
+          selected: _selectedTimeframe,
+          loading: _reanalyzing,
+          onSelect: _selectTimeframe,
+          onAnalyze: () => _reanalyze(_selectedTimeframe),
+          onOpenRiskMap: supportsRiskMap(analysis.instrument)
+              ? () => _openRiskMap(analysis)
+              : null,
+          usageLabel: analysisUsageLabel(
+            context,
+            context.watch<AnalysisProvider>().quota,
+          ),
+        ),
+
+        const SizedBox(height: 14),
+
         _HeaderCard(
           analysis: analysis,
           biasColor: biasColor,
@@ -817,63 +823,12 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
         ],
 
         const SizedBox(height: 14),
-
-        _TimeframeCard(
-          current: analysis.timeframe,
-          selected: _selectedTimeframe,
-          loading: _reanalyzing,
-          onSelect: _selectTimeframe,
-        ),
-
-        if (supportsRiskMap(analysis.instrument)) ...[
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: _reanalyzing ? null : () => _openRiskMap(analysis),
-              icon: const Icon(Icons.monitor_heart_outlined),
-              label: Text(context.l10n.riskMapTitle),
-            ),
-          ),
-        ],
-
-        if (!isPro) ...[
-          const SizedBox(height: 14),
-          _BeginnerMeaningCard(
-            analysis: analysis,
-            biasLabel: biasLabel,
-            biasColor: biasColor,
-          ),
-        ],
-
-        const SizedBox(height: 14),
-
-        _RiskCard(analysis: analysis, isPro: isPro),
-        _AnalysisGuideLink(
-          onPressed: () => _openGuide(
-            ProgressionEvidenceStartInputGuideIdEnum.biasConfidenceValidity,
-          ),
-        ),
-
-        if ((isPro ? analysis.uncertaintyNotes : analysis.whyReason)
-                ?.trim()
-                .isNotEmpty ==
-            true) ...[
-          const SizedBox(height: 14),
-          _ConfidenceReasonCard(
-            analysis: analysis,
-            reason: (isPro ? analysis.uncertaintyNotes! : analysis.whyReason!),
-            onOpenUrl: _openExternalUrl,
-          ),
-        ],
-
-        const SizedBox(height: 14),
-
         _ChartCard(
           analysis: analysis,
           candles: _candles,
           isLoading: _marketLoading,
           error: _marketError,
+          onRetry: () => _loadMarketData(analysis, force: true),
           onOpenTradingView: () => _openExternalUrl(
             Uri.https('www.tradingview.com', '/chart/', {
               'symbol': _tradingViewSymbol(analysis.instrument),
@@ -882,7 +837,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
         ),
 
         if (analysis.tradePlan != null) ...[
-          const SizedBox(height: 20),
+          const SizedBox(height: 14),
           Text(
             context.l10n.tradingPlanTitle,
             style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
@@ -896,22 +851,23 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
           _TradePlanCard(plan: analysis.tradePlan!, isDark: isDark),
         ],
 
-        const SizedBox(height: 14),
+        // Ringkasan "Bukti pasar" disembunyikan atas permintaan produk.
+        // const SizedBox(height: 14),
+        // _EvidenceSummary(analysis: analysis),
+        const SizedBox(height: 10),
         Card(
           child: ExpansionTile(
             key: const ValueKey('analysis-market-evidence'),
             initiallyExpanded: false,
             leading: const Icon(Icons.query_stats_rounded),
             title: Text(
-              context.l10n.marketEvidence,
+              context.l10n.supportingData,
               style: const TextStyle(fontWeight: FontWeight.w800),
             ),
             subtitle: Text(context.l10n.marketEvidenceDescription),
             childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
             children: [
-              _MarketSnapshotCard(analysis: analysis),
               if (analysis.fundamentalContext != null) ...[
-                const SizedBox(height: 12),
                 _FundamentalSnapshotCard(
                   analysis: analysis,
                   refreshed: _fundamentalRefresh,
@@ -919,49 +875,12 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
                   onRefresh: _refreshFundamentals,
                   onOpenUrl: _openExternalUrl,
                 ),
-                _AnalysisGuideLink(
-                  onPressed: () => _openGuide(
-                    ProgressionEvidenceStartInputGuideIdEnum
-                        .technicalFundamental,
-                  ),
-                ),
+                const SizedBox(height: 12),
               ],
+              _MarketSnapshotCard(analysis: analysis),
             ],
           ),
         ),
-
-        if (analysis.tradePlan != null) ...[
-          const SizedBox(height: 14),
-          AdaptivePositionPlanCard(analysis: analysis, candles: _candles),
-          Wrap(
-            spacing: 4,
-            children: [
-              _AnalysisGuideLink(
-                onPressed: () => _openGuide(
-                  ProgressionEvidenceStartInputGuideIdEnum.standardPlan,
-                ),
-              ),
-              _AnalysisGuideLink(
-                label: context.l10n.learnAdaptivePosition,
-                onPressed: () => _openGuide(
-                  ProgressionEvidenceStartInputGuideIdEnum.adaptivePositionPlan,
-                ),
-              ),
-            ],
-          ),
-        ],
-
-        if (analysis.tradePlan != null) ...[
-          const SizedBox(height: 14),
-          _AnalysisAlertsCard(
-            status: _alertStatus,
-            loading: _alertStatusLoading,
-            busy: _alertBusy,
-            error: _alertError,
-            onToggle: _setAnalysisAlerts,
-            onRetry: _loadAlertStatus,
-          ),
-        ],
 
         if (_technical != null) ...[
           const SizedBox(height: 14),
@@ -987,6 +906,20 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
           ),
         ],
 
+        if (analysis.tradePlan != null) ...[
+          const SizedBox(height: 14),
+          AdaptivePositionPlanCard(analysis: analysis, candles: _candles),
+        ],
+
+        if (!isPro) ...[
+          const SizedBox(height: 14),
+          _BeginnerMeaningCard(
+            analysis: analysis,
+            biasLabel: biasLabel,
+            biasColor: biasColor,
+          ),
+        ],
+
         if (analysis.userInputContext?.trim().isNotEmpty == true) ...[
           const SizedBox(height: 14),
           _SectionCard(
@@ -995,26 +928,6 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
             icon: Icons.chat_bubble_outline,
           ),
         ],
-
-        const SizedBox(height: 14),
-
-        _AnalysisJournalCard(
-          entry: _journalEntry,
-          loading: _journalLoading,
-          error: _journalError,
-          onOpen: () => _openJournal(analysis),
-          onRetry: _loadJournalEntry,
-        ),
-
-        const SizedBox(height: 14),
-
-        Consumer<AnalysisProvider>(
-          builder: (context, provider, _) => AnalysisNoteCard(
-            note: analysis.userNote,
-            isSaving: provider.isSavingNote(analysis.id),
-            onSave: _saveNote,
-          ),
-        ),
 
         if (invalidation?.trim().isNotEmpty == true) ...[
           const SizedBox(height: 14),
@@ -1043,12 +956,102 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
             (analysis.keyDriversTechnical?.trim().isNotEmpty == true ||
                 analysis.keyDriversFundamental?.trim().isNotEmpty == true ||
                 analysis.marketContext?.trim().isNotEmpty == true)) ...[
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           _ProAnalysisDetailsCard(analysis: analysis),
         ],
 
         const SizedBox(height: 12),
         _ExecutionInsightCard(analysis: analysis),
+
+        if (analysis.tradePlan != null) ...[
+          const SizedBox(height: 14),
+          _AnalysisAlertsCard(
+            status: _alertStatus,
+            loading: _alertStatusLoading,
+            busy: _alertBusy,
+            error: _alertError,
+            onToggle: _setAnalysisAlerts,
+            onRetry: _loadAlertStatus,
+          ),
+        ],
+
+        if (widget.onCreatePriceAlert case final onCreatePriceAlert?) ...[
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: onCreatePriceAlert,
+            icon: const Icon(Icons.notifications_active_outlined, size: 17),
+            label: Text(context.l10n.createPriceAlert),
+          ),
+        ],
+
+        const SizedBox(height: 14),
+        Text(
+          context.l10n.notesAndJournal,
+          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          context.l10n.notesAndJournalDescription,
+          style: TextStyle(color: muted, fontSize: 12, height: 1.4),
+        ),
+        const SizedBox(height: 10),
+
+        _AnalysisJournalCard(
+          entry: _journalEntry,
+          loading: _journalLoading,
+          error: _journalError,
+          onOpen: () => _openJournal(analysis),
+          onRetry: _loadJournalEntry,
+        ),
+
+        const SizedBox(height: 14),
+
+        Consumer<AnalysisProvider>(
+          builder: (context, provider, _) => AnalysisNoteCard(
+            note: analysis.userNote,
+            isSaving: provider.isSavingNote(analysis.id),
+            onSave: _saveNote,
+          ),
+        ),
+
+        const SizedBox(height: 14),
+        Card(
+          child: ExpansionTile(
+            key: const ValueKey('analysis-guides'),
+            leading: const Icon(Icons.menu_book_outlined),
+            title: Text(
+              context.l10n.learnAnalysisBasics,
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+            childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+            children: [
+              _AnalysisGuideLink(
+                label: context.l10n.learnBiasConfidence,
+                onPressed: () => _openGuide(
+                  ProgressionEvidenceStartInputGuideIdEnum
+                      .biasConfidenceValidity,
+                ),
+              ),
+              _AnalysisGuideLink(
+                label: context.l10n.learnTechnicalFundamental,
+                onPressed: () => _openGuide(
+                  ProgressionEvidenceStartInputGuideIdEnum.technicalFundamental,
+                ),
+              ),
+              _AnalysisGuideLink(
+                onPressed: () => _openGuide(
+                  ProgressionEvidenceStartInputGuideIdEnum.standardPlan,
+                ),
+              ),
+              _AnalysisGuideLink(
+                label: context.l10n.learnAdaptivePosition,
+                onPressed: () => _openGuide(
+                  ProgressionEvidenceStartInputGuideIdEnum.adaptivePositionPlan,
+                ),
+              ),
+            ],
+          ),
+        ),
 
         const SizedBox(height: 14),
 
@@ -1445,12 +1448,22 @@ class _TimeframeCard extends StatelessWidget {
     required this.selected,
     required this.loading,
     required this.onSelect,
+    required this.onAnalyze,
+    required this.usageLabel,
+    this.onOpenRiskMap,
   });
 
   final String current;
   final String? selected;
   final bool loading;
   final ValueChanged<String> onSelect;
+  final VoidCallback onAnalyze;
+  final String usageLabel;
+
+  /// Peta risiko membandingkan timeframe satu sama lain, jadi tempatnya di
+  /// kartu ini — bukan sebagai tombol lepas di dasar halaman. `null` ketika
+  /// instrumen belum didukung.
+  final VoidCallback? onOpenRiskMap;
 
   @override
   Widget build(BuildContext context) {
@@ -1473,25 +1486,135 @@ class _TimeframeCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: _analysisTimeframes
-                  .map((timeframe) {
-                    final active = (selected ?? current) == timeframe;
-                    return ChoiceChip(
-                      label: Text(timeframe),
-                      selected: active,
-                      onSelected: loading ? null : (_) => onSelect(timeframe),
-                    );
-                  })
-                  .toList(growable: false),
+            // Kisi berkolom tetap, bukan Wrap bebas: delapan timeframe jadi
+            // dua baris rata dengan lebar tombol seragam, sehingga tidak ada
+            // baris kedua yang menggantung dan tidak ada tombol yang melebar
+            // hanya karena labelnya lebih panjang.
+            LayoutBuilder(
+              builder: (context, constraints) {
+                const spacing = 8.0;
+                final columns = MediaQuery.textScalerOf(context).scale(1) > 1.3
+                    ? 2
+                    : 4;
+                final width =
+                    (constraints.maxWidth - spacing * (columns - 1)) / columns;
+                return Wrap(
+                  spacing: spacing,
+                  runSpacing: spacing,
+                  children: _analysisTimeframes
+                      .map(
+                        (timeframe) => SizedBox(
+                          width: width,
+                          child: _TimeframeOption(
+                            key: Key('timeframe-option-$timeframe'),
+                            timeframe: timeframe,
+                            selected: (selected ?? current) == timeframe,
+                            onTap: loading ? null : () => onSelect(timeframe),
+                          ),
+                        ),
+                      )
+                      .toList(growable: false),
+                );
+              },
             ),
+            if (selected != null && selected != current) ...[
+              const SizedBox(height: 14),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  key: const Key('analyze-selected-timeframe-button'),
+                  onPressed: loading ? null : onAnalyze,
+                  icon: const Icon(Icons.auto_awesome_rounded, size: 18),
+                  label: Text(context.l10n.analyzeThisTimeframe),
+                ),
+              ),
+              const SizedBox(height: 7),
+              Text(
+                usageLabel,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+            if (onOpenRiskMap case final onOpenRiskMap?) ...[
+              // Aksi sekunder, dipisahkan dari kontrol pemilihan di atasnya.
+              const SizedBox(height: 14),
+              const Divider(height: 1),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  key: const Key('timeframe-risk-map-button'),
+                  onPressed: loading ? null : onOpenRiskMap,
+                  icon: const Icon(Icons.monitor_heart_outlined, size: 18),
+                  label: Text(context.l10n.riskMapTitle),
+                ),
+              ),
+            ],
             if (loading) ...[
               const SizedBox(height: 12),
               const LinearProgressIndicator(),
             ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Satu tombol timeframe.
+///
+/// Mengikuti tombol timeframe web (`px-4 py-2 rounded-lg border`): terisi
+/// penuh warna brand ketika terpilih, berbingkai ketika tidak. Tidak ada
+/// centang, supaya lebar setiap tombol tetap sama di kedua keadaan.
+class _TimeframeOption extends StatelessWidget {
+  const _TimeframeOption({
+    super.key,
+    required this.timeframe,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String timeframe;
+  final bool selected;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final disabled = onTap == null;
+
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: Opacity(
+        opacity: disabled ? 0.5 : 1,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppColors.radiusLg),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: selected ? colors.primary : colors.surfaceContainerLowest,
+              borderRadius: BorderRadius.circular(AppColors.radiusLg),
+              border: Border.all(
+                color: selected ? colors.primary : colors.outlineVariant,
+              ),
+            ),
+            child: Text(
+              timeframe,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                color: selected ? colors.onPrimary : colors.onSurface,
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -1518,36 +1641,97 @@ class _HeaderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final condition = _marketConditionMeta(context, analysis.marketCondition);
+    final confidenceReason =
+        (isPro ? analysis.uncertaintyNotes : analysis.whyReason)?.trim();
+    final risk = (analysis.riskLevel ?? '').trim().toLowerCase();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final (
+      riskLabel,
+      riskColor,
+    ) = risk.contains('high') || risk.contains('tinggi')
+        ? (
+            context.l10n.riskHighLabel,
+            isDark ? AppColors.bearishDark : AppColors.bearishLight,
+          )
+        : risk.contains('low') || risk.contains('rendah')
+        ? (
+            context.l10n.riskLowLabel,
+            isDark ? AppColors.bullishDark : AppColors.bullishLight,
+          )
+        : (
+            context.l10n.riskModerateLabel,
+            isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
+          );
     return Card(
+      key: const ValueKey('analysis-result-header'),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.topLeft,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: biasColor.withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        biasLabel,
+                        maxLines: 2,
+                        style: TextStyle(
+                          color: biasColor,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 12.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.topRight,
+                    child: Container(
+                      key: const ValueKey('analysis-risk-chip'),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 9,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: riskColor.withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        riskLabel,
+                        maxLines: 2,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: riskColor,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 11.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 10),
             Wrap(
               spacing: 8,
               runSpacing: 8,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: biasColor.withValues(alpha: 0.14),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    biasLabel,
-                    style: TextStyle(
-                      color: biasColor,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 12.5,
-                    ),
-                  ),
-                ),
-
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 9,
@@ -1584,37 +1768,34 @@ class _HeaderCard extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (condition != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: condition.$2.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(condition.$3, size: 16, color: condition.$2),
+                        const SizedBox(width: 6),
+                        Text(
+                          condition.$1,
+                          style: TextStyle(
+                            color: condition.$2,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
               ],
             ),
-
-            if (condition != null) ...[
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: condition.$2.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(condition.$3, size: 16, color: condition.$2),
-                    const SizedBox(width: 6),
-                    Text(
-                      condition.$1,
-                      style: TextStyle(
-                        color: condition.$2,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
 
             if (analysis.confidenceMin != null &&
                 analysis.confidenceMax != null) ...[
@@ -1693,6 +1874,39 @@ class _HeaderCard extends StatelessWidget {
               ),
               style: TextStyle(color: muted, fontSize: 12),
             ),
+
+            if (confidenceReason?.isNotEmpty == true) ...[
+              const SizedBox(height: 8),
+              const Divider(),
+              Theme(
+                data: Theme.of(
+                  context,
+                ).copyWith(dividerColor: Colors.transparent),
+                child: ExpansionTile(
+                  key: const ValueKey('analysis-confidence-reason'),
+                  tilePadding: EdgeInsets.zero,
+                  childrenPadding: const EdgeInsets.only(bottom: 8),
+                  leading: Icon(
+                    Icons.help_outline_rounded,
+                    size: 18,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  title: Text(
+                    context.l10n.whyNotHigherConfidence,
+                    style: const TextStyle(fontWeight: FontWeight.w900),
+                  ),
+                  children: [
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        confidenceReason!,
+                        style: const TextStyle(height: 1.45),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -1824,70 +2038,109 @@ class _BeginnerMeaningCard extends StatelessWidget {
   }
 }
 
-// =============================================================================
-// RISK
-// =============================================================================
-
-class _RiskCard extends StatelessWidget {
-  const _RiskCard({required this.analysis, required this.isPro});
+// ignore: unused_element
+class _EvidenceSummary extends StatelessWidget {
+  const _EvidenceSummary({required this.analysis});
 
   final Analysis analysis;
-  final bool isPro;
 
   @override
   Widget build(BuildContext context) {
-    final risk = (analysis.riskLevel ?? '').trim().toLowerCase();
+    final l10n = context.l10n;
+    final evidence = <(IconData, String, String)>[];
+    final fundamental = analysis.keyDriversFundamental?.trim();
+    final contextSnapshot = analysis.fundamentalContext;
+    if (fundamental?.isNotEmpty == true) {
+      evidence.add((
+        Icons.calendar_month_outlined,
+        l10n.fundamentalDrivers,
+        fundamental!,
+      ));
+    } else if (contextSnapshot != null) {
+      evidence.add((
+        Icons.calendar_month_outlined,
+        l10n.fundamentalDrivers,
+        l10n.fundamentalEvidenceSummary(
+          contextSnapshot.newsItems.length,
+          contextSnapshot.calendarEvents.length,
+        ),
+      ));
+    }
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final technical = analysis.keyDriversTechnical?.trim();
+    if (technical?.isNotEmpty == true) {
+      evidence.add((
+        Icons.analytics_outlined,
+        l10n.technicalDrivers,
+        technical!,
+      ));
+    } else if (analysis.techBuyCount != null ||
+        analysis.techNeutralCount != null ||
+        analysis.techSellCount != null) {
+      evidence.add((
+        Icons.analytics_outlined,
+        l10n.technicalDrivers,
+        '${l10n.buy} ${analysis.techBuyCount ?? 0} · '
+            '${l10n.neutral} ${analysis.techNeutralCount ?? 0} · '
+            '${l10n.sell} ${analysis.techSellCount ?? 0}',
+      ));
+    }
 
-    late final Color color;
-    late final String label;
-    late final String guidance;
-
-    if (risk.contains('high') || risk.contains('tinggi')) {
-      color = isDark ? AppColors.bearishDark : AppColors.bearishLight;
-      label = context.l10n.riskHighLabel;
-      guidance = isPro
-          ? context.l10n.riskHighProGuidance
-          : context.l10n.riskHighBeginnerGuidance;
-    } else if (risk.contains('low') || risk.contains('rendah')) {
-      color = isDark ? AppColors.bullishDark : AppColors.bullishLight;
-      label = context.l10n.riskLowLabel;
-      guidance = context.l10n.riskLowGuidance;
-    } else {
-      // Glyph/teks memakai nada emas yang terbaca; isian tetap emas web.
-      color = isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText;
-      label = context.l10n.riskModerateLabel;
-      guidance = context.l10n.riskModerateGuidance;
+    final marketContext = analysis.marketContext?.trim();
+    final reason = analysis.whyReason?.trim();
+    final third = marketContext?.isNotEmpty == true ? marketContext : reason;
+    if (third?.isNotEmpty == true) {
+      evidence.add((Icons.public_rounded, l10n.marketContext, third!));
     }
 
     return Card(
+      key: const ValueKey('analysis-evidence-summary'),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Icon(Icons.shield_outlined, color: color, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: color,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 10),
-
             Text(
-              guidance,
-              style: const TextStyle(fontSize: 12.5, height: 1.45),
+              l10n.marketEvidence,
+              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
             ),
+            const SizedBox(height: 10),
+            if (evidence.isEmpty)
+              Text(
+                l10n.marketEvidenceDescription,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              )
+            else
+              for (final item in evidence.take(3)) ...[
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(item.$1, size: 18),
+                    const SizedBox(width: 9),
+                    Expanded(
+                      child: Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(
+                              text: '${item.$2}: ',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            TextSpan(text: item.$3),
+                          ],
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 12.5, height: 1.4),
+                      ),
+                    ),
+                  ],
+                ),
+                if (item != evidence.take(3).last) const SizedBox(height: 10),
+              ],
           ],
         ),
       ),
@@ -2026,6 +2279,7 @@ class _ChartCard extends StatelessWidget {
     required this.candles,
     required this.isLoading,
     required this.error,
+    required this.onRetry,
     required this.onOpenTradingView,
   });
 
@@ -2034,6 +2288,7 @@ class _ChartCard extends StatelessWidget {
 
   final bool isLoading;
   final String? error;
+  final VoidCallback onRetry;
   final VoidCallback onOpenTradingView;
 
   @override
@@ -2094,12 +2349,10 @@ class _ChartCard extends StatelessWidget {
             const SizedBox(height: 16),
 
             if (error != null && candles.isEmpty)
-              Text(
-                error!,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontSize: 12,
-                ),
+              ErrorBanner(
+                message: error,
+                onRetry: onRetry,
+                retryLabel: context.l10n.tryAgain,
               )
             else
               AnalysisLevelsChart(
@@ -2458,87 +2711,6 @@ String _summarySignal(int buy, int neutral, int sell) {
   if (buy > sell && buy > neutral) return 'Bullish';
   if (sell > buy && sell > neutral) return 'Bearish';
   return 'Neutral';
-}
-
-class _ConfidenceReasonCard extends StatelessWidget {
-  const _ConfidenceReasonCard({
-    required this.analysis,
-    required this.reason,
-    required this.onOpenUrl,
-  });
-
-  final Analysis analysis;
-  final String reason;
-  final ValueChanged<String> onOpenUrl;
-
-  @override
-  Widget build(BuildContext context) {
-    final citations = analysis.fundamentalCitations;
-    final news = analysis.fundamentalContext?.newsItems;
-    return Card(
-      child: ExpansionTile(
-        key: const ValueKey('analysis-confidence-reason'),
-        initiallyExpanded: false,
-        leading: const Icon(Icons.help_outline_rounded, size: 18),
-        title: Text(
-          context.l10n.whyNotHigherConfidence,
-          style: const TextStyle(fontWeight: FontWeight.w900),
-        ),
-        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(reason, style: const TextStyle(height: 1.45)),
-          ),
-          if (citations != null &&
-              (citations.newsTitles.isNotEmpty ||
-                  citations.calendarEvents.isNotEmpty)) ...[
-            const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                context.l10n.citedSources,
-                style: const TextStyle(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
-            const SizedBox(height: 6),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Wrap(
-                spacing: 7,
-                runSpacing: 7,
-                children: [
-                  for (final title in citations.newsTitles)
-                    ActionChip(
-                      avatar: const Icon(Icons.article_outlined, size: 15),
-                      label: Text(title, overflow: TextOverflow.ellipsis),
-                      onPressed: () {
-                        for (final item
-                            in news ?? const <FundamentalNewsItem>[]) {
-                          final url = item.url;
-                          if (item.title == title && url != null) {
-                            onOpenUrl(url);
-                            return;
-                          }
-                        }
-                      },
-                    ),
-                  for (final event in citations.calendarEvents)
-                    Chip(
-                      avatar: const Icon(Icons.event_outlined, size: 15),
-                      label: Text(event, overflow: TextOverflow.ellipsis),
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
 }
 
 class _TechnicalIndicatorsCard extends StatelessWidget {

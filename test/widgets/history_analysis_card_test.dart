@@ -47,6 +47,18 @@ void main() {
     expect(find.textContaining('PROFIT'), findsNothing);
   });
 
+  testWidgets('labels the credit-sensitive analysis action clearly', (
+    tester,
+  ) async {
+    var tapped = false;
+    await _pumpCard(tester, _analysis(), onReanalyze: () => tapped = true);
+
+    await tester.tap(find.text('Use for a new analysis'));
+
+    expect(tapped, isTrue);
+    expect(find.byIcon(Icons.refresh_rounded), findsNothing);
+  });
+
   testWidgets('keeps risk and market context readable at 200% text', (
     tester,
   ) async {
@@ -69,6 +81,7 @@ Future<void> _pumpCard(
   WidgetTester tester,
   Analysis analysis, {
   TextScaler textScaler = TextScaler.noScaling,
+  VoidCallback? onReanalyze,
 }) {
   return tester.pumpWidget(
     MaterialApp(
@@ -78,7 +91,11 @@ Future<void> _pumpCard(
         data: MediaQueryData(textScaler: textScaler),
         child: Scaffold(
           body: SingleChildScrollView(
-            child: HistoryAnalysisCard(analysis: analysis, onTap: () {}),
+            child: HistoryAnalysisCard(
+              analysis: analysis,
+              onTap: () {},
+              onReanalyze: onReanalyze,
+            ),
           ),
         ),
       ),

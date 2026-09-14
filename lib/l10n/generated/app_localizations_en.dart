@@ -70,7 +70,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noteSaveFailed => 'Note could not be saved.';
 
   @override
-  String get tradingPlanTitle => 'Trading Plan';
+  String get tradingPlanTitle => 'Suggested Levels';
 
   @override
   String get tradingPlanDisclaimer =>
@@ -84,7 +84,31 @@ class AppLocalizationsEn extends AppLocalizations {
       'Market snapshot and fundamental context.';
 
   @override
-  String get technicalDetails => 'Technical details';
+  String get supportingData => 'Fundamental context';
+
+  @override
+  String fundamentalEvidenceSummary(int news, int events) {
+    return '$news news items · $events economic events';
+  }
+
+  @override
+  String get notesAndJournal => 'Notes & journal';
+
+  @override
+  String get notesAndJournalDescription =>
+      'Use the journal for trade decisions and outcomes; use the private note for analysis-specific reminders.';
+
+  @override
+  String get learnAnalysisBasics => 'Learn analysis basics';
+
+  @override
+  String get learnBiasConfidence => 'Bias, confidence, and validity';
+
+  @override
+  String get learnTechnicalFundamental => 'Technical and fundamental evidence';
+
+  @override
+  String get technicalDetails => 'Technical indicators';
 
   @override
   String get technicalDetailsDescription =>
@@ -172,6 +196,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get analyzeThisTimeframe => 'Analyze this timeframe';
+
+  @override
+  String get analysisUsesFreeQuota => 'Source: free analysis quota';
+
+  @override
+  String get analysisUsesOneCredit => 'Source: 1 credit (free quota used up)';
+
+  @override
+  String get analysisUsageUnavailable =>
+      'Source will be confirmed before the request is processed';
+
+  @override
+  String get selectedAnalysisMarket => 'Selected market';
+
+  @override
+  String get changeSelection => 'Change';
 
   @override
   String get priceChart => 'Price Chart';
@@ -301,10 +341,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get riskHighLabel => 'High Risk';
 
   @override
-  String get riskLowLabel => 'Relatively Low Risk';
+  String get riskLowLabel => 'Low Risk';
 
   @override
-  String get riskModerateLabel => 'Moderate Risk';
+  String get riskModerateLabel => 'Medium Risk';
 
   @override
   String get riskHighProGuidance =>
@@ -326,14 +366,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reanalyze => 'Analyze again';
 
   @override
+  String get useForNewAnalysis => 'Use for a new analysis';
+
+  @override
+  String get basicFilters => 'Basic filters';
+
+  @override
+  String get saveBasicFilter => 'Save basic filter';
+
+  @override
+  String get basicFilterExplanation =>
+      'Saves search, mode, instruments, timeframes, and date range. Evaluation status is not yet supported by backend presets.';
+
+  @override
   String get history => 'History';
 
   @override
-  String get historyPageTitle => 'History & Analysis Performance';
+  String get historyPageTitle => 'Analysis History';
 
   @override
   String historyTotalAnalyses(int count) {
-    return '$count analyses total';
+    return '$count saved analyses';
   }
 
   @override
@@ -819,7 +872,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get openFullExplanation => 'Open full explanation';
 
   @override
-  String get learnAdaptivePosition => 'Learn adaptive positioning';
+  String get learnAdaptivePosition => 'Learn the Position Size Recommendation';
 
   @override
   String get sponsoredBySolidPrime => 'Sponsored by SOLID PRIME';
@@ -1384,6 +1437,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Choose a market, review the live context, then create your first analysis. Results are decision support—not trading orders.';
 
   @override
+  String get chooseMarketAndStartAnalysis =>
+      'Choose a market and start analysis';
+
+  @override
   String get gotIt => 'Got it';
 
   @override
@@ -1443,6 +1500,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get analysisQuota => 'Analysis Quota';
+
+  @override
+  String get analysisQuotaLoadFailed =>
+      'The analysis quota could not be loaded.';
 
   @override
   String get perHour => 'Per hour';
@@ -1537,6 +1598,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get selectInstrument => 'Select Instrument';
+
+  @override
+  String get instrumentCategoryCommoditiesIndices => 'Commodities & Indices';
+
+  @override
+  String get instrumentCategoryForex => 'Forex';
+
+  @override
+  String get instrumentCategoryCrypto => 'Crypto';
 
   @override
   String get selectMarketDescription =>
@@ -1771,7 +1841,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String positiveEvaluatedSummary(int rate) {
-    return '$rate% positive outcomes from evaluated analyses.';
+    return 'Targets were reached in $rate% of evaluated analyses.';
   }
 
   @override
@@ -2192,6 +2262,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get outcomeSummary => '30-day outcome summary';
+
+  @override
+  String get allHistorySummary => 'All analysis summary';
+
+  @override
+  String get targetReached => 'Target reached';
+
+  @override
+  String get riskLimitTouched => 'Risk limit reached';
+
+  @override
+  String get periodEnded => 'Period ended';
+
+  @override
+  String get cannotBeEvaluated => 'Cannot be evaluated';
+
+  @override
+  String get outcomeSummaryLoadFailed =>
+      'The outcome summary could not be loaded.';
 
   @override
   String get targetHitRate => 'Target hit rate';
@@ -2743,7 +2832,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appErrInstrumentUnsupported =>
-      'This instrument does not support the Adaptive Position Plan.';
+      'This instrument does not support the Position Size Recommendation.';
 
   @override
   String get appErrNoStandardPlan =>
@@ -2861,6 +2950,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get newsSourceFallback => 'News source';
+
+  @override
+  String get latestNews => 'Latest News';
+
+  @override
+  String get refresh => 'Refresh';
+
+  @override
+  String get scrollForMore => 'Swipe to see more';
 
   @override
   String get publicAiPerformanceSubtitle =>
@@ -3141,6 +3239,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tradingRulesUnavailable => 'Trading rules are not available.';
+
+  @override
+  String get positionSizeRecommendation => 'Position Size Recommendation';
 
   @override
   String get adaptivePlanIntro =>

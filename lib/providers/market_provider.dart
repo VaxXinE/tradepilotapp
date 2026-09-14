@@ -11,6 +11,7 @@ import '../models/technical_summary.dart';
 import '../repositories/market_repository.dart';
 import 'auth_provider.dart';
 import '../l10n/app_messages.dart';
+import '../l10n/generated/app_localizations.dart';
 
 class MarketProvider extends ChangeNotifier {
   MarketProvider(this._authProvider, this._repository) {
@@ -26,10 +27,24 @@ class MarketProvider extends ChangeNotifier {
   // SOURCE OF TRUTH — INSTRUMENTS
   // ===========================================================================
 
+  // Id kategori bersifat internal — label yang dilihat pengguna diambil dari
+  // [instrumentCategoryLabel]. Web memberi label ketiganya "Futures", "Forex",
+  // dan "Crypto", tetapi grup pertama sebenarnya berisi logam spot dan indeks,
+  // bukan kontrak berjangka, sehingga mobile memakai penamaan yang jujur.
+
+  /// Logam spot, energi, dan indeks saham.
+  static const commoditiesIndicesCategory = 'commoditiesIndices';
+
+  /// Pasangan mata uang.
+  static const forexCategory = 'forex';
+
+  /// Aset kripto.
+  static const cryptoCategory = 'crypto';
+
   /// Disamakan dengan Trade-Pilot web `prod`
   /// dan SUPPORTED_INSTRUMENTS backend.
   static const instrumentGroups = {
-    'Futures': [
+    commoditiesIndicesCategory: [
       'XAU/USD',
       'BRENT',
       'XAG/USD',
@@ -39,9 +54,25 @@ class MarketProvider extends ChangeNotifier {
       'NASDAQ',
       'DXY',
     ],
-    'Forex': ['AUD/USD', 'EUR/USD', 'GBP/USD', 'USD/CHF', 'USD/JPY', 'USD/IDR'],
-    'Crypto': ['BTC/USD', 'ETH/USD', 'SOL/USD', 'BNB/USD', 'XRP/USD'],
+    forexCategory: [
+      'AUD/USD',
+      'EUR/USD',
+      'GBP/USD',
+      'USD/CHF',
+      'USD/JPY',
+      'USD/IDR',
+    ],
+    cryptoCategory: ['BTC/USD', 'ETH/USD', 'SOL/USD', 'BNB/USD', 'XRP/USD'],
   };
+
+  /// Label tampil untuk sebuah id kategori pada [instrumentGroups].
+  static String instrumentCategoryLabel(AppLocalizations l10n, String id) =>
+      switch (id) {
+        commoditiesIndicesCategory => l10n.instrumentCategoryCommoditiesIndices,
+        forexCategory => l10n.instrumentCategoryForex,
+        cryptoCategory => l10n.instrumentCategoryCrypto,
+        _ => id,
+      };
 
   /// Instrumen yang boleh dipilih pada layar Analisis.
   ///

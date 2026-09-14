@@ -17,7 +17,7 @@ import '../../../providers/market_provider.dart';
 import '../../../providers/progression_provider.dart';
 import '../../../providers/watchlist_provider.dart';
 import '../../../widgets/error_banner.dart';
-import '../../../widgets/app_footer.dart';
+import '../../../widgets/chart/timeframe_selector.dart';
 import '../../../widgets/market_mini_chart.dart';
 import '../../../widgets/cooling_off_breathing_dialog.dart';
 import '../../../widgets/analysis_quota_dialog.dart';
@@ -80,8 +80,8 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _resultSectionKey = GlobalKey();
   Analysis? _resultAnalysis;
+  String? _analysisSubmitError;
   int _resultRevision = 0;
-  bool _reanalyzingInstrument = false;
   String? _guardrailInstrument;
   List<Map<String, dynamic>> _guardrails = const [];
   final Map<String, int> _guardrailTelemetryIds = {};
@@ -267,13 +267,13 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
 
     final note = _contextController.text.trim();
 
+    if (_analysisSubmitError != null) {
+      setState(() => _analysisSubmitError = null);
+    }
+
     for (final signal in _guardrails) {
       unawaited(_logGuardrailProceed(auth, signal, market.selectedInstrument));
     }
-
-    // Tombol submit hilang begitu hasil tampil, jadi analisis ulang memakai
-    // popup progres seperti dialog `dialog-reanalyzing` pada web.
-    if (_resultAnalysis != null) _showReanalyzingDialog();
 
     final result = await analysisProvider.createAnalysis(
       instrument: market.selectedInstrument,
@@ -282,11 +282,10 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
       userInputContext: note.isEmpty ? null : note,
     );
 
-    _dismissReanalyzingDialog();
-
     if (!mounted) return;
 
     if (result == null) {
+      setState(() => _analysisSubmitError = analysisProvider.errorMessage);
       final limit = analysisProvider.quotaLimit;
       if (limit != null) {
         final openTopUp = await showAnalysisQuotaDialog(context, limit);
@@ -372,64 +371,13 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
     }
   }
 
-  /// Memilih instrumen dari grid.
-  ///
-  /// Mengikuti `handleInstrumentClick` pada web: ketika sebuah hasil sudah
-  /// tampil di halaman, memilih instrumen lain langsung menjalankan analisis
-  /// baru tanpa menunggu tombol submit (tombol itu memang disembunyikan).
-  /// Analisis pertama tetap butuh tap eksplisit pada tombol.
-  Future<void> _selectInstrument(String symbol) async {
-    final market = context.read<MarketProvider>();
-    final previous = market.selectedInstrument;
+  /// Mengubah pilihan tidak pernah membuat request analisis atau memakai
+  /// kuota. Request hanya boleh berasal dari tombol submit yang eksplisit.
+  Future<void> _selectInstrument(String symbol) =>
+      context.read<MarketProvider>().selectInstrument(symbol);
 
-    await market.selectInstrument(symbol);
-
-    if (!mounted) return;
-
-    if (_resultAnalysis == null ||
-        market.selectedInstrument == previous ||
-        market.isCustomInstrument ||
-        context.read<AnalysisProvider>().isSubmitting) {
-      return;
-    }
-
-    await _submit();
-  }
-
-  void _showReanalyzingDialog() {
-    _reanalyzingInstrument = true;
-    unawaited(
-      showDialog<void>(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => PopScope(
-          canPop: false,
-          child: AlertDialog(
-            key: const Key('reanalyzing-dialog'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const CircularProgressIndicator(),
-                const SizedBox(height: 16),
-                Text(
-                  context.l10n.analyzingMarket,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _dismissReanalyzingDialog() {
-    if (!_reanalyzingInstrument) return;
-    _reanalyzingInstrument = false;
-    if (!mounted) return;
-    Navigator.of(context, rootNavigator: true).pop();
-  }
+  Future<void> _selectTimeframe(String timeframe) =>
+      context.read<MarketProvider>().selectTimeframe(timeframe);
 
   /// Membawa hasil ke layar, sama seperti `scrollIntoView` pada web.
   void _scrollToResult() {
@@ -471,6 +419,31 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
       );
     }
     widget.onNewAnalysis?.call();
+  }
+
+  void _changeAnalysisSelection() {
+    final result = _resultAnalysis;
+    if (result != null) {
+      unawaited(
+        context.read<MarketProvider>().selectInstrument(
+          result.instrument,
+          timeframe: result.timeframe,
+        ),
+      );
+    }
+    setState(() {
+      _resultRevision++;
+      _resultAnalysis = null;
+    });
+    if (_scrollController.hasClients) {
+      unawaited(
+        _scrollController.animateTo(
+          0,
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOut,
+        ),
+      );
+    }
   }
 
   Future<void> _toggleMentalItem(int index) async {
@@ -566,9 +539,6 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
     final highImpactSoon = _findHighImpactSoon(market.highImpactEvents);
     final l10n = context.l10n;
 
-    // Sama seperti web: form tidak pernah diganti oleh hasil analisis. Hasil
-    // dirender di bawah form sehingga trader tetap bisa memilih simbol lain
-    // (BRENT, NIKKEI, HSI, ...) tanpa keluar dari halaman ini.
     final result = _resultAnalysis;
     final resultRevision = _resultRevision;
 
@@ -582,103 +552,81 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(16),
             children: [
-              _AnalyzeHeader(
-                title: l10n.analyzeTitle,
-                quota: analysis.quota,
-                onNewAnalysis: result == null ? null : _openNewAnalysisForm,
-              ),
+              _AnalyzeHeader(title: l10n.analyzeTitle, quota: analysis.quota),
               const SizedBox(height: 20),
-              ErrorBanner(message: analysis.errorMessage),
-
-              ErrorBanner(message: market.marketError),
-
-              // ---------------------------------------------------------------
-              // INSTRUMENT
-              // ---------------------------------------------------------------
-              _SectionTitle(title: l10n.selectInstrument),
-
-              const SizedBox(height: 12),
-
-              _InstrumentSelector(
-                selected: instrument,
-                isCustom: market.isCustomInstrument,
-                onSelected: _selectInstrument,
-                onSelectedCustom: (symbol) =>
-                    market.selectInstrument(symbol, allowUnsupported: true),
+              ErrorBanner(
+                message: _analysisSubmitError,
+                onRetry: analysis.isSubmitting
+                    ? null
+                    : () => unawaited(_submit()),
+                retryLabel: l10n.tryAgain,
               ),
 
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: () {
-                  unawaited(_openPriceAlert(instrument, quote));
-                },
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(40),
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  textStyle: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+              ErrorBanner(
+                message: market.marketError,
+                onRetry: () =>
+                    unawaited(market.loadSelectedMarketData(force: true)),
+                retryLabel: l10n.tryAgain,
+              ),
+              if (result == null) ...[
+                _SectionTitle(title: l10n.selectInstrument),
+                const SizedBox(height: 12),
+                _InstrumentSelector(
+                  selected: instrument,
+                  isCustom: market.isCustomInstrument,
+                  onSelected: _selectInstrument,
+                  onSelectedCustom: (symbol) =>
+                      market.selectInstrument(symbol, allowUnsupported: true),
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    Expanded(child: _SectionTitle(title: l10n.timeframe)),
+                    Text(
+                      '$instrument · $timeframe',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                TimeframeSelector(
+                  timeframes: const [
+                    '1m',
+                    '5m',
+                    '15m',
+                    '30m',
+                    '1h',
+                    '4h',
+                    '1D',
+                    '1W',
+                  ],
+                  selected: timeframe,
+                  onSelected: (value) => unawaited(_selectTimeframe(value)),
+                  isLoading: market.isLoadingSelectedMarket,
+                ),
+                const SizedBox(height: 20),
+                if (highImpactSoon != null) ...[
+                  _PreTradeWarning(event: highImpactSoon),
+                  const SizedBox(height: 20),
+                ],
+                if (mentalChecklist.enabled) ...[
+                  _MentalChecklistCard(
+                    checked: _checkedMentalItems,
+                    isSaving: _isAwardingChecklist,
+                    onToggle: _toggleMentalItem,
                   ),
-                ),
-                icon: const Icon(Icons.notifications_active_outlined, size: 15),
-                label: Text(
-                  quote == null
-                      ? l10n.priceAlertUnavailable
-                      : l10n.createPriceAlert,
-                ),
-              ),
-
-              if (quote == null) ...[
-                const SizedBox(height: 7),
-                Text(
-                  l10n.instrumentHasNoLiveFeed,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: muted, fontSize: 11.5),
-                ),
-              ],
-
-              const SizedBox(height: 20),
-
-              _MarketOverviewCard(
-                market: market,
-                onToggleWatchlist: () {
-                  unawaited(_toggleWatchlist(instrument));
-                },
-              ),
-
-              const SizedBox(height: 20),
-
-              // ---------------------------------------------------------------
-              // HIGH IMPACT PRE-TRADE WARNING
-              // ---------------------------------------------------------------
-              if (highImpactSoon != null) ...[
-                _PreTradeWarning(event: highImpactSoon),
-
-                const SizedBox(height: 20),
-              ],
-
-              if (mentalChecklist.enabled) ...[
-                _MentalChecklistCard(
-                  checked: _checkedMentalItems,
-                  isSaving: _isAwardingChecklist,
-                  onToggle: _toggleMentalItem,
-                ),
-                const SizedBox(height: 20),
-              ],
-
-              // ---------------------------------------------------------------
-              // CTA
-              // ---------------------------------------------------------------
-              // Setelah hasil ada, tombol submit disembunyikan — memilih
-              // instrumen lain langsung menganalisis ulang, persis web.
-              if (result == null)
-                Center(
+                  const SizedBox(height: 20),
+                ],
+                SizedBox(
+                  width: double.infinity,
                   child: ElevatedButton.icon(
                     key: const Key('submit-analysis-button'),
                     onPressed: analysis.isSubmitting ? null : _submit,
                     style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(160, 48),
-                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      minimumSize: const Size.fromHeight(52),
                       textStyle: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -701,29 +649,38 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
                     ),
                   ),
                 ),
-
-              if (analysis.quota != null && !analysis.quota!.unlimited) ...[
-                const SizedBox(height: 10),
-                _QuotaSummaryCard(
-                  summary: l10n.analysisQuotaBalances(
-                    analysis.quota!.hourly.remaining,
-                    analysis.quota!.daily.remaining,
-                    analysis.quota!.credits.balance,
+                const SizedBox(height: 8),
+                Text(
+                  analysisUsageLabel(context, analysis.quota),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
                   ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  l10n.aiAnalysisDisclaimer,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: muted, fontSize: 11, height: 1.4),
+                ),
+                const SizedBox(height: 20),
+                _MarketOverviewCard(
+                  market: market,
+                  onToggleWatchlist: () {
+                    unawaited(_toggleWatchlist(instrument));
+                  },
                 ),
               ],
 
-              const SizedBox(height: 12),
-
-              Text(
-                l10n.aiAnalysisDisclaimer,
-                textAlign: TextAlign.center,
-                style: TextStyle(color: muted, fontSize: 11, height: 1.4),
-              ),
-
               if (result != null) ...[
-                const SizedBox(height: 20),
-                const Divider(height: 1),
+                _AnalysisSelectionSummary(
+                  instrument: result.instrument,
+                  timeframe: result.timeframe,
+                  onChange: _changeAnalysisSelection,
+                  onNew: _openNewAnalysisForm,
+                ),
                 const SizedBox(height: 16),
                 KeyedSubtree(
                   key: _resultSectionKey,
@@ -732,6 +689,11 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
                     analysisId: result.id,
                     preloaded: result,
                     embedded: true,
+                    onCreatePriceAlert: quote == null
+                        ? null
+                        : () => unawaited(
+                            _openPriceAlert(result.instrument, quote),
+                          ),
                     onAnalysisCreated: (created) {
                       if (!mounted || resultRevision != _resultRevision) {
                         return;
@@ -742,7 +704,7 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
                 ),
               ],
 
-              const AppFooter(),
+              const SizedBox(height: 24),
             ],
           ),
         ),
@@ -1382,46 +1344,67 @@ class _SectionTitle extends StatelessWidget {
   );
 }
 
-class _QuotaSummaryCard extends StatelessWidget {
-  const _QuotaSummaryCard({required this.summary});
+class _AnalysisSelectionSummary extends StatelessWidget {
+  const _AnalysisSelectionSummary({
+    required this.instrument,
+    required this.timeframe,
+    required this.onChange,
+    required this.onNew,
+  });
 
-  final String summary;
+  final String instrument;
+  final String timeframe;
+  final VoidCallback onChange;
+  final VoidCallback onNew;
 
   @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Row(
-          children: [
-            Icon(Icons.account_balance_wallet_outlined, color: colors.primary),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    context.l10n.analysisQuota,
-                    style: const TextStyle(fontWeight: FontWeight.w800),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    summary,
-                    style: TextStyle(
-                      color: colors.onSurfaceVariant,
-                      fontSize: 12.5,
+  Widget build(BuildContext context) => Card(
+    child: Padding(
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.l10n.selectedAnalysisMarket,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 3),
+                    Text(
+                      '$instrument · $timeframe',
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                  ],
+                ),
               ),
+              TextButton(
+                key: const Key('change-analysis-selection-button'),
+                onPressed: onChange,
+                child: Text(context.l10n.changeSelection),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              key: const Key('new-analysis-button'),
+              onPressed: onNew,
+              icon: const Icon(Icons.add_rounded, size: 17),
+              label: Text(context.l10n.analyzeTitle),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
 }
 
 // =============================================================================
@@ -1529,7 +1512,10 @@ class _InstrumentSelectorState extends State<_InstrumentSelector> {
               for (final category in _groups.keys) ...[
                 Expanded(
                   child: _CategoryTab(
-                    label: category,
+                    label: MarketProvider.instrumentCategoryLabel(
+                      context.l10n,
+                      category,
+                    ),
                     isOpen: open == category,
                     onTap: () => setState(
                       () => _openCategory = open == category ? null : category,
@@ -1725,19 +1711,10 @@ class _InstrumentOption extends StatelessWidget {
 /// Baris judul Analyze mengikuti mobile web: judul di kiri, lalu chip
 /// progression dan chip kuota di kanan.
 class _AnalyzeHeader extends StatelessWidget {
-  const _AnalyzeHeader({
-    required this.title,
-    required this.quota,
-    this.onNewAnalysis,
-  });
+  const _AnalyzeHeader({required this.title, required this.quota});
 
   final String title;
   final AnalysisQuota? quota;
-
-  /// Hanya terisi ketika sebuah hasil sedang tampil; menekannya mengosongkan
-  /// hasil dan mengembalikan form ke keadaan bersih, sama seperti tombol
-  /// `button-new-analysis` pada web.
-  final VoidCallback? onNewAnalysis;
 
   @override
   Widget build(BuildContext context) {
@@ -1762,13 +1739,6 @@ class _AnalyzeHeader extends StatelessWidget {
             spacing: 8,
             runSpacing: 6,
             children: [
-              if (onNewAnalysis case final onNewAnalysis?)
-                OutlinedButton.icon(
-                  key: const Key('new-analysis-button'),
-                  onPressed: onNewAnalysis,
-                  icon: const Icon(Icons.add_rounded, size: 17),
-                  label: Text(context.l10n.analyzeTitle),
-                ),
               if (summary != null) _ProgressionChip(summary: summary),
               if (showQuota) _QuotaChip(quota: quota!),
             ],

@@ -11,10 +11,10 @@ class NewsFeedCard extends StatefulWidget {
   const NewsFeedCard({super.key});
 
   @override
-  State<NewsFeedCard> createState() => _NewsFeedCardState();
+  State<NewsFeedCard> createState() => NewsFeedCardState();
 }
 
-class _NewsFeedCardState extends State<NewsFeedCard> {
+class NewsFeedCardState extends State<NewsFeedCard> {
   List<_NewsArticle> _articles = const [];
   bool _loading = true;
   bool _failed = false;
@@ -78,15 +78,15 @@ class _NewsFeedCardState extends State<NewsFeedCard> {
             children: [
               const Icon(Icons.newspaper_outlined, size: 20),
               const SizedBox(width: 8),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Berita Terkini',
-                  style: TextStyle(fontWeight: FontWeight.w900),
+                  context.l10n.latestNews,
+                  style: const TextStyle(fontWeight: FontWeight.w900),
                 ),
               ),
               TextButton(
                 onPressed: _loading ? null : load,
-                child: const Text('Refresh'),
+                child: Text(context.l10n.refresh),
               ),
             ],
           ),

@@ -9,7 +9,6 @@ import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 import 'package:trade_pilot_api_client/trade_pilot_client.dart';
 
 import '../models/history_filters.dart';
-import '../models/history_sort.dart';
 import 'auth_provider.dart';
 import '../l10n/app_messages.dart';
 
@@ -71,6 +70,8 @@ class AnalysisProvider extends ChangeNotifier {
 
   bool isLoadingSummary = false;
 
+  bool isLoadingHistoryOutcomeSummary = false;
+
   String? errorMessage;
 
   String? historyError;
@@ -85,7 +86,13 @@ class AnalysisProvider extends ChangeNotifier {
 
   AnalysesSummary? summary;
 
+  AnalysisHistorySummary? historyOutcomeSummary;
+
+  String? historyOutcomeSummaryError;
+
   AnalysisQuota? quota;
+
+  bool quotaLoadFailed = false;
 
   AnalysisQuotaLimit? quotaLimit;
 
@@ -125,36 +132,17 @@ class AnalysisProvider extends ChangeNotifier {
   }
 
   List<Analysis> get visibleHistory {
-    // The generated API has no outcome/confidence/sort parameters yet.
-    // Refine a copy of the loaded page so Dashboard's base history stays intact.
-    final result = List<Analysis>.of(
+    return List<Analysis>.of(
       historyFilters.hasServerFilters ? filteredHistory : history,
     );
-
-    result.removeWhere((analysis) => !_matchesClientFilters(analysis));
-    result.sort(_compareVisibleHistory);
-
-    return result;
   }
 
-  int get visibleHistoryTotal {
-    if (historyFilters.outcome != HistoryOutcomeFilter.all ||
-        historyFilters.minConfidence != null) {
-      return visibleHistory.length;
-    }
-
-    return visibleHistorySourceTotal;
-  }
+  int get visibleHistoryTotal => visibleHistorySourceTotal;
 
   int get visibleHistorySourceTotal {
     return historyFilters.hasServerFilters
         ? filteredHistoryTotal
         : historyTotal;
-  }
-
-  bool get hasClientHistoryRefinement {
-    return historyFilters.outcome != HistoryOutcomeFilter.all ||
-        historyFilters.minConfidence != null;
   }
 
   bool get isLoadingVisibleHistory {
@@ -198,6 +186,10 @@ class AnalysisProvider extends ChangeNotifier {
   int _historyRequestId = 0;
 
   int _summaryRequestId = 0;
+
+  int _historyOutcomeSummaryRequestId = 0;
+
+  bool _historyOutcomeSummaryRequestInFlight = false;
 
   int _quotaRequestId = 0;
 
@@ -259,6 +251,8 @@ class AnalysisProvider extends ChangeNotifier {
 
     _summaryRequestId++;
 
+    _historyOutcomeSummaryRequestId++;
+
     _quotaRequestId++;
 
     _createRequestId++;
@@ -277,6 +271,8 @@ class AnalysisProvider extends ChangeNotifier {
     _historyRequestInFlight = false;
 
     _summaryRequestInFlight = false;
+
+    _historyOutcomeSummaryRequestInFlight = false;
 
     _quotaRequestInFlight = false;
 
@@ -336,7 +332,15 @@ class AnalysisProvider extends ChangeNotifier {
 
     summary = null;
 
+    isLoadingHistoryOutcomeSummary = false;
+
+    historyOutcomeSummary = null;
+
+    historyOutcomeSummaryError = null;
+
     quota = null;
+
+    quotaLoadFailed = false;
 
     quotaLimit = null;
 
@@ -376,12 +380,21 @@ class AnalysisProvider extends ChangeNotifier {
         return;
       }
 
-      quota = response.data;
+      final loadedQuota = response.data;
+
+      if (loadedQuota == null) {
+        quotaLoadFailed = quota == null;
+        return;
+      }
+
+      quota = loadedQuota;
+      quotaLoadFailed = false;
     } catch (_) {
       // Quota bukan critical state.
       //
       // Kalau background refresh gagal,
       // pertahankan cache terakhir.
+      quotaLoadFailed = quota == null;
     } finally {
       if (requestId == _quotaRequestId) {
         _quotaRequestInFlight = false;
@@ -446,6 +459,49 @@ class AnalysisProvider extends ChangeNotifier {
             isLoadingSummary = false;
           }
 
+          notifyListeners();
+        }
+      }
+    }
+  }
+
+  Future<void> loadHistoryOutcomeSummary({bool silent = false}) async {
+    if (_authProvider.status != AuthStatus.authenticated ||
+        _historyOutcomeSummaryRequestInFlight) {
+      return;
+    }
+
+    final epoch = _sessionEpoch;
+    final requestId = ++_historyOutcomeSummaryRequestId;
+    _historyOutcomeSummaryRequestInFlight = true;
+
+    if (!silent) {
+      isLoadingHistoryOutcomeSummary = true;
+      historyOutcomeSummaryError = null;
+      notifyListeners();
+    }
+
+    try {
+      final response = await _client.analyses.getAnalysisHistorySummary(
+        range: 'all',
+      );
+      if (!_isSessionCurrent(epoch) ||
+          requestId != _historyOutcomeSummaryRequestId) {
+        return;
+      }
+      historyOutcomeSummary = response.data;
+      historyOutcomeSummaryError = response.data == null
+          ? AppMessages.l10n.errGeneric
+          : null;
+    } catch (error) {
+      if (_isSessionCurrent(epoch)) {
+        historyOutcomeSummaryError = _friendlyError(error);
+      }
+    } finally {
+      if (requestId == _historyOutcomeSummaryRequestId) {
+        _historyOutcomeSummaryRequestInFlight = false;
+        if (_isSessionCurrent(epoch)) {
+          isLoadingHistoryOutcomeSummary = false;
           notifyListeners();
         }
       }
@@ -560,6 +616,8 @@ class AnalysisProvider extends ChangeNotifier {
       unawaited(loadHistory(refresh: true, silent: true));
 
       unawaited(loadSummary(silent: true));
+
+      unawaited(loadHistoryOutcomeSummary(silent: true));
 
       unawaited(loadQuota(ensureFresh: true));
 
@@ -941,6 +999,10 @@ class AnalysisProvider extends ChangeNotifier {
             ? null
             : BuiltList<String>(filters.timeframes),
 
+        outcomes: filters.apiOutcome == null
+            ? null
+            : BuiltList<String>(filters.apiOutcome!),
+
         q: filters.query.isEmpty ? null : filters.query,
 
         from: _toApiDate(filters.from),
@@ -1037,72 +1099,6 @@ class AnalysisProvider extends ChangeNotifier {
     }
 
     return Date(date.year, date.month, date.day);
-  }
-
-  bool _matchesClientFilters(Analysis analysis) {
-    switch (historyFilters.outcome) {
-      case HistoryOutcomeFilter.success:
-        if (analysis.outcomeStatus != AnalysisOutcomeStatusEnum.tp1Hit &&
-            analysis.outcomeStatus != AnalysisOutcomeStatusEnum.tp2Hit) {
-          return false;
-        }
-        break;
-      case HistoryOutcomeFilter.failed:
-        if (analysis.outcomeStatus != AnalysisOutcomeStatusEnum.slHit &&
-            analysis.outcomeStatus != AnalysisOutcomeStatusEnum.expired &&
-            analysis.outcomeStatus != AnalysisOutcomeStatusEnum.invalidated) {
-          return false;
-        }
-        break;
-      case HistoryOutcomeFilter.pending:
-        if (analysis.outcomeStatus != null &&
-            analysis.outcomeStatus != AnalysisOutcomeStatusEnum.pending) {
-          return false;
-        }
-        break;
-      case HistoryOutcomeFilter.all:
-        break;
-    }
-
-    final minimum = historyFilters.minConfidence;
-    if (minimum != null && _averageConfidence(analysis) < minimum) {
-      return false;
-    }
-
-    return true;
-  }
-
-  int _compareVisibleHistory(Analysis left, Analysis right) {
-    int result;
-
-    switch (historyFilters.sort) {
-      case HistorySort.newest:
-        result = right.createdAt.compareTo(left.createdAt);
-        break;
-      case HistorySort.oldest:
-        result = left.createdAt.compareTo(right.createdAt);
-        break;
-      case HistorySort.confidenceHighest:
-        result = _averageConfidence(right).compareTo(_averageConfidence(left));
-        break;
-    }
-
-    if (result != 0) {
-      return result;
-    }
-
-    return right.id.compareTo(left.id);
-  }
-
-  double _averageConfidence(Analysis analysis) {
-    final minimum = analysis.confidenceMin;
-    final maximum = analysis.confidenceMax;
-
-    if (minimum != null && maximum != null) {
-      return (minimum + maximum) / 2;
-    }
-
-    return (minimum ?? maximum ?? -1).toDouble();
   }
 
   String _historyPreferencesKey(int userId) {

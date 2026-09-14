@@ -221,7 +221,7 @@ abstract class AppLocalizations {
   /// No description provided for @tradingPlanTitle.
   ///
   /// In en, this message translates to:
-  /// **'Trading Plan'**
+  /// **'Suggested Levels'**
   String get tradingPlanTitle;
 
   /// No description provided for @tradingPlanDisclaimer.
@@ -242,10 +242,52 @@ abstract class AppLocalizations {
   /// **'Market snapshot and fundamental context.'**
   String get marketEvidenceDescription;
 
+  /// No description provided for @supportingData.
+  ///
+  /// In en, this message translates to:
+  /// **'Fundamental context'**
+  String get supportingData;
+
+  /// No description provided for @fundamentalEvidenceSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{news} news items · {events} economic events'**
+  String fundamentalEvidenceSummary(int news, int events);
+
+  /// No description provided for @notesAndJournal.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes & journal'**
+  String get notesAndJournal;
+
+  /// No description provided for @notesAndJournalDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the journal for trade decisions and outcomes; use the private note for analysis-specific reminders.'**
+  String get notesAndJournalDescription;
+
+  /// No description provided for @learnAnalysisBasics.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn analysis basics'**
+  String get learnAnalysisBasics;
+
+  /// No description provided for @learnBiasConfidence.
+  ///
+  /// In en, this message translates to:
+  /// **'Bias, confidence, and validity'**
+  String get learnBiasConfidence;
+
+  /// No description provided for @learnTechnicalFundamental.
+  ///
+  /// In en, this message translates to:
+  /// **'Technical and fundamental evidence'**
+  String get learnTechnicalFundamental;
+
   /// No description provided for @technicalDetails.
   ///
   /// In en, this message translates to:
-  /// **'Technical details'**
+  /// **'Technical indicators'**
   String get technicalDetails;
 
   /// No description provided for @technicalDetailsDescription.
@@ -403,6 +445,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Analyze this timeframe'**
   String get analyzeThisTimeframe;
+
+  /// No description provided for @analysisUsesFreeQuota.
+  ///
+  /// In en, this message translates to:
+  /// **'Source: free analysis quota'**
+  String get analysisUsesFreeQuota;
+
+  /// No description provided for @analysisUsesOneCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Source: 1 credit (free quota used up)'**
+  String get analysisUsesOneCredit;
+
+  /// No description provided for @analysisUsageUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Source will be confirmed before the request is processed'**
+  String get analysisUsageUnavailable;
+
+  /// No description provided for @selectedAnalysisMarket.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected market'**
+  String get selectedAnalysisMarket;
+
+  /// No description provided for @changeSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get changeSelection;
 
   /// No description provided for @priceChart.
   ///
@@ -629,13 +701,13 @@ abstract class AppLocalizations {
   /// No description provided for @riskLowLabel.
   ///
   /// In en, this message translates to:
-  /// **'Relatively Low Risk'**
+  /// **'Low Risk'**
   String get riskLowLabel;
 
   /// No description provided for @riskModerateLabel.
   ///
   /// In en, this message translates to:
-  /// **'Moderate Risk'**
+  /// **'Medium Risk'**
   String get riskModerateLabel;
 
   /// No description provided for @riskHighProGuidance.
@@ -668,6 +740,30 @@ abstract class AppLocalizations {
   /// **'Analyze again'**
   String get reanalyze;
 
+  /// No description provided for @useForNewAnalysis.
+  ///
+  /// In en, this message translates to:
+  /// **'Use for a new analysis'**
+  String get useForNewAnalysis;
+
+  /// No description provided for @basicFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Basic filters'**
+  String get basicFilters;
+
+  /// No description provided for @saveBasicFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Save basic filter'**
+  String get saveBasicFilter;
+
+  /// No description provided for @basicFilterExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Saves search, mode, instruments, timeframes, and date range. Evaluation status is not yet supported by backend presets.'**
+  String get basicFilterExplanation;
+
   /// No description provided for @history.
   ///
   /// In en, this message translates to:
@@ -677,13 +773,13 @@ abstract class AppLocalizations {
   /// No description provided for @historyPageTitle.
   ///
   /// In en, this message translates to:
-  /// **'History & Analysis Performance'**
+  /// **'Analysis History'**
   String get historyPageTitle;
 
   /// No description provided for @historyTotalAnalyses.
   ///
   /// In en, this message translates to:
-  /// **'{count} analyses total'**
+  /// **'{count} saved analyses'**
   String historyTotalAnalyses(int count);
 
   /// No description provided for @profile.
@@ -1571,7 +1667,7 @@ abstract class AppLocalizations {
   /// No description provided for @learnAdaptivePosition.
   ///
   /// In en, this message translates to:
-  /// **'Learn adaptive positioning'**
+  /// **'Learn the Position Size Recommendation'**
   String get learnAdaptivePosition;
 
   /// No description provided for @sponsoredBySolidPrime.
@@ -2564,6 +2660,12 @@ abstract class AppLocalizations {
   /// **'Choose a market, review the live context, then create your first analysis. Results are decision support—not trading orders.'**
   String get onboardingSteps;
 
+  /// No description provided for @chooseMarketAndStartAnalysis.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a market and start analysis'**
+  String get chooseMarketAndStartAnalysis;
+
   /// No description provided for @gotIt.
   ///
   /// In en, this message translates to:
@@ -2677,6 +2779,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Analysis Quota'**
   String get analysisQuota;
+
+  /// No description provided for @analysisQuotaLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The analysis quota could not be loaded.'**
+  String get analysisQuotaLoadFailed;
 
   /// No description provided for @perHour.
   ///
@@ -2833,6 +2941,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select Instrument'**
   String get selectInstrument;
+
+  /// No description provided for @instrumentCategoryCommoditiesIndices.
+  ///
+  /// In en, this message translates to:
+  /// **'Commodities & Indices'**
+  String get instrumentCategoryCommoditiesIndices;
+
+  /// No description provided for @instrumentCategoryForex.
+  ///
+  /// In en, this message translates to:
+  /// **'Forex'**
+  String get instrumentCategoryForex;
+
+  /// No description provided for @instrumentCategoryCrypto.
+  ///
+  /// In en, this message translates to:
+  /// **'Crypto'**
+  String get instrumentCategoryCrypto;
 
   /// No description provided for @selectMarketDescription.
   ///
@@ -3221,7 +3347,7 @@ abstract class AppLocalizations {
   /// No description provided for @positiveEvaluatedSummary.
   ///
   /// In en, this message translates to:
-  /// **'{rate}% positive outcomes from evaluated analyses.'**
+  /// **'Targets were reached in {rate}% of evaluated analyses.'**
   String positiveEvaluatedSummary(int rate);
 
   /// No description provided for @hasJournalNote.
@@ -3979,6 +4105,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'30-day outcome summary'**
   String get outcomeSummary;
+
+  /// No description provided for @allHistorySummary.
+  ///
+  /// In en, this message translates to:
+  /// **'All analysis summary'**
+  String get allHistorySummary;
+
+  /// No description provided for @targetReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Target reached'**
+  String get targetReached;
+
+  /// No description provided for @riskLimitTouched.
+  ///
+  /// In en, this message translates to:
+  /// **'Risk limit reached'**
+  String get riskLimitTouched;
+
+  /// No description provided for @periodEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Period ended'**
+  String get periodEnded;
+
+  /// No description provided for @cannotBeEvaluated.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot be evaluated'**
+  String get cannotBeEvaluated;
+
+  /// No description provided for @outcomeSummaryLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The outcome summary could not be loaded.'**
+  String get outcomeSummaryLoadFailed;
 
   /// No description provided for @targetHitRate.
   ///
@@ -4925,7 +5087,7 @@ abstract class AppLocalizations {
   /// No description provided for @appErrInstrumentUnsupported.
   ///
   /// In en, this message translates to:
-  /// **'This instrument does not support the Adaptive Position Plan.'**
+  /// **'This instrument does not support the Position Size Recommendation.'**
   String get appErrInstrumentUnsupported;
 
   /// No description provided for @appErrNoStandardPlan.
@@ -5119,6 +5281,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'News source'**
   String get newsSourceFallback;
+
+  /// No description provided for @latestNews.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest News'**
+  String get latestNews;
+
+  /// No description provided for @refresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get refresh;
+
+  /// No description provided for @scrollForMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe to see more'**
+  String get scrollForMore;
 
   /// No description provided for @publicAiPerformanceSubtitle.
   ///
@@ -5599,6 +5779,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Trading rules are not available.'**
   String get tradingRulesUnavailable;
+
+  /// No description provided for @positionSizeRecommendation.
+  ///
+  /// In en, this message translates to:
+  /// **'Position Size Recommendation'**
+  String get positionSizeRecommendation;
 
   /// No description provided for @adaptivePlanIntro.
   ///

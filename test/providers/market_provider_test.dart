@@ -3,11 +3,13 @@ import 'dart:math' as math;
 
 import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 import 'package:tradepilotapp/models/market_context.dart';
 import 'package:tradepilotapp/models/market_models.dart';
 import 'package:tradepilotapp/providers/auth_provider.dart';
+import 'package:tradepilotapp/l10n/generated/app_localizations.dart';
 import 'package:tradepilotapp/providers/market_provider.dart';
 import 'package:tradepilotapp/repositories/market_repository.dart';
 
@@ -31,19 +33,60 @@ void main() {
   });
 
   test('analyze instrument groups follow the web allowlist', () {
+    expect(MarketProvider.analyzeVisibleInstruments, {
+      'XAU/USD',
+      'BRENT',
+      'NIKKEI',
+      'HSI',
+    });
+    // Only the commodities/indices category still has visible symbols, so the
+    // picker has no category tabs to show — matching
+    // VISIBLE_INSTRUMENT_CATEGORIES.
+    expect(MarketProvider.analyzeInstrumentGroups.keys, [
+      MarketProvider.commoditiesIndicesCategory,
+    ]);
     expect(
-      MarketProvider.analyzeVisibleInstruments,
-      {'XAU/USD', 'BRENT', 'NIKKEI', 'HSI'},
-    );
-    // Only the futures category still has visible symbols, so the picker has
-    // no category tabs to show — matching VISIBLE_INSTRUMENT_CATEGORIES.
-    expect(MarketProvider.analyzeInstrumentGroups.keys, ['Futures']);
-    expect(
-      MarketProvider.analyzeInstrumentGroups['Futures'],
+      MarketProvider.analyzeInstrumentGroups[MarketProvider
+          .commoditiesIndicesCategory],
       ['XAU/USD', 'BRENT', 'HSI', 'NIKKEI'],
     );
     for (final instrument in MarketProvider.analyzeVisibleInstruments) {
       expect(MarketProvider.supportedInstruments, contains(instrument));
+    }
+  });
+
+  test('instrument categories are localized, never raw ids', () async {
+    final en = await AppLocalizations.delegate.load(const Locale('en'));
+    final id = await AppLocalizations.delegate.load(const Locale('id'));
+
+    // Grup pertama berisi logam spot dan indeks, bukan kontrak berjangka,
+    // jadi labelnya tidak boleh "Futures" seperti pada web.
+    expect(
+      MarketProvider.instrumentCategoryLabel(
+        en,
+        MarketProvider.commoditiesIndicesCategory,
+      ),
+      'Commodities & Indices',
+    );
+    expect(
+      MarketProvider.instrumentCategoryLabel(
+        id,
+        MarketProvider.commoditiesIndicesCategory,
+      ),
+      'Komoditas & Indeks',
+    );
+    expect(
+      MarketProvider.instrumentCategoryLabel(id, MarketProvider.forexCategory),
+      'Valas',
+    );
+    expect(
+      MarketProvider.instrumentCategoryLabel(id, MarketProvider.cryptoCategory),
+      'Kripto',
+    );
+
+    // Setiap id pada peta punya terjemahan — tidak ada yang jatuh ke id mentah.
+    for (final id in MarketProvider.instrumentGroups.keys) {
+      expect(MarketProvider.instrumentCategoryLabel(en, id), isNot(id));
     }
   });
 

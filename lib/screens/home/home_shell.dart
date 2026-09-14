@@ -326,6 +326,9 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         // P2-A:
         // menghormati search/filter aktif.
         unawaited(analysisProvider.refreshVisibleHistory(silent: !showLoading));
+        unawaited(
+          analysisProvider.loadHistoryOutcomeSummary(silent: !showLoading),
+        );
 
         break;
 

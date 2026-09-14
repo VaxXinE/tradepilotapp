@@ -73,7 +73,7 @@ class EconomicCalendarCard extends StatelessWidget {
                 l10n.noUpcomingEconomicEvents,
                 style: TextStyle(color: muted),
               )
-            else
+            else ...[
               ConstrainedBox(
                 constraints: const BoxConstraints(maxHeight: 430),
                 child: Scrollbar(
@@ -90,6 +90,21 @@ class EconomicCalendarCard extends StatelessWidget {
                   ),
                 ),
               ),
+              if (events.length > 3) ...[
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.swipe_vertical_rounded, size: 15, color: muted),
+                    const SizedBox(width: 6),
+                    Text(
+                      l10n.scrollForMore,
+                      style: TextStyle(color: muted, fontSize: 11),
+                    ),
+                  ],
+                ),
+              ],
+            ],
           ],
         ),
       ),

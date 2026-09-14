@@ -103,6 +103,24 @@ void main() {
       expect(provider.quota?.daily.remaining, 9);
     },
   );
+
+  test('reports missing quota and clears the error after retry', () async {
+    final adapter = _QuotaFailureAdapter();
+    final provider = await _provider(adapter);
+    addTearDown(provider.dispose);
+
+    await provider.loadQuota();
+    expect(provider.quota, isNull);
+    expect(provider.quotaLoadFailed, isTrue);
+
+    await provider.loadQuota(ensureFresh: true);
+    expect(provider.quota, isNull);
+    expect(provider.quotaLoadFailed, isTrue);
+
+    await provider.loadQuota(ensureFresh: true);
+    expect(provider.quota?.credits.balance, 3);
+    expect(provider.quotaLoadFailed, isFalse);
+  });
 }
 
 Future<AnalysisProvider> _provider(HttpClientAdapter adapter) async {
@@ -255,6 +273,38 @@ class _QuotaRefreshAdapter implements HttpClientAdapter {
       }, 200);
 
   ResponseBody _json(Object body, int status) => ResponseBody.fromString(
+    jsonEncode(body),
+    status,
+    headers: {
+      Headers.contentTypeHeader: [Headers.jsonContentType],
+    },
+  );
+
+  @override
+  void close({bool force = false}) {}
+}
+
+class _QuotaFailureAdapter implements HttpClientAdapter {
+  int requests = 0;
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    requests++;
+    if (requests == 1) return _json(null, 200);
+    if (requests == 2) return _json({'error': 'Unavailable'}, 500);
+    return _json({
+      'unlimited': false,
+      'hourly': {'limit': 5, 'used': 1, 'remaining': 4},
+      'daily': {'limit': 10, 'used': 2, 'remaining': 8},
+      'credits': {'balance': 3},
+    }, 200);
+  }
+
+  ResponseBody _json(Object? body, int status) => ResponseBody.fromString(
     jsonEncode(body),
     status,
     headers: {

@@ -107,9 +107,9 @@ class _AdaptivePositionPlanCardState extends State<AdaptivePositionPlanCard> {
       clipBehavior: Clip.antiAlias,
       child: ExpansionTile(
         leading: const Icon(Icons.calculate_outlined),
-        title: const Text(
-          'Adaptive Position Plan',
-          style: TextStyle(fontWeight: FontWeight.w800),
+        title: Text(
+          context.l10n.positionSizeRecommendation,
+          style: const TextStyle(fontWeight: FontWeight.w800),
         ),
         subtitle: Text(context.l10n.adaptivePlanIntro),
         onExpansionChanged: (open) {

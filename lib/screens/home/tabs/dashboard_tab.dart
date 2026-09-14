@@ -16,9 +16,8 @@ import '../../../providers/market_provider.dart';
 import '../../../providers/notifications_provider.dart';
 import '../../../providers/watchlist_provider.dart';
 import '../../../widgets/analysis_card.dart';
-import '../../../widgets/app_footer.dart';
 import '../../../widgets/calendar/economic_calendar_card.dart';
-import '../../../widgets/market/market_overview_card.dart';
+// import '../../../widgets/market/market_overview_card.dart';
 import '../../../widgets/market/market_session_card.dart';
 import '../../../widgets/news_feed_card.dart';
 import '../../../widgets/price_alert/price_alert_sheet.dart';
@@ -44,6 +43,12 @@ class DashboardTab extends StatefulWidget {
 class _DashboardTabState extends State<DashboardTab> {
   AnalysisOutcomesSummary? _outcomes;
 
+  bool _outcomesLoadFailed = false;
+
+  bool _outcomesRequestInFlight = false;
+
+  final _newsFeedKey = GlobalKey<NewsFeedCardState>();
+
   @override
   void initState() {
     super.initState();
@@ -51,15 +56,26 @@ class _DashboardTabState extends State<DashboardTab> {
   }
 
   Future<void> _loadOutcomes() async {
+    if (_outcomesRequestInFlight) return;
+    _outcomesRequestInFlight = true;
     try {
       final response = await context
           .read<AuthProvider>()
           .client
           .analyses
           .getAnalysisOutcomesSummary();
-      if (mounted) setState(() => _outcomes = response.data);
+      if (mounted) {
+        setState(() {
+          _outcomes = response.data;
+          _outcomesLoadFailed = response.data == null;
+        });
+      }
     } catch (_) {
-      // Statistik tambahan tidak boleh menghalangi dashboard utama.
+      if (mounted && _outcomes == null) {
+        setState(() => _outcomesLoadFailed = true);
+      }
+    } finally {
+      _outcomesRequestInFlight = false;
     }
   }
 
@@ -95,12 +111,16 @@ class _DashboardTabState extends State<DashboardTab> {
 
     final notifications = context.read<NotificationsProvider>();
 
+    final newsRefresh = _newsFeedKey.currentState?.load();
+
     await Future.wait([
       analysis.refreshCoreData(silent: false),
       watchlist.loadWatchlist(),
       market.loadQuotes(force: true),
+      market.loadSelectedMarketData(force: true),
       notifications.load(silent: true),
       _loadOutcomes(),
+      ?newsRefresh,
     ]);
   }
 
@@ -211,39 +231,34 @@ class _DashboardTabState extends State<DashboardTab> {
 
             if (user?.onboardingCompleted != true) ...[
               _OnboardingCard(
-                onDone: () => context.read<AuthProvider>().completeOnboarding(),
+                onStart: () {
+                  unawaited(context.read<AuthProvider>().completeOnboarding());
+                  widget.onOpenAnalyze(null);
+                },
               ),
               const SizedBox(height: 16),
             ],
 
-            MarketOverviewCard(
-              quote: market.selectedQuote,
-              isLoading: market.isLoadingQuotes,
-              error: market.marketError,
-              updatedAt: market.quotesUpdatedAt,
-              onRetry: () {
-                unawaited(market.loadQuotes(force: true));
-              },
-              onOpen: () {
-                widget.onOpenAnalyze(market.selectedInstrument);
-              },
-            ),
+            // MarketOverviewCard(
+            //   quote: market.selectedQuote,
+            //   isLoading: market.isLoadingQuotes,
+            //   error: market.marketError,
+            //   updatedAt: market.quotesUpdatedAt,
+            //   onRetry: () {
+            //     unawaited(market.loadQuotes(force: true));
+            //   },
+            //   onOpen: () {
+            //     widget.onOpenAnalyze(market.selectedInstrument);
+            //   },
+            // ),
+            // const SizedBox(height: 16),
 
-            const SizedBox(height: 16),
-
-            // Primary task stays near the top; market context remains below.
-            _BeginnerHeroCard(
-              onAnalyze: () {
-                widget.onOpenAnalyze(null);
-              },
-            ),
-
-            const SizedBox(height: 16),
-
-            MarketSessionCard(instrument: market.selectedInstrument),
-
-            const SizedBox(height: 16),
-
+            // _BeginnerHeroCard(
+            //   onAnalyze: () {
+            //     widget.onOpenAnalyze(null);
+            //   },
+            // ),
+            // const SizedBox(height: 16),
             if (isLoadingAnalysisData)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 28),
@@ -255,59 +270,23 @@ class _DashboardTabState extends State<DashboardTab> {
               if (_outcomes case final outcomes?) ...[
                 _OutcomeSummaryCard(outcomes: outcomes),
                 const SizedBox(height: 14),
+              ] else if (_outcomesLoadFailed) ...[
+                _DashboardLoadErrorCard(
+                  message: l10n.outcomeSummaryLoadFailed,
+                  onRetry: () => unawaited(_loadOutcomes()),
+                ),
+                const SizedBox(height: 14),
               ],
               if (analysisProvider.quota != null)
                 _QuotaCard(quota: analysisProvider.quota!),
-              const SizedBox(height: 16),
-            ],
-
-            EconomicCalendarCard(
-              instrument: market.selectedInstrument,
-              events: market.selectedCalendar,
-              isLoading: market.isLoadingSelectedMarket,
-              hasError: market.marketError != null,
-              onRetry: () =>
-                  unawaited(market.loadSelectedMarketData(force: true)),
-            ),
-
-            const SizedBox(height: 16),
-
-            const NewsFeedCard(),
-
-            if (showSponsor) ...[
-              const SizedBox(height: 16),
-              Card(
-                child: ListTile(
-                  leading: const Icon(Icons.live_tv_outlined),
-                  title: Text(l10n.liveAnalysisTitle),
-                  subtitle: Text(l10n.liveAnalysisSponsorSubtitle),
-                  trailing: const Icon(Icons.open_in_new_rounded),
-                  onTap: _openSponsorTikTok,
+              if (analysisProvider.quotaLoadFailed)
+                _DashboardLoadErrorCard(
+                  message: l10n.analysisQuotaLoadFailed,
+                  onRetry: () =>
+                      unawaited(analysisProvider.loadQuota(ensureFresh: true)),
                 ),
-              ),
+              const SizedBox(height: 16),
             ],
-
-            const SizedBox(height: 16),
-
-            // ---------------------------------------------------------------
-            // WATCHLIST / LIVE MARKET
-            // ---------------------------------------------------------------
-            _WatchlistMarketCard(
-              market: market,
-              watchlist: watchlist,
-              onOpenInstrument: widget.onOpenAnalyze,
-              onCreateAlert: _openAlert,
-              onManageWatchlist: _openWatchlistManager,
-            ),
-
-            const SizedBox(height: 16),
-
-            _AllMarketsCard(
-              quotes: market.quotes.values.toList(),
-              onOpenInstrument: widget.onOpenAnalyze,
-            ),
-
-            const SizedBox(height: 20),
 
             if (!isLoadingAnalysisData) ...[
               // -------------------------------------------------------------
@@ -365,6 +344,48 @@ class _DashboardTabState extends State<DashboardTab> {
                 }),
             ],
 
+            const SizedBox(height: 16),
+
+            _WatchlistMarketCard(
+              market: market,
+              watchlist: watchlist,
+              onOpenInstrument: widget.onOpenAnalyze,
+              onCreateAlert: _openAlert,
+              onManageWatchlist: _openWatchlistManager,
+            ),
+
+            const SizedBox(height: 16),
+
+            MarketSessionCard(instrument: market.selectedInstrument),
+
+            const SizedBox(height: 16),
+
+            EconomicCalendarCard(
+              instrument: market.selectedInstrument,
+              events: market.selectedCalendar,
+              isLoading: market.isLoadingSelectedMarket,
+              hasError: market.marketError != null,
+              onRetry: () =>
+                  unawaited(market.loadSelectedMarketData(force: true)),
+            ),
+
+            const SizedBox(height: 16),
+
+            NewsFeedCard(key: _newsFeedKey),
+
+            if (showSponsor) ...[
+              const SizedBox(height: 16),
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.live_tv_outlined),
+                  title: Text(l10n.liveAnalysisTitle),
+                  subtitle: Text(l10n.liveAnalysisSponsorSubtitle),
+                  trailing: const Icon(Icons.open_in_new_rounded),
+                  onTap: _openSponsorTikTok,
+                ),
+              ),
+            ],
+
             const SizedBox(height: 20),
 
             Text(
@@ -373,7 +394,7 @@ class _DashboardTabState extends State<DashboardTab> {
               style: TextStyle(color: muted, fontSize: 12, height: 1.4),
             ),
 
-            const AppFooter(),
+            const SizedBox(height: 24),
           ],
         ),
       ),
@@ -485,8 +506,8 @@ class _DashboardGreeting extends StatelessWidget {
 }
 
 class _OnboardingCard extends StatelessWidget {
-  const _OnboardingCard({required this.onDone});
-  final Future<bool> Function() onDone;
+  const _OnboardingCard({required this.onStart});
+  final VoidCallback onStart;
 
   @override
   Widget build(BuildContext context) => Card(
@@ -503,8 +524,8 @@ class _OnboardingCard extends StatelessWidget {
           Text(context.l10n.onboardingSteps),
           const SizedBox(height: 12),
           FilledButton(
-            onPressed: () => onDone(),
-            child: Text(context.l10n.gotIt),
+            onPressed: onStart,
+            child: Text(context.l10n.chooseMarketAndStartAnalysis),
           ),
         ],
       ),
@@ -512,77 +533,11 @@ class _OnboardingCard extends StatelessWidget {
   );
 }
 
-class _AllMarketsCard extends StatelessWidget {
-  const _AllMarketsCard({required this.quotes, required this.onOpenInstrument});
-  final List<LiveMarketQuote> quotes;
-  final void Function(String? instrument) onOpenInstrument;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    if (quotes.isEmpty) return const SizedBox.shrink();
-    final itemExtent =
-        68 * MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.6);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              context.l10n.liveMarkets,
-              style: const TextStyle(fontWeight: FontWeight.w900),
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              height: quotes.length.clamp(1, 3) * itemExtent,
-              child: Scrollbar(
-                child: ListView.builder(
-                  key: const Key('live-markets-list'),
-                  primary: false,
-                  itemExtent: itemExtent,
-                  itemCount: quotes.length,
-                  itemBuilder: (_, index) {
-                    final quote = quotes[index];
-                    return ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(quote.instrument),
-                      subtitle: Text(
-                        _formatPrice(quote.instrument, quote.price),
-                      ),
-                      trailing: Text(
-                        '${quote.changePercent > 0 ? '+' : ''}${quote.changePercent.toStringAsFixed(2)}%',
-                        style: TextStyle(
-                          color: quote.changePercent > 0
-                              ? (isDark
-                                    ? AppColors.bullishDark
-                                    : AppColors.bullishLight)
-                              : quote.changePercent < 0
-                              ? (isDark
-                                    ? AppColors.bearishDark
-                                    : AppColors.bearishLight)
-                              : Theme.of(context).colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      onTap: () => onOpenInstrument(quote.instrument),
-                    );
-                  },
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 // =============================================================================
 // BEGINNER HERO
 // =============================================================================
 
+/*
 class _BeginnerHeroCard extends StatelessWidget {
   const _BeginnerHeroCard({required this.onAnalyze});
 
@@ -637,6 +592,7 @@ class _BeginnerHeroCard extends StatelessWidget {
     );
   }
 }
+*/
 
 // =============================================================================
 // WATCHLIST
@@ -753,6 +709,11 @@ class _WatchlistMarketCard extends StatelessWidget {
                 ),
                 style: TextStyle(color: muted, fontSize: 12),
               ),
+            ],
+
+            if (instruments.length > 3) ...[
+              const SizedBox(height: 8),
+              _ScrollForMoreHint(color: muted),
             ],
           ],
         ),
@@ -1254,6 +1215,56 @@ class _QuotaCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _DashboardLoadErrorCard extends StatelessWidget {
+  const _DashboardLoadErrorCard({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    child: Padding(
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.error_outline_rounded,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              const SizedBox(width: 10),
+              Expanded(child: Text(message)),
+            ],
+          ),
+          const SizedBox(height: 4),
+          TextButton(onPressed: onRetry, child: Text(context.l10n.tryAgain)),
+        ],
+      ),
+    ),
+  );
+}
+
+class _ScrollForMoreHint extends StatelessWidget {
+  const _ScrollForMoreHint({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Icon(Icons.swipe_vertical_rounded, size: 15, color: color),
+      const SizedBox(width: 6),
+      Text(
+        context.l10n.scrollForMore,
+        style: TextStyle(color: color, fontSize: 11),
+      ),
+    ],
+  );
 }
 
 class _QuotaBar extends StatelessWidget {

@@ -23,27 +23,28 @@ import 'package:tradepilotapp/screens/home/tabs/analyze_tab.dart';
 import '../../helpers/localized_test_app.dart';
 
 void main() {
-  testWidgets('the instrument picker stays reachable after an analysis', (
-    tester,
-  ) async {
+  testWidgets('the analysis form collapses after an analysis', (tester) async {
     await _pumpAnalyzeTab(tester);
+
+    expect(find.text('XAU/USD · 1h'), findsOneWidget);
+    expect(find.byKey(const ValueKey('timeframe-1h')), findsOneWidget);
 
     await _runAnalysis(tester);
 
-    // Web menampilkan hasil DI BAWAH form, bukan menggantinya, sehingga
-    // pemilihan simbol tidak pernah hilang.
     expect(find.byType(AnalysisDetailScreen), findsOneWidget);
-
-    // Tombol submit disembunyikan; simbol lain langsung dianalisis ulang.
     expect(find.byKey(const Key('submit-analysis-button')), findsNothing);
 
     await _scrollToTop(tester);
-    expect(find.text('Select Instrument'), findsOneWidget);
-    expect(find.text('BRENT'), findsOneWidget);
+    expect(find.text('Select Instrument'), findsNothing);
+    expect(find.text('XAU/USD · 1h'), findsOneWidget);
+    expect(
+      find.byKey(const Key('change-analysis-selection-button')),
+      findsOneWidget,
+    );
     expect(find.byKey(const Key('new-analysis-button')), findsOneWidget);
   });
 
-  testWidgets('picking another instrument re-analyzes immediately', (
+  testWidgets('picking another instrument waits for explicit submit', (
     tester,
   ) async {
     final provider = await _pumpAnalyzeTab(tester);
@@ -52,9 +53,15 @@ void main() {
     expect(provider.requested, ['XAU/USD']);
 
     await _scrollToTop(tester);
+    final change = find.byKey(const Key('change-analysis-selection-button'));
+    await tester.ensureVisible(change);
+    await tester.tap(change);
+    await tester.pumpAndSettle();
     await tester.tap(find.text('BRENT'));
     await tester.pumpAndSettle();
+    expect(provider.requested, ['XAU/USD']);
 
+    await _runAnalysis(tester);
     expect(provider.requested, ['XAU/USD', 'BRENT']);
   });
 
@@ -85,14 +92,8 @@ void main() {
   });
 }
 
-/// Hasil dirender di bawah form dan halaman ikut menggulir ke sana, jadi
-/// bagian form perlu ditarik kembali ke layar sebelum di-assert.
 Future<void> _scrollToTop(WidgetTester tester) async {
-  await tester.scrollUntilVisible(
-    find.byKey(const Key('new-analysis-button')),
-    -400,
-    scrollable: find.byType(Scrollable).first,
-  );
+  await tester.drag(find.byType(ListView).first, const Offset(0, 5000));
   await tester.pumpAndSettle();
 }
 

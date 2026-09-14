@@ -8,7 +8,6 @@ import '../../core/localization/locale_controller.dart';
 import '../../l10n/l10n.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/progression_provider.dart';
-import '../../widgets/app_footer.dart';
 import '../../widgets/responsive_page.dart';
 
 class MindsetScreen extends StatefulWidget {
@@ -176,7 +175,7 @@ class _MindsetScreenState extends State<MindsetScreen> {
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ),
-          if (widget.embedded) const AppFooter(),
+          const SizedBox(height: 24),
         ],
       ),
     );
@@ -481,15 +480,15 @@ const _modules = [
   _MindsetModule(
     category: 'getting-started',
     guideId: ProgressionEvidenceStartInputGuideIdEnum.adaptivePlan,
-    titleEn: 'Standard and Adaptive Position Plans',
-    titleId: 'Standard dan Adaptive Position Plan',
+    titleEn: 'Standard Plan and Position Size Recommendation',
+    titleId: 'Standard Plan dan Rekomendasi Ukuran Posisi',
     summaryEn:
         'The difference between market levels and account-aware checkpoints.',
     summaryId: 'Perbedaan level market dan checkpoint sesuai kondisi akun.',
     bodyEn:
-        'Standard Plan presents analysis levels directly. Adaptive Position Plan converts a supported analysis into account-aware position checkpoints and limits for supported instruments.',
+        'Standard Plan presents analysis levels directly. Position Size Recommendation converts a supported analysis into account-aware position checkpoints and limits for supported instruments.',
     bodyId:
-        'Standard Plan menampilkan level analisis langsung. Adaptive Position Plan mengubah analisis yang didukung menjadi checkpoint posisi dan batas sesuai kondisi akun untuk instrumen tertentu.',
+        'Standard Plan menampilkan level analisis langsung. Rekomendasi Ukuran Posisi mengubah analisis yang didukung menjadi checkpoint posisi dan batas sesuai kondisi akun untuk instrumen tertentu.',
     pointsEn: [
       'Enter actual available funds.',
       'Every layer is a manual decision.',
@@ -658,14 +657,14 @@ const _modules = [
   _MindsetModule(
     category: 'analysis-manual',
     guideId: ProgressionEvidenceStartInputGuideIdEnum.adaptivePositionPlan,
-    titleEn: 'Using the Adaptive Position Plan',
-    titleId: 'Menggunakan Adaptive Position Plan',
+    titleEn: 'Using the Position Size Recommendation',
+    titleId: 'Menggunakan Rekomendasi Ukuran Posisi',
     summaryEn: 'Account-aware position checkpoints and safeguards.',
     summaryId: 'Checkpoint posisi dan safeguard sesuai kondisi akun.',
     bodyEn:
-        'The Adaptive Plan combines actual account type, available funds, risk style, analysis direction, confidence, levels, and supported account constraints. It never places orders.',
+        'Position Size Recommendation combines actual account type, available funds, risk style, analysis direction, confidence, levels, and supported account constraints. It never places orders.',
     bodyId:
-        'Adaptive Plan menggabungkan jenis akun, dana tersedia, gaya risiko, arah, confidence, level, dan batas akun yang didukung. Fitur ini tidak pernah memasang order.',
+        'Rekomendasi Ukuran Posisi menggabungkan jenis akun, dana tersedia, gaya risiko, arah, confidence, level, dan batas akun yang didukung. Fitur ini tidak pernah memasang order.',
     pointsEn: [
       'Eligible does not mean required.',
       'Reassess every layer.',

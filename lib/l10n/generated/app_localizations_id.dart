@@ -70,7 +70,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get noteSaveFailed => 'Catatan gagal disimpan.';
 
   @override
-  String get tradingPlanTitle => 'Rencana Trading';
+  String get tradingPlanTitle => 'Suggested Levels';
 
   @override
   String get tradingPlanDisclaimer =>
@@ -84,7 +84,31 @@ class AppLocalizationsId extends AppLocalizations {
       'Snapshot market dan konteks fundamental.';
 
   @override
-  String get technicalDetails => 'Detail teknikal';
+  String get supportingData => 'Konteks fundamental';
+
+  @override
+  String fundamentalEvidenceSummary(int news, int events) {
+    return '$news berita · $events event ekonomi';
+  }
+
+  @override
+  String get notesAndJournal => 'Catatan & jurnal';
+
+  @override
+  String get notesAndJournalDescription =>
+      'Gunakan jurnal untuk keputusan dan hasil trade; gunakan catatan pribadi untuk pengingat khusus analisis ini.';
+
+  @override
+  String get learnAnalysisBasics => 'Pelajari dasar analisis';
+
+  @override
+  String get learnBiasConfidence => 'Bias, keyakinan, dan masa berlaku';
+
+  @override
+  String get learnTechnicalFundamental => 'Bukti teknikal dan fundamental';
+
+  @override
+  String get technicalDetails => 'Indikator teknikal';
 
   @override
   String get technicalDetailsDescription =>
@@ -172,6 +196,22 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get analyzeThisTimeframe => 'Analisis timeframe ini';
+
+  @override
+  String get analysisUsesFreeQuota => 'Sumber: kuota analisis gratis';
+
+  @override
+  String get analysisUsesOneCredit => 'Sumber: 1 credit (kuota gratis habis)';
+
+  @override
+  String get analysisUsageUnavailable =>
+      'Sumber pemakaian akan dipastikan sebelum permintaan diproses';
+
+  @override
+  String get selectedAnalysisMarket => 'Pasar yang dianalisis';
+
+  @override
+  String get changeSelection => 'Ubah';
 
   @override
   String get priceChart => 'Grafik Harga';
@@ -298,13 +338,13 @@ class AppLocalizationsId extends AppLocalizations {
       'Tunggu sampai kondisi pembatal di atas tidak lagi berisiko, atau sampai muncul konfluensi sinyal yang lebih kuat.';
 
   @override
-  String get riskHighLabel => 'Risiko Tinggi';
+  String get riskHighLabel => 'High Risk';
 
   @override
-  String get riskLowLabel => 'Risiko Relatif Rendah';
+  String get riskLowLabel => 'Low Risk';
 
   @override
-  String get riskModerateLabel => 'Risiko Sedang';
+  String get riskModerateLabel => 'Medium Risk';
 
   @override
   String get riskHighProGuidance =>
@@ -326,14 +366,27 @@ class AppLocalizationsId extends AppLocalizations {
   String get reanalyze => 'Analisis ulang';
 
   @override
+  String get useForNewAnalysis => 'Gunakan untuk analisis baru';
+
+  @override
+  String get basicFilters => 'Filter dasar';
+
+  @override
+  String get saveBasicFilter => 'Simpan filter dasar';
+
+  @override
+  String get basicFilterExplanation =>
+      'Menyimpan pencarian, mode, instrumen, timeframe, dan rentang tanggal. Status evaluasi belum didukung oleh preset backend.';
+
+  @override
   String get history => 'Riwayat';
 
   @override
-  String get historyPageTitle => 'Riwayat & Performa Analisis';
+  String get historyPageTitle => 'Riwayat Analisis';
 
   @override
   String historyTotalAnalyses(int count) {
-    return '$count analisis total';
+    return '$count analisis tersimpan';
   }
 
   @override
@@ -818,7 +871,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get openFullExplanation => 'Buka penjelasan lengkap';
 
   @override
-  String get learnAdaptivePosition => 'Pelajari posisi adaptif';
+  String get learnAdaptivePosition => 'Pelajari Rekomendasi Ukuran Posisi';
 
   @override
   String get sponsoredBySolidPrime => 'Disponsori oleh SOLID PRIME';
@@ -1378,6 +1431,9 @@ class AppLocalizationsId extends AppLocalizations {
       'Pilih pasar, periksa konteks live, lalu buat analisis pertama. Hasil adalah alat bantu keputusan—bukan instruksi trading.';
 
   @override
+  String get chooseMarketAndStartAnalysis => 'Pilih pasar dan mulai analisis';
+
+  @override
   String get gotIt => 'Mengerti';
 
   @override
@@ -1437,6 +1493,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get analysisQuota => 'Kuota Analisis';
+
+  @override
+  String get analysisQuotaLoadFailed => 'Kuota analisis belum dapat dimuat.';
 
   @override
   String get perHour => 'Per jam';
@@ -1531,6 +1590,15 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get selectInstrument => 'Pilih Instrumen';
+
+  @override
+  String get instrumentCategoryCommoditiesIndices => 'Komoditas & Indeks';
+
+  @override
+  String get instrumentCategoryForex => 'Valas';
+
+  @override
+  String get instrumentCategoryCrypto => 'Kripto';
 
   @override
   String get selectMarketDescription => 'Pilih pasar yang ingin kamu pahami.';
@@ -1766,7 +1834,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String positiveEvaluatedSummary(int rate) {
-    return '$rate% outcome positif dari analisis yang sudah dievaluasi.';
+    return 'Target tercapai pada $rate% analisis yang sudah dievaluasi.';
   }
 
   @override
@@ -2186,6 +2254,25 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get outcomeSummary => 'Ringkasan outcome 30 hari';
+
+  @override
+  String get allHistorySummary => 'Ringkasan seluruh analisis';
+
+  @override
+  String get targetReached => 'Target tercapai';
+
+  @override
+  String get riskLimitTouched => 'Batas risiko tersentuh';
+
+  @override
+  String get periodEnded => 'Periode berakhir';
+
+  @override
+  String get cannotBeEvaluated => 'Tidak dapat dievaluasi';
+
+  @override
+  String get outcomeSummaryLoadFailed =>
+      'Ringkasan outcome belum dapat dimuat.';
 
   @override
   String get targetHitRate => 'Target tercapai';
@@ -2736,7 +2823,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get appErrInstrumentUnsupported =>
-      'Instrumen ini belum mendukung Adaptive Position Plan.';
+      'Instrumen ini belum mendukung Rekomendasi Ukuran Posisi.';
 
   @override
   String get appErrNoStandardPlan =>
@@ -2852,6 +2939,15 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get newsSourceFallback => 'Sumber berita';
+
+  @override
+  String get latestNews => 'Berita Terkini';
+
+  @override
+  String get refresh => 'Segarkan';
+
+  @override
+  String get scrollForMore => 'Geser untuk melihat lainnya';
 
   @override
   String get publicAiPerformanceSubtitle =>
@@ -3128,6 +3224,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get tradingRulesUnavailable => 'Aturan trading tidak tersedia.';
+
+  @override
+  String get positionSizeRecommendation => 'Rekomendasi Ukuran Posisi';
 
   @override
   String get adaptivePlanIntro =>

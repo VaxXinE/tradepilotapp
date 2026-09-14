@@ -60,14 +60,6 @@ class HistoryAnalysisCard extends StatelessWidget {
                         color: theme.colorScheme.primary,
                       ),
                     ),
-                  const SizedBox(width: 4),
-                  if (onReanalyze != null)
-                    IconButton(
-                      tooltip: context.l10n.reanalyze,
-                      visualDensity: VisualDensity.compact,
-                      onPressed: onReanalyze,
-                      icon: const Icon(Icons.refresh_rounded),
-                    ),
                   Icon(Icons.chevron_right_rounded, color: muted),
                 ],
               ),
@@ -103,20 +95,26 @@ class HistoryAnalysisCard extends StatelessWidget {
                   runSpacing: 7,
                   children: [
                     if (risk?.isNotEmpty == true)
-                      _InfoChip(
+                      _SecondaryFact(
                         icon: Icons.shield_outlined,
                         label: context.l10n.riskValue(
                           _riskLabel(context, risk!),
                         ),
-                        color: _riskColor(context, risk),
                       ),
                     if (marketCondition?.isNotEmpty == true)
-                      _InfoChip(
+                      _SecondaryFact(
                         icon: Icons.query_stats_rounded,
                         label: _marketConditionLabel(context, marketCondition!),
-                        color: _marketConditionColor(context, marketCondition),
                       ),
                   ],
+                ),
+              ],
+              if (onReanalyze != null) ...[
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: onReanalyze,
+                  icon: const Icon(Icons.add_chart_rounded, size: 18),
+                  label: Text(context.l10n.useForNewAnalysis),
                 ),
               ],
             ],
@@ -213,25 +211,27 @@ class HistoryAnalysisCard extends StatelessWidget {
     }
     return dark ? AppColors.neutralDark : AppColors.neutralLight;
   }
+}
 
-  static Color _riskColor(BuildContext context, String value) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    return switch (value.trim().toLowerCase()) {
-      'high' => dark ? AppColors.bearishDark : AppColors.bearishLight,
-      'low' => dark ? AppColors.bullishDark : AppColors.bullishLight,
-      _ => dark ? AppColors.neutralDark : AppColors.neutralLight,
-    };
-  }
+class _SecondaryFact extends StatelessWidget {
+  const _SecondaryFact({required this.icon, required this.label});
 
-  static Color _marketConditionColor(BuildContext context, String value) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    return switch (value.trim().toLowerCase()) {
-      'trending_up' ||
-      'uptrend' => dark ? AppColors.bullishDark : AppColors.bullishLight,
-      'trending_down' ||
-      'downtrend' => dark ? AppColors.bearishDark : AppColors.bearishLight,
-      _ => dark ? AppColors.neutralDark : AppColors.neutralLight,
-    };
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.onSurfaceVariant;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: color),
+        const SizedBox(width: 4),
+        Flexible(
+          child: Text(label, style: TextStyle(color: color, fontSize: 12)),
+        ),
+      ],
+    );
   }
 }
 
@@ -247,9 +247,7 @@ class _OutcomeBadge extends StatelessWidget {
     final positive =
         status == AnalysisOutcomeStatusEnum.tp1Hit ||
         status == AnalysisOutcomeStatusEnum.tp2Hit;
-    final negative =
-        status == AnalysisOutcomeStatusEnum.slHit ||
-        status == AnalysisOutcomeStatusEnum.invalidated;
+    final negative = status == AnalysisOutcomeStatusEnum.slHit;
     final color = positive
         ? (dark ? AppColors.bullishDark : AppColors.bullishLight)
         : negative

@@ -2,7 +2,14 @@ import 'history_sort.dart';
 
 enum HistoryModeFilter { all, beginner, pro }
 
-enum HistoryOutcomeFilter { all, success, failed, pending }
+enum HistoryOutcomeFilter {
+  all,
+  pending,
+  targetReached,
+  riskLimitHit,
+  expired,
+  invalidated,
+}
 
 class HistoryFilters {
   const HistoryFilters({
@@ -11,7 +18,6 @@ class HistoryFilters {
     this.outcome = HistoryOutcomeFilter.all,
     this.instruments = const [],
     this.timeframes = const [],
-    this.minConfidence,
     this.sort = HistorySort.newest,
     this.from,
     this.to,
@@ -29,8 +35,6 @@ class HistoryFilters {
 
   final List<String> timeframes;
 
-  final int? minConfidence;
-
   final HistorySort sort;
 
   final DateTime? from;
@@ -43,7 +47,6 @@ class HistoryFilters {
         outcome != HistoryOutcomeFilter.all ||
         instruments.isNotEmpty ||
         timeframes.isNotEmpty ||
-        minConfidence != null ||
         from != null ||
         to != null;
   }
@@ -52,6 +55,7 @@ class HistoryFilters {
   bool get hasServerFilters {
     return query.isNotEmpty ||
         mode != HistoryModeFilter.all ||
+        outcome != HistoryOutcomeFilter.all ||
         instruments.isNotEmpty ||
         timeframes.isNotEmpty ||
         from != null ||
@@ -61,6 +65,7 @@ class HistoryFilters {
   bool hasSameServerFilters(HistoryFilters other) {
     return query == other.query &&
         mode == other.mode &&
+        outcome == other.outcome &&
         _sameList(instruments, other.instruments) &&
         _sameList(timeframes, other.timeframes) &&
         from == other.from &&
@@ -82,11 +87,17 @@ class HistoryFilters {
 
   List<String>? get apiOutcome {
     switch (outcome) {
-      case HistoryOutcomeFilter.success:
+      case HistoryOutcomeFilter.targetReached:
         return ['tp1_hit', 'tp2_hit'];
 
-      case HistoryOutcomeFilter.failed:
-        return ['sl_hit', 'expired', 'invalidated'];
+      case HistoryOutcomeFilter.riskLimitHit:
+        return ['sl_hit'];
+
+      case HistoryOutcomeFilter.expired:
+        return ['expired'];
+
+      case HistoryOutcomeFilter.invalidated:
+        return ['invalidated'];
 
       case HistoryOutcomeFilter.pending:
         return ['pending'];
@@ -96,12 +107,14 @@ class HistoryFilters {
     }
   }
 
+  /// Jumlah kategori aktif yang diwakili lencana pada tombol filter.
+  ///
+  /// [query] sengaja tidak dihitung: pencarian tinggal di kolom search yang
+  /// selalu terlihat beserta tombol hapusnya, dan tidak pernah muncul di
+  /// filter sheet. Menghitungnya membuat lencana menunjuk sesuatu yang tidak
+  /// bisa ditemukan pengguna ketika sheet dibuka.
   int get activeCategoryCount {
     var count = 0;
-
-    if (query.isNotEmpty) {
-      count++;
-    }
 
     if (mode != HistoryModeFilter.all) {
       count++;
@@ -119,10 +132,6 @@ class HistoryFilters {
       count++;
     }
 
-    if (minConfidence != null) {
-      count++;
-    }
-
     if (from != null || to != null) {
       count++;
     }
@@ -137,20 +146,13 @@ class HistoryFilters {
       cleanQuery = cleanQuery.substring(0, maxSearchLength);
     }
 
-    var cleanConfidence = minConfidence;
-
-    if (cleanConfidence != null) {
-      cleanConfidence = cleanConfidence.clamp(0, 100);
-    }
-
     return HistoryFilters(
       query: cleanQuery,
       mode: mode,
       outcome: outcome,
       instruments: _normalizeList(instruments, uppercase: true),
       timeframes: _normalizeList(timeframes, uppercase: false),
-      minConfidence: cleanConfidence,
-      sort: sort,
+      sort: HistorySort.newest,
       from: _dateOnly(from),
       to: _dateOnly(to),
     );
@@ -162,11 +164,9 @@ class HistoryFilters {
     HistoryOutcomeFilter? outcome,
     List<String>? instruments,
     List<String>? timeframes,
-    int? minConfidence,
     HistorySort? sort,
     DateTime? from,
     DateTime? to,
-    bool clearConfidence = false,
     bool clearFrom = false,
     bool clearTo = false,
   }) {
@@ -176,9 +176,6 @@ class HistoryFilters {
       outcome: outcome ?? this.outcome,
       instruments: instruments ?? this.instruments,
       timeframes: timeframes ?? this.timeframes,
-      minConfidence: clearConfidence
-          ? null
-          : minConfidence ?? this.minConfidence,
       sort: sort ?? this.sort,
       from: clearFrom ? null : from ?? this.from,
       to: clearTo ? null : to ?? this.to,
@@ -193,8 +190,6 @@ class HistoryFilters {
       'outcome': outcome.name,
       'instruments': instruments,
       'timeframes': timeframes,
-      'minConfidence': minConfidence,
-      'sort': sort.name,
     };
   }
 
@@ -211,23 +206,24 @@ class HistoryFilters {
       return raw is List ? raw.whereType<String>().toList() : const [];
     }
 
-    final confidence = json['minConfidence'];
-
     return HistoryFilters(
       mode: enumValue(
         HistoryModeFilter.values,
         json['mode'],
         HistoryModeFilter.all,
       ),
-      outcome: enumValue(
-        HistoryOutcomeFilter.values,
-        json['outcome'],
-        HistoryOutcomeFilter.all,
-      ),
+      outcome: switch (json['outcome']) {
+        'success' => HistoryOutcomeFilter.targetReached,
+        'failed' => HistoryOutcomeFilter.all,
+        final value => enumValue(
+          HistoryOutcomeFilter.values,
+          value,
+          HistoryOutcomeFilter.all,
+        ),
+      },
       instruments: strings(json['instruments']),
       timeframes: strings(json['timeframes']),
-      minConfidence: confidence is num ? confidence.toInt() : null,
-      sort: enumValue(HistorySort.values, json['sort'], HistorySort.newest),
+      sort: HistorySort.newest,
     ).normalized();
   }
 

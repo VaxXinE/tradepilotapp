@@ -25,22 +25,13 @@ void main() {
     expect(find.text('Beginner Mode'), findsOneWidget);
     expect(find.text('Leaning Bearish'), findsOneWidget);
 
-    // Scroll through the web-parity section order before asserting on it.
-    await tester.scrollUntilVisible(
-      find.text('What does it mean?'),
-      400,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.pumpAndSettle();
-    expect(find.text('What does it mean?'), findsOneWidget);
     // Technical detail now sits behind a collapsed section, so open it before
     // asserting on the indicators inside.
-    await tester.scrollUntilVisible(
+    await _reveal(
+      tester,
       find.byKey(const ValueKey('analysis-technical-details')),
-      500,
-      scrollable: find.byType(Scrollable).first,
+      find.byType(Scrollable).first,
     );
-    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('analysis-technical-details')));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('signal-scale-bar')), findsNWidgets(5));
@@ -81,6 +72,11 @@ void main() {
       find.byKey(const ValueKey('indicator-signal-EMA (9)')),
       findsOneWidget,
     );
+    await _reveal(
+      tester,
+      find.text('What does it mean?'),
+      find.byType(Scrollable).first,
+    );
 
     await _pumpDetail(tester, _analysis(AnalysisModeEnum.pro));
 
@@ -100,11 +96,18 @@ void main() {
     expect(find.text('Uptrend'), findsOneWidget);
     expect(find.text('trending_up'), findsNothing);
     await tester.scrollUntilVisible(
-      find.text('Moderate Risk'),
+      find.text('Medium Risk'),
       300,
       scrollable: find.byType(Scrollable).first,
     );
-    expect(find.text('Moderate Risk'), findsOneWidget);
+    expect(find.text('Medium Risk'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('analysis-result-header')),
+        matching: find.byKey(const ValueKey('analysis-risk-chip')),
+      ),
+      findsOneWidget,
+    );
     expect(find.text('medium'), findsNothing);
     expect(find.byTooltip('Reanalyze'), findsNothing);
   });
@@ -126,6 +129,7 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text('XAU/USD'), findsWidgets);
+    await _reveal(tester, find.text('Uptrend'), find.byType(Scrollable).first);
     expect(find.text('Uptrend'), findsOneWidget);
   });
 
@@ -154,6 +158,65 @@ void main() {
     );
   });
 
+  testWidgets(
+    'chart, levels, fundamental, and technical follow reading order',
+    (tester) async {
+      await _pumpDetail(
+        tester,
+        _analysis(
+          AnalysisModeEnum.beginner,
+          tradePlan: _tradePlan(),
+          failureConditions: 'Invalidation details',
+          mainScenario: 'Primary scenario details',
+        ),
+      );
+      final scrollable = find.byType(Scrollable).first;
+
+      await _reveal(tester, find.text('Price Chart'), scrollable);
+      final chartOffset = tester
+          .state<ScrollableState>(scrollable)
+          .position
+          .pixels;
+
+      await _reveal(tester, find.text('Suggested Levels'), scrollable);
+      final levelsOffset = tester
+          .state<ScrollableState>(scrollable)
+          .position
+          .pixels;
+
+      await _reveal(
+        tester,
+        find.byKey(const ValueKey('analysis-market-evidence')),
+        scrollable,
+      );
+      final fundamentalOffset = tester
+          .state<ScrollableState>(scrollable)
+          .position
+          .pixels;
+
+      await _reveal(
+        tester,
+        find.byKey(const ValueKey('analysis-technical-details')),
+        scrollable,
+      );
+      final technicalOffset = tester
+          .state<ScrollableState>(scrollable)
+          .position
+          .pixels;
+
+      await _reveal(tester, find.text('Notes & journal'), scrollable);
+      final toolsOffset = tester
+          .state<ScrollableState>(scrollable)
+          .position
+          .pixels;
+
+      expect(levelsOffset, greaterThan(chartOffset));
+      expect(fundamentalOffset, greaterThan(levelsOffset));
+      expect(technicalOffset, greaterThan(fundamentalOffset));
+      expect(toolsOffset, greaterThan(technicalOffset));
+    },
+  );
+
   testWidgets('invalidation, opportunity, and risk are collapsed by default', (
     tester,
   ) async {
@@ -171,11 +234,7 @@ void main() {
       (ValueKey('analysis-risk'), 'Risk details'),
     ]) {
       final card = find.byKey(entry.$1);
-      await tester.scrollUntilVisible(
-        card,
-        500,
-        scrollable: find.byType(Scrollable).first,
-      );
+      await _reveal(tester, card, find.byType(Scrollable).first);
       expect(find.text(entry.$2), findsNothing);
       await tester.tap(card);
       await tester.pumpAndSettle();
@@ -216,11 +275,7 @@ void main() {
     );
 
     final scenarios = find.byKey(const ValueKey('analysis-scenarios'));
-    await tester.scrollUntilVisible(
-      scenarios,
-      500,
-      scrollable: find.byType(Scrollable).first,
-    );
+    await _reveal(tester, scenarios, find.byType(Scrollable).first);
     expect(find.text('Primary scenario details'), findsNothing);
 
     await tester.tap(scenarios);
@@ -242,12 +297,28 @@ void main() {
       ),
     );
 
-    final details = find.byKey(const ValueKey('analysis-pro-details'));
-    await tester.scrollUntilVisible(
-      details,
-      500,
-      scrollable: find.byType(Scrollable).first,
+    expect(
+      find.byKey(const ValueKey('analysis-evidence-summary')),
+      findsNothing,
     );
+
+    final details = find.byKey(const ValueKey('analysis-pro-details'));
+    final scrollable = find.byType(Scrollable).first;
+    await _reveal(
+      tester,
+      find.byKey(const ValueKey('analysis-scenarios')),
+      scrollable,
+    );
+    final scenariosOffset = tester
+        .state<ScrollableState>(scrollable)
+        .position
+        .pixels;
+    await _reveal(tester, details, scrollable);
+    final detailsOffset = tester
+        .state<ScrollableState>(scrollable)
+        .position
+        .pixels;
+    expect(detailsOffset, greaterThan(scenariosOffset));
     expect(find.text('Technical factor details'), findsNothing);
 
     await tester.tap(details);
@@ -268,12 +339,10 @@ void main() {
     );
 
     final reason = find.byKey(const ValueKey('analysis-confidence-reason'));
-    await tester.scrollUntilVisible(
-      reason,
-      400,
-      scrollable: find.byType(Scrollable).first,
-    );
+    final header = find.byKey(const ValueKey('analysis-result-header'));
+    expect(find.descendant(of: header, matching: reason), findsOneWidget);
     expect(find.text('Confidence reason details'), findsNothing);
+    expect(find.text('Cited sources'), findsNothing);
 
     await tester.tap(reason);
     await tester.pumpAndSettle();
@@ -305,11 +374,7 @@ void main() {
     );
 
     final levels = find.byKey(const ValueKey('analysis-alert-levels'));
-    await tester.scrollUntilVisible(
-      levels,
-      500,
-      scrollable: find.byType(Scrollable).first,
-    );
+    await _reveal(tester, levels, find.byType(Scrollable).first);
     expect(find.text('@ 4410'), findsNothing);
 
     await tester.tap(levels);
@@ -347,7 +412,7 @@ void main() {
     expect(find.textContaining('Entry sesuai rencana'), findsOneWidget);
   });
 
-  testWidgets('timeframe switch analyzes only the latest selection', (
+  testWidgets('timeframe switch requires explicit analysis confirmation', (
     tester,
   ) async {
     Analysis? created;
@@ -357,18 +422,44 @@ void main() {
       onAnalysisCreated: (value) => created = value,
     );
 
-    await tester.tap(find.widgetWithText(ChoiceChip, '4h'));
-    await tester.pump(const Duration(milliseconds: 300));
-    await tester.tap(find.widgetWithText(ChoiceChip, '1D'));
-    await tester.pump(const Duration(milliseconds: 649));
-    expect(provider.requestedTimeframes, isEmpty);
-
-    await tester.pump(const Duration(milliseconds: 1));
+    await tester.tap(find.byKey(const Key('timeframe-option-4h')));
+    await tester.tap(find.byKey(const Key('timeframe-option-1D')));
     await tester.pump();
+    expect(provider.requestedTimeframes, isEmpty);
+    expect(find.text('Analyze this timeframe'), findsOneWidget);
+
+    await tester.tap(
+      find.byKey(const Key('analyze-selected-timeframe-button')),
+    );
+    await tester.pumpAndSettle();
 
     expect(provider.requestedTimeframes, [CreateAnalysisBodyTimeframeEnum.n1d]);
     expect(created?.timeframe, '1D');
-    expect(find.text('Analyze this timeframe'), findsNothing);
+  });
+
+  testWidgets('timeframe buttons keep a single width across selection', (
+    tester,
+  ) async {
+    await _pumpDetail(tester, _analysis(AnalysisModeEnum.beginner));
+
+    double widthOf(String timeframe) =>
+        tester.getSize(find.byKey(Key('timeframe-option-$timeframe'))).width;
+
+    const timeframes = ['1m', '5m', '15m', '30m', '1h', '4h', '1D', '1W'];
+    final widths = {for (final tf in timeframes) widthOf(tf)};
+
+    // Kisi berkolom tetap: label panjang atau pendek tidak mengubah lebar,
+    // jadi kedua baris tetap rata.
+    expect(widths, hasLength(1));
+
+    // '1h' adalah timeframe analisis ini. Memilih yang lain tidak boleh
+    // menggeser tata letak — itulah sebabnya centang dihilangkan.
+    await tester.tap(find.byKey(const Key('timeframe-option-15m')));
+    await tester.pump();
+
+    for (final tf in timeframes) {
+      expect(widthOf(tf), widths.single);
+    }
   });
 
   testWidgets('new analysis button opens the analysis flow', (tester) async {
@@ -383,6 +474,20 @@ void main() {
 
     expect(opened, isTrue);
   });
+}
+
+Future<void> _reveal(
+  WidgetTester tester,
+  Finder target,
+  Finder scrollable,
+) async {
+  for (var attempt = 0; attempt < 20 && target.evaluate().isEmpty; attempt++) {
+    await tester.drag(scrollable, const Offset(0, -400));
+    await tester.pump();
+  }
+  expect(target, findsOneWidget);
+  await tester.ensureVisible(target);
+  await tester.pumpAndSettle();
 }
 
 Future<_FakeAnalysisProvider> _pumpDetail(

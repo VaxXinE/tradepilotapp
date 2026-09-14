@@ -9,12 +9,10 @@ import '../../../core/theme/app_colors.dart';
 import '../../../l10n/l10n.dart';
 import '../../../core/history/history_statistics.dart';
 import '../../../models/history_filters.dart';
-import '../../../models/history_sort.dart';
 import '../../../providers/analysis_provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/market_provider.dart';
 import '../../../widgets/error_banner.dart';
-import '../../../widgets/app_footer.dart';
 import '../../../widgets/history/history_analysis_card.dart';
 import '../../../widgets/history/history_summary_card.dart';
 import '../../analysis/analysis_detail_screen.dart';
@@ -31,6 +29,8 @@ class HistoryTab extends StatefulWidget {
   @override
   State<HistoryTab> createState() => _HistoryTabState();
 }
+
+enum _HistoryPresetAction { open, save }
 
 class _HistoryTabState extends State<HistoryTab> {
   final ScrollController _scrollController = ScrollController();
@@ -56,6 +56,7 @@ class _HistoryTabState extends State<HistoryTab> {
 
       _searchController.text = filters.query;
       unawaited(_loadPresets());
+      unawaited(context.read<AnalysisProvider>().loadHistoryOutcomeSummary());
     });
   }
 
@@ -83,12 +84,23 @@ class _HistoryTabState extends State<HistoryTab> {
     final name = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(context.l10n.saveCurrentFilter),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          maxLength: 60,
-          decoration: InputDecoration(labelText: context.l10n.presetName),
+        title: Text(context.l10n.saveBasicFilter),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              context.l10n.basicFilterExplanation,
+              style: Theme.of(dialogContext).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              autofocus: true,
+              maxLength: 60,
+              decoration: InputDecoration(labelText: context.l10n.presetName),
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -460,26 +472,41 @@ class _HistoryTabState extends State<HistoryTab> {
                       ),
                   ],
                 ),
-              ],
-            ),
-          ),
 
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _loadingPresets ? null : _showPresets,
-                    icon: const Icon(Icons.bookmarks_outlined),
-                    label: Text(l10n.savedFilters),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                IconButton.outlined(
-                  tooltip: l10n.saveCurrentFilter,
-                  onPressed: _loadingPresets ? null : _savePreset,
-                  icon: const Icon(Icons.bookmark_add_outlined),
+                const SizedBox(width: 4),
+
+                PopupMenuButton<_HistoryPresetAction>(
+                  tooltip: l10n.basicFilters,
+                  enabled: !_loadingPresets,
+                  icon: const Icon(Icons.more_vert_rounded),
+                  onSelected: (action) {
+                    switch (action) {
+                      case _HistoryPresetAction.open:
+                        unawaited(_showPresets());
+                        break;
+                      case _HistoryPresetAction.save:
+                        unawaited(_savePreset());
+                        break;
+                    }
+                  },
+                  itemBuilder: (_) => [
+                    PopupMenuItem(
+                      value: _HistoryPresetAction.open,
+                      child: ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.bookmarks_outlined),
+                        title: Text(l10n.savedFilters),
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: _HistoryPresetAction.save,
+                      child: ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.bookmark_add_outlined),
+                        title: Text(l10n.saveBasicFilter),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -502,15 +529,23 @@ class _HistoryTabState extends State<HistoryTab> {
           if (provider.visibleHistoryError != null)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-              child: ErrorBanner(message: provider.visibleHistoryError),
+              child: ErrorBanner(
+                message: provider.visibleHistoryError,
+                retryLabel: l10n.tryAgain,
+                onRetry: () {
+                  unawaited(provider.refreshVisibleHistory(silent: false));
+                },
+              ),
             ),
 
           Expanded(
             child: RefreshIndicator(
               onRefresh: () {
-                return context.read<AnalysisProvider>().refreshVisibleHistory(
-                  silent: false,
-                );
+                final provider = context.read<AnalysisProvider>();
+                return Future.wait([
+                  provider.refreshVisibleHistory(silent: false),
+                  provider.loadHistoryOutcomeSummary(),
+                ]);
               },
               child: _buildContent(
                 context: context,
@@ -550,7 +585,8 @@ class _HistoryTabState extends State<HistoryTab> {
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         padding: const EdgeInsets.all(24),
         children: [
-          SizedBox(height: MediaQuery.sizeOf(context).height * 0.18),
+          _buildHistorySummary(provider),
+          SizedBox(height: MediaQuery.sizeOf(context).height * 0.1),
           Icon(
             filtered ? Icons.search_off_rounded : Icons.history_rounded,
             size: 42,
@@ -611,12 +647,7 @@ class _HistoryTabState extends State<HistoryTab> {
       },
       itemBuilder: (context, index) {
         if (index == 0) {
-          return HistorySummaryCard(
-            statistics: HistoryStatistics.fromAnalyses(items),
-            isPartial:
-                items.length < provider.visibleHistorySourceTotal ||
-                provider.hasClientHistoryRefinement,
-          );
+          return _buildHistorySummary(provider);
         }
 
         final itemIndex = index - 1;
@@ -629,7 +660,7 @@ class _HistoryTabState extends State<HistoryTab> {
               child: Center(child: CircularProgressIndicator(strokeWidth: 2.4)),
             );
           }
-          return const AppFooter();
+          return const SizedBox(height: 24);
         }
 
         final analysis = items[itemIndex];
@@ -660,6 +691,30 @@ class _HistoryTabState extends State<HistoryTab> {
           },
         );
       },
+    );
+  }
+
+  Widget _buildHistorySummary(AnalysisProvider provider) {
+    final summary = provider.historyOutcomeSummary;
+    if (summary != null) {
+      return HistorySummaryCard(
+        statistics: HistoryStatistics.fromOutcomeStats(summary.overall),
+      );
+    }
+    if (provider.historyOutcomeSummaryError != null) {
+      return ErrorBanner(
+        message: provider.historyOutcomeSummaryError,
+        retryLabel: context.l10n.tryAgain,
+        onRetry: () {
+          unawaited(provider.loadHistoryOutcomeSummary());
+        },
+      );
+    }
+    return const Card(
+      child: SizedBox(
+        height: 96,
+        child: Center(child: CircularProgressIndicator(strokeWidth: 2.4)),
+      ),
     );
   }
 }
@@ -713,17 +768,6 @@ class _ActiveFilters extends StatelessWidget {
           ),
           onDeleted: () {
             onChanged(filters.copyWith(outcome: HistoryOutcomeFilter.all));
-          },
-        ),
-      );
-    }
-
-    if (filters.minConfidence case final confidence?) {
-      chips.add(
-        InputChip(
-          label: Text(context.l10n.confidenceAtLeast(confidence)),
-          onDeleted: () {
-            onChanged(filters.copyWith(clearConfidence: true));
           },
         ),
       );
@@ -815,12 +859,16 @@ class _ActiveFilters extends StatelessWidget {
     HistoryOutcomeFilter outcome,
   ) {
     switch (outcome) {
-      case HistoryOutcomeFilter.success:
-        return l10n.positive;
-      case HistoryOutcomeFilter.failed:
-        return l10n.negative;
       case HistoryOutcomeFilter.pending:
         return l10n.pending;
+      case HistoryOutcomeFilter.targetReached:
+        return l10n.targetReached;
+      case HistoryOutcomeFilter.riskLimitHit:
+        return l10n.riskLimitTouched;
+      case HistoryOutcomeFilter.expired:
+        return l10n.periodEnded;
+      case HistoryOutcomeFilter.invalidated:
+        return l10n.cannotBeEvaluated;
       case HistoryOutcomeFilter.all:
         return l10n.all;
     }
@@ -1025,75 +1073,6 @@ class _HistoryFilterSheetState extends State<_HistoryFilterSheet> {
                   const SizedBox(height: 24),
 
                   Text(
-                    l10n.minimumConfidence,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-
-                  const SizedBox(height: 9),
-
-                  Wrap(
-                    spacing: 7,
-                    runSpacing: 7,
-                    children: [
-                      ChoiceChip(
-                        label: Text(l10n.all),
-                        selected: _draft.minConfidence == null,
-                        onSelected: (_) {
-                          setState(() {
-                            _draft = _draft.copyWith(clearConfidence: true);
-                          });
-                        },
-                      ),
-                      for (final confidence in const [60, 70, 80, 90])
-                        ChoiceChip(
-                          label: Text('≥ $confidence%'),
-                          selected: _draft.minConfidence == confidence,
-                          onSelected: (_) {
-                            setState(() {
-                              _draft = _draft.copyWith(
-                                minConfidence: confidence,
-                              );
-                            });
-                          },
-                        ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  Text(
-                    l10n.sortOrder,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-
-                  const SizedBox(height: 9),
-
-                  Wrap(
-                    spacing: 7,
-                    runSpacing: 7,
-                    children: [
-                      for (final sort in HistorySort.values)
-                        ChoiceChip(
-                          label: Text(_sortLabel(l10n, sort)),
-                          selected: _draft.sort == sort,
-                          onSelected: (_) {
-                            setState(() {
-                              _draft = _draft.copyWith(sort: sort);
-                            });
-                          },
-                        ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  Text(
                     l10n.instrument,
                     style: const TextStyle(
                       fontSize: 13,
@@ -1108,7 +1087,10 @@ class _HistoryFilterSheetState extends State<_HistoryFilterSheet> {
                     Padding(
                       padding: const EdgeInsets.only(top: 8, bottom: 6),
                       child: Text(
-                        group.key,
+                        MarketProvider.instrumentCategoryLabel(
+                          context.l10n,
+                          group.key,
+                        ),
                         style: TextStyle(
                           color: muted,
                           fontSize: 12,
@@ -1227,21 +1209,14 @@ class _HistoryFilterSheetState extends State<_HistoryFilterSheet> {
         return l10n.all;
       case HistoryOutcomeFilter.pending:
         return l10n.pending;
-      case HistoryOutcomeFilter.success:
-        return l10n.positiveOutcome;
-      case HistoryOutcomeFilter.failed:
-        return l10n.negativeOutcome;
-    }
-  }
-
-  static String _sortLabel(AppLocalizations l10n, HistorySort sort) {
-    switch (sort) {
-      case HistorySort.newest:
-        return l10n.newest;
-      case HistorySort.oldest:
-        return l10n.oldest;
-      case HistorySort.confidenceHighest:
-        return l10n.highestConfidence;
+      case HistoryOutcomeFilter.targetReached:
+        return l10n.targetReached;
+      case HistoryOutcomeFilter.riskLimitHit:
+        return l10n.riskLimitTouched;
+      case HistoryOutcomeFilter.expired:
+        return l10n.periodEnded;
+      case HistoryOutcomeFilter.invalidated:
+        return l10n.cannotBeEvaluated;
     }
   }
 }

@@ -129,7 +129,10 @@ class _InstrumentPickerSheetState extends State<InstrumentPickerSheet> {
                         ),
 
                         child: Text(
-                          entry.key,
+                          MarketProvider.instrumentCategoryLabel(
+                            context.l10n,
+                            entry.key,
+                          ),
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
