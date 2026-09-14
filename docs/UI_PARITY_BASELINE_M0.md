@@ -4,7 +4,7 @@
 
 - Web: `Trade-Pilot/artifacts/ai-trading`
 - Branch web: `prodd-v2`
-- Commit acuan: `860e898`
+- Commit acuan: `403edd4`
 - Target utama: responsive mobile web, bukan `artifacts/mobile` lama
 - Viewport pembanding: 360×800, 390×844, dan 430×932
 
@@ -65,9 +65,19 @@ memenuhi kontras WCAG AA. Emas terang dipakai sebagai fill dengan teks hitam.
   dan Profil menjadi layar tanpa tab seperti pada web.
 - App bar duplikat pada tab utama dihapus.
 
-Ticker sengaja dapat digeser pengguna dan tidak bergerak otomatis. Ini tetap
-menampilkan data live seperti web, tetapi menghindari animasi kontinu yang dapat
-mengganggu aksesibilitas dan tidak membutuhkan dependency marquee tambahan.
+Ticker dapat dijeda, disembunyikan, atau digeser manual ketika animasi berhenti;
+preferensi kontrol disimpan lokal seperti pada web terbaru.
+
+## Sinkronisasi web September 2026
+
+- Guide menampilkan Quick Start dan status bacaan dari `completedGuideIds`.
+- History memiliki tab ringkasan/daftar, rentang waktu, progress sampel, dan
+  bucket backend `__other__` sebagai “Instrumen Lainnya”.
+- Performance memberi progress sampel dan label bucket instrumen lain.
+- Notifications memisahkan Inbox dan Pengaturan.
+- Chart hasil mengikuti quote backend terbaru tanpa mengganti snapshot analisis.
+- Adaptive Position Plan dapat disalin sebagai konteks perencanaan manual.
+- Progression memakai warna emblem per tier dan badge achievement per keluarga.
 
 ## Core journey M3
 

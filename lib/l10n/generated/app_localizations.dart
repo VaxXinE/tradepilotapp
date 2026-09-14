@@ -980,6 +980,30 @@ abstract class AppLocalizations {
   /// **'Market news'**
   String get marketNews;
 
+  /// No description provided for @pauseTicker.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause ticker'**
+  String get pauseTicker;
+
+  /// No description provided for @resumeTicker.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume ticker'**
+  String get resumeTicker;
+
+  /// No description provided for @hideTicker.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide ticker'**
+  String get hideTicker;
+
+  /// No description provided for @showTicker.
+  ///
+  /// In en, this message translates to:
+  /// **'Show ticker'**
+  String get showTicker;
+
   /// No description provided for @termsOfService.
   ///
   /// In en, this message translates to:
@@ -1237,6 +1261,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not enough data for a responsible display. {need} results required; currently {have}.'**
   String performanceInsufficient(int need, int have);
+
+  /// No description provided for @performanceSampleProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{have} of {need} samples collected'**
+  String performanceSampleProgress(int have, int need);
+
+  /// No description provided for @otherInstruments.
+  ///
+  /// In en, this message translates to:
+  /// **'Other Instruments'**
+  String get otherInstruments;
 
   /// No description provided for @performanceByInstrument.
   ///
@@ -2348,6 +2384,12 @@ abstract class AppLocalizations {
   /// **'Inbox'**
   String get notificationInbox;
 
+  /// No description provided for @notificationSettingsTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get notificationSettingsTab;
+
   /// No description provided for @notificationUnreadCount.
   ///
   /// In en, this message translates to:
@@ -3319,6 +3361,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'History summary'**
   String get historySummary;
+
+  /// No description provided for @historyListTab.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get historyListTab;
+
+  /// No description provided for @timeframePerformance.
+  ///
+  /// In en, this message translates to:
+  /// **'By timeframe'**
+  String get timeframePerformance;
+
+  /// No description provided for @allTime.
+  ///
+  /// In en, this message translates to:
+  /// **'All time'**
+  String get allTime;
+
+  /// No description provided for @daysShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}d'**
+  String daysShort(int count);
 
   /// No description provided for @partialSummary.
   ///
@@ -5600,6 +5666,18 @@ abstract class AppLocalizations {
   /// **'Search guide...'**
   String get guideSearchHint;
 
+  /// No description provided for @guideQuickStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick start'**
+  String get guideQuickStart;
+
+  /// No description provided for @guideQuickStartHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Three guides to understand the core workflow.'**
+  String get guideQuickStartHint;
+
   /// No description provided for @guideSubtitle.
   ///
   /// In en, this message translates to:
@@ -5815,6 +5893,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Build position plan'**
   String get buildPositionPlan;
+
+  /// No description provided for @copyPositionPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy plan'**
+  String get copyPositionPlan;
+
+  /// No description provided for @positionPlanCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Position plan copied.'**
+  String get positionPlanCopied;
+
+  /// No description provided for @positionPlanCopyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Position plan could not be copied.'**
+  String get positionPlanCopyFailed;
+
+  /// No description provided for @positionDirection.
+  ///
+  /// In en, this message translates to:
+  /// **'Direction'**
+  String get positionDirection;
+
+  /// No description provided for @riskStyle.
+  ///
+  /// In en, this message translates to:
+  /// **'Risk style'**
+  String get riskStyle;
+
+  /// No description provided for @riskStyleConservative.
+  ///
+  /// In en, this message translates to:
+  /// **'Conservative'**
+  String get riskStyleConservative;
+
+  /// No description provided for @riskStyleBalanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced'**
+  String get riskStyleBalanced;
+
+  /// No description provided for @riskStyleAggressive.
+  ///
+  /// In en, this message translates to:
+  /// **'Aggressive'**
+  String get riskStyleAggressive;
+
+  /// No description provided for @totalLots.
+  ///
+  /// In en, this message translates to:
+  /// **'Total lots'**
+  String get totalLots;
+
+  /// No description provided for @marginRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Required margin'**
+  String get marginRequired;
+
+  /// No description provided for @estimatedCycleLoss.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated cycle loss'**
+  String get estimatedCycleLoss;
+
+  /// No description provided for @adaptiveCopyManualContext.
+  ///
+  /// In en, this message translates to:
+  /// **'Use this as manual planning context, not an execution instruction.'**
+  String get adaptiveCopyManualContext;
 
   /// No description provided for @notRecommended.
   ///

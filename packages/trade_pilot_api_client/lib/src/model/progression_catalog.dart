@@ -14,11 +14,15 @@ part 'progression_catalog.g.dart';
 ///
 /// Properties:
 /// * [achievements]
+/// * [completedGuideIds] - Guide article IDs with a valid, non-revoked completion award.
 @BuiltValue()
 abstract class ProgressionCatalog
     implements Built<ProgressionCatalog, ProgressionCatalogBuilder> {
   @BuiltValueField(wireName: r'achievements')
   BuiltList<ProgressionAchievement> get achievements;
+
+  @BuiltValueField(wireName: r'completedGuideIds')
+  BuiltList<String> get completedGuideIds;
 
   ProgressionCatalog._();
 
@@ -52,6 +56,11 @@ class _$ProgressionCatalogSerializer
       specifiedType:
           const FullType(BuiltList, [FullType(ProgressionAchievement)]),
     );
+    yield r'completedGuideIds';
+    yield serializers.serialize(
+      object.completedGuideIds,
+      specifiedType: const FullType(BuiltList, [FullType(String)]),
+    );
   }
 
   @override
@@ -84,6 +93,13 @@ class _$ProgressionCatalogSerializer
                 const FullType(BuiltList, [FullType(ProgressionAchievement)]),
           ) as BuiltList<ProgressionAchievement>;
           result.achievements.replace(valueDes);
+          break;
+        case r'completedGuideIds':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(BuiltList, [FullType(String)]),
+          ) as BuiltList<String>;
+          result.completedGuideIds.replace(valueDes);
           break;
         default:
           unhandled.add(key);

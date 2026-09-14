@@ -2293,6 +2293,7 @@ class _ChartCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final quote = context.watch<MarketProvider>().quotes[analysis.instrument];
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -2329,12 +2330,33 @@ class _ChartCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 2),
-                      Text(
-                        '${analysis.instrument} • ${analysis.timeframe}',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          fontSize: 11,
-                        ),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 2,
+                        children: [
+                          Text(
+                            '${analysis.instrument} • ${analysis.timeframe}',
+                            style: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                              fontSize: 11,
+                            ),
+                          ),
+                          if (quote != null)
+                            Text(
+                              '${quote.price.toStringAsFixed(2)} '
+                              '${quote.changePercent >= 0 ? '+' : ''}'
+                              '${quote.changePercent.toStringAsFixed(2)}%',
+                              style: TextStyle(
+                                color: quote.changePercent >= 0
+                                    ? const Color(0xFF10B981)
+                                    : const Color(0xFFEF4444),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                        ],
                       ),
                     ],
                   ),
@@ -2359,6 +2381,7 @@ class _ChartCard extends StatelessWidget {
                 candles: candles,
                 tradePlan: analysis.tradePlan,
                 tradingBias: analysis.tradingBias,
+                currentPrice: quote?.price,
                 isLoading: isLoading,
               ),
           ],

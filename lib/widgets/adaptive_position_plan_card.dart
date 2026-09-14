@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
@@ -217,6 +218,8 @@ class _AdaptivePositionPlanCardState extends State<AdaptivePositionPlanCard> {
           const SizedBox(height: 14),
           _Result(
             recommendation: _recommendation!,
+            instrument: widget.analysis.instrument,
+            riskStyle: _style,
             activeSide: _activeSide,
             onSideChanged: (side) => setState(() => _activeSide = side),
           ),
@@ -242,10 +245,14 @@ class _MoneyField extends StatelessWidget {
 class _Result extends StatelessWidget {
   const _Result({
     required this.recommendation,
+    required this.instrument,
+    required this.riskStyle,
     required this.activeSide,
     required this.onSideChanged,
   });
   final AdaptiveRecommendation recommendation;
+  final String instrument;
+  final AdaptiveRiskStyle riskStyle;
   final String activeSide;
   final ValueChanged<String> onSideChanged;
 
@@ -309,6 +316,15 @@ class _Result extends StatelessWidget {
           onSelectionChanged: (value) => onSideChanged(value.first),
         ),
         const SizedBox(height: 10),
+        Align(
+          alignment: Alignment.centerRight,
+          child: OutlinedButton.icon(
+            onPressed: () => _copyPlan(context, side),
+            icon: const Icon(Icons.copy_rounded, size: 18),
+            label: Text(context.l10n.copyPositionPlan),
+          ),
+        ),
+        const SizedBox(height: 8),
         _MetricGrid(side: side),
         const SizedBox(height: 10),
         ...side.layers.indexed.map(
@@ -321,6 +337,48 @@ class _Result extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  Future<void> _copyPlan(BuildContext context, AdaptiveSidePlan side) async {
+    final l10n = context.l10n;
+    final style = switch (riskStyle) {
+      AdaptiveRiskStyle.conservative => l10n.riskStyleConservative,
+      AdaptiveRiskStyle.balanced => l10n.riskStyleBalanced,
+      AdaptiveRiskStyle.aggressive => l10n.riskStyleAggressive,
+    };
+    final lines = <String>[
+      l10n.positionSizeRecommendation,
+      '${l10n.instrument}: $instrument',
+      '${l10n.positionDirection}: ${side.side.toUpperCase()}',
+      '${l10n.riskStyle}: $style',
+      '',
+      ...side.layers.indexed.map(
+        (item) =>
+            '${item.$1 + 1}. ${_decimal(item.$2.price)} · '
+            '${_decimal(item.$2.lot)} lot',
+      ),
+      'SL: ${_decimal(side.stopLoss)}',
+      if (side.takeProfit1 != null) 'TP1: ${_decimal(side.takeProfit1!)}',
+      if (side.takeProfit2 != null) 'TP2: ${_decimal(side.takeProfit2!)}',
+      '${l10n.totalLots}: ${_decimal(side.totalLots)} lot',
+      '${l10n.marginRequired}: ${_money(side.marginRequired)}',
+      '${l10n.estimatedCycleLoss}: ${_money(side.estimatedLoss)}',
+      l10n.adaptiveCopyManualContext,
+    ];
+    try {
+      await Clipboard.setData(ClipboardData(text: lines.join('\n')));
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.positionPlanCopied)));
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.positionPlanCopyFailed)));
+      }
+    }
   }
 }
 

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../core/api/api_config.dart';
@@ -186,6 +187,8 @@ class LiveMarketTicker extends StatefulWidget {
 
 class _LiveMarketTickerState extends State<LiveMarketTicker>
     with SingleTickerProviderStateMixin {
+  static const _pausedKey = 'tradepilot_ticker_paused';
+  static const _hiddenKey = 'tradepilot_ticker_hidden';
   static const _pixelsPerSecond = 34.0;
   static const _newsRefreshInterval = Duration(minutes: 5);
 
@@ -194,11 +197,14 @@ class _LiveMarketTickerState extends State<LiveMarketTicker>
   Ticker? _ticker;
   Duration _lastElapsed = Duration.zero;
   Timer? _newsTimer;
+  bool _paused = false;
+  bool _hidden = false;
 
   @override
   void initState() {
     super.initState();
     _ticker = createTicker(_onTick)..start();
+    unawaited(_restorePreferences());
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(_loadNews());
       _newsTimer = Timer.periodic(
@@ -242,9 +248,31 @@ class _LiveMarketTickerState extends State<LiveMarketTicker>
     }
   }
 
+  Future<void> _restorePreferences() async {
+    final preferences = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _paused = preferences.getBool(_pausedKey) ?? false;
+      _hidden = preferences.getBool(_hiddenKey) ?? false;
+    });
+  }
+
+  Future<void> _setPaused(bool value) async {
+    setState(() => _paused = value);
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setBool(_pausedKey, value);
+  }
+
+  Future<void> _setHidden(bool value) async {
+    setState(() => _hidden = value);
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setBool(_hiddenKey, value);
+  }
+
   void _onTick(Duration elapsed) {
     final delta = elapsed - _lastElapsed;
     _lastElapsed = elapsed;
+    if (_paused) return;
     if (!_scrollController.hasClients) return;
     if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) return;
 
@@ -264,6 +292,19 @@ class _LiveMarketTickerState extends State<LiveMarketTicker>
   Widget build(BuildContext context) {
     final quotes = widget.quotes.where((quote) => quote.price > 0).toList();
     if (quotes.isEmpty && _articles.isEmpty) return const SizedBox.shrink();
+    if (_hidden) {
+      return Container(
+        height: 30,
+        alignment: Alignment.centerRight,
+        color: const Color(0xFF020617),
+        child: TextButton.icon(
+          onPressed: () => unawaited(_setHidden(false)),
+          icon: const Icon(Icons.visibility_rounded, size: 15),
+          label: Text(context.l10n.showTicker),
+          style: TextButton.styleFrom(foregroundColor: Colors.white70),
+        ),
+      );
+    }
 
     final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
 
@@ -299,26 +340,61 @@ class _LiveMarketTickerState extends State<LiveMarketTicker>
           color: Color(0xFF020617),
           border: Border(bottom: BorderSide(color: Color(0x1AFFFFFF))),
         ),
-        child: SingleChildScrollView(
-          key: const Key('live-market-ticker'),
-          controller: _scrollController,
-          scrollDirection: Axis.horizontal,
-          // Saat animasi berjalan, gesture manual dimatikan agar tidak
-          // bertabrakan dengan pergeseran otomatis; ketika sistem meminta
-          // pengurangan animasi, ticker berhenti dan bisa digeser sendiri.
-          physics: reduceMotion
-              ? const AlwaysScrollableScrollPhysics()
-              : const NeverScrollableScrollPhysics(),
-          child: Row(
-            children: [
-              for (var pass = 0; pass < 2; pass++)
-                for (final item in items)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: item,
-                  ),
-            ],
-          ),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              right: 78,
+              child: SingleChildScrollView(
+                key: const Key('live-market-ticker'),
+                controller: _scrollController,
+                scrollDirection: Axis.horizontal,
+                physics: reduceMotion || _paused
+                    ? const AlwaysScrollableScrollPhysics()
+                    : const NeverScrollableScrollPhysics(),
+                child: Row(
+                  children: [
+                    for (var pass = 0; pass < 2; pass++)
+                      for (final item in items)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: item,
+                        ),
+                  ],
+                ),
+              ),
+            ),
+            Positioned(
+              right: 0,
+              top: 0,
+              bottom: 0,
+              child: ColoredBox(
+                color: const Color(0xFF020617),
+                child: Row(
+                  children: [
+                    IconButton(
+                      tooltip: _paused
+                          ? context.l10n.resumeTicker
+                          : context.l10n.pauseTicker,
+                      onPressed: () => unawaited(_setPaused(!_paused)),
+                      icon: Icon(
+                        _paused
+                            ? Icons.play_arrow_rounded
+                            : Icons.pause_rounded,
+                        size: 17,
+                      ),
+                      color: Colors.white70,
+                    ),
+                    IconButton(
+                      tooltip: context.l10n.hideTicker,
+                      onPressed: () => unawaited(_setHidden(true)),
+                      icon: const Icon(Icons.visibility_off_rounded, size: 16),
+                      color: Colors.white70,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

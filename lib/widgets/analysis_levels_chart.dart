@@ -12,12 +12,14 @@ class AnalysisLevelsChart extends StatelessWidget {
     required this.candles,
     this.tradePlan,
     this.tradingBias,
+    this.currentPrice,
     this.isLoading = false,
   });
 
   final List<MarketCandle> candles;
   final TradePlan? tradePlan;
   final String? tradingBias;
+  final double? currentPrice;
 
   final bool isLoading;
 
@@ -49,7 +51,18 @@ class AnalysisLevelsChart extends StatelessWidget {
 
     final visible = candles.length > _maxCandles
         ? candles.sublist(candles.length - _maxCandles)
-        : candles;
+        : List<MarketCandle>.of(candles);
+    final live = currentPrice;
+    if (live != null && live.isFinite && live > 0) {
+      final last = visible.last;
+      visible[visible.length - 1] = MarketCandle(
+        date: last.date,
+        open: last.open,
+        high: live > last.high ? live : last.high,
+        low: live < last.low ? live : last.low,
+        close: live,
+      );
+    }
 
     final levels = _buildLevels(tradePlan, tradingBias);
 

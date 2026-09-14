@@ -49,6 +49,7 @@ void main() {
 
     expect(progression.summary?.totalXp, 120);
     expect(progression.catalog?.achievements.single.unlocked, isTrue);
+    expect(progression.completedGuideIds, {'how-ai-works'});
     expect(progression.history?.entries.single.source_, 'guide_completion');
 
     await auth.forceLogout();
@@ -78,6 +79,7 @@ class _ProgressionAdapter implements HttpClientAdapter {
         'longestStreak': 4,
       },
       '/progression/catalog' => {
+        'completedGuideIds': ['how-ai-works'],
         'achievements': [
           {
             'key': 'guide_1',

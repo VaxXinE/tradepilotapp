@@ -20,6 +20,9 @@ class ProgressionProvider extends ChangeNotifier {
   bool isLoading = false;
   String? error;
 
+  Set<String> get completedGuideIds =>
+      catalog?.completedGuideIds.toSet() ?? const {};
+
   int? _activeUserId;
   int _sessionEpoch = 0;
 

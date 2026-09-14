@@ -185,6 +185,10 @@
   "sponsoredBy": "Disponsori oleh",
   "newsDataVia": "Data berita via newsmaker.id",
   "marketNews": "Berita pasar",
+  "pauseTicker": "Jeda ticker",
+  "resumeTicker": "Lanjutkan ticker",
+  "hideTicker": "Sembunyikan ticker",
+  "showTicker": "Tampilkan ticker",
   "termsOfService": "Syarat Layanan",
   "support": "Bantuan",
   "deleteAccount": "Hapus Akun",
@@ -245,6 +249,14 @@
       }
     }
   },
+  "performanceSampleProgress": "{have} dari {need} sampel terkumpul",
+  "@performanceSampleProgress": {
+    "placeholders": {
+      "have": {"type": "int"},
+      "need": {"type": "int"}
+    }
+  },
+  "otherInstruments": "Instrumen Lainnya",
   "performanceByInstrument": "Per instrumen",
   "performanceBySession": "Per sesi pasar",
   "performanceByCondition": "Per kondisi pasar",
@@ -512,6 +524,7 @@
   "realtimeActive": "Realtime terhubung",
   "realtimeConnecting": "Menghubungkan realtime…",
   "notificationInbox": "Kotak Masuk",
+  "notificationSettingsTab": "Pengaturan",
   "notificationUnreadCount": "{count} belum dibaca",
   "@notificationUnreadCount": {
     "placeholders": {
@@ -672,6 +685,11 @@
     }
   },
   "historySummary": "Ringkasan riwayat",
+  "historyListTab": "Riwayat",
+  "timeframePerformance": "Per timeframe",
+  "allTime": "Semua waktu",
+  "daysShort": "{count}h",
+  "@daysShort": {"placeholders": {"count": {"type": "int"}}},
   "partialSummary": "Ringkasan sementara",
   "visible": "Terlihat",
   "evaluated": "Dievaluasi",
@@ -1495,6 +1513,8 @@
     }
   },
   "guideSearchHint": "Cari panduan...",
+  "guideQuickStart": "Mulai cepat",
+  "guideQuickStartHint": "Tiga panduan untuk memahami alur utama.",
   "guideSubtitle": "Pengetahuan, fitur, dan mindset.",
   "guideNoResults": "Artikel tidak ditemukan.",
   "marketChartUnavailable": "Chart market belum tersedia.",
@@ -1531,6 +1551,18 @@
   "availableTradingFunds": "Dana trading tersedia",
   "maxLossLimit": "Batas rugi maksimum",
   "buildPositionPlan": "Buat rencana posisi",
+  "copyPositionPlan": "Salin rencana",
+  "positionPlanCopied": "Rencana posisi disalin.",
+  "positionPlanCopyFailed": "Rencana posisi gagal disalin.",
+  "positionDirection": "Arah",
+  "riskStyle": "Gaya risiko",
+  "riskStyleConservative": "Konservatif",
+  "riskStyleBalanced": "Seimbang",
+  "riskStyleAggressive": "Agresif",
+  "totalLots": "Total lot",
+  "marginRequired": "Margin dibutuhkan",
+  "estimatedCycleLoss": "Estimasi rugi siklus",
+  "adaptiveCopyManualContext": "Gunakan sebagai konteks perencanaan manual, bukan instruksi eksekusi.",
   "notRecommended": "Tidak direkomendasikan",
   "adaptivePlanFootnote": "Day trading only. Estimasi tidak memasukkan spread, slippage, fee, VAT, rollover, atau auto-liquidation broker.",
   "lossToSl": "Rugi ke SL",

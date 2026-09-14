@@ -491,6 +491,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get marketNews => 'Market news';
 
   @override
+  String get pauseTicker => 'Pause ticker';
+
+  @override
+  String get resumeTicker => 'Resume ticker';
+
+  @override
+  String get hideTicker => 'Hide ticker';
+
+  @override
+  String get showTicker => 'Show ticker';
+
+  @override
   String get termsOfService => 'Terms of Service';
 
   @override
@@ -624,6 +636,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String performanceInsufficient(int need, int have) {
     return 'Not enough data for a responsible display. $need results required; currently $have.';
   }
+
+  @override
+  String performanceSampleProgress(int have, int need) {
+    return '$have of $need samples collected';
+  }
+
+  @override
+  String get otherInstruments => 'Other Instruments';
 
   @override
   String get performanceByInstrument => 'By instrument';
@@ -1254,6 +1274,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationInbox => 'Inbox';
 
   @override
+  String get notificationSettingsTab => 'Settings';
+
+  @override
   String notificationUnreadCount(int count) {
     return '$count unread';
   }
@@ -1826,6 +1849,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get historySummary => 'History summary';
+
+  @override
+  String get historyListTab => 'History';
+
+  @override
+  String get timeframePerformance => 'By timeframe';
+
+  @override
+  String get allTime => 'All time';
+
+  @override
+  String daysShort(int count) {
+    return '${count}d';
+  }
 
   @override
   String get partialSummary => 'Partial summary';
@@ -3137,6 +3174,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get guideSearchHint => 'Search guide...';
 
   @override
+  String get guideQuickStart => 'Quick start';
+
+  @override
+  String get guideQuickStartHint =>
+      'Three guides to understand the core workflow.';
+
+  @override
   String get guideSubtitle => 'Knowledge, features, and mindset.';
 
   @override
@@ -3259,6 +3303,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get buildPositionPlan => 'Build position plan';
+
+  @override
+  String get copyPositionPlan => 'Copy plan';
+
+  @override
+  String get positionPlanCopied => 'Position plan copied.';
+
+  @override
+  String get positionPlanCopyFailed => 'Position plan could not be copied.';
+
+  @override
+  String get positionDirection => 'Direction';
+
+  @override
+  String get riskStyle => 'Risk style';
+
+  @override
+  String get riskStyleConservative => 'Conservative';
+
+  @override
+  String get riskStyleBalanced => 'Balanced';
+
+  @override
+  String get riskStyleAggressive => 'Aggressive';
+
+  @override
+  String get totalLots => 'Total lots';
+
+  @override
+  String get marginRequired => 'Required margin';
+
+  @override
+  String get estimatedCycleLoss => 'Estimated cycle loss';
+
+  @override
+  String get adaptiveCopyManualContext =>
+      'Use this as manual planning context, not an execution instruction.';
 
   @override
   String get notRecommended => 'Not recommended';

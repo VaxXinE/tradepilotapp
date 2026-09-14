@@ -375,6 +375,9 @@ Serializers _$serializers = (Serializers().toBuilder()
               BuiltList, const [const FullType(ProgressionAchievement)]),
           () => ListBuilder<ProgressionAchievement>())
       ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(String)]),
+          () => ListBuilder<String>())
+      ..addBuilderFactory(
           const FullType(
               BuiltList, const [const FullType(ProgressionAuditEntry)]),
           () => ListBuilder<ProgressionAuditEntry>())

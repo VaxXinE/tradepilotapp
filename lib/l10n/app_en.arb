@@ -187,6 +187,10 @@
   "sponsoredBy": "Sponsored by",
   "newsDataVia": "News data via newsmaker.id",
   "marketNews": "Market news",
+  "pauseTicker": "Pause ticker",
+  "resumeTicker": "Resume ticker",
+  "hideTicker": "Hide ticker",
+  "showTicker": "Show ticker",
   "termsOfService": "Terms of Service",
   "support": "Support",
   "deleteAccount": "Delete Account",
@@ -247,6 +251,14 @@
       }
     }
   },
+  "performanceSampleProgress": "{have} of {need} samples collected",
+  "@performanceSampleProgress": {
+    "placeholders": {
+      "have": {"type": "int"},
+      "need": {"type": "int"}
+    }
+  },
+  "otherInstruments": "Other Instruments",
   "performanceByInstrument": "By instrument",
   "performanceBySession": "By market session",
   "performanceByCondition": "By market condition",
@@ -567,6 +579,7 @@
   "realtimeActive": "Realtime connected",
   "realtimeConnecting": "Connecting realtime…",
   "notificationInbox": "Inbox",
+  "notificationSettingsTab": "Settings",
   "notificationUnreadCount": "{count} unread",
   "@notificationUnreadCount": {
     "placeholders": {
@@ -923,6 +936,11 @@
     }
   },
   "historySummary": "History summary",
+  "historyListTab": "History",
+  "timeframePerformance": "By timeframe",
+  "allTime": "All time",
+  "daysShort": "{count}d",
+  "@daysShort": {"placeholders": {"count": {"type": "int"}}},
   "partialSummary": "Partial summary",
   "visible": "Visible",
   "evaluated": "Evaluated",
@@ -1669,6 +1687,8 @@
     }
   },
   "guideSearchHint": "Search guide...",
+  "guideQuickStart": "Quick start",
+  "guideQuickStartHint": "Three guides to understand the core workflow.",
   "guideSubtitle": "Knowledge, features, and mindset.",
   "guideNoResults": "No articles found.",
   "marketChartUnavailable": "The market chart is not available yet.",
@@ -1715,6 +1735,18 @@
   "availableTradingFunds": "Available trading funds",
   "maxLossLimit": "Maximum loss limit",
   "buildPositionPlan": "Build position plan",
+  "copyPositionPlan": "Copy plan",
+  "positionPlanCopied": "Position plan copied.",
+  "positionPlanCopyFailed": "Position plan could not be copied.",
+  "positionDirection": "Direction",
+  "riskStyle": "Risk style",
+  "riskStyleConservative": "Conservative",
+  "riskStyleBalanced": "Balanced",
+  "riskStyleAggressive": "Aggressive",
+  "totalLots": "Total lots",
+  "marginRequired": "Required margin",
+  "estimatedCycleLoss": "Estimated cycle loss",
+  "adaptiveCopyManualContext": "Use this as manual planning context, not an execution instruction.",
   "notRecommended": "Not recommended",
   "adaptivePlanFootnote": "Day trading only. Estimates exclude spread, slippage, fees, VAT, rollover, and broker auto-liquidation.",
   "lossToSl": "Loss to SL",

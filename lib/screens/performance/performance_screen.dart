@@ -115,15 +115,41 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
 
   List<Widget> _summaryWidgets(PerformanceSummary summary) {
     if (summary.overall.total < summary.minSamples.overall) {
+      final progress = summary.overall.total / summary.minSamples.overall;
       return [
         Card(
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: Text(
-              context.l10n.performanceInsufficient(
-                summary.minSamples.overall,
-                summary.overall.total,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  context.l10n.performanceInsufficient(
+                    summary.minSamples.overall,
+                    summary.overall.total,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Semantics(
+                  label: context.l10n.performanceSampleProgress(
+                    summary.overall.total,
+                    summary.minSamples.overall,
+                  ),
+                  child: LinearProgressIndicator(
+                    value: progress.clamp(0, 1),
+                    minHeight: 8,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  context.l10n.performanceSampleProgress(
+                    summary.overall.total,
+                    summary.minSamples.overall,
+                  ),
+                  style: Theme.of(context).textTheme.labelSmall,
+                ),
+              ],
             ),
           ),
         ),
@@ -513,6 +539,7 @@ String _percent(num? value) =>
     value == null ? '—' : '${(value * 100).round()}%';
 
 String _bucketLabel(BuildContext context, String value) => switch (value) {
+  '__other__' || '__OTHER__' => context.l10n.otherInstruments,
   'asia' => 'Asia',
   'london' => 'London',
   'newyork' => 'New York',

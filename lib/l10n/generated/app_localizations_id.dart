@@ -491,6 +491,18 @@ class AppLocalizationsId extends AppLocalizations {
   String get marketNews => 'Berita pasar';
 
   @override
+  String get pauseTicker => 'Jeda ticker';
+
+  @override
+  String get resumeTicker => 'Lanjutkan ticker';
+
+  @override
+  String get hideTicker => 'Sembunyikan ticker';
+
+  @override
+  String get showTicker => 'Tampilkan ticker';
+
+  @override
   String get termsOfService => 'Syarat Layanan';
 
   @override
@@ -624,6 +636,14 @@ class AppLocalizationsId extends AppLocalizations {
   String performanceInsufficient(int need, int have) {
     return 'Data belum cukup untuk ditampilkan secara bertanggung jawab. Butuh $need hasil; saat ini $have.';
   }
+
+  @override
+  String performanceSampleProgress(int have, int need) {
+    return '$have dari $need sampel terkumpul';
+  }
+
+  @override
+  String get otherInstruments => 'Instrumen Lainnya';
 
   @override
   String get performanceByInstrument => 'Per instrumen';
@@ -1248,6 +1268,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get notificationInbox => 'Kotak Masuk';
 
   @override
+  String get notificationSettingsTab => 'Pengaturan';
+
+  @override
   String notificationUnreadCount(int count) {
     return '$count belum dibaca';
   }
@@ -1819,6 +1842,20 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get historySummary => 'Ringkasan riwayat';
+
+  @override
+  String get historyListTab => 'Riwayat';
+
+  @override
+  String get timeframePerformance => 'Per timeframe';
+
+  @override
+  String get allTime => 'Semua waktu';
+
+  @override
+  String daysShort(int count) {
+    return '${count}h';
+  }
 
   @override
   String get partialSummary => 'Ringkasan sementara';
@@ -3123,6 +3160,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get guideSearchHint => 'Cari panduan...';
 
   @override
+  String get guideQuickStart => 'Mulai cepat';
+
+  @override
+  String get guideQuickStartHint => 'Tiga panduan untuk memahami alur utama.';
+
+  @override
   String get guideSubtitle => 'Pengetahuan, fitur, dan mindset.';
 
   @override
@@ -3244,6 +3287,43 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get buildPositionPlan => 'Buat rencana posisi';
+
+  @override
+  String get copyPositionPlan => 'Salin rencana';
+
+  @override
+  String get positionPlanCopied => 'Rencana posisi disalin.';
+
+  @override
+  String get positionPlanCopyFailed => 'Rencana posisi gagal disalin.';
+
+  @override
+  String get positionDirection => 'Arah';
+
+  @override
+  String get riskStyle => 'Gaya risiko';
+
+  @override
+  String get riskStyleConservative => 'Konservatif';
+
+  @override
+  String get riskStyleBalanced => 'Seimbang';
+
+  @override
+  String get riskStyleAggressive => 'Agresif';
+
+  @override
+  String get totalLots => 'Total lot';
+
+  @override
+  String get marginRequired => 'Margin dibutuhkan';
+
+  @override
+  String get estimatedCycleLoss => 'Estimasi rugi siklus';
+
+  @override
+  String get adaptiveCopyManualContext =>
+      'Gunakan sebagai konteks perencanaan manual, bukan instruksi eksekusi.';
 
   @override
   String get notRecommended => 'Tidak direkomendasikan';

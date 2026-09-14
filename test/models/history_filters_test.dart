@@ -4,6 +4,14 @@ import 'package:tradepilotapp/models/history_filters.dart';
 import 'package:tradepilotapp/models/history_sort.dart';
 
 void main() {
+  test('preserves the backend other-instruments bucket key', () {
+    final filters = const HistoryFilters(
+      instruments: ['__OTHER__', 'xau/usd'],
+    ).normalized();
+
+    expect(filters.instruments, ['__other__', 'XAU/USD']);
+  });
+
   group('HistoryFilters', () {
     test('outcome filters map to distinct server statuses', () {
       const filter = HistoryFilters(

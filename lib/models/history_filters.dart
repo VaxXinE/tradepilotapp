@@ -24,6 +24,7 @@ class HistoryFilters {
   });
 
   static const int maxSearchLength = 100;
+  static const String otherInstruments = '__other__';
 
   final String query;
 
@@ -237,8 +238,9 @@ class HistoryFilters {
 
     for (final raw in values) {
       var value = raw.trim();
-
-      if (uppercase) {
+      if (value.toLowerCase() == otherInstruments) {
+        value = otherInstruments;
+      } else if (uppercase) {
         value = value.toUpperCase();
       }
 

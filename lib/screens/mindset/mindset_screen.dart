@@ -41,7 +41,14 @@ class _MindsetScreenState extends State<MindsetScreen> {
         final id = context.read<LocaleController>().locale.languageCode == 'id';
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (_) => _MindsetModuleScreen(module: module, id: id),
+            builder: (_) => _MindsetModuleScreen(
+              module: module,
+              id: id,
+              initiallyCompleted: context
+                  .read<ProgressionProvider>()
+                  .completedGuideIds
+                  .contains(module.guideKey),
+            ),
           ),
         );
         break;
@@ -68,10 +75,43 @@ class _MindsetScreenState extends State<MindsetScreen> {
               .toList();
     final categories = visible.map((module) => module.category).toSet();
     final l10n = context.l10n;
+    final completedGuideIds = context
+        .watch<ProgressionProvider?>()
+        ?.completedGuideIds;
+    final quickStart = [
+      _modules.firstWhere(
+        (module) =>
+            module.guideId ==
+            ProgressionEvidenceStartInputGuideIdEnum.analysisWorkflow,
+      ),
+      _modules.firstWhere(
+        (module) => module.titleEn == 'Using History & Performance',
+      ),
+      _modules.firstWhere(
+        (module) =>
+            module.guideId ==
+            ProgressionEvidenceStartInputGuideIdEnum.adaptivePositionPlan,
+      ),
+    ];
+
+    void openModule(_MindsetModule module) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => _MindsetModuleScreen(
+            module: module,
+            id: id,
+            initiallyCompleted:
+                completedGuideIds?.contains(module.guideKey) == true,
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: widget.embedded ? null : AppBar(title: Text(l10n.guide)),
       body: ListView(
+        key: ValueKey('guide-${_selectedCategory ?? 'all'}-${_query.isEmpty}'),
         padding: responsivePagePadding(context),
         children: [
           if (widget.embedded) ...[
@@ -97,6 +137,45 @@ class _MindsetScreenState extends State<MindsetScreen> {
             ),
           ),
           const SizedBox(height: 12),
+          if (_query.trim().isEmpty && _selectedCategory == null) ...[
+            Text(
+              l10n.guideQuickStart,
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              l10n.guideQuickStartHint,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 8),
+            for (var index = 0; index < quickStart.length; index++) ...[
+              Card(
+                clipBehavior: Clip.antiAlias,
+                child: ListTile(
+                  key: ValueKey(
+                    'guide-quick-start-${quickStart[index].guideKey ?? index}',
+                  ),
+                  leading: CircleAvatar(child: Text('${index + 1}')),
+                  title: Text(
+                    id ? quickStart[index].titleId : quickStart[index].titleEn,
+                  ),
+                  trailing:
+                      completedGuideIds?.contains(quickStart[index].guideKey) ==
+                          true
+                      ? const Icon(
+                          Icons.check_circle_rounded,
+                          color: Colors.green,
+                        )
+                      : const Icon(Icons.chevron_right_rounded),
+                  onTap: () => openModule(quickStart[index]),
+                ),
+              ),
+              const SizedBox(height: 6),
+            ],
+            const SizedBox(height: 6),
+          ],
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -154,14 +233,13 @@ class _MindsetScreenState extends State<MindsetScreen> {
                   leading: Icon(_categoryIcon(category)),
                   title: Text(id ? module.titleId : module.titleEn),
                   subtitle: Text(id ? module.summaryId : module.summaryEn),
-                  trailing: const Icon(Icons.chevron_right_rounded),
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          _MindsetModuleScreen(module: module, id: id),
-                    ),
-                  ),
+                  trailing: completedGuideIds?.contains(module.guideKey) == true
+                      ? const Icon(
+                          Icons.check_circle_rounded,
+                          color: Colors.green,
+                        )
+                      : const Icon(Icons.chevron_right_rounded),
+                  onTap: () => openModule(module),
                 ),
               ),
               const SizedBox(height: 8),
@@ -200,9 +278,14 @@ class _MindsetScreenState extends State<MindsetScreen> {
 }
 
 class _MindsetModuleScreen extends StatefulWidget {
-  const _MindsetModuleScreen({required this.module, required this.id});
+  const _MindsetModuleScreen({
+    required this.module,
+    required this.id,
+    required this.initiallyCompleted,
+  });
   final _MindsetModule module;
   final bool id;
+  final bool initiallyCompleted;
 
   @override
   State<_MindsetModuleScreen> createState() => _MindsetModuleScreenState();
@@ -218,7 +301,8 @@ class _MindsetModuleScreenState extends State<_MindsetModuleScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.module.guideId != null) {
+    _completed = widget.initiallyCompleted;
+    if (widget.module.guideId != null && !_completed) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _startEvidence());
     }
   }
@@ -386,6 +470,13 @@ class _MindsetModule {
   final List<String> pointsId;
   final String category;
   final ProgressionEvidenceStartInputGuideIdEnum? guideId;
+
+  String? get guideKey => guideId?.name
+      .replaceAllMapped(
+        RegExp(r'([a-z0-9])([A-Z])'),
+        (match) => '${match[1]}-${match[2]}',
+      )
+      .toLowerCase();
 }
 
 const _modules = [
@@ -453,6 +544,29 @@ const _modules = [
       'Baca invalidation sebelum level.',
       'Confidence bukan probabilitas menang.',
       'Jangan mengikuti entry secara buta.',
+    ],
+  ),
+  _MindsetModule(
+    category: 'getting-started',
+    titleEn: 'Using History & Performance',
+    titleId: 'Menggunakan Riwayat & Performa',
+    summaryEn: 'Review outcomes, filters, presets, and meaningful samples.',
+    summaryId: 'Tinjau outcome, filter, preset, dan jumlah sampel yang layak.',
+    bodyEn:
+        'Summary turns completed analyses into performance views by instrument and timeframe. History keeps the original records behind those numbers.',
+    bodyId:
+        'Ringkasan mengubah analisis yang selesai menjadi gambaran performa per instrumen dan timeframe. Riwayat menyimpan catatan asli di balik angka tersebut.',
+    pointsEn: [
+      'Use search, filters, and presets to repeat a focused review.',
+      'Other Instruments groups non-primary markets without renaming the original records.',
+      'TP outcomes are wins, SL is a loss, and expired is reported separately.',
+      'Treat small samples cautiously; historical performance is not a prediction.',
+    ],
+    pointsId: [
+      'Gunakan pencarian, filter, dan preset untuk mengulang review terfokus.',
+      'Instrumen Lainnya mengelompokkan market non-utama tanpa mengganti nama catatan aslinya.',
+      'Outcome TP adalah win, SL adalah loss, dan expired dilaporkan terpisah.',
+      'Waspadai sampel kecil; performa historis bukan prediksi.',
     ],
   ),
   _MindsetModule(

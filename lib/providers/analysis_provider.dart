@@ -465,7 +465,10 @@ class AnalysisProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> loadHistoryOutcomeSummary({bool silent = false}) async {
+  Future<void> loadHistoryOutcomeSummary({
+    bool silent = false,
+    String range = 'all',
+  }) async {
     if (_authProvider.status != AuthStatus.authenticated ||
         _historyOutcomeSummaryRequestInFlight) {
       return;
@@ -483,7 +486,7 @@ class AnalysisProvider extends ChangeNotifier {
 
     try {
       final response = await _client.analyses.getAnalysisHistorySummary(
-        range: 'all',
+        range: range,
       );
       if (!_isSessionCurrent(epoch) ||
           requestId != _historyOutcomeSummaryRequestId) {

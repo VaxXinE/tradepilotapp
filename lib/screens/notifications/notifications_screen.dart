@@ -23,6 +23,8 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
+  bool _showSettings = false;
+
   @override
   void initState() {
     super.initState();
@@ -143,7 +145,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       appBar: AppBar(
         title: Text(context.l10n.notifications),
         actions: [
-          if (provider.unreadCount > 0)
+          if (!_showSettings && provider.unreadCount > 0)
             TextButton(
               onPressed: () {
                 unawaited(provider.markAllRead());
@@ -158,95 +160,118 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
           children: [
-            Row(
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: provider.isRealtimeConnected
-                        ? (isDark
-                              ? AppColors.bullishDark
-                              : AppColors.bullishLight)
-                        : muted,
-                  ),
+            SegmentedButton<bool>(
+              segments: [
+                ButtonSegment(
+                  value: false,
+                  icon: const Icon(Icons.inbox_outlined),
+                  label: Text(context.l10n.notificationInbox),
                 ),
-                const SizedBox(width: 7),
-                Text(
-                  provider.isRealtimeConnected
-                      ? context.l10n.realtimeActive
-                      : context.l10n.realtimeConnecting,
-                  style: TextStyle(color: muted, fontSize: 10.5),
+                ButtonSegment(
+                  value: true,
+                  icon: const Icon(Icons.tune_rounded),
+                  label: Text(context.l10n.notificationSettingsTab),
                 ),
               ],
+              selected: {_showSettings},
+              onSelectionChanged: (selection) {
+                setState(() => _showSettings = selection.first);
+              },
             ),
-
             const SizedBox(height: 14),
 
-            if (nativePush != null) ...[
-              _NativePushCard(service: nativePush),
-              const SizedBox(height: 12),
-            ],
-
-            _PreferencesCard(provider: provider),
-
-            const SizedBox(height: 20),
-
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    context.l10n.notificationInbox,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w900,
+            if (_showSettings) ...[
+              if (nativePush != null) ...[
+                _NativePushCard(service: nativePush),
+                const SizedBox(height: 12),
+              ],
+              _PreferencesCard(provider: provider),
+            ] else ...[
+              Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: provider.isRealtimeConnected
+                          ? (isDark
+                                ? AppColors.bullishDark
+                                : AppColors.bullishLight)
+                          : muted,
                     ),
                   ),
-                ),
-                if (provider.unreadCount > 0)
+                  const SizedBox(width: 7),
                   Text(
-                    context.l10n.notificationUnreadCount(provider.unreadCount),
+                    provider.isRealtimeConnected
+                        ? context.l10n.realtimeActive
+                        : context.l10n.realtimeConnecting,
                     style: TextStyle(color: muted, fontSize: 10.5),
                   ),
-              ],
-            ),
-
-            const SizedBox(height: 10),
-
-            ErrorBanner(message: provider.loadError),
-
-            if (provider.isLoading && provider.items.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 50),
-                child: Center(child: CircularProgressIndicator()),
-              )
-            else if (provider.items.isEmpty)
-              _EmptyState(muted: muted)
-            else
-              Card(
-                clipBehavior: Clip.antiAlias,
-                child: Column(
-                  children: [
-                    for (
-                      var index = 0;
-                      index < provider.items.length;
-                      index++
-                    ) ...[
-                      _NotificationTile(
-                        notification: provider.items[index],
-                        onTap: () {
-                          unawaited(
-                            _handleNotificationTap(provider.items[index]),
-                          );
-                        },
-                      ),
-                      if (index != provider.items.length - 1)
-                        const Divider(height: 1),
-                    ],
-                  ],
-                ),
+                ],
               ),
+
+              const SizedBox(height: 14),
+
+              const SizedBox(height: 14),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      context.l10n.notificationInbox,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  if (provider.unreadCount > 0)
+                    Text(
+                      context.l10n.notificationUnreadCount(
+                        provider.unreadCount,
+                      ),
+                      style: TextStyle(color: muted, fontSize: 10.5),
+                    ),
+                ],
+              ),
+
+              const SizedBox(height: 10),
+
+              ErrorBanner(message: provider.loadError),
+
+              if (provider.isLoading && provider.items.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 50),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (provider.items.isEmpty)
+                _EmptyState(muted: muted)
+              else
+                Card(
+                  clipBehavior: Clip.antiAlias,
+                  child: Column(
+                    children: [
+                      for (
+                        var index = 0;
+                        index < provider.items.length;
+                        index++
+                      ) ...[
+                        _NotificationTile(
+                          notification: provider.items[index],
+                          onTap: () {
+                            unawaited(
+                              _handleNotificationTap(provider.items[index]),
+                            );
+                          },
+                        ),
+                        if (index != provider.items.length - 1)
+                          const Divider(height: 1),
+                      ],
+                    ],
+                  ),
+                ),
+            ],
           ],
         ),
       ),

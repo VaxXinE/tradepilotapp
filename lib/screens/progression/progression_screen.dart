@@ -394,13 +394,7 @@ class _AchievementCard extends StatelessWidget {
           ? Theme.of(context).colorScheme.primary.withValues(alpha: .06)
           : null,
       child: ListTile(
-        leading: CircleAvatar(
-          child: Icon(
-            item.unlocked
-                ? _achievementIcon(item.key)
-                : Icons.lock_outline_rounded,
-          ),
-        ),
+        leading: _AchievementBadge(keyName: item.key, unlocked: item.unlocked),
         title: Text(
           _achievementTitle(item.key, id),
           style: const TextStyle(fontWeight: FontWeight.w800),
@@ -423,6 +417,73 @@ class _AchievementCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _AchievementBadge extends StatelessWidget {
+  const _AchievementBadge({required this.keyName, required this.unlocked});
+
+  final String keyName;
+  final bool unlocked;
+
+  @override
+  Widget build(BuildContext context) {
+    final (icon, accent) = _achievementStyle(keyName);
+    final muted = Theme.of(context).colorScheme.onSurfaceVariant;
+    return SizedBox(
+      width: 48,
+      height: 48,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                color: (unlocked ? accent : muted).withValues(alpha: .14),
+                border: Border.all(color: unlocked ? accent : muted),
+                borderRadius: BorderRadius.circular(
+                  keyName.startsWith('journal') ? 24 : 12,
+                ),
+              ),
+              child: Icon(
+                unlocked ? icon : Icons.lock_outline_rounded,
+                color: unlocked ? accent : muted,
+              ),
+            ),
+          ),
+          if (!unlocked)
+            const Positioned(
+              right: 0,
+              bottom: 0,
+              child: Icon(Icons.lock_rounded, size: 14),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+(IconData, Color) _achievementStyle(String key) {
+  if (key == 'first_reflection' || key.startsWith('journal_')) {
+    return (Icons.explore_outlined, const Color(0xFF3B82F6));
+  }
+  if (key.startsWith('evaluation_')) {
+    return (Icons.gps_fixed_rounded, const Color(0xFF10B981));
+  }
+  if (key.startsWith('checklist_')) {
+    return (Icons.shield_outlined, const Color(0xFF94A3B8));
+  }
+  if (key.startsWith('guide_')) {
+    return (Icons.menu_book_rounded, const Color(0xFF06B6D4));
+  }
+  if (key.startsWith('wait_')) {
+    return (Icons.anchor_rounded, const Color(0xFFF59E0B));
+  }
+  if (key.startsWith('streak_') || key == 'consistent_1000') {
+    return (Icons.bolt_rounded, const Color(0xFFEAB308));
+  }
+  if (key.startsWith('mastery_')) {
+    return (Icons.workspace_premium_rounded, const Color(0xFFA855F7));
+  }
+  return (Icons.keyboard_arrow_up_rounded, const Color(0xFFD6A52D));
 }
 
 class _HistoryCard extends StatelessWidget {
@@ -491,19 +552,6 @@ String _rankName(String value, bool id) {
     'master': ['Master', 'Master'],
   };
   return names[rank]?[id ? 1 : 0] ?? value;
-}
-
-IconData _achievementIcon(String key) {
-  if (key.startsWith('guide')) return Icons.menu_book_rounded;
-  if (key.startsWith('wait')) return Icons.self_improvement_rounded;
-  if (key.startsWith('journal') || key == 'first_reflection') {
-    return Icons.star_rounded;
-  }
-  if (key.startsWith('streak')) return Icons.calendar_month_rounded;
-  if (key.startsWith('checklist') || key.startsWith('evaluation')) {
-    return Icons.shield_rounded;
-  }
-  return Icons.emoji_events_rounded;
 }
 
 String _sourceName(String source, bool id) => switch (source) {

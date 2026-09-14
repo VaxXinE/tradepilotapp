@@ -2,7 +2,7 @@
 
 ## Baseline
 
-- Web: `Trade-Pilot`, branch `prodd-v2`, commit `860e898`
+- Web: `Trade-Pilot`, branch `prodd-v2`, commit `403edd4`
 - Flutter: branch `feat/1.0.2/web-mobile-ui-parity`
 - Platform smoke test: iOS Simulator, iPhone 17 Pro Max
 - Target layout test: 360×800 dengan text scale 1.3
