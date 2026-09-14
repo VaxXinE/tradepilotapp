@@ -16,7 +16,7 @@ class _$FundamentalNewsItem extends FundamentalNewsItem {
   @override
   final String source_;
   @override
-  final String url;
+  final String? url;
   @override
   final DateTime publishedAt;
 
@@ -29,7 +29,7 @@ class _$FundamentalNewsItem extends FundamentalNewsItem {
       required this.title,
       required this.summary,
       required this.source_,
-      required this.url,
+      this.url,
       required this.publishedAt})
       : super._();
   @override
@@ -149,8 +149,7 @@ class FundamentalNewsItemBuilder
               summary, r'FundamentalNewsItem', 'summary'),
           source_: BuiltValueNullFieldError.checkNotNull(
               source_, r'FundamentalNewsItem', 'source_'),
-          url: BuiltValueNullFieldError.checkNotNull(
-              url, r'FundamentalNewsItem', 'url'),
+          url: url,
           publishedAt: BuiltValueNullFieldError.checkNotNull(
               publishedAt, r'FundamentalNewsItem', 'publishedAt'),
         );

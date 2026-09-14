@@ -33,29 +33,17 @@ final BuiltSet<NotificationTypeEnum> _$notificationTypeEnumValues =
   _$notificationTypeEnum_error,
 ]);
 
-const NotificationActionTypeEnum _$notificationActionTypeEnum_analysis =
-    const NotificationActionTypeEnum._('analysis');
-const NotificationActionTypeEnum _$notificationActionTypeEnum_history =
-    const NotificationActionTypeEnum._('history');
-const NotificationActionTypeEnum _$notificationActionTypeEnum_notifications =
-    const NotificationActionTypeEnum._('notifications');
-const NotificationActionTypeEnum _$notificationActionTypeEnum_dailySummary =
-    const NotificationActionTypeEnum._('dailySummary');
-const NotificationActionTypeEnum _$notificationActionTypeEnum_alerts =
-    const NotificationActionTypeEnum._('alerts');
+const NotificationActionTypeEnum _$notificationActionTypeEnum_openNotification =
+    const NotificationActionTypeEnum._('openNotification');
+const NotificationActionTypeEnum _$notificationActionTypeEnum_openAnalysis =
+    const NotificationActionTypeEnum._('openAnalysis');
 
 NotificationActionTypeEnum _$notificationActionTypeEnumValueOf(String name) {
   switch (name) {
-    case 'analysis':
-      return _$notificationActionTypeEnum_analysis;
-    case 'history':
-      return _$notificationActionTypeEnum_history;
-    case 'notifications':
-      return _$notificationActionTypeEnum_notifications;
-    case 'dailySummary':
-      return _$notificationActionTypeEnum_dailySummary;
-    case 'alerts':
-      return _$notificationActionTypeEnum_alerts;
+    case 'openNotification':
+      return _$notificationActionTypeEnum_openNotification;
+    case 'openAnalysis':
+      return _$notificationActionTypeEnum_openAnalysis;
     default:
       throw ArgumentError(name);
   }
@@ -63,11 +51,8 @@ NotificationActionTypeEnum _$notificationActionTypeEnumValueOf(String name) {
 
 final BuiltSet<NotificationActionTypeEnum> _$notificationActionTypeEnumValues =
     BuiltSet<NotificationActionTypeEnum>(const <NotificationActionTypeEnum>[
-  _$notificationActionTypeEnum_analysis,
-  _$notificationActionTypeEnum_history,
-  _$notificationActionTypeEnum_notifications,
-  _$notificationActionTypeEnum_dailySummary,
-  _$notificationActionTypeEnum_alerts,
+  _$notificationActionTypeEnum_openNotification,
+  _$notificationActionTypeEnum_openAnalysis,
 ]);
 
 Serializer<NotificationTypeEnum> _$notificationTypeEnumSerializer =
@@ -108,18 +93,12 @@ class _$NotificationTypeEnumSerializer
 class _$NotificationActionTypeEnumSerializer
     implements PrimitiveSerializer<NotificationActionTypeEnum> {
   static const Map<String, Object> _toWire = const <String, Object>{
-    'analysis': 'analysis',
-    'history': 'history',
-    'notifications': 'notifications',
-    'dailySummary': 'daily_summary',
-    'alerts': 'alerts',
+    'openNotification': 'open_notification',
+    'openAnalysis': 'open_analysis',
   };
   static const Map<Object, String> _fromWire = const <Object, String>{
-    'analysis': 'analysis',
-    'history': 'history',
-    'notifications': 'notifications',
-    'daily_summary': 'dailySummary',
-    'alerts': 'alerts',
+    'open_notification': 'openNotification',
+    'open_analysis': 'openAnalysis',
   };
 
   @override
@@ -156,9 +135,11 @@ class _$Notification extends Notification {
   @override
   final DateTime? readAt;
   @override
+  final String? category;
+  @override
   final NotificationActionTypeEnum? actionType;
   @override
-  final int? actionId;
+  final String? actionId;
   @override
   final DateTime createdAt;
 
@@ -173,6 +154,7 @@ class _$Notification extends Notification {
       required this.message,
       required this.type,
       this.readAt,
+      this.category,
       this.actionType,
       this.actionId,
       required this.createdAt})
@@ -195,6 +177,7 @@ class _$Notification extends Notification {
         message == other.message &&
         type == other.type &&
         readAt == other.readAt &&
+        category == other.category &&
         actionType == other.actionType &&
         actionId == other.actionId &&
         createdAt == other.createdAt;
@@ -210,6 +193,7 @@ class _$Notification extends Notification {
     _$hash = $jc(_$hash, message.hashCode);
     _$hash = $jc(_$hash, type.hashCode);
     _$hash = $jc(_$hash, readAt.hashCode);
+    _$hash = $jc(_$hash, category.hashCode);
     _$hash = $jc(_$hash, actionType.hashCode);
     _$hash = $jc(_$hash, actionId.hashCode);
     _$hash = $jc(_$hash, createdAt.hashCode);
@@ -227,6 +211,7 @@ class _$Notification extends Notification {
           ..add('message', message)
           ..add('type', type)
           ..add('readAt', readAt)
+          ..add('category', category)
           ..add('actionType', actionType)
           ..add('actionId', actionId)
           ..add('createdAt', createdAt))
@@ -266,14 +251,18 @@ class NotificationBuilder
   DateTime? get readAt => _$this._readAt;
   set readAt(DateTime? readAt) => _$this._readAt = readAt;
 
+  String? _category;
+  String? get category => _$this._category;
+  set category(String? category) => _$this._category = category;
+
   NotificationActionTypeEnum? _actionType;
   NotificationActionTypeEnum? get actionType => _$this._actionType;
   set actionType(NotificationActionTypeEnum? actionType) =>
       _$this._actionType = actionType;
 
-  int? _actionId;
-  int? get actionId => _$this._actionId;
-  set actionId(int? actionId) => _$this._actionId = actionId;
+  String? _actionId;
+  String? get actionId => _$this._actionId;
+  set actionId(String? actionId) => _$this._actionId = actionId;
 
   DateTime? _createdAt;
   DateTime? get createdAt => _$this._createdAt;
@@ -293,6 +282,7 @@ class NotificationBuilder
       _message = $v.message;
       _type = $v.type;
       _readAt = $v.readAt;
+      _category = $v.category;
       _actionType = $v.actionType;
       _actionId = $v.actionId;
       _createdAt = $v.createdAt;
@@ -327,6 +317,7 @@ class NotificationBuilder
           type: BuiltValueNullFieldError.checkNotNull(
               type, r'Notification', 'type'),
           readAt: readAt,
+          category: category,
           actionType: actionType,
           actionId: actionId,
           createdAt: BuiltValueNullFieldError.checkNotNull(

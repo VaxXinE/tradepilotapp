@@ -16,19 +16,20 @@ part 'performance_summary.g.dart';
 /// Public AI transparency snapshot for the rolling `windowDays` window (task #164).
 ///
 /// Properties:
-/// * [windowDays] 
-/// * [generatedAt] 
-/// * [windowStart] 
-/// * [minSamples] 
-/// * [overall] 
-/// * [banner] 
-/// * [byInstrument] 
-/// * [bySession] 
-/// * [byCondition] 
+/// * [windowDays]
+/// * [generatedAt]
+/// * [windowStart]
+/// * [minSamples]
+/// * [overall]
+/// * [banner]
+/// * [byInstrument]
+/// * [bySession]
+/// * [byCondition]
 /// * [byVolatility] - Deterministic regime classification derived from the stored indicator tally (trending / ranging / choppy). Replaces ADX where raw OHLC isn't kept per analysis.
 /// * [byNewsActivity] - news_week vs quiet_week, derived from whether the AI's fundamental snapshot included any high-impact calendar event at analysis time.
 @BuiltValue()
-abstract class PerformanceSummary implements Built<PerformanceSummary, PerformanceSummaryBuilder> {
+abstract class PerformanceSummary
+    implements Built<PerformanceSummary, PerformanceSummaryBuilder> {
   @BuiltValueField(wireName: r'windowDays')
   PerformanceSummaryWindowDaysEnum get windowDays;
   // enum windowDaysEnum {  30,  90,  };
@@ -67,16 +68,19 @@ abstract class PerformanceSummary implements Built<PerformanceSummary, Performan
 
   PerformanceSummary._();
 
-  factory PerformanceSummary([void updates(PerformanceSummaryBuilder b)]) = _$PerformanceSummary;
+  factory PerformanceSummary([void updates(PerformanceSummaryBuilder b)]) =
+      _$PerformanceSummary;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(PerformanceSummaryBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<PerformanceSummary> get serializer => _$PerformanceSummarySerializer();
+  static Serializer<PerformanceSummary> get serializer =>
+      _$PerformanceSummarySerializer();
 }
 
-class _$PerformanceSummarySerializer implements PrimitiveSerializer<PerformanceSummary> {
+class _$PerformanceSummarySerializer
+    implements PrimitiveSerializer<PerformanceSummary> {
   @override
   final Iterable<Type> types = const [PerformanceSummary, _$PerformanceSummary];
 
@@ -151,7 +155,9 @@ class _$PerformanceSummarySerializer implements PrimitiveSerializer<PerformanceS
     PerformanceSummary object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -273,17 +279,20 @@ class _$PerformanceSummarySerializer implements PrimitiveSerializer<PerformanceS
 }
 
 class PerformanceSummaryWindowDaysEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireNumber: 30)
-  static const PerformanceSummaryWindowDaysEnum number30 = _$performanceSummaryWindowDaysEnum_number30;
+  static const PerformanceSummaryWindowDaysEnum number30 =
+      _$performanceSummaryWindowDaysEnum_number30;
   @BuiltValueEnumConst(wireNumber: 90)
-  static const PerformanceSummaryWindowDaysEnum number90 = _$performanceSummaryWindowDaysEnum_number90;
+  static const PerformanceSummaryWindowDaysEnum number90 =
+      _$performanceSummaryWindowDaysEnum_number90;
 
-  static Serializer<PerformanceSummaryWindowDaysEnum> get serializer => _$performanceSummaryWindowDaysEnumSerializer;
+  static Serializer<PerformanceSummaryWindowDaysEnum> get serializer =>
+      _$performanceSummaryWindowDaysEnumSerializer;
 
-  const PerformanceSummaryWindowDaysEnum._(String name): super(name);
+  const PerformanceSummaryWindowDaysEnum._(String name) : super(name);
 
-  static BuiltSet<PerformanceSummaryWindowDaysEnum> get values => _$performanceSummaryWindowDaysEnumValues;
-  static PerformanceSummaryWindowDaysEnum valueOf(String name) => _$performanceSummaryWindowDaysEnumValueOf(name);
+  static BuiltSet<PerformanceSummaryWindowDaysEnum> get values =>
+      _$performanceSummaryWindowDaysEnumValues;
+  static PerformanceSummaryWindowDaysEnum valueOf(String name) =>
+      _$performanceSummaryWindowDaysEnumValueOf(name);
 }
-

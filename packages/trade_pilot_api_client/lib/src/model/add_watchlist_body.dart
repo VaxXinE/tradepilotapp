@@ -11,24 +11,28 @@ part 'add_watchlist_body.g.dart';
 /// AddWatchlistBody
 ///
 /// Properties:
-/// * [instrument] 
+/// * [instrument]
 @BuiltValue()
-abstract class AddWatchlistBody implements Built<AddWatchlistBody, AddWatchlistBodyBuilder> {
+abstract class AddWatchlistBody
+    implements Built<AddWatchlistBody, AddWatchlistBodyBuilder> {
   @BuiltValueField(wireName: r'instrument')
   String get instrument;
 
   AddWatchlistBody._();
 
-  factory AddWatchlistBody([void updates(AddWatchlistBodyBuilder b)]) = _$AddWatchlistBody;
+  factory AddWatchlistBody([void updates(AddWatchlistBodyBuilder b)]) =
+      _$AddWatchlistBody;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AddWatchlistBodyBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AddWatchlistBody> get serializer => _$AddWatchlistBodySerializer();
+  static Serializer<AddWatchlistBody> get serializer =>
+      _$AddWatchlistBodySerializer();
 }
 
-class _$AddWatchlistBodySerializer implements PrimitiveSerializer<AddWatchlistBody> {
+class _$AddWatchlistBodySerializer
+    implements PrimitiveSerializer<AddWatchlistBody> {
   @override
   final Iterable<Type> types = const [AddWatchlistBody, _$AddWatchlistBody];
 
@@ -53,7 +57,9 @@ class _$AddWatchlistBodySerializer implements PrimitiveSerializer<AddWatchlistBo
     AddWatchlistBody object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -103,4 +109,3 @@ class _$AddWatchlistBodySerializer implements PrimitiveSerializer<AddWatchlistBo
     return result.build();
   }
 }
-

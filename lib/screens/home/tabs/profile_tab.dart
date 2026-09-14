@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
@@ -5,21 +7,32 @@ import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/localization/locale_controller.dart';
+import '../../../core/preferences/mental_checklist_controller.dart';
 import '../../../core/api/api_config.dart';
+import '../../../core/config/sponsor_config.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme_controller.dart';
 import '../../../l10n/l10n.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../providers/credit_provider.dart';
+import '../../../providers/progression_provider.dart';
+import '../../../services/native_push_service.dart';
+import '../../../widgets/progression/progression_emblem.dart';
+import '../../../widgets/app_footer.dart';
 // import '../../../screens/notifications/notifications_screen.dart';
 import '../../profile/change_password_screen.dart';
 import '../../profile/change_security_question_screen.dart';
 import '../../profile/delete_account_screen.dart';
 import '../../profile/edit_profile_screen.dart';
+import '../../price_alert/price_alert_list_screen.dart';
+import '../../topup/topup_screen.dart';
 import '../../analytics/analytics_screen.dart';
 import '../../daily_summary/daily_summary_screen.dart';
 import '../../journal/trade_journal_screen.dart';
 import '../../trader_mirror/trader_mirror_screen.dart';
 import '../../mindset/mindset_screen.dart';
+import '../../progression/progression_screen.dart';
+import '../../performance/performance_screen.dart';
 
 class ProfileTab extends StatelessWidget {
   const ProfileTab({super.key});
@@ -28,7 +41,21 @@ class ProfileTab extends StatelessWidget {
   static const _termsUrl = 'https://tradepilot.id/terms';
   static const _supportUrl = 'https://tradepilot.id/support';
 
-  Future<void> _openUrl(BuildContext context, String url) async {
+  Future<void> _openUrl(
+    BuildContext context,
+    String url, {
+    OutboundClickBodyPlacementEnum? placement,
+    OutboundClickBodyTargetEnum? target,
+  }) async {
+    if (placement != null && target != null) {
+      unawaited(
+        context.read<AuthProvider>().telemetry.recordOutboundClick(
+          placement: placement,
+          target: target,
+          languageCode: Localizations.localeOf(context).languageCode,
+        ),
+      );
+    }
     try {
       if (await launchUrl(
         Uri.parse(url),
@@ -96,6 +123,8 @@ class ProfileTab extends StatelessWidget {
 
     if (confirmed != true || !context.mounted) return;
 
+    await context.read<NativePushService?>()?.unregister();
+    if (!context.mounted) return;
     await context.read<AuthProvider>().logout();
   }
 
@@ -141,6 +170,9 @@ class ProfileTab extends StatelessWidget {
         ? AppColors.darkMutedForeground
         : AppColors.lightMutedForeground;
     final primary = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
+    final primaryText = isDark
+        ? AppColors.darkPrimaryText
+        : AppColors.lightPrimaryText;
     final onPrimary = isDark
         ? AppColors.darkPrimaryForeground
         : AppColors.lightPrimaryForeground;
@@ -154,7 +186,6 @@ class ProfileTab extends StatelessWidget {
     final isPro = user.selectedMode == UserSelectedModeEnum.pro;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.profile)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -164,14 +195,23 @@ class ProfileTab extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  Text(
+                    l10n.profile,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 14),
                   _ProfileHeader(
                     name: user.displayName,
                     email: user.email,
+                    role: user.role,
                     avatarUrl: user.avatarUrl,
                     primary: primary,
+                    primaryText: primaryText,
                     onPrimary: onPrimary,
                     muted: muted,
                   ),
+                  const SizedBox(height: 12),
+                  const _ProgressionProfileCard(),
                   const SizedBox(height: 24),
                   _Section(
                     title: l10n.account,
@@ -187,6 +227,7 @@ class ProfileTab extends StatelessWidget {
                           ),
                         ),
                       ),
+                      const _TopUpMenuItem(),
                     ],
                   ),
                   _Section(
@@ -207,22 +248,40 @@ class ProfileTab extends StatelessWidget {
                         ),
                       ),
                       const Divider(height: 1),
-                      SwitchListTile(
-                        secondary: Icon(
-                          themeController.isDarkMode
-                              ? Icons.dark_mode_outlined
-                              : Icons.light_mode_outlined,
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  themeController.isDarkMode
+                                      ? Icons.dark_mode_outlined
+                                      : Icons.light_mode_outlined,
+                                  size: 20,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  l10n.appearance,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            _ThemeSegmentedControl(
+                              isDarkMode: themeController.isDarkMode,
+                              enabled: !auth.isUpdatingProfile,
+                              onSelected: (dark) => _toggleTheme(context, dark),
+                            ),
+                          ],
                         ),
-                        title: Text(l10n.darkTheme),
-                        subtitle: Text(
-                          themeController.isDarkMode
-                              ? l10n.darkThemeEnabled
-                              : l10n.darkThemeDisabled,
-                        ),
-                        value: themeController.isDarkMode,
-                        onChanged: auth.isUpdatingProfile
-                            ? null
-                            : (value) => _toggleTheme(context, value),
                       ),
                       const Divider(height: 1),
                       SwitchListTile(
@@ -238,40 +297,49 @@ class ProfileTab extends StatelessWidget {
                             ? null
                             : (value) => _toggleMode(context, value),
                       ),
+                      const Divider(height: 1),
+                      SwitchListTile(
+                        secondary: const Icon(Icons.checklist_rounded),
+                        title: Text(l10n.mentalChecklistPreference),
+                        subtitle: Text(l10n.mentalChecklistPreferenceHint),
+                        value: context
+                            .watch<MentalChecklistController>()
+                            .enabled,
+                        onChanged: (value) => context
+                            .read<MentalChecklistController>()
+                            .setEnabled(value),
+                      ),
                     ],
                   ),
                   _Section(
                     title: l10n.security,
                     children: [
                       const _BiometricLockTile(),
-                      const Divider(height: 1),
-                      ListTile(
-                        leading: const Icon(Icons.lock_outline_rounded),
-                        title: Text(l10n.changePassword),
-                        trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const ChangePasswordScreen(),
+                      if (user.hasPassword) ...[
+                        const Divider(height: 1),
+                        ListTile(
+                          leading: const Icon(Icons.lock_outline_rounded),
+                          title: Text(l10n.changePassword),
+                          trailing: const Icon(Icons.chevron_right_rounded),
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const ChangePasswordScreen(),
+                            ),
                           ),
                         ),
-                      ),
-                      const Divider(height: 1),
-                      ListTile(
-                        leading: const Icon(Icons.help_outline_rounded),
-                        title: Text(l10n.securityQuestion),
-                        subtitle: Text(
-                          user.securityQuestion ?? l10n.notAvailable,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                const ChangeSecurityQuestionScreen(),
+                        const Divider(height: 1),
+                        ListTile(
+                          leading: const Icon(Icons.help_outline_rounded),
+                          title: Text(l10n.securityQuestion),
+                          trailing: const Icon(Icons.chevron_right_rounded),
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  const ChangeSecurityQuestionScreen(),
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                   _Section(
@@ -338,6 +406,21 @@ class ProfileTab extends StatelessWidget {
                     title: l10n.insightsAndJournal,
                     children: [
                       ListTile(
+                        key: const Key('profile-my-alerts'),
+                        leading: const Icon(
+                          Icons.notifications_active_outlined,
+                        ),
+                        title: Text(l10n.myPriceAlerts),
+                        subtitle: Text(l10n.priceAlertsSubtitle),
+                        trailing: const Icon(Icons.chevron_right_rounded),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const PriceAlertListScreen(),
+                          ),
+                        ),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
                         leading: const Icon(Icons.menu_book_outlined),
                         title: Text(l10n.tradeJournal),
                         subtitle: Text(l10n.tradeJournalDescription),
@@ -357,6 +440,18 @@ class ProfileTab extends StatelessWidget {
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (_) => const AnalyticsScreen(),
+                          ),
+                        ),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: const Icon(Icons.public_rounded),
+                        title: Text(l10n.publicAiPerformance),
+                        subtitle: Text(l10n.publicAiPerformanceSubtitle),
+                        trailing: const Icon(Icons.chevron_right_rounded),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const PerformanceScreen(),
                           ),
                         ),
                       ),
@@ -385,9 +480,9 @@ class ProfileTab extends StatelessWidget {
                       ),
                       const Divider(height: 1),
                       ListTile(
-                        leading: const Icon(Icons.psychology_alt_outlined),
-                        title: Text(l10n.traderMindset),
-                        subtitle: Text(l10n.traderMindsetDescription),
+                        leading: const Icon(Icons.school_outlined),
+                        title: Text(l10n.guide),
+                        subtitle: Text(l10n.guideDescription),
                         trailing: const Icon(Icons.chevron_right_rounded),
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute(
@@ -397,6 +492,42 @@ class ProfileTab extends StatelessWidget {
                       ),
                     ],
                   ),
+                  if (showSponsor) ...[
+                    const SizedBox(height: 8),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              l10n.sponsoredBySolidPrime,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              l10n.sponsorDisclosure,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                            const SizedBox(height: 12),
+                            FilledButton.icon(
+                              onPressed: () => _openUrl(
+                                context,
+                                sponsorWebsiteUrl,
+                                placement:
+                                    OutboundClickBodyPlacementEnum.profileCta,
+                                target: OutboundClickBodyTargetEnum.sgBerjangka,
+                              ),
+                              icon: const Icon(Icons.open_in_new_rounded),
+                              label: Text(l10n.openSponsorWebsite),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 8),
                   OutlinedButton.icon(
                     onPressed: auth.isBusy
@@ -417,7 +548,61 @@ class ProfileTab extends StatelessWidget {
               ),
             ),
           ),
+          const AppFooter(),
         ],
+      ),
+    );
+  }
+}
+
+class _ProgressionProfileCard extends StatelessWidget {
+  const _ProgressionProfileCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final summary = context.watch<ProgressionProvider>().summary;
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const ProgressionScreen())),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              if (summary == null)
+                const CircleAvatar(child: Icon(Icons.emoji_events_outlined))
+              else
+                ProgressionEmblem(
+                  level: summary.level,
+                  masteryLevel: summary.masteryLevel,
+                  size: 54,
+                ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.l10n.progressionTitle,
+                      style: const TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                    Text(
+                      summary == null
+                          ? context.l10n.progressionSubtitle
+                          : '${summary.totalXp} XP · ${context.l10n.progressionLevel(summary.level)} · ${summary.rank}',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right_rounded),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -444,18 +629,30 @@ class _ProfileHeader extends StatelessWidget {
   const _ProfileHeader({
     required this.name,
     required this.email,
+    required this.role,
     required this.avatarUrl,
     required this.primary,
+    required this.primaryText,
     required this.onPrimary,
     required this.muted,
   });
 
   final String name;
   final String email;
+  final UserRoleEnum role;
   final String? avatarUrl;
   final Color primary;
+
+  /// // Glyph/teks memakai nada emas yang terbaca; isian tetap emas web.
+  final Color primaryText;
   final Color onPrimary;
   final Color muted;
+
+  String _roleLabel(BuildContext context) => switch (role) {
+    UserRoleEnum.superAdmin => context.l10n.roleSuperAdmin,
+    UserRoleEnum.admin => context.l10n.roleAdmin,
+    _ => context.l10n.roleUser,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -492,10 +689,30 @@ class _ProfileHeader extends StatelessWidget {
                   ),
                   const SizedBox(height: 3),
                   Text(email, style: TextStyle(color: muted, fontSize: 12.5)),
+                  const SizedBox(height: 6),
+                  Container(
+                    key: const Key('profile-role-badge'),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.secondary,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      _roleLabel(context),
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: Theme.of(context).colorScheme.onSecondary,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
-            Icon(Icons.verified_user_outlined, color: primary, size: 20),
+            Icon(Icons.verified_user_outlined, color: primaryText, size: 20),
           ],
         ),
       ),
@@ -618,6 +835,179 @@ class _BiometricLockTileState extends State<_BiometricLockTile> {
       onChanged: _isSaving ? null : _toggle,
       title: Text(l10n.biometricLock),
       subtitle: Text(enabled ? l10n.biometricLockOn : l10n.biometricLockOff),
+    );
+  }
+}
+
+/// Entri `Top Up Credit` beserta badge saldo.
+///
+/// Saldo di-watch terpisah supaya kegagalan `GET /topups/balance` hanya
+/// menghilangkan badge-nya — menu Profile yang lain tidak ikut rusak.
+class _TopUpMenuItem extends StatelessWidget {
+  const _TopUpMenuItem();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final credit = context.watch<CreditProvider>();
+    final theme = Theme.of(context);
+
+    return ListTile(
+      leading: const Icon(Icons.account_balance_wallet_outlined),
+      title: Text(l10n.topUpCredit),
+      subtitle: Text(l10n.creditBalance),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (credit.hasBalance)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                '${credit.balance}',
+                style: TextStyle(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          const Icon(Icons.chevron_right_rounded),
+        ],
+      ),
+      onTap: () async {
+        await Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const TopUpScreen()));
+
+        // Saldo bisa berubah setelah approval atau pemakaian credit, jadi
+        // segarkan begitu kembali ke Profile.
+        if (context.mounted) {
+          await credit.loadBalance(silent: true);
+        }
+      },
+    );
+  }
+}
+
+// =============================================================================
+// THEME SEGMENTED CONTROL
+// =============================================================================
+
+/// Pilihan tema Terang/Gelap mengikuti kontrol segmented pada mobile web.
+class _ThemeSegmentedControl extends StatelessWidget {
+  const _ThemeSegmentedControl({
+    required this.isDarkMode,
+    required this.enabled,
+    required this.onSelected,
+  });
+
+  final bool isDarkMode;
+  final bool enabled;
+  final ValueChanged<bool> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        key: const Key('profile-theme-segmented'),
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: colors.surfaceContainerHighest.withValues(alpha: 0.25),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: colors.outlineVariant.withValues(alpha: 0.6),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _ThemeSegment(
+              icon: Icons.light_mode_outlined,
+              label: l10n.lightMode,
+              selected: !isDarkMode,
+              onTap: enabled && isDarkMode ? () => onSelected(false) : null,
+            ),
+            const SizedBox(width: 4),
+            _ThemeSegment(
+              icon: Icons.dark_mode_outlined,
+              label: l10n.darkMode,
+              selected: isDarkMode,
+              onTap: enabled && !isDarkMode ? () => onSelected(true) : null,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ThemeSegment extends StatelessWidget {
+  const _ThemeSegment({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(9),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: selected ? colors.surface : Colors.transparent,
+            borderRadius: BorderRadius.circular(9),
+            boxShadow: selected
+                ? const [
+                    BoxShadow(
+                      color: Color(0x1A000000),
+                      blurRadius: 4,
+                      offset: Offset(0, 1),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 16,
+                color: selected ? colors.primary : colors.onSurfaceVariant,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  color: selected ? colors.onSurface : colors.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

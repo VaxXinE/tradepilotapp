@@ -11,21 +11,24 @@ part 'push_public_key.g.dart';
 /// PushPublicKey
 ///
 /// Properties:
-/// * [publicKey] 
+/// * [publicKey]
 @BuiltValue()
-abstract class PushPublicKey implements Built<PushPublicKey, PushPublicKeyBuilder> {
+abstract class PushPublicKey
+    implements Built<PushPublicKey, PushPublicKeyBuilder> {
   @BuiltValueField(wireName: r'publicKey')
   String get publicKey;
 
   PushPublicKey._();
 
-  factory PushPublicKey([void updates(PushPublicKeyBuilder b)]) = _$PushPublicKey;
+  factory PushPublicKey([void updates(PushPublicKeyBuilder b)]) =
+      _$PushPublicKey;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(PushPublicKeyBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<PushPublicKey> get serializer => _$PushPublicKeySerializer();
+  static Serializer<PushPublicKey> get serializer =>
+      _$PushPublicKeySerializer();
 }
 
 class _$PushPublicKeySerializer implements PrimitiveSerializer<PushPublicKey> {
@@ -53,7 +56,9 @@ class _$PushPublicKeySerializer implements PrimitiveSerializer<PushPublicKey> {
     PushPublicKey object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -103,4 +108,3 @@ class _$PushPublicKeySerializer implements PrimitiveSerializer<PushPublicKey> {
     return result.build();
   }
 }
-

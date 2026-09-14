@@ -20,6 +20,7 @@ class AnalysisCard extends StatelessWidget {
     final border = isDark ? AppColors.darkBorder : AppColors.lightBorder;
 
     final isExpired = analysis.validUntil.isBefore(DateTime.now());
+    final validityTime = DateFormat('d MMM, HH:mm').format(analysis.validUntil);
     final bias = (analysis.tradingBias ?? '').toLowerCase();
     final biasColor = bias.contains('bull')
         ? (isDark ? AppColors.bullishDark : AppColors.bullishLight)
@@ -86,13 +87,15 @@ class AnalysisCard extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 4),
-                    Row(
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 2,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         Text(
                           analysis.timeframe,
                           style: TextStyle(color: muted, fontSize: 12.5),
                         ),
-                        const SizedBox(width: 8),
                         Container(
                           width: 3,
                           height: 3,
@@ -101,44 +104,44 @@ class AnalysisCard extends StatelessWidget {
                             shape: BoxShape.circle,
                           ),
                         ),
-                        const SizedBox(width: 8),
                         Text(
                           DateFormat('d MMM, HH:mm').format(analysis.createdAt),
                           style: TextStyle(color: muted, fontSize: 12.5),
                         ),
                       ],
                     ),
+                    if (analysis.confidenceMin != null &&
+                        analysis.confidenceMax != null) ...[
+                      const SizedBox(height: 7),
+                      Text(
+                        '${context.l10n.aiConfidence}: '
+                        '${analysis.confidenceMin}–${analysis.confidenceMax}%',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12.5,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 2),
+                    Text(
+                      isExpired
+                          ? context.l10n.analysisWindowExpiredAt(validityTime)
+                          : context.l10n.analysisWindowActiveUntil(
+                              validityTime,
+                            ),
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: isExpired
+                            ? (isDark
+                                  ? AppColors.bearishDark
+                                  : AppColors.bearishLight)
+                            : muted,
+                      ),
+                    ),
                   ],
                 ),
               ),
               const SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  if (analysis.confidenceMin != null &&
-                      analysis.confidenceMax != null)
-                    Text(
-                      '${analysis.confidenceMin}-${analysis.confidenceMax}%',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                      ),
-                    ),
-                  const SizedBox(height: 2),
-                  Text(
-                    isExpired ? context.l10n.expired : context.l10n.valid,
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      color: isExpired
-                          ? (isDark
-                                ? AppColors.bearishDark
-                                : AppColors.bearishLight)
-                          : muted,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(width: 4),
               Icon(Icons.chevron_right_rounded, color: border, size: 20),
             ],
           ),

@@ -11,7 +11,6 @@ import 'package:dio/dio.dart';
 import 'package:trade_pilot_api_client/src/model/health_status.dart';
 
 class HealthApi {
-
   final Dio _dio;
 
   final Serializers _serializers;
@@ -19,7 +18,7 @@ class HealthApi {
   const HealthApi(this._dio, this._serializers);
 
   /// Health check
-  /// 
+  ///
   ///
   /// Parameters:
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
@@ -31,7 +30,7 @@ class HealthApi {
   ///
   /// Returns a [Future] containing a [Response] with a [HealthStatus] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<HealthStatus>> healthCheck({ 
+  Future<Response<HealthStatus>> healthCheck({
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -64,11 +63,12 @@ class HealthApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(HealthStatus),
-      ) as HealthStatus;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(HealthStatus),
+            ) as HealthStatus;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -90,5 +90,4 @@ class HealthApi {
       extra: _response.extra,
     );
   }
-
 }

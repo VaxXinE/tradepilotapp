@@ -12,13 +12,15 @@ part 'create_user_price_alert_body.g.dart';
 /// CreateUserPriceAlertBody
 ///
 /// Properties:
-/// * [instrument] 
+/// * [instrument]
 /// * [targetPrice] - Target price. Must be a positive finite number.
-/// * [triggerDirection] 
-/// * [note] 
+/// * [triggerDirection]
+/// * [note]
 /// * [lang] - UI language at create time; controls push notification language.
 @BuiltValue()
-abstract class CreateUserPriceAlertBody implements Built<CreateUserPriceAlertBody, CreateUserPriceAlertBodyBuilder> {
+abstract class CreateUserPriceAlertBody
+    implements
+        Built<CreateUserPriceAlertBody, CreateUserPriceAlertBodyBuilder> {
   @BuiltValueField(wireName: r'instrument')
   String get instrument;
 
@@ -40,18 +42,25 @@ abstract class CreateUserPriceAlertBody implements Built<CreateUserPriceAlertBod
 
   CreateUserPriceAlertBody._();
 
-  factory CreateUserPriceAlertBody([void updates(CreateUserPriceAlertBodyBuilder b)]) = _$CreateUserPriceAlertBody;
+  factory CreateUserPriceAlertBody(
+          [void updates(CreateUserPriceAlertBodyBuilder b)]) =
+      _$CreateUserPriceAlertBody;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(CreateUserPriceAlertBodyBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<CreateUserPriceAlertBody> get serializer => _$CreateUserPriceAlertBodySerializer();
+  static Serializer<CreateUserPriceAlertBody> get serializer =>
+      _$CreateUserPriceAlertBodySerializer();
 }
 
-class _$CreateUserPriceAlertBodySerializer implements PrimitiveSerializer<CreateUserPriceAlertBody> {
+class _$CreateUserPriceAlertBodySerializer
+    implements PrimitiveSerializer<CreateUserPriceAlertBody> {
   @override
-  final Iterable<Type> types = const [CreateUserPriceAlertBody, _$CreateUserPriceAlertBody];
+  final Iterable<Type> types = const [
+    CreateUserPriceAlertBody,
+    _$CreateUserPriceAlertBody
+  ];
 
   @override
   final String wireName = r'CreateUserPriceAlertBody';
@@ -74,7 +83,8 @@ class _$CreateUserPriceAlertBodySerializer implements PrimitiveSerializer<Create
     yield r'triggerDirection';
     yield serializers.serialize(
       object.triggerDirection,
-      specifiedType: const FullType(CreateUserPriceAlertBodyTriggerDirectionEnum),
+      specifiedType:
+          const FullType(CreateUserPriceAlertBodyTriggerDirectionEnum),
     );
     if (object.note != null) {
       yield r'note';
@@ -98,7 +108,9 @@ class _$CreateUserPriceAlertBodySerializer implements PrimitiveSerializer<Create
     CreateUserPriceAlertBody object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -130,7 +142,8 @@ class _$CreateUserPriceAlertBodySerializer implements PrimitiveSerializer<Create
         case r'triggerDirection':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(CreateUserPriceAlertBodyTriggerDirectionEnum),
+            specifiedType:
+                const FullType(CreateUserPriceAlertBodyTriggerDirectionEnum),
           ) as CreateUserPriceAlertBodyTriggerDirectionEnum;
           result.triggerDirection = valueDes;
           break;
@@ -145,7 +158,8 @@ class _$CreateUserPriceAlertBodySerializer implements PrimitiveSerializer<Create
         case r'lang':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(CreateUserPriceAlertBodyLangEnum),
+            specifiedType:
+                const FullType.nullable(CreateUserPriceAlertBodyLangEnum),
           ) as CreateUserPriceAlertBodyLangEnum?;
           if (valueDes == null) continue;
           result.lang = valueDes;
@@ -180,34 +194,44 @@ class _$CreateUserPriceAlertBodySerializer implements PrimitiveSerializer<Create
 }
 
 class CreateUserPriceAlertBodyTriggerDirectionEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'above')
-  static const CreateUserPriceAlertBodyTriggerDirectionEnum above = _$createUserPriceAlertBodyTriggerDirectionEnum_above;
+  static const CreateUserPriceAlertBodyTriggerDirectionEnum above =
+      _$createUserPriceAlertBodyTriggerDirectionEnum_above;
   @BuiltValueEnumConst(wireName: r'below')
-  static const CreateUserPriceAlertBodyTriggerDirectionEnum below = _$createUserPriceAlertBodyTriggerDirectionEnum_below;
+  static const CreateUserPriceAlertBodyTriggerDirectionEnum below =
+      _$createUserPriceAlertBodyTriggerDirectionEnum_below;
 
-  static Serializer<CreateUserPriceAlertBodyTriggerDirectionEnum> get serializer => _$createUserPriceAlertBodyTriggerDirectionEnumSerializer;
+  static Serializer<CreateUserPriceAlertBodyTriggerDirectionEnum>
+      get serializer =>
+          _$createUserPriceAlertBodyTriggerDirectionEnumSerializer;
 
-  const CreateUserPriceAlertBodyTriggerDirectionEnum._(String name): super(name);
+  const CreateUserPriceAlertBodyTriggerDirectionEnum._(String name)
+      : super(name);
 
-  static BuiltSet<CreateUserPriceAlertBodyTriggerDirectionEnum> get values => _$createUserPriceAlertBodyTriggerDirectionEnumValues;
-  static CreateUserPriceAlertBodyTriggerDirectionEnum valueOf(String name) => _$createUserPriceAlertBodyTriggerDirectionEnumValueOf(name);
+  static BuiltSet<CreateUserPriceAlertBodyTriggerDirectionEnum> get values =>
+      _$createUserPriceAlertBodyTriggerDirectionEnumValues;
+  static CreateUserPriceAlertBodyTriggerDirectionEnum valueOf(String name) =>
+      _$createUserPriceAlertBodyTriggerDirectionEnumValueOf(name);
 }
 
 class CreateUserPriceAlertBodyLangEnum extends EnumClass {
-
   /// UI language at create time; controls push notification language.
   @BuiltValueEnumConst(wireName: r'en')
-  static const CreateUserPriceAlertBodyLangEnum en = _$createUserPriceAlertBodyLangEnum_en;
+  static const CreateUserPriceAlertBodyLangEnum en =
+      _$createUserPriceAlertBodyLangEnum_en;
+
   /// UI language at create time; controls push notification language.
   @BuiltValueEnumConst(wireName: r'id')
-  static const CreateUserPriceAlertBodyLangEnum id = _$createUserPriceAlertBodyLangEnum_id;
+  static const CreateUserPriceAlertBodyLangEnum id =
+      _$createUserPriceAlertBodyLangEnum_id;
 
-  static Serializer<CreateUserPriceAlertBodyLangEnum> get serializer => _$createUserPriceAlertBodyLangEnumSerializer;
+  static Serializer<CreateUserPriceAlertBodyLangEnum> get serializer =>
+      _$createUserPriceAlertBodyLangEnumSerializer;
 
-  const CreateUserPriceAlertBodyLangEnum._(String name): super(name);
+  const CreateUserPriceAlertBodyLangEnum._(String name) : super(name);
 
-  static BuiltSet<CreateUserPriceAlertBodyLangEnum> get values => _$createUserPriceAlertBodyLangEnumValues;
-  static CreateUserPriceAlertBodyLangEnum valueOf(String name) => _$createUserPriceAlertBodyLangEnumValueOf(name);
+  static BuiltSet<CreateUserPriceAlertBodyLangEnum> get values =>
+      _$createUserPriceAlertBodyLangEnumValues;
+  static CreateUserPriceAlertBodyLangEnum valueOf(String name) =>
+      _$createUserPriceAlertBodyLangEnumValueOf(name);
 }
-

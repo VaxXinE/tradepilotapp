@@ -1,5 +1,7 @@
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
+import '../../l10n/app_messages.dart';
+
 enum MindsetInsightType { frequency, concentration, pending, journal }
 
 class MindsetInsight {
@@ -27,11 +29,10 @@ class MindsetEngine {
       if (ordered[index].createdAt.difference(ordered[index - 2].createdAt) <=
           const Duration(hours: 1)) {
         result.add(
-          const MindsetInsight(
+          MindsetInsight(
             type: MindsetInsightType.frequency,
-            title: 'Jeda evaluasi',
-            message:
-                'Beberapa analisis dibuat dalam waktu berdekatan. Pertimbangkan memberi waktu untuk mengevaluasi analisis sebelumnya.',
+            title: AppMessages.l10n.mindsetPacingTitle,
+            message: AppMessages.l10n.mindsetPacingBody,
           ),
         );
         break;
@@ -54,9 +55,12 @@ class MindsetEngine {
       result.add(
         MindsetInsight(
           type: MindsetInsightType.concentration,
-          title: 'Fokus instrumen',
-          message:
-              '${entry.value} dari ${analyses.length} analisis yang sedang dihitung berfokus pada ${entry.key}.',
+          title: AppMessages.l10n.mindsetConcentrationTitle,
+          message: AppMessages.l10n.mindsetConcentrationBody(
+            entry.value,
+            analyses.length,
+            entry.key,
+          ),
         ),
       );
     }
@@ -72,9 +76,8 @@ class MindsetEngine {
       result.add(
         MindsetInsight(
           type: MindsetInsightType.pending,
-          title: 'Analisis masih menunggu',
-          message:
-              '$pending analisis yang sedang dihitung belum selesai dievaluasi. Gunakan hasil berikutnya sebagai bahan refleksi, bukan kepastian.',
+          title: AppMessages.l10n.mindsetPendingTitle,
+          message: AppMessages.l10n.mindsetPendingBody(pending),
         ),
       );
     }
@@ -84,11 +87,10 @@ class MindsetEngine {
         .length;
     if (analyses.length >= 4 && journaled * 4 < analyses.length) {
       result.add(
-        const MindsetInsight(
+        MindsetInsight(
           type: MindsetInsightType.journal,
-          title: 'Konsistensi catatan',
-          message:
-              'Catatan pribadi masih jarang digunakan. Menulis alasan awal dapat membantu refleksi setelah evaluasi tersedia.',
+          title: AppMessages.l10n.mindsetJournalTitle,
+          message: AppMessages.l10n.mindsetJournalBody,
         ),
       );
     }

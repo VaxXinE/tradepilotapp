@@ -11,11 +11,13 @@ part 'daily_summary_settings_update.g.dart';
 /// DailySummarySettingsUpdate
 ///
 /// Properties:
-/// * [enabled] 
-/// * [time] 
-/// * [timezone] 
+/// * [enabled]
+/// * [time]
+/// * [timezone]
 @BuiltValue()
-abstract class DailySummarySettingsUpdate implements Built<DailySummarySettingsUpdate, DailySummarySettingsUpdateBuilder> {
+abstract class DailySummarySettingsUpdate
+    implements
+        Built<DailySummarySettingsUpdate, DailySummarySettingsUpdateBuilder> {
   @BuiltValueField(wireName: r'enabled')
   bool? get enabled;
 
@@ -27,18 +29,25 @@ abstract class DailySummarySettingsUpdate implements Built<DailySummarySettingsU
 
   DailySummarySettingsUpdate._();
 
-  factory DailySummarySettingsUpdate([void updates(DailySummarySettingsUpdateBuilder b)]) = _$DailySummarySettingsUpdate;
+  factory DailySummarySettingsUpdate(
+          [void updates(DailySummarySettingsUpdateBuilder b)]) =
+      _$DailySummarySettingsUpdate;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(DailySummarySettingsUpdateBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<DailySummarySettingsUpdate> get serializer => _$DailySummarySettingsUpdateSerializer();
+  static Serializer<DailySummarySettingsUpdate> get serializer =>
+      _$DailySummarySettingsUpdateSerializer();
 }
 
-class _$DailySummarySettingsUpdateSerializer implements PrimitiveSerializer<DailySummarySettingsUpdate> {
+class _$DailySummarySettingsUpdateSerializer
+    implements PrimitiveSerializer<DailySummarySettingsUpdate> {
   @override
-  final Iterable<Type> types = const [DailySummarySettingsUpdate, _$DailySummarySettingsUpdate];
+  final Iterable<Type> types = const [
+    DailySummarySettingsUpdate,
+    _$DailySummarySettingsUpdate
+  ];
 
   @override
   final String wireName = r'DailySummarySettingsUpdate';
@@ -77,7 +86,9 @@ class _$DailySummarySettingsUpdateSerializer implements PrimitiveSerializer<Dail
     DailySummarySettingsUpdate object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -144,4 +155,3 @@ class _$DailySummarySettingsUpdateSerializer implements PrimitiveSerializer<Dail
     return result.build();
   }
 }
-

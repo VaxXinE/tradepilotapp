@@ -14,16 +14,17 @@ part 'personal_analytics.g.dart';
 /// PersonalAnalytics
 ///
 /// Properties:
-/// * [totalAllTime] 
-/// * [totalThisMonth] 
-/// * [totalThisWeek] 
-/// * [topInstruments] 
-/// * [dominantMode] 
-/// * [accuracyRate] 
-/// * [feedbackCount] 
-/// * [weeklyData] 
+/// * [totalAllTime]
+/// * [totalThisMonth]
+/// * [totalThisWeek]
+/// * [topInstruments]
+/// * [dominantMode]
+/// * [accuracyRate]
+/// * [feedbackCount]
+/// * [weeklyData]
 @BuiltValue()
-abstract class PersonalAnalytics implements Built<PersonalAnalytics, PersonalAnalyticsBuilder> {
+abstract class PersonalAnalytics
+    implements Built<PersonalAnalytics, PersonalAnalyticsBuilder> {
   @BuiltValueField(wireName: r'totalAllTime')
   int get totalAllTime;
 
@@ -50,16 +51,19 @@ abstract class PersonalAnalytics implements Built<PersonalAnalytics, PersonalAna
 
   PersonalAnalytics._();
 
-  factory PersonalAnalytics([void updates(PersonalAnalyticsBuilder b)]) = _$PersonalAnalytics;
+  factory PersonalAnalytics([void updates(PersonalAnalyticsBuilder b)]) =
+      _$PersonalAnalytics;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(PersonalAnalyticsBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<PersonalAnalytics> get serializer => _$PersonalAnalyticsSerializer();
+  static Serializer<PersonalAnalytics> get serializer =>
+      _$PersonalAnalyticsSerializer();
 }
 
-class _$PersonalAnalyticsSerializer implements PrimitiveSerializer<PersonalAnalytics> {
+class _$PersonalAnalyticsSerializer
+    implements PrimitiveSerializer<PersonalAnalytics> {
   @override
   final Iterable<Type> types = const [PersonalAnalytics, _$PersonalAnalytics];
 
@@ -89,7 +93,8 @@ class _$PersonalAnalyticsSerializer implements PrimitiveSerializer<PersonalAnaly
     yield r'topInstruments';
     yield serializers.serialize(
       object.topInstruments,
-      specifiedType: const FullType(BuiltList, [FullType(PersonalAnalyticsTopInstrumentsInner)]),
+      specifiedType: const FullType(
+          BuiltList, [FullType(PersonalAnalyticsTopInstrumentsInner)]),
     );
     if (object.dominantMode != null) {
       yield r'dominantMode';
@@ -113,7 +118,8 @@ class _$PersonalAnalyticsSerializer implements PrimitiveSerializer<PersonalAnaly
     yield r'weeklyData';
     yield serializers.serialize(
       object.weeklyData,
-      specifiedType: const FullType(BuiltList, [FullType(PersonalAnalyticsWeeklyDataInner)]),
+      specifiedType: const FullType(
+          BuiltList, [FullType(PersonalAnalyticsWeeklyDataInner)]),
     );
   }
 
@@ -123,7 +129,9 @@ class _$PersonalAnalyticsSerializer implements PrimitiveSerializer<PersonalAnaly
     PersonalAnalytics object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -162,7 +170,8 @@ class _$PersonalAnalyticsSerializer implements PrimitiveSerializer<PersonalAnaly
         case r'topInstruments':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltList, [FullType(PersonalAnalyticsTopInstrumentsInner)]),
+            specifiedType: const FullType(
+                BuiltList, [FullType(PersonalAnalyticsTopInstrumentsInner)]),
           ) as BuiltList<PersonalAnalyticsTopInstrumentsInner>;
           result.topInstruments.replace(valueDes);
           break;
@@ -192,7 +201,8 @@ class _$PersonalAnalyticsSerializer implements PrimitiveSerializer<PersonalAnaly
         case r'weeklyData':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltList, [FullType(PersonalAnalyticsWeeklyDataInner)]),
+            specifiedType: const FullType(
+                BuiltList, [FullType(PersonalAnalyticsWeeklyDataInner)]),
           ) as BuiltList<PersonalAnalyticsWeeklyDataInner>;
           result.weeklyData.replace(valueDes);
           break;
@@ -224,4 +234,3 @@ class _$PersonalAnalyticsSerializer implements PrimitiveSerializer<PersonalAnaly
     return result.build();
   }
 }
-

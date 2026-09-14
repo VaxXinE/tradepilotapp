@@ -4,6 +4,8 @@ import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
 import '../../providers/auth_provider.dart';
 import '../analysis/analysis_detail_screen.dart';
+import '../../l10n/l10n.dart';
+import '../../widgets/responsive_page.dart';
 
 class DailySummaryScreen extends StatefulWidget {
   const DailySummaryScreen({super.key});
@@ -38,7 +40,7 @@ class _DailySummaryScreenState extends State<DailySummaryScreen> {
       });
     } catch (_) {
       if (mounted && auth.user?.id == userId) {
-        setState(() => _error = 'Ringkasan harian belum dapat dimuat.');
+        setState(() => _error = context.l10n.dailySummaryLoadFailed);
       }
     } finally {
       if (mounted && auth.user?.id == userId) setState(() => _loading = false);
@@ -69,7 +71,7 @@ class _DailySummaryScreenState extends State<DailySummaryScreen> {
     } catch (_) {
       if (mounted && auth.user?.id == userId) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Pengaturan ringkasan gagal disimpan.')),
+          SnackBar(content: Text(context.l10n.dailySummarySaveFailed)),
         );
       }
     } finally {
@@ -99,15 +101,13 @@ class _DailySummaryScreenState extends State<DailySummaryScreen> {
     final currentUserId = context.watch<AuthProvider>().user?.id;
     if (_ownerUserId != null && currentUserId != _ownerUserId) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Ringkasan Harian')),
-        body: const Center(
-          child: Text('Sesi berubah. Buka kembali halaman ini.'),
-        ),
+        appBar: AppBar(title: Text(context.l10n.dailySummary)),
+        body: Center(child: Text(context.l10n.sessionChangedReopen)),
       );
     }
     final data = _data;
     return Scaffold(
-      appBar: AppBar(title: const Text('Ringkasan Harian')),
+      appBar: AppBar(title: Text(context.l10n.dailySummary)),
       body: RefreshIndicator(
         onRefresh: _load,
         child: _loading && data == null
@@ -125,26 +125,29 @@ class _DailySummaryScreenState extends State<DailySummaryScreen> {
                   Center(
                     child: TextButton(
                       onPressed: _load,
-                      child: const Text('Coba lagi'),
+                      child: Text(context.l10n.tryAgain),
                     ),
                   ),
                 ],
               )
             : ListView(
-                padding: const EdgeInsets.all(16),
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: responsivePagePadding(context),
                 children: [
                   SwitchListTile.adaptive(
                     value: data!.settings.enabled,
                     onChanged: _saving
                         ? null
                         : (value) => _update(enabled: value),
-                    title: const Text('Ringkasan harian'),
-                    subtitle: Text('Zona waktu: ${data.settings.timezone}'),
+                    title: Text(context.l10n.dailySummary),
+                    subtitle: Text(
+                      context.l10n.dailySummaryTimezone(data.settings.timezone),
+                    ),
                   ),
                   ListTile(
                     enabled: !_saving && data.settings.enabled,
                     leading: const Icon(Icons.schedule_outlined),
-                    title: const Text('Waktu pengiriman'),
+                    title: Text(context.l10n.dailySummaryDeliveryTime),
                     subtitle: Text(data.settings.time),
                     onTap: _pickTime,
                   ),
@@ -161,8 +164,8 @@ class _DailySummaryScreenState extends State<DailySummaryScreen> {
                         Chip(
                           label: Text(
                             today.kind == DailySummaryTodayKindEnum.full
-                                ? 'Full digest'
-                                : 'Quota only',
+                                ? context.l10n.dailySummaryFullDigest
+                                : context.l10n.dailySummaryQuotaOnly,
                           ),
                         ),
                       ],
@@ -227,13 +230,18 @@ class _DailySummaryScreenState extends State<DailySummaryScreen> {
                                         analysis.confidenceMax != null)
                                       Chip(
                                         label: Text(
-                                          '${analysis.confidenceMin}–${analysis.confidenceMax}%',
+                                          context.l10n.confidenceValue(
+                                            '${analysis.confidenceMin}–${analysis.confidenceMax}%',
+                                          ),
                                         ),
                                       ),
                                     if (analysis.preferredSide != null)
                                       Chip(
                                         label: Text(
-                                          'Side: ${analysis.preferredSide}',
+                                          context.l10n
+                                              .dailySummaryPreferredSide(
+                                                analysis.preferredSide!,
+                                              ),
                                         ),
                                       ),
                                   ],
@@ -254,13 +262,13 @@ class _DailySummaryScreenState extends State<DailySummaryScreen> {
                       ),
                     ),
                   ] else
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 56),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 56),
                       child: Column(
                         children: [
-                          Icon(Icons.today_outlined, size: 48),
-                          SizedBox(height: 12),
-                          Text('Belum ada ringkasan untuk hari ini.'),
+                          const Icon(Icons.today_outlined, size: 48),
+                          const SizedBox(height: 12),
+                          Text(context.l10n.dailySummaryEmpty),
                         ],
                       ),
                     ),

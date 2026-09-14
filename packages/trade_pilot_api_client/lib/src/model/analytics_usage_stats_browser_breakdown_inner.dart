@@ -11,10 +11,13 @@ part 'analytics_usage_stats_browser_breakdown_inner.g.dart';
 /// AnalyticsUsageStatsBrowserBreakdownInner
 ///
 /// Properties:
-/// * [browser] 
-/// * [count] 
+/// * [browser]
+/// * [count]
 @BuiltValue()
-abstract class AnalyticsUsageStatsBrowserBreakdownInner implements Built<AnalyticsUsageStatsBrowserBreakdownInner, AnalyticsUsageStatsBrowserBreakdownInnerBuilder> {
+abstract class AnalyticsUsageStatsBrowserBreakdownInner
+    implements
+        Built<AnalyticsUsageStatsBrowserBreakdownInner,
+            AnalyticsUsageStatsBrowserBreakdownInnerBuilder> {
   @BuiltValueField(wireName: r'browser')
   String get browser;
 
@@ -23,18 +26,25 @@ abstract class AnalyticsUsageStatsBrowserBreakdownInner implements Built<Analyti
 
   AnalyticsUsageStatsBrowserBreakdownInner._();
 
-  factory AnalyticsUsageStatsBrowserBreakdownInner([void updates(AnalyticsUsageStatsBrowserBreakdownInnerBuilder b)]) = _$AnalyticsUsageStatsBrowserBreakdownInner;
+  factory AnalyticsUsageStatsBrowserBreakdownInner(
+          [void updates(AnalyticsUsageStatsBrowserBreakdownInnerBuilder b)]) =
+      _$AnalyticsUsageStatsBrowserBreakdownInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AnalyticsUsageStatsBrowserBreakdownInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AnalyticsUsageStatsBrowserBreakdownInner> get serializer => _$AnalyticsUsageStatsBrowserBreakdownInnerSerializer();
+  static Serializer<AnalyticsUsageStatsBrowserBreakdownInner> get serializer =>
+      _$AnalyticsUsageStatsBrowserBreakdownInnerSerializer();
 }
 
-class _$AnalyticsUsageStatsBrowserBreakdownInnerSerializer implements PrimitiveSerializer<AnalyticsUsageStatsBrowserBreakdownInner> {
+class _$AnalyticsUsageStatsBrowserBreakdownInnerSerializer
+    implements PrimitiveSerializer<AnalyticsUsageStatsBrowserBreakdownInner> {
   @override
-  final Iterable<Type> types = const [AnalyticsUsageStatsBrowserBreakdownInner, _$AnalyticsUsageStatsBrowserBreakdownInner];
+  final Iterable<Type> types = const [
+    AnalyticsUsageStatsBrowserBreakdownInner,
+    _$AnalyticsUsageStatsBrowserBreakdownInner
+  ];
 
   @override
   final String wireName = r'AnalyticsUsageStatsBrowserBreakdownInner';
@@ -62,7 +72,9 @@ class _$AnalyticsUsageStatsBrowserBreakdownInnerSerializer implements PrimitiveS
     AnalyticsUsageStatsBrowserBreakdownInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -119,4 +131,3 @@ class _$AnalyticsUsageStatsBrowserBreakdownInnerSerializer implements PrimitiveS
     return result.build();
   }
 }
-

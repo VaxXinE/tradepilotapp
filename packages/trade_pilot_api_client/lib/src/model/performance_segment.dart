@@ -13,12 +13,13 @@ part 'performance_segment.g.dart';
 /// A segmentation of the outcome ledger. `gated` is true when no bucket inside the segment crossed the minimum-sample threshold; the UI then renders a 'need more data' placeholder instead of cherry-picking the largest bucket.
 ///
 /// Properties:
-/// * [gated] 
-/// * [need] 
-/// * [have] 
-/// * [buckets] 
+/// * [gated]
+/// * [need]
+/// * [have]
+/// * [buckets]
 @BuiltValue()
-abstract class PerformanceSegment implements Built<PerformanceSegment, PerformanceSegmentBuilder> {
+abstract class PerformanceSegment
+    implements Built<PerformanceSegment, PerformanceSegmentBuilder> {
   @BuiltValueField(wireName: r'gated')
   bool get gated;
 
@@ -33,16 +34,19 @@ abstract class PerformanceSegment implements Built<PerformanceSegment, Performan
 
   PerformanceSegment._();
 
-  factory PerformanceSegment([void updates(PerformanceSegmentBuilder b)]) = _$PerformanceSegment;
+  factory PerformanceSegment([void updates(PerformanceSegmentBuilder b)]) =
+      _$PerformanceSegment;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(PerformanceSegmentBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<PerformanceSegment> get serializer => _$PerformanceSegmentSerializer();
+  static Serializer<PerformanceSegment> get serializer =>
+      _$PerformanceSegmentSerializer();
 }
 
-class _$PerformanceSegmentSerializer implements PrimitiveSerializer<PerformanceSegment> {
+class _$PerformanceSegmentSerializer
+    implements PrimitiveSerializer<PerformanceSegment> {
   @override
   final Iterable<Type> types = const [PerformanceSegment, _$PerformanceSegment];
 
@@ -82,7 +86,9 @@ class _$PerformanceSegmentSerializer implements PrimitiveSerializer<PerformanceS
     PerformanceSegment object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -121,7 +127,8 @@ class _$PerformanceSegmentSerializer implements PrimitiveSerializer<PerformanceS
         case r'buckets':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltList, [FullType(PerformanceBucket)]),
+            specifiedType:
+                const FullType(BuiltList, [FullType(PerformanceBucket)]),
           ) as BuiltList<PerformanceBucket>;
           result.buckets.replace(valueDes);
           break;
@@ -153,4 +160,3 @@ class _$PerformanceSegmentSerializer implements PrimitiveSerializer<PerformanceS
     return result.build();
   }
 }
-

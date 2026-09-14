@@ -16,7 +16,8 @@ part 'outbound_click_body.g.dart';
 /// * [target] - Partner the click was directed to
 /// * [lang] - UI language at click time
 @BuiltValue()
-abstract class OutboundClickBody implements Built<OutboundClickBody, OutboundClickBodyBuilder> {
+abstract class OutboundClickBody
+    implements Built<OutboundClickBody, OutboundClickBodyBuilder> {
   /// Stable slug describing where the link was clicked
   @BuiltValueField(wireName: r'placement')
   OutboundClickBodyPlacementEnum get placement;
@@ -34,16 +35,19 @@ abstract class OutboundClickBody implements Built<OutboundClickBody, OutboundCli
 
   OutboundClickBody._();
 
-  factory OutboundClickBody([void updates(OutboundClickBodyBuilder b)]) = _$OutboundClickBody;
+  factory OutboundClickBody([void updates(OutboundClickBodyBuilder b)]) =
+      _$OutboundClickBody;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(OutboundClickBodyBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<OutboundClickBody> get serializer => _$OutboundClickBodySerializer();
+  static Serializer<OutboundClickBody> get serializer =>
+      _$OutboundClickBodySerializer();
 }
 
-class _$OutboundClickBodySerializer implements PrimitiveSerializer<OutboundClickBody> {
+class _$OutboundClickBodySerializer
+    implements PrimitiveSerializer<OutboundClickBody> {
   @override
   final Iterable<Type> types = const [OutboundClickBody, _$OutboundClickBody];
 
@@ -80,7 +84,9 @@ class _$OutboundClickBodySerializer implements PrimitiveSerializer<OutboundClick
     OutboundClickBody object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -147,68 +153,90 @@ class _$OutboundClickBodySerializer implements PrimitiveSerializer<OutboundClick
 }
 
 class OutboundClickBodyPlacementEnum extends EnumClass {
-
   /// Stable slug describing where the link was clicked
   @BuiltValueEnumConst(wireName: r'splash')
-  static const OutboundClickBodyPlacementEnum splash = _$outboundClickBodyPlacementEnum_splash;
+  static const OutboundClickBodyPlacementEnum splash =
+      _$outboundClickBodyPlacementEnum_splash;
+
   /// Stable slug describing where the link was clicked
   @BuiltValueEnumConst(wireName: r'landing-header')
-  static const OutboundClickBodyPlacementEnum landingHeader = _$outboundClickBodyPlacementEnum_landingHeader;
+  static const OutboundClickBodyPlacementEnum landingHeader =
+      _$outboundClickBodyPlacementEnum_landingHeader;
+
   /// Stable slug describing where the link was clicked
   @BuiltValueEnumConst(wireName: r'landing-cta')
-  static const OutboundClickBodyPlacementEnum landingCta = _$outboundClickBodyPlacementEnum_landingCta;
+  static const OutboundClickBodyPlacementEnum landingCta =
+      _$outboundClickBodyPlacementEnum_landingCta;
+
   /// Stable slug describing where the link was clicked
   @BuiltValueEnumConst(wireName: r'landing-footer')
-  static const OutboundClickBodyPlacementEnum landingFooter = _$outboundClickBodyPlacementEnum_landingFooter;
+  static const OutboundClickBodyPlacementEnum landingFooter =
+      _$outboundClickBodyPlacementEnum_landingFooter;
+
   /// Stable slug describing where the link was clicked
   @BuiltValueEnumConst(wireName: r'layout-footer')
-  static const OutboundClickBodyPlacementEnum layoutFooter = _$outboundClickBodyPlacementEnum_layoutFooter;
+  static const OutboundClickBodyPlacementEnum layoutFooter =
+      _$outboundClickBodyPlacementEnum_layoutFooter;
+
   /// Stable slug describing where the link was clicked
   @BuiltValueEnumConst(wireName: r'profile-cta')
-  static const OutboundClickBodyPlacementEnum profileCta = _$outboundClickBodyPlacementEnum_profileCta;
+  static const OutboundClickBodyPlacementEnum profileCta =
+      _$outboundClickBodyPlacementEnum_profileCta;
+
   /// Stable slug describing where the link was clicked
   @BuiltValueEnumConst(wireName: r'dashboard-tiktok')
-  static const OutboundClickBodyPlacementEnum dashboardTiktok = _$outboundClickBodyPlacementEnum_dashboardTiktok;
+  static const OutboundClickBodyPlacementEnum dashboardTiktok =
+      _$outboundClickBodyPlacementEnum_dashboardTiktok;
 
-  static Serializer<OutboundClickBodyPlacementEnum> get serializer => _$outboundClickBodyPlacementEnumSerializer;
+  static Serializer<OutboundClickBodyPlacementEnum> get serializer =>
+      _$outboundClickBodyPlacementEnumSerializer;
 
-  const OutboundClickBodyPlacementEnum._(String name): super(name);
+  const OutboundClickBodyPlacementEnum._(String name) : super(name);
 
-  static BuiltSet<OutboundClickBodyPlacementEnum> get values => _$outboundClickBodyPlacementEnumValues;
-  static OutboundClickBodyPlacementEnum valueOf(String name) => _$outboundClickBodyPlacementEnumValueOf(name);
+  static BuiltSet<OutboundClickBodyPlacementEnum> get values =>
+      _$outboundClickBodyPlacementEnumValues;
+  static OutboundClickBodyPlacementEnum valueOf(String name) =>
+      _$outboundClickBodyPlacementEnumValueOf(name);
 }
 
 class OutboundClickBodyTargetEnum extends EnumClass {
-
   /// Partner the click was directed to
   @BuiltValueEnumConst(wireName: r'sg-berjangka')
-  static const OutboundClickBodyTargetEnum sgBerjangka = _$outboundClickBodyTargetEnum_sgBerjangka;
+  static const OutboundClickBodyTargetEnum sgBerjangka =
+      _$outboundClickBodyTargetEnum_sgBerjangka;
+
   /// Partner the click was directed to
   @BuiltValueEnumConst(wireName: r'tiktok')
-  static const OutboundClickBodyTargetEnum tiktok = _$outboundClickBodyTargetEnum_tiktok;
+  static const OutboundClickBodyTargetEnum tiktok =
+      _$outboundClickBodyTargetEnum_tiktok;
 
-  static Serializer<OutboundClickBodyTargetEnum> get serializer => _$outboundClickBodyTargetEnumSerializer;
+  static Serializer<OutboundClickBodyTargetEnum> get serializer =>
+      _$outboundClickBodyTargetEnumSerializer;
 
-  const OutboundClickBodyTargetEnum._(String name): super(name);
+  const OutboundClickBodyTargetEnum._(String name) : super(name);
 
-  static BuiltSet<OutboundClickBodyTargetEnum> get values => _$outboundClickBodyTargetEnumValues;
-  static OutboundClickBodyTargetEnum valueOf(String name) => _$outboundClickBodyTargetEnumValueOf(name);
+  static BuiltSet<OutboundClickBodyTargetEnum> get values =>
+      _$outboundClickBodyTargetEnumValues;
+  static OutboundClickBodyTargetEnum valueOf(String name) =>
+      _$outboundClickBodyTargetEnumValueOf(name);
 }
 
 class OutboundClickBodyLangEnum extends EnumClass {
-
   /// UI language at click time
   @BuiltValueEnumConst(wireName: r'en')
   static const OutboundClickBodyLangEnum en = _$outboundClickBodyLangEnum_en;
+
   /// UI language at click time
   @BuiltValueEnumConst(wireName: r'id')
   static const OutboundClickBodyLangEnum id = _$outboundClickBodyLangEnum_id;
 
-  static Serializer<OutboundClickBodyLangEnum> get serializer => _$outboundClickBodyLangEnumSerializer;
+  static Serializer<OutboundClickBodyLangEnum> get serializer =>
+      _$outboundClickBodyLangEnumSerializer;
 
-  const OutboundClickBodyLangEnum._(String name): super(name);
+  const OutboundClickBodyLangEnum._(String name) : super(name);
 
-  static BuiltSet<OutboundClickBodyLangEnum> get values => _$outboundClickBodyLangEnumValues;
-  static OutboundClickBodyLangEnum valueOf(String name) => _$outboundClickBodyLangEnumValueOf(name);
+  static BuiltSet<OutboundClickBodyLangEnum> get values =>
+      _$outboundClickBodyLangEnumValues;
+  static OutboundClickBodyLangEnum valueOf(String name) =>
+      _$outboundClickBodyLangEnumValueOf(name);
 }
-

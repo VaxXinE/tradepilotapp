@@ -41,7 +41,7 @@ void main() {
         );
 
         expect(ok, isFalse);
-        expect(provider.error, 'Instrumen tidak boleh kosong.');
+        expect(provider.error, 'Instrument cannot be empty.');
         expect(repository.createCalls, 0);
       },
     );
@@ -62,7 +62,7 @@ void main() {
           ),
           isFalse,
         );
-        expect(provider.error, 'Target harga harus lebih besar dari 0.');
+        expect(provider.error, 'Target price must be greater than 0.');
 
         expect(
           await provider.createAlert(
@@ -92,7 +92,7 @@ void main() {
         );
 
         expect(ok, isFalse);
-        expect(provider.error, 'Catatan maksimal 200 karakter.');
+        expect(provider.error, 'Notes are limited to 200 characters.');
         expect(repository.createCalls, 0);
       },
     );
@@ -182,7 +182,7 @@ void main() {
     );
 
     expect(ok, isFalse);
-    expect(provider.error, 'Gagal membuat price alert.');
+    expect(provider.error, 'Could not create the price alert.');
     expect(provider.alerts, isEmpty);
   });
 
@@ -246,7 +246,9 @@ User _user(int id) => User(
     ..role = UserRoleEnum.user
     ..selectedMode = UserSelectedModeEnum.beginner
     ..themePreference = UserThemePreferenceEnum.dark
-    ..onboardingCompleted = true,
+    ..createdAt = DateTime.utc(2026)
+    ..onboardingCompleted = true
+    ..hasPassword = true,
 );
 
 UserPriceAlert _alert({

@@ -1,16 +1,20 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:one_of/one_of.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
+import '../../l10n/l10n.dart';
 import '../../providers/auth_provider.dart';
 import '../analysis/analysis_detail_screen.dart';
 
 class TradeJournalScreen extends StatefulWidget {
-  const TradeJournalScreen({super.key, this.analysis});
+  const TradeJournalScreen({super.key, this.analysis, this.initialEntry});
 
   final Analysis? analysis;
+  final JournalEntry? initialEntry;
 
   @override
   State<TradeJournalScreen> createState() => _TradeJournalScreenState();
@@ -31,7 +35,9 @@ class _TradeJournalScreenState extends State<TradeJournalScreen> {
     super.initState();
     _load();
     if (widget.analysis != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _openForm());
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _openForm(widget.initialEntry),
+      );
     }
   }
 
@@ -67,7 +73,7 @@ class _TradeJournalScreenState extends State<TradeJournalScreen> {
       });
     } catch (_) {
       if (_sameUser(userId) && requestId == _requestId) {
-        setState(() => _error = 'Jurnal belum dapat dimuat. Coba lagi.');
+        setState(() => _error = context.l10n.journalLoadFailed);
       }
     } finally {
       if (_sameUser(userId) && requestId == _requestId) {
@@ -144,6 +150,15 @@ class _TradeJournalScreenState extends State<TradeJournalScreen> {
       }
       final savedEntry = saved;
       if (!_sameUser(userId) || savedEntry == null) return;
+      if (entry == null) {
+        unawaited(
+          auth.telemetry.track(
+            AnalyticsEventBodyEventTypeEnum.tradeLogged,
+            path: '/journal',
+            metadata: {'instrument': result.instrument, 'side': result.side},
+          ),
+        );
+      }
       setState(() {
         final index = _entries.indexWhere((item) => item.id == savedEntry.id);
         if (index < 0) {
@@ -158,7 +173,7 @@ class _TradeJournalScreenState extends State<TradeJournalScreen> {
     } catch (_) {
       if (mounted && _sameUser(userId)) {
         messenger.showSnackBar(
-          const SnackBar(content: Text('Entri jurnal gagal disimpan.')),
+          SnackBar(content: Text(context.l10n.journalSaveFailed)),
         );
       }
     } finally {
@@ -171,16 +186,16 @@ class _TradeJournalScreenState extends State<TradeJournalScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Hapus entri jurnal?'),
-        content: const Text('Tindakan ini tidak dapat dibatalkan.'),
+        title: Text(context.l10n.journalDeleteTitle),
+        content: Text(context.l10n.journalDeleteWarning),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal'),
+            child: Text(context.l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Hapus'),
+            child: Text(context.l10n.delete),
           ),
         ],
       ),
@@ -188,6 +203,7 @@ class _TradeJournalScreenState extends State<TradeJournalScreen> {
     if (confirmed != true || !mounted) return;
     final auth = context.read<AuthProvider>();
     final messenger = ScaffoldMessenger.of(context);
+    final l10n = context.l10n;
     final userId = auth.user?.id;
     setState(() => _mutating = true);
     try {
@@ -201,7 +217,7 @@ class _TradeJournalScreenState extends State<TradeJournalScreen> {
     } catch (_) {
       if (_sameUser(userId)) {
         messenger.showSnackBar(
-          const SnackBar(content: Text('Entri jurnal gagal dihapus.')),
+          SnackBar(content: Text(l10n.journalDeleteFailed)),
         );
       }
     } finally {
@@ -210,11 +226,11 @@ class _TradeJournalScreenState extends State<TradeJournalScreen> {
   }
 
   String _outcome(JournalEntryOutcomeEnum outcome) => switch (outcome.name) {
-    'win' => 'Outcome positif',
-    'loss' => 'Outcome negatif',
-    'breakeven' => 'Impas',
-    'skipped' => 'Tidak diambil',
-    _ => 'Masih terbuka',
+    'win' => context.l10n.positiveOutcome,
+    'loss' => context.l10n.negativeOutcome,
+    'breakeven' => context.l10n.breakeven,
+    'skipped' => context.l10n.skippedTrade,
+    _ => context.l10n.open,
   };
 
   @override
@@ -222,18 +238,16 @@ class _TradeJournalScreenState extends State<TradeJournalScreen> {
     final currentUserId = context.watch<AuthProvider>().user?.id;
     if (_ownerUserId != null && currentUserId != _ownerUserId) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Trade Journal')),
-        body: const Center(
-          child: Text('Sesi berubah. Buka kembali halaman ini.'),
-        ),
+        appBar: AppBar(title: Text(context.l10n.tradeJournal)),
+        body: Center(child: Text(context.l10n.journalSessionChanged)),
       );
     }
     return Scaffold(
-      appBar: AppBar(title: const Text('Trade Journal')),
+      appBar: AppBar(title: Text(context.l10n.tradeJournal)),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _mutating ? null : () => _openForm(),
         icon: const Icon(Icons.add),
-        label: const Text('Tambah'),
+        label: Text(context.l10n.add),
       ),
       body: RefreshIndicator(
         onRefresh: _load,
@@ -252,19 +266,22 @@ class _TradeJournalScreenState extends State<TradeJournalScreen> {
                   Center(
                     child: TextButton(
                       onPressed: _load,
-                      child: const Text('Coba lagi'),
+                      child: Text(context.l10n.tryAgain),
                     ),
                   ),
                 ],
               )
             : _entries.isEmpty
             ? ListView(
-                padding: EdgeInsets.all(24),
-                children: const [
-                  SizedBox(height: 140),
-                  Icon(Icons.menu_book_outlined, size: 52),
-                  SizedBox(height: 12),
-                  Text('Belum ada entri jurnal.', textAlign: TextAlign.center),
+                padding: const EdgeInsets.all(24),
+                children: [
+                  const SizedBox(height: 140),
+                  const Icon(Icons.menu_book_outlined, size: 52),
+                  const SizedBox(height: 12),
+                  Text(
+                    context.l10n.noJournalEntries,
+                    textAlign: TextAlign.center,
+                  ),
                 ],
               )
             : ListView.builder(
@@ -279,31 +296,34 @@ class _TradeJournalScreenState extends State<TradeJournalScreen> {
                           _JournalStatsCard(stats: stats),
                         DropdownButtonFormField<String?>(
                           initialValue: _outcomeFilter,
-                          decoration: const InputDecoration(
-                            labelText: 'Filter outcome',
-                            prefixIcon: Icon(Icons.filter_alt_outlined),
+                          decoration: InputDecoration(
+                            labelText: context.l10n.journalOutcomeFilter,
+                            prefixIcon: const Icon(Icons.filter_alt_outlined),
                           ),
-                          items: const [
-                            DropdownMenuItem(value: null, child: Text('Semua')),
+                          items: [
+                            DropdownMenuItem(
+                              value: null,
+                              child: Text(context.l10n.all),
+                            ),
                             DropdownMenuItem(
                               value: 'open',
-                              child: Text('Terbuka'),
+                              child: Text(context.l10n.open),
                             ),
                             DropdownMenuItem(
                               value: 'win',
-                              child: Text('Positif'),
+                              child: Text(context.l10n.positive),
                             ),
                             DropdownMenuItem(
                               value: 'loss',
-                              child: Text('Negatif'),
+                              child: Text(context.l10n.negative),
                             ),
                             DropdownMenuItem(
                               value: 'breakeven',
-                              child: Text('Impas'),
+                              child: Text(context.l10n.breakeven),
                             ),
                             DropdownMenuItem(
                               value: 'skipped',
-                              child: Text('Tidak diambil'),
+                              child: Text(context.l10n.skippedTrade),
                             ),
                           ],
                           onChanged: (value) {
@@ -311,11 +331,11 @@ class _TradeJournalScreenState extends State<TradeJournalScreen> {
                             _load();
                           },
                         ),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 10),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
                           child: Text(
-                            'Maksimum 100 entri terbaru dari server. Data ini bersifat pribadi.',
-                            style: TextStyle(fontSize: 12),
+                            context.l10n.journalPrivateLimit,
+                            style: const TextStyle(fontSize: 12),
                           ),
                         ),
                       ],
@@ -357,9 +377,15 @@ class _TradeJournalScreenState extends State<TradeJournalScreen> {
                       trailing: PopupMenuButton<String>(
                         onSelected: (value) =>
                             value == 'edit' ? _openForm(entry) : _delete(entry),
-                        itemBuilder: (_) => const [
-                          PopupMenuItem(value: 'edit', child: Text('Edit')),
-                          PopupMenuItem(value: 'delete', child: Text('Hapus')),
+                        itemBuilder: (_) => [
+                          PopupMenuItem(
+                            value: 'edit',
+                            child: Text(context.l10n.edit),
+                          ),
+                          PopupMenuItem(
+                            value: 'delete',
+                            child: Text(context.l10n.delete),
+                          ),
                         ],
                       ),
                     ),
@@ -445,7 +471,11 @@ class _JournalDialogState extends State<_JournalDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(widget.entry == null ? 'Tambah jurnal' : 'Edit jurnal'),
+      title: Text(
+        widget.entry == null
+            ? context.l10n.addJournal
+            : context.l10n.editJournal,
+      ),
       content: SingleChildScrollView(
         child: Form(
           key: _formKey,
@@ -456,45 +486,51 @@ class _JournalDialogState extends State<_JournalDialog> {
                 key: const Key('journal-instrument-field'),
                 controller: _instrument,
                 maxLength: 32,
-                decoration: const InputDecoration(labelText: 'Instrumen'),
+                decoration: InputDecoration(labelText: context.l10n.instrument),
                 validator: (value) => value?.trim().isEmpty == true
-                    ? 'Instrumen wajib diisi.'
+                    ? context.l10n.instrumentRequired
                     : null,
               ),
               DropdownButtonFormField<String>(
                 initialValue: _side,
-                decoration: const InputDecoration(labelText: 'Sisi'),
-                items: const [
+                decoration: InputDecoration(labelText: context.l10n.side),
+                items: [
                   DropdownMenuItem(
                     value: 'buy',
-                    child: Text('Buy (catatan transaksi)'),
+                    child: Text(context.l10n.buyJournalSide),
                   ),
                   DropdownMenuItem(
                     value: 'sell',
-                    child: Text('Sell (catatan transaksi)'),
+                    child: Text(context.l10n.sellJournalSide),
                   ),
                 ],
                 onChanged: (value) => _side = value!,
               ),
               DropdownButtonFormField<String>(
                 initialValue: _outcome,
-                decoration: const InputDecoration(
-                  labelText: 'Status retrospektif',
+                decoration: InputDecoration(
+                  labelText: context.l10n.retrospectiveStatus,
                 ),
-                items: const [
-                  DropdownMenuItem(value: 'open', child: Text('Masih terbuka')),
+                items: [
+                  DropdownMenuItem(
+                    value: 'open',
+                    child: Text(context.l10n.open),
+                  ),
                   DropdownMenuItem(
                     value: 'win',
-                    child: Text('Outcome positif'),
+                    child: Text(context.l10n.positiveOutcome),
                   ),
                   DropdownMenuItem(
                     value: 'loss',
-                    child: Text('Outcome negatif'),
+                    child: Text(context.l10n.negativeOutcome),
                   ),
-                  DropdownMenuItem(value: 'breakeven', child: Text('Impas')),
+                  DropdownMenuItem(
+                    value: 'breakeven',
+                    child: Text(context.l10n.breakeven),
+                  ),
                   DropdownMenuItem(
                     value: 'skipped',
-                    child: Text('Tidak diambil'),
+                    child: Text(context.l10n.skippedTrade),
                   ),
                 ],
                 onChanged: (value) => _outcome = value!,
@@ -513,11 +549,11 @@ class _JournalDialogState extends State<_JournalDialog> {
                   ),
                 ],
               ),
-              _NumberField(controller: _quantity, label: 'Quantity'),
+              _NumberField(controller: _quantity, label: context.l10n.quantity),
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: const Icon(Icons.schedule_outlined),
-                title: const Text('Waktu transaksi'),
+                title: Text(context.l10n.tradeTime),
                 subtitle: Text(
                   DateFormat('dd MMM yyyy, HH:mm').format(_tradedAt),
                 ),
@@ -526,8 +562,8 @@ class _JournalDialogState extends State<_JournalDialog> {
               TextField(
                 controller: _mood,
                 maxLength: 100,
-                decoration: const InputDecoration(
-                  labelText: 'Kondisi diri (opsional)',
+                decoration: InputDecoration(
+                  labelText: context.l10n.moodOptional,
                 ),
               ),
               TextField(
@@ -535,8 +571,8 @@ class _JournalDialogState extends State<_JournalDialog> {
                 minLines: 2,
                 maxLines: 5,
                 maxLength: 5000,
-                decoration: const InputDecoration(
-                  labelText: 'Refleksi (opsional)',
+                decoration: InputDecoration(
+                  labelText: context.l10n.reflectionOptional,
                 ),
               ),
             ],
@@ -546,7 +582,7 @@ class _JournalDialogState extends State<_JournalDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Batal'),
+          child: Text(context.l10n.cancel),
         ),
         FilledButton(
           onPressed: () {
@@ -566,7 +602,7 @@ class _JournalDialogState extends State<_JournalDialog> {
               ),
             );
           },
-          child: const Text('Simpan'),
+          child: Text(context.l10n.save),
         ),
       ],
     );
@@ -649,7 +685,7 @@ class _NumberField extends StatelessWidget {
     validator: (value) =>
         value == null || value.trim().isEmpty || num.tryParse(value) != null
         ? null
-        : 'Masukkan angka yang valid.',
+        : context.l10n.enterValidNumber,
   );
 }
 
@@ -665,16 +701,16 @@ class _JournalStatsCard extends StatelessWidget {
         spacing: 24,
         runSpacing: 12,
         children: [
-          _Stat('Entri', '${stats.totals.entries}'),
+          _Stat(context.l10n.entries, '${stats.totals.entries}'),
           _Stat(
-            'Win rate',
+            context.l10n.winRate,
             stats.winRate == null ? '—' : '${(stats.winRate! * 100).round()}%',
           ),
-          _Stat('Menang', '${stats.totals.wins}'),
-          _Stat('Kalah', '${stats.totals.losses}'),
-          _Stat('Terbuka', '${stats.totals.open}'),
+          _Stat(context.l10n.wins, '${stats.totals.wins}'),
+          _Stat(context.l10n.losses, '${stats.totals.losses}'),
+          _Stat(context.l10n.open, '${stats.totals.open}'),
           _Stat(
-            'Avg P/L',
+            context.l10n.averageProfitLoss,
             stats.avgPnlPercent == null
                 ? '—'
                 : '${stats.avgPnlPercent!.toStringAsFixed(2)}%',

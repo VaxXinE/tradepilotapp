@@ -14,7 +14,8 @@ part 'update_user_quota_body.g.dart';
 /// * [customQuotaPerHour] - Positive integer to set an override, or null to clear it.
 /// * [customQuotaPerDay] - Positive integer to set an override, or null to clear it.
 @BuiltValue()
-abstract class UpdateUserQuotaBody implements Built<UpdateUserQuotaBody, UpdateUserQuotaBodyBuilder> {
+abstract class UpdateUserQuotaBody
+    implements Built<UpdateUserQuotaBody, UpdateUserQuotaBodyBuilder> {
   /// Positive integer to set an override, or null to clear it.
   @BuiltValueField(wireName: r'customQuotaPerHour')
   int get customQuotaPerHour;
@@ -25,18 +26,24 @@ abstract class UpdateUserQuotaBody implements Built<UpdateUserQuotaBody, UpdateU
 
   UpdateUserQuotaBody._();
 
-  factory UpdateUserQuotaBody([void updates(UpdateUserQuotaBodyBuilder b)]) = _$UpdateUserQuotaBody;
+  factory UpdateUserQuotaBody([void updates(UpdateUserQuotaBodyBuilder b)]) =
+      _$UpdateUserQuotaBody;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(UpdateUserQuotaBodyBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<UpdateUserQuotaBody> get serializer => _$UpdateUserQuotaBodySerializer();
+  static Serializer<UpdateUserQuotaBody> get serializer =>
+      _$UpdateUserQuotaBodySerializer();
 }
 
-class _$UpdateUserQuotaBodySerializer implements PrimitiveSerializer<UpdateUserQuotaBody> {
+class _$UpdateUserQuotaBodySerializer
+    implements PrimitiveSerializer<UpdateUserQuotaBody> {
   @override
-  final Iterable<Type> types = const [UpdateUserQuotaBody, _$UpdateUserQuotaBody];
+  final Iterable<Type> types = const [
+    UpdateUserQuotaBody,
+    _$UpdateUserQuotaBody
+  ];
 
   @override
   final String wireName = r'UpdateUserQuotaBody';
@@ -64,7 +71,9 @@ class _$UpdateUserQuotaBodySerializer implements PrimitiveSerializer<UpdateUserQ
     UpdateUserQuotaBody object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -121,4 +130,3 @@ class _$UpdateUserQuotaBodySerializer implements PrimitiveSerializer<UpdateUserQ
     return result.build();
   }
 }
-

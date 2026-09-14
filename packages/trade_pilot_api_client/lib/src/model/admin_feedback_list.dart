@@ -13,12 +13,13 @@ part 'admin_feedback_list.g.dart';
 /// AdminFeedbackList
 ///
 /// Properties:
-/// * [feedback] 
-/// * [total] 
-/// * [page] 
-/// * [limit] 
+/// * [feedback]
+/// * [total]
+/// * [page]
+/// * [limit]
 @BuiltValue()
-abstract class AdminFeedbackList implements Built<AdminFeedbackList, AdminFeedbackListBuilder> {
+abstract class AdminFeedbackList
+    implements Built<AdminFeedbackList, AdminFeedbackListBuilder> {
   @BuiltValueField(wireName: r'feedback')
   BuiltList<AdminFeedbackRow> get feedback;
 
@@ -33,16 +34,19 @@ abstract class AdminFeedbackList implements Built<AdminFeedbackList, AdminFeedba
 
   AdminFeedbackList._();
 
-  factory AdminFeedbackList([void updates(AdminFeedbackListBuilder b)]) = _$AdminFeedbackList;
+  factory AdminFeedbackList([void updates(AdminFeedbackListBuilder b)]) =
+      _$AdminFeedbackList;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AdminFeedbackListBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AdminFeedbackList> get serializer => _$AdminFeedbackListSerializer();
+  static Serializer<AdminFeedbackList> get serializer =>
+      _$AdminFeedbackListSerializer();
 }
 
-class _$AdminFeedbackListSerializer implements PrimitiveSerializer<AdminFeedbackList> {
+class _$AdminFeedbackListSerializer
+    implements PrimitiveSerializer<AdminFeedbackList> {
   @override
   final Iterable<Type> types = const [AdminFeedbackList, _$AdminFeedbackList];
 
@@ -82,7 +86,9 @@ class _$AdminFeedbackListSerializer implements PrimitiveSerializer<AdminFeedback
     AdminFeedbackList object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -100,7 +106,8 @@ class _$AdminFeedbackListSerializer implements PrimitiveSerializer<AdminFeedback
         case r'feedback':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltList, [FullType(AdminFeedbackRow)]),
+            specifiedType:
+                const FullType(BuiltList, [FullType(AdminFeedbackRow)]),
           ) as BuiltList<AdminFeedbackRow>;
           result.feedback.replace(valueDes);
           break;
@@ -153,4 +160,3 @@ class _$AdminFeedbackListSerializer implements PrimitiveSerializer<AdminFeedback
     return result.build();
   }
 }
-

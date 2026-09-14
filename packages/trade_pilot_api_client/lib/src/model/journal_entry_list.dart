@@ -13,24 +13,28 @@ part 'journal_entry_list.g.dart';
 /// JournalEntryList
 ///
 /// Properties:
-/// * [entries] 
+/// * [entries]
 @BuiltValue()
-abstract class JournalEntryList implements Built<JournalEntryList, JournalEntryListBuilder> {
+abstract class JournalEntryList
+    implements Built<JournalEntryList, JournalEntryListBuilder> {
   @BuiltValueField(wireName: r'entries')
   BuiltList<JournalEntry> get entries;
 
   JournalEntryList._();
 
-  factory JournalEntryList([void updates(JournalEntryListBuilder b)]) = _$JournalEntryList;
+  factory JournalEntryList([void updates(JournalEntryListBuilder b)]) =
+      _$JournalEntryList;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(JournalEntryListBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<JournalEntryList> get serializer => _$JournalEntryListSerializer();
+  static Serializer<JournalEntryList> get serializer =>
+      _$JournalEntryListSerializer();
 }
 
-class _$JournalEntryListSerializer implements PrimitiveSerializer<JournalEntryList> {
+class _$JournalEntryListSerializer
+    implements PrimitiveSerializer<JournalEntryList> {
   @override
   final Iterable<Type> types = const [JournalEntryList, _$JournalEntryList];
 
@@ -55,7 +59,9 @@ class _$JournalEntryListSerializer implements PrimitiveSerializer<JournalEntryLi
     JournalEntryList object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -105,4 +111,3 @@ class _$JournalEntryListSerializer implements PrimitiveSerializer<JournalEntryLi
     return result.build();
   }
 }
-

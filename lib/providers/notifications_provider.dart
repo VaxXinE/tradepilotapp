@@ -8,6 +8,7 @@ import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 import 'package:trade_pilot_api_client/trade_pilot_client.dart';
 
 import 'auth_provider.dart';
+import '../l10n/app_messages.dart';
 
 enum NotificationPreferenceKey {
   expiry,
@@ -192,7 +193,7 @@ class NotificationsProvider extends ChangeNotifier {
       // Pertahankan cache terakhir.
       if (_isCurrentSession(epoch: epoch, userId: userId) &&
           requestId == _loadRequestId) {
-        loadError = 'Notifikasi belum dapat dimuat. Tarik untuk mencoba lagi.';
+        loadError = AppMessages.l10n.errNotificationsLoadFailed;
       }
     } finally {
       if (requestId == _loadRequestId) {
@@ -331,7 +332,7 @@ class NotificationsProvider extends ChangeNotifier {
       preferencesError = null;
     } catch (_) {
       if (_isCurrentSession(epoch: epoch, userId: userId)) {
-        preferencesError = 'Gagal memuat preferensi notifikasi.';
+        preferencesError = AppMessages.l10n.errNotificationPrefsLoadFailed;
       }
     } finally {
       if (requestId == _prefsRequestId) {
@@ -437,7 +438,7 @@ class NotificationsProvider extends ChangeNotifier {
       return true;
     } catch (_) {
       if (_isCurrentSession(epoch: epoch, userId: userId)) {
-        preferencesError = 'Gagal menyimpan preferensi notifikasi.';
+        preferencesError = AppMessages.l10n.errNotificationPrefsSaveFailed;
       }
 
       return false;
@@ -508,7 +509,7 @@ class NotificationsProvider extends ChangeNotifier {
       return true;
     } catch (_) {
       if (_isCurrentSession(epoch: epoch, userId: userId)) {
-        preferencesError = 'Gagal menyimpan pengingat sesi market.';
+        preferencesError = AppMessages.l10n.errMarketSessionReminderSaveFailed;
       }
 
       return false;
@@ -517,6 +518,63 @@ class NotificationsProvider extends ChangeNotifier {
           _isCurrentSession(epoch: epoch, userId: userId)) {
         isSavingPreferences = false;
 
+        notifyListeners();
+      }
+    }
+  }
+
+  Future<bool> updateQuietHours({
+    bool? enabled,
+    String? start,
+    String? end,
+    String? timezone,
+  }) async {
+    final userId = _currentUserId;
+    final validTime = RegExp(r'^(?:[01]\d|2[0-3]):[0-5]\d$');
+    final validTimezone = RegExp(r'^(?:UTC|[A-Za-z_+-]+/[A-Za-z0-9_+/-]+)$');
+
+    if (userId == null ||
+        isSavingPreferences ||
+        (enabled == null && start == null && end == null && timezone == null) ||
+        (start != null && !validTime.hasMatch(start)) ||
+        (end != null && !validTime.hasMatch(end)) ||
+        (timezone != null && !validTimezone.hasMatch(timezone))) {
+      return false;
+    }
+
+    final epoch = _sessionEpoch;
+    final mutationId = ++_prefsMutationId;
+    isSavingPreferences = true;
+    preferencesError = null;
+    notifyListeners();
+
+    try {
+      final response = await _client.push.updatePushPrefs(
+        pushPrefsUpdate: PushPrefsUpdate(
+          (builder) => builder
+            ..quietHoursEnabled = enabled
+            ..quietHoursStart = start
+            ..quietHoursEnd = end
+            ..notificationTimezone = timezone,
+        ),
+      );
+
+      if (!_isCurrentSession(epoch: epoch, userId: userId) ||
+          mutationId != _prefsMutationId) {
+        return false;
+      }
+
+      preferences = response.data;
+      return preferences != null;
+    } catch (_) {
+      if (_isCurrentSession(epoch: epoch, userId: userId)) {
+        preferencesError = AppMessages.l10n.errQuietHoursSaveFailed;
+      }
+      return false;
+    } finally {
+      if (mutationId == _prefsMutationId &&
+          _isCurrentSession(epoch: epoch, userId: userId)) {
+        isSavingPreferences = false;
         notifyListeners();
       }
     }

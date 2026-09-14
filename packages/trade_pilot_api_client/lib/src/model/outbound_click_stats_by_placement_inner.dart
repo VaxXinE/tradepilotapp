@@ -11,11 +11,14 @@ part 'outbound_click_stats_by_placement_inner.g.dart';
 /// OutboundClickStatsByPlacementInner
 ///
 /// Properties:
-/// * [placement] 
-/// * [target] 
-/// * [count] 
+/// * [placement]
+/// * [target]
+/// * [count]
 @BuiltValue()
-abstract class OutboundClickStatsByPlacementInner implements Built<OutboundClickStatsByPlacementInner, OutboundClickStatsByPlacementInnerBuilder> {
+abstract class OutboundClickStatsByPlacementInner
+    implements
+        Built<OutboundClickStatsByPlacementInner,
+            OutboundClickStatsByPlacementInnerBuilder> {
   @BuiltValueField(wireName: r'placement')
   String get placement;
 
@@ -27,18 +30,25 @@ abstract class OutboundClickStatsByPlacementInner implements Built<OutboundClick
 
   OutboundClickStatsByPlacementInner._();
 
-  factory OutboundClickStatsByPlacementInner([void updates(OutboundClickStatsByPlacementInnerBuilder b)]) = _$OutboundClickStatsByPlacementInner;
+  factory OutboundClickStatsByPlacementInner(
+          [void updates(OutboundClickStatsByPlacementInnerBuilder b)]) =
+      _$OutboundClickStatsByPlacementInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(OutboundClickStatsByPlacementInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<OutboundClickStatsByPlacementInner> get serializer => _$OutboundClickStatsByPlacementInnerSerializer();
+  static Serializer<OutboundClickStatsByPlacementInner> get serializer =>
+      _$OutboundClickStatsByPlacementInnerSerializer();
 }
 
-class _$OutboundClickStatsByPlacementInnerSerializer implements PrimitiveSerializer<OutboundClickStatsByPlacementInner> {
+class _$OutboundClickStatsByPlacementInnerSerializer
+    implements PrimitiveSerializer<OutboundClickStatsByPlacementInner> {
   @override
-  final Iterable<Type> types = const [OutboundClickStatsByPlacementInner, _$OutboundClickStatsByPlacementInner];
+  final Iterable<Type> types = const [
+    OutboundClickStatsByPlacementInner,
+    _$OutboundClickStatsByPlacementInner
+  ];
 
   @override
   final String wireName = r'OutboundClickStatsByPlacementInner';
@@ -71,7 +81,9 @@ class _$OutboundClickStatsByPlacementInnerSerializer implements PrimitiveSeriali
     OutboundClickStatsByPlacementInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -135,4 +147,3 @@ class _$OutboundClickStatsByPlacementInnerSerializer implements PrimitiveSeriali
     return result.build();
   }
 }
-

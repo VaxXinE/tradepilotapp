@@ -11,10 +11,13 @@ part 'analytics_usage_stats_country_breakdown_inner.g.dart';
 /// AnalyticsUsageStatsCountryBreakdownInner
 ///
 /// Properties:
-/// * [country] 
-/// * [count] 
+/// * [country]
+/// * [count]
 @BuiltValue()
-abstract class AnalyticsUsageStatsCountryBreakdownInner implements Built<AnalyticsUsageStatsCountryBreakdownInner, AnalyticsUsageStatsCountryBreakdownInnerBuilder> {
+abstract class AnalyticsUsageStatsCountryBreakdownInner
+    implements
+        Built<AnalyticsUsageStatsCountryBreakdownInner,
+            AnalyticsUsageStatsCountryBreakdownInnerBuilder> {
   @BuiltValueField(wireName: r'country')
   String get country;
 
@@ -23,18 +26,25 @@ abstract class AnalyticsUsageStatsCountryBreakdownInner implements Built<Analyti
 
   AnalyticsUsageStatsCountryBreakdownInner._();
 
-  factory AnalyticsUsageStatsCountryBreakdownInner([void updates(AnalyticsUsageStatsCountryBreakdownInnerBuilder b)]) = _$AnalyticsUsageStatsCountryBreakdownInner;
+  factory AnalyticsUsageStatsCountryBreakdownInner(
+          [void updates(AnalyticsUsageStatsCountryBreakdownInnerBuilder b)]) =
+      _$AnalyticsUsageStatsCountryBreakdownInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AnalyticsUsageStatsCountryBreakdownInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AnalyticsUsageStatsCountryBreakdownInner> get serializer => _$AnalyticsUsageStatsCountryBreakdownInnerSerializer();
+  static Serializer<AnalyticsUsageStatsCountryBreakdownInner> get serializer =>
+      _$AnalyticsUsageStatsCountryBreakdownInnerSerializer();
 }
 
-class _$AnalyticsUsageStatsCountryBreakdownInnerSerializer implements PrimitiveSerializer<AnalyticsUsageStatsCountryBreakdownInner> {
+class _$AnalyticsUsageStatsCountryBreakdownInnerSerializer
+    implements PrimitiveSerializer<AnalyticsUsageStatsCountryBreakdownInner> {
   @override
-  final Iterable<Type> types = const [AnalyticsUsageStatsCountryBreakdownInner, _$AnalyticsUsageStatsCountryBreakdownInner];
+  final Iterable<Type> types = const [
+    AnalyticsUsageStatsCountryBreakdownInner,
+    _$AnalyticsUsageStatsCountryBreakdownInner
+  ];
 
   @override
   final String wireName = r'AnalyticsUsageStatsCountryBreakdownInner';
@@ -62,7 +72,9 @@ class _$AnalyticsUsageStatsCountryBreakdownInnerSerializer implements PrimitiveS
     AnalyticsUsageStatsCountryBreakdownInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -119,4 +131,3 @@ class _$AnalyticsUsageStatsCountryBreakdownInnerSerializer implements PrimitiveS
     return result.build();
   }
 }
-

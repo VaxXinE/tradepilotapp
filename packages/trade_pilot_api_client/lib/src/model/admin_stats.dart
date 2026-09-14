@@ -14,13 +14,13 @@ part 'admin_stats.g.dart';
 /// AdminStats
 ///
 /// Properties:
-/// * [totalUsersToday] 
-/// * [totalAnalysesToday] 
-/// * [totalAnalysesThisWeek] 
-/// * [totalAnalysesThisMonth] 
-/// * [totalUsers] 
-/// * [instrumentBreakdown] 
-/// * [modeBreakdown] 
+/// * [totalUsersToday]
+/// * [totalAnalysesToday]
+/// * [totalAnalysesThisWeek]
+/// * [totalAnalysesThisMonth]
+/// * [totalUsers]
+/// * [instrumentBreakdown]
+/// * [modeBreakdown]
 @BuiltValue()
 abstract class AdminStats implements Built<AdminStats, AdminStatsBuilder> {
   @BuiltValueField(wireName: r'totalUsersToday')
@@ -95,7 +95,8 @@ class _$AdminStatsSerializer implements PrimitiveSerializer<AdminStats> {
     yield r'instrumentBreakdown';
     yield serializers.serialize(
       object.instrumentBreakdown,
-      specifiedType: const FullType(BuiltList, [FullType(PersonalAnalyticsTopInstrumentsInner)]),
+      specifiedType: const FullType(
+          BuiltList, [FullType(PersonalAnalyticsTopInstrumentsInner)]),
     );
     yield r'modeBreakdown';
     yield serializers.serialize(
@@ -110,7 +111,9 @@ class _$AdminStatsSerializer implements PrimitiveSerializer<AdminStats> {
     AdminStats object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -163,7 +166,8 @@ class _$AdminStatsSerializer implements PrimitiveSerializer<AdminStats> {
         case r'instrumentBreakdown':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltList, [FullType(PersonalAnalyticsTopInstrumentsInner)]),
+            specifiedType: const FullType(
+                BuiltList, [FullType(PersonalAnalyticsTopInstrumentsInner)]),
           ) as BuiltList<PersonalAnalyticsTopInstrumentsInner>;
           result.instrumentBreakdown.replace(valueDes);
           break;
@@ -202,4 +206,3 @@ class _$AdminStatsSerializer implements PrimitiveSerializer<AdminStats> {
     return result.build();
   }
 }
-

@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 
 class ErrorBanner extends StatelessWidget {
-  const ErrorBanner({super.key, required this.message});
+  const ErrorBanner({
+    super.key,
+    required this.message,
+    this.onRetry,
+    this.retryLabel,
+  }) : assert(onRetry == null || retryLabel != null);
 
   final String? message;
+  final VoidCallback? onRetry;
+  final String? retryLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -24,9 +31,24 @@ class ErrorBanner extends StatelessWidget {
           Icon(Icons.error_outline_rounded, size: 18, color: error),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(
-              message!,
-              style: TextStyle(color: error, fontSize: 13.5),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(message!, style: TextStyle(color: error, fontSize: 13.5)),
+                if (onRetry != null) ...[
+                  const SizedBox(height: 4),
+                  TextButton(
+                    onPressed: onRetry,
+                    style: TextButton.styleFrom(
+                      foregroundColor: error,
+                      padding: EdgeInsets.zero,
+                      minimumSize: const Size(48, 40),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: Text(retryLabel!),
+                  ),
+                ],
+              ],
             ),
           ),
         ],

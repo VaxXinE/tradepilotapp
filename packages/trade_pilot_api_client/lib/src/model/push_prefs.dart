@@ -12,14 +12,14 @@ part 'push_prefs.g.dart';
 /// PushPrefs
 ///
 /// Properties:
-/// * [pushExpiry] 
-/// * [pushBroadcast] 
-/// * [pushDailySummary] 
-/// * [pushMarketNews] 
-/// * [pushCalendarEvents] 
-/// * [pushPriceAnomaly] 
-/// * [pushWeeklyRecap] 
-/// * [pushSignalFlip] 
+/// * [pushExpiry]
+/// * [pushBroadcast]
+/// * [pushDailySummary]
+/// * [pushMarketNews]
+/// * [pushCalendarEvents]
+/// * [pushPriceAnomaly]
+/// * [pushWeeklyRecap]
+/// * [pushSignalFlip]
 /// * [marketOpenSessions] - FX sessions the user wants a 5-min pre-open ping for. Empty = off.
 /// * [pushDormancyNudge] - Opt-in toggle for the weekly \"we miss you\" nudge after 7+ days idle.
 /// * [pushOnboarding] - One-shot 24h-after-signup empty-watchlist nudge.
@@ -28,6 +28,16 @@ part 'push_prefs.g.dart';
 /// * [guardrailOvertrading] - Show soft warning when the user crosses the per-hour or per-day analysis count.
 /// * [guardrailHighRisk] - Show soft warning when a high-impact event for the instrument prints within 30 min.
 /// * [coolingOffEnabled] - Opt-in 30-minute countdown after a significant loss before showing the analyse button warning.
+/// * [pushAnalysisCompleted] - OS push when an AI analysis finishes processing.
+/// * [pushTpSlHit] - OS push when a tracked trade plan's TP or SL level is crossed.
+/// * [pushLoginAlert] - OS push on a new login. The in-app notification is always created regardless of this toggle.
+/// * [nativePushEnabled] - Master switch for native (FCM) push delivery to registered mobile devices.
+/// * [webPushEnabled] - Master switch for Web Push (VAPID) delivery to subscribed browsers.
+/// * [quietHoursEnabled] - When false, quiet hours are disabled entirely for this user.
+/// * [quietHoursStart] - HH:MM 24h local time quiet hours begin.
+/// * [quietHoursEnd] - HH:MM 24h local time quiet hours end.
+/// * [notificationTimezone] - IANA timezone quietHoursStart/quietHoursEnd are interpreted in.
+/// * [progressionNotificationsEnabled] - Enable personal progression notifications.
 @BuiltValue()
 abstract class PushPrefs implements Built<PushPrefs, PushPrefsBuilder> {
   @BuiltValueField(wireName: r'pushExpiry')
@@ -86,6 +96,46 @@ abstract class PushPrefs implements Built<PushPrefs, PushPrefsBuilder> {
   /// Opt-in 30-minute countdown after a significant loss before showing the analyse button warning.
   @BuiltValueField(wireName: r'coolingOffEnabled')
   bool get coolingOffEnabled;
+
+  /// OS push when an AI analysis finishes processing.
+  @BuiltValueField(wireName: r'pushAnalysisCompleted')
+  bool get pushAnalysisCompleted;
+
+  /// OS push when a tracked trade plan's TP or SL level is crossed.
+  @BuiltValueField(wireName: r'pushTpSlHit')
+  bool get pushTpSlHit;
+
+  /// OS push on a new login. The in-app notification is always created regardless of this toggle.
+  @BuiltValueField(wireName: r'pushLoginAlert')
+  bool get pushLoginAlert;
+
+  /// Master switch for native (FCM) push delivery to registered mobile devices.
+  @BuiltValueField(wireName: r'nativePushEnabled')
+  bool get nativePushEnabled;
+
+  /// Master switch for Web Push (VAPID) delivery to subscribed browsers.
+  @BuiltValueField(wireName: r'webPushEnabled')
+  bool get webPushEnabled;
+
+  /// When false, quiet hours are disabled entirely for this user.
+  @BuiltValueField(wireName: r'quietHoursEnabled')
+  bool get quietHoursEnabled;
+
+  /// HH:MM 24h local time quiet hours begin.
+  @BuiltValueField(wireName: r'quietHoursStart')
+  String get quietHoursStart;
+
+  /// HH:MM 24h local time quiet hours end.
+  @BuiltValueField(wireName: r'quietHoursEnd')
+  String get quietHoursEnd;
+
+  /// IANA timezone quietHoursStart/quietHoursEnd are interpreted in.
+  @BuiltValueField(wireName: r'notificationTimezone')
+  String get notificationTimezone;
+
+  /// Enable personal progression notifications.
+  @BuiltValueField(wireName: r'progressionNotificationsEnabled')
+  bool get progressionNotificationsEnabled;
 
   PushPrefs._();
 
@@ -153,7 +203,8 @@ class _$PushPrefsSerializer implements PrimitiveSerializer<PushPrefs> {
     yield r'marketOpenSessions';
     yield serializers.serialize(
       object.marketOpenSessions,
-      specifiedType: const FullType(BuiltList, [FullType(PushPrefsMarketOpenSessionsEnum)]),
+      specifiedType: const FullType(
+          BuiltList, [FullType(PushPrefsMarketOpenSessionsEnum)]),
     );
     yield r'pushDormancyNudge';
     yield serializers.serialize(
@@ -192,6 +243,56 @@ class _$PushPrefsSerializer implements PrimitiveSerializer<PushPrefs> {
       object.coolingOffEnabled,
       specifiedType: const FullType(bool),
     );
+    yield r'pushAnalysisCompleted';
+    yield serializers.serialize(
+      object.pushAnalysisCompleted,
+      specifiedType: const FullType(bool),
+    );
+    yield r'pushTpSlHit';
+    yield serializers.serialize(
+      object.pushTpSlHit,
+      specifiedType: const FullType(bool),
+    );
+    yield r'pushLoginAlert';
+    yield serializers.serialize(
+      object.pushLoginAlert,
+      specifiedType: const FullType(bool),
+    );
+    yield r'nativePushEnabled';
+    yield serializers.serialize(
+      object.nativePushEnabled,
+      specifiedType: const FullType(bool),
+    );
+    yield r'webPushEnabled';
+    yield serializers.serialize(
+      object.webPushEnabled,
+      specifiedType: const FullType(bool),
+    );
+    yield r'quietHoursEnabled';
+    yield serializers.serialize(
+      object.quietHoursEnabled,
+      specifiedType: const FullType(bool),
+    );
+    yield r'quietHoursStart';
+    yield serializers.serialize(
+      object.quietHoursStart,
+      specifiedType: const FullType(String),
+    );
+    yield r'quietHoursEnd';
+    yield serializers.serialize(
+      object.quietHoursEnd,
+      specifiedType: const FullType(String),
+    );
+    yield r'notificationTimezone';
+    yield serializers.serialize(
+      object.notificationTimezone,
+      specifiedType: const FullType(String),
+    );
+    yield r'progressionNotificationsEnabled';
+    yield serializers.serialize(
+      object.progressionNotificationsEnabled,
+      specifiedType: const FullType(bool),
+    );
   }
 
   @override
@@ -200,7 +301,9 @@ class _$PushPrefsSerializer implements PrimitiveSerializer<PushPrefs> {
     PushPrefs object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -274,7 +377,8 @@ class _$PushPrefsSerializer implements PrimitiveSerializer<PushPrefs> {
         case r'marketOpenSessions':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltList, [FullType(PushPrefsMarketOpenSessionsEnum)]),
+            specifiedType: const FullType(
+                BuiltList, [FullType(PushPrefsMarketOpenSessionsEnum)]),
           ) as BuiltList<PushPrefsMarketOpenSessionsEnum>;
           result.marketOpenSessions.replace(valueDes);
           break;
@@ -328,6 +432,76 @@ class _$PushPrefsSerializer implements PrimitiveSerializer<PushPrefs> {
           ) as bool;
           result.coolingOffEnabled = valueDes;
           break;
+        case r'pushAnalysisCompleted':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(bool),
+          ) as bool;
+          result.pushAnalysisCompleted = valueDes;
+          break;
+        case r'pushTpSlHit':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(bool),
+          ) as bool;
+          result.pushTpSlHit = valueDes;
+          break;
+        case r'pushLoginAlert':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(bool),
+          ) as bool;
+          result.pushLoginAlert = valueDes;
+          break;
+        case r'nativePushEnabled':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(bool),
+          ) as bool;
+          result.nativePushEnabled = valueDes;
+          break;
+        case r'webPushEnabled':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(bool),
+          ) as bool;
+          result.webPushEnabled = valueDes;
+          break;
+        case r'quietHoursEnabled':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(bool),
+          ) as bool;
+          result.quietHoursEnabled = valueDes;
+          break;
+        case r'quietHoursStart':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.quietHoursStart = valueDes;
+          break;
+        case r'quietHoursEnd':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.quietHoursEnd = valueDes;
+          break;
+        case r'notificationTimezone':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.notificationTimezone = valueDes;
+          break;
+        case r'progressionNotificationsEnabled':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(bool),
+          ) as bool;
+          result.progressionNotificationsEnabled = valueDes;
+          break;
         default:
           unhandled.add(key);
           unhandled.add(value);
@@ -358,19 +532,23 @@ class _$PushPrefsSerializer implements PrimitiveSerializer<PushPrefs> {
 }
 
 class PushPrefsMarketOpenSessionsEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'tokyo')
-  static const PushPrefsMarketOpenSessionsEnum tokyo = _$pushPrefsMarketOpenSessionsEnum_tokyo;
+  static const PushPrefsMarketOpenSessionsEnum tokyo =
+      _$pushPrefsMarketOpenSessionsEnum_tokyo;
   @BuiltValueEnumConst(wireName: r'london')
-  static const PushPrefsMarketOpenSessionsEnum london = _$pushPrefsMarketOpenSessionsEnum_london;
+  static const PushPrefsMarketOpenSessionsEnum london =
+      _$pushPrefsMarketOpenSessionsEnum_london;
   @BuiltValueEnumConst(wireName: r'newyork')
-  static const PushPrefsMarketOpenSessionsEnum newyork = _$pushPrefsMarketOpenSessionsEnum_newyork;
+  static const PushPrefsMarketOpenSessionsEnum newyork =
+      _$pushPrefsMarketOpenSessionsEnum_newyork;
 
-  static Serializer<PushPrefsMarketOpenSessionsEnum> get serializer => _$pushPrefsMarketOpenSessionsEnumSerializer;
+  static Serializer<PushPrefsMarketOpenSessionsEnum> get serializer =>
+      _$pushPrefsMarketOpenSessionsEnumSerializer;
 
-  const PushPrefsMarketOpenSessionsEnum._(String name): super(name);
+  const PushPrefsMarketOpenSessionsEnum._(String name) : super(name);
 
-  static BuiltSet<PushPrefsMarketOpenSessionsEnum> get values => _$pushPrefsMarketOpenSessionsEnumValues;
-  static PushPrefsMarketOpenSessionsEnum valueOf(String name) => _$pushPrefsMarketOpenSessionsEnumValueOf(name);
+  static BuiltSet<PushPrefsMarketOpenSessionsEnum> get values =>
+      _$pushPrefsMarketOpenSessionsEnumValues;
+  static PushPrefsMarketOpenSessionsEnum valueOf(String name) =>
+      _$pushPrefsMarketOpenSessionsEnumValueOf(name);
 }
-

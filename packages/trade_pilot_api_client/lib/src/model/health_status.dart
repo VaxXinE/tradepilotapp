@@ -11,9 +11,10 @@ part 'health_status.g.dart';
 /// HealthStatus
 ///
 /// Properties:
-/// * [status] 
+/// * [status]
 @BuiltValue()
-abstract class HealthStatus implements Built<HealthStatus, HealthStatusBuilder> {
+abstract class HealthStatus
+    implements Built<HealthStatus, HealthStatusBuilder> {
   @BuiltValueField(wireName: r'status')
   String get status;
 
@@ -53,7 +54,9 @@ class _$HealthStatusSerializer implements PrimitiveSerializer<HealthStatus> {
     HealthStatus object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -103,4 +106,3 @@ class _$HealthStatusSerializer implements PrimitiveSerializer<HealthStatus> {
     return result.build();
   }
 }
-

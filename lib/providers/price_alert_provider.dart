@@ -6,6 +6,7 @@ import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
 import '../repositories/price_alert_repository.dart';
 import 'auth_provider.dart';
+import '../l10n/app_messages.dart';
 
 class PriceAlertProvider extends ChangeNotifier {
   PriceAlertProvider(this._authProvider, this._repository) {
@@ -63,7 +64,10 @@ class PriceAlertProvider extends ChangeNotifier {
       _error = null;
     } catch (error) {
       if (_isCurrent(epoch, userId) && requestId == _loadRequestId) {
-        _error = _friendlyError(error, 'Gagal memuat price alert.');
+        _error = _friendlyError(
+          error,
+          AppMessages.l10n.errPriceAlertsLoadFailed,
+        );
       }
     } finally {
       if (_isCurrent(epoch, userId) && requestId == _loadRequestId) {
@@ -84,13 +88,13 @@ class PriceAlertProvider extends ChangeNotifier {
     final normalized = instrument.trim().toUpperCase();
 
     if (normalized.isEmpty) {
-      _error = 'Instrumen tidak boleh kosong.';
+      _error = AppMessages.l10n.errInstrumentRequired;
       notifyListeners();
       return false;
     }
 
     if (!targetPrice.isFinite || targetPrice <= 0) {
-      _error = 'Target harga harus lebih besar dari 0.';
+      _error = AppMessages.l10n.errTargetPricePositive;
       notifyListeners();
       return false;
     }
@@ -98,7 +102,7 @@ class PriceAlertProvider extends ChangeNotifier {
     final trimmedNote = note?.trim();
 
     if (trimmedNote != null && trimmedNote.length > 200) {
-      _error = 'Catatan maksimal 200 karakter.';
+      _error = AppMessages.l10n.errNoteTooLong200;
       notifyListeners();
       return false;
     }
@@ -106,7 +110,7 @@ class PriceAlertProvider extends ChangeNotifier {
     final userId = _currentUserId;
 
     if (userId == null) {
-      _error = 'Sesi login sudah berakhir.';
+      _error = AppMessages.l10n.errSessionExpired;
       notifyListeners();
       return false;
     }
@@ -143,7 +147,10 @@ class PriceAlertProvider extends ChangeNotifier {
       return true;
     } catch (error) {
       if (isCurrent()) {
-        _error = _friendlyError(error, 'Gagal membuat price alert.');
+        _error = _friendlyError(
+          error,
+          AppMessages.l10n.errPriceAlertCreateFailed,
+        );
         notifyListeners();
       }
       return false;
@@ -159,7 +166,7 @@ class PriceAlertProvider extends ChangeNotifier {
     final userId = _currentUserId;
 
     if (userId == null) {
-      _error = 'Sesi login sudah berakhir.';
+      _error = AppMessages.l10n.errSessionExpired;
       notifyListeners();
       return false;
     }
@@ -186,7 +193,10 @@ class PriceAlertProvider extends ChangeNotifier {
       return true;
     } catch (error) {
       if (isCurrent()) {
-        _error = _friendlyError(error, 'Gagal menghapus price alert.');
+        _error = _friendlyError(
+          error,
+          AppMessages.l10n.errPriceAlertDeleteFailed,
+        );
         notifyListeners();
       }
       return false;
@@ -253,7 +263,7 @@ class PriceAlertProvider extends ChangeNotifier {
         }
       }
       if (error.response?.statusCode == 401) {
-        return 'Sesi login sudah berakhir.';
+        return AppMessages.l10n.errSessionExpired;
       }
     }
 

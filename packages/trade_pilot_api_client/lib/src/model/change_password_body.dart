@@ -11,10 +11,11 @@ part 'change_password_body.g.dart';
 /// ChangePasswordBody
 ///
 /// Properties:
-/// * [currentPassword] 
-/// * [newPassword] 
+/// * [currentPassword]
+/// * [newPassword]
 @BuiltValue()
-abstract class ChangePasswordBody implements Built<ChangePasswordBody, ChangePasswordBodyBuilder> {
+abstract class ChangePasswordBody
+    implements Built<ChangePasswordBody, ChangePasswordBodyBuilder> {
   @BuiltValueField(wireName: r'currentPassword')
   String get currentPassword;
 
@@ -23,16 +24,19 @@ abstract class ChangePasswordBody implements Built<ChangePasswordBody, ChangePas
 
   ChangePasswordBody._();
 
-  factory ChangePasswordBody([void updates(ChangePasswordBodyBuilder b)]) = _$ChangePasswordBody;
+  factory ChangePasswordBody([void updates(ChangePasswordBodyBuilder b)]) =
+      _$ChangePasswordBody;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ChangePasswordBodyBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ChangePasswordBody> get serializer => _$ChangePasswordBodySerializer();
+  static Serializer<ChangePasswordBody> get serializer =>
+      _$ChangePasswordBodySerializer();
 }
 
-class _$ChangePasswordBodySerializer implements PrimitiveSerializer<ChangePasswordBody> {
+class _$ChangePasswordBodySerializer
+    implements PrimitiveSerializer<ChangePasswordBody> {
   @override
   final Iterable<Type> types = const [ChangePasswordBody, _$ChangePasswordBody];
 
@@ -62,7 +66,9 @@ class _$ChangePasswordBodySerializer implements PrimitiveSerializer<ChangePasswo
     ChangePasswordBody object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -119,4 +125,3 @@ class _$ChangePasswordBodySerializer implements PrimitiveSerializer<ChangePasswo
     return result.build();
   }
 }
-

@@ -11,12 +11,13 @@ part 'watchlist_item.g.dart';
 /// WatchlistItem
 ///
 /// Properties:
-/// * [instrument] 
-/// * [addedAt] 
+/// * [instrument]
+/// * [addedAt]
 /// * [mostRecentAnalysisId] - ID of the user's most recent analysis for this instrument, or null if none exists.
 /// * [mostRecentAnalysisAt] - Created-at of the most recent analysis for this instrument, or null if none exists.
 @BuiltValue()
-abstract class WatchlistItem implements Built<WatchlistItem, WatchlistItemBuilder> {
+abstract class WatchlistItem
+    implements Built<WatchlistItem, WatchlistItemBuilder> {
   @BuiltValueField(wireName: r'instrument')
   String get instrument;
 
@@ -33,13 +34,15 @@ abstract class WatchlistItem implements Built<WatchlistItem, WatchlistItemBuilde
 
   WatchlistItem._();
 
-  factory WatchlistItem([void updates(WatchlistItemBuilder b)]) = _$WatchlistItem;
+  factory WatchlistItem([void updates(WatchlistItemBuilder b)]) =
+      _$WatchlistItem;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(WatchlistItemBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<WatchlistItem> get serializer => _$WatchlistItemSerializer();
+  static Serializer<WatchlistItem> get serializer =>
+      _$WatchlistItemSerializer();
 }
 
 class _$WatchlistItemSerializer implements PrimitiveSerializer<WatchlistItem> {
@@ -86,7 +89,9 @@ class _$WatchlistItemSerializer implements PrimitiveSerializer<WatchlistItem> {
     WatchlistItem object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -159,4 +164,3 @@ class _$WatchlistItemSerializer implements PrimitiveSerializer<WatchlistItem> {
     return result.build();
   }
 }
-

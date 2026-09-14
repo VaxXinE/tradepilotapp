@@ -12,12 +12,13 @@ part 'create_analysis_body.g.dart';
 /// CreateAnalysisBody
 ///
 /// Properties:
-/// * [instrument] 
-/// * [timeframe] 
-/// * [userInputContext] 
-/// * [mode] 
+/// * [instrument]
+/// * [timeframe]
+/// * [userInputContext]
+/// * [mode]
 @BuiltValue()
-abstract class CreateAnalysisBody implements Built<CreateAnalysisBody, CreateAnalysisBodyBuilder> {
+abstract class CreateAnalysisBody
+    implements Built<CreateAnalysisBody, CreateAnalysisBodyBuilder> {
   @BuiltValueField(wireName: r'instrument')
   String get instrument;
 
@@ -34,16 +35,19 @@ abstract class CreateAnalysisBody implements Built<CreateAnalysisBody, CreateAna
 
   CreateAnalysisBody._();
 
-  factory CreateAnalysisBody([void updates(CreateAnalysisBodyBuilder b)]) = _$CreateAnalysisBody;
+  factory CreateAnalysisBody([void updates(CreateAnalysisBodyBuilder b)]) =
+      _$CreateAnalysisBody;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(CreateAnalysisBodyBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<CreateAnalysisBody> get serializer => _$CreateAnalysisBodySerializer();
+  static Serializer<CreateAnalysisBody> get serializer =>
+      _$CreateAnalysisBodySerializer();
 }
 
-class _$CreateAnalysisBodySerializer implements PrimitiveSerializer<CreateAnalysisBody> {
+class _$CreateAnalysisBodySerializer
+    implements PrimitiveSerializer<CreateAnalysisBody> {
   @override
   final Iterable<Type> types = const [CreateAnalysisBody, _$CreateAnalysisBody];
 
@@ -85,7 +89,9 @@ class _$CreateAnalysisBodySerializer implements PrimitiveSerializer<CreateAnalys
     CreateAnalysisBody object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -159,44 +165,57 @@ class _$CreateAnalysisBodySerializer implements PrimitiveSerializer<CreateAnalys
 }
 
 class CreateAnalysisBodyTimeframeEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'1m')
-  static const CreateAnalysisBodyTimeframeEnum n1m = _$createAnalysisBodyTimeframeEnum_n1m;
+  static const CreateAnalysisBodyTimeframeEnum n1m =
+      _$createAnalysisBodyTimeframeEnum_n1m;
   @BuiltValueEnumConst(wireName: r'5m')
-  static const CreateAnalysisBodyTimeframeEnum n5m = _$createAnalysisBodyTimeframeEnum_n5m;
+  static const CreateAnalysisBodyTimeframeEnum n5m =
+      _$createAnalysisBodyTimeframeEnum_n5m;
   @BuiltValueEnumConst(wireName: r'15m')
-  static const CreateAnalysisBodyTimeframeEnum n15m = _$createAnalysisBodyTimeframeEnum_n15m;
+  static const CreateAnalysisBodyTimeframeEnum n15m =
+      _$createAnalysisBodyTimeframeEnum_n15m;
   @BuiltValueEnumConst(wireName: r'30m')
-  static const CreateAnalysisBodyTimeframeEnum n30m = _$createAnalysisBodyTimeframeEnum_n30m;
+  static const CreateAnalysisBodyTimeframeEnum n30m =
+      _$createAnalysisBodyTimeframeEnum_n30m;
   @BuiltValueEnumConst(wireName: r'1h')
-  static const CreateAnalysisBodyTimeframeEnum n1h = _$createAnalysisBodyTimeframeEnum_n1h;
+  static const CreateAnalysisBodyTimeframeEnum n1h =
+      _$createAnalysisBodyTimeframeEnum_n1h;
   @BuiltValueEnumConst(wireName: r'4h')
-  static const CreateAnalysisBodyTimeframeEnum n4h = _$createAnalysisBodyTimeframeEnum_n4h;
+  static const CreateAnalysisBodyTimeframeEnum n4h =
+      _$createAnalysisBodyTimeframeEnum_n4h;
   @BuiltValueEnumConst(wireName: r'1D')
-  static const CreateAnalysisBodyTimeframeEnum n1d = _$createAnalysisBodyTimeframeEnum_n1d;
+  static const CreateAnalysisBodyTimeframeEnum n1d =
+      _$createAnalysisBodyTimeframeEnum_n1d;
   @BuiltValueEnumConst(wireName: r'1W')
-  static const CreateAnalysisBodyTimeframeEnum n1w = _$createAnalysisBodyTimeframeEnum_n1w;
+  static const CreateAnalysisBodyTimeframeEnum n1w =
+      _$createAnalysisBodyTimeframeEnum_n1w;
 
-  static Serializer<CreateAnalysisBodyTimeframeEnum> get serializer => _$createAnalysisBodyTimeframeEnumSerializer;
+  static Serializer<CreateAnalysisBodyTimeframeEnum> get serializer =>
+      _$createAnalysisBodyTimeframeEnumSerializer;
 
-  const CreateAnalysisBodyTimeframeEnum._(String name): super(name);
+  const CreateAnalysisBodyTimeframeEnum._(String name) : super(name);
 
-  static BuiltSet<CreateAnalysisBodyTimeframeEnum> get values => _$createAnalysisBodyTimeframeEnumValues;
-  static CreateAnalysisBodyTimeframeEnum valueOf(String name) => _$createAnalysisBodyTimeframeEnumValueOf(name);
+  static BuiltSet<CreateAnalysisBodyTimeframeEnum> get values =>
+      _$createAnalysisBodyTimeframeEnumValues;
+  static CreateAnalysisBodyTimeframeEnum valueOf(String name) =>
+      _$createAnalysisBodyTimeframeEnumValueOf(name);
 }
 
 class CreateAnalysisBodyModeEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'beginner')
-  static const CreateAnalysisBodyModeEnum beginner = _$createAnalysisBodyModeEnum_beginner;
+  static const CreateAnalysisBodyModeEnum beginner =
+      _$createAnalysisBodyModeEnum_beginner;
   @BuiltValueEnumConst(wireName: r'pro')
-  static const CreateAnalysisBodyModeEnum pro = _$createAnalysisBodyModeEnum_pro;
+  static const CreateAnalysisBodyModeEnum pro =
+      _$createAnalysisBodyModeEnum_pro;
 
-  static Serializer<CreateAnalysisBodyModeEnum> get serializer => _$createAnalysisBodyModeEnumSerializer;
+  static Serializer<CreateAnalysisBodyModeEnum> get serializer =>
+      _$createAnalysisBodyModeEnumSerializer;
 
-  const CreateAnalysisBodyModeEnum._(String name): super(name);
+  const CreateAnalysisBodyModeEnum._(String name) : super(name);
 
-  static BuiltSet<CreateAnalysisBodyModeEnum> get values => _$createAnalysisBodyModeEnumValues;
-  static CreateAnalysisBodyModeEnum valueOf(String name) => _$createAnalysisBodyModeEnumValueOf(name);
+  static BuiltSet<CreateAnalysisBodyModeEnum> get values =>
+      _$createAnalysisBodyModeEnumValues;
+  static CreateAnalysisBodyModeEnum valueOf(String name) =>
+      _$createAnalysisBodyModeEnumValueOf(name);
 }
-

@@ -85,8 +85,8 @@ class TokenStorage {
     'role': user.role.name,
     'selectedMode': user.selectedMode.name,
     'themePreference': user.themePreference.name,
-    'securityQuestion': user.securityQuestion,
     'onboardingCompleted': user.onboardingCompleted,
-    'createdAt': user.createdAt?.toIso8601String(),
+    'hasPassword': user.hasPassword,
+    'createdAt': user.createdAt.toIso8601String(),
   };
 }

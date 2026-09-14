@@ -82,7 +82,7 @@ void main() {
     expect(await provider.addInstrument('EUR/USD'), isFalse);
 
     expect(provider.items.map((item) => item.instrument), ['BTC/USD']);
-    expect(provider.error, 'Gagal memperbarui watchlist.');
+    expect(provider.error, 'Could not update your watchlist.');
   });
 }
 
@@ -102,7 +102,9 @@ User _user(int id) => User(
     ..role = UserRoleEnum.user
     ..selectedMode = UserSelectedModeEnum.beginner
     ..themePreference = UserThemePreferenceEnum.dark
-    ..onboardingCompleted = true,
+    ..createdAt = DateTime.utc(2026)
+    ..onboardingCompleted = true
+    ..hasPassword = true,
 );
 
 WatchlistItem _item(String instrument) => WatchlistItem(

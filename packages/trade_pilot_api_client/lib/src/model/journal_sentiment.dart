@@ -11,17 +11,18 @@ part 'journal_sentiment.g.dart';
 /// Anonymised long-vs-short aggregate for an instrument over the last `windowDays`, gated when sample is too small to safely de-identify.
 ///
 /// Properties:
-/// * [instrument] 
-/// * [windowDays] 
-/// * [minSampleSize] 
-/// * [minDistinctTraders] 
+/// * [instrument]
+/// * [windowDays]
+/// * [minSampleSize]
+/// * [minDistinctTraders]
 /// * [sampleSize] - Number of directional (buy/sell) entries in the window. Null when `gated` is true (suppressed to prevent membership inference on thin instruments).
 /// * [distinctTraders] - Number of distinct user IDs contributing entries. Null when `gated` is true.
 /// * [gated] - True when sample is below thresholds; percentages, sampleSize, and distinctTraders are all null.
-/// * [buyPct] 
-/// * [sellPct] 
+/// * [buyPct]
+/// * [sellPct]
 @BuiltValue()
-abstract class JournalSentiment implements Built<JournalSentiment, JournalSentimentBuilder> {
+abstract class JournalSentiment
+    implements Built<JournalSentiment, JournalSentimentBuilder> {
   @BuiltValueField(wireName: r'instrument')
   String get instrument;
 
@@ -36,34 +37,37 @@ abstract class JournalSentiment implements Built<JournalSentiment, JournalSentim
 
   /// Number of directional (buy/sell) entries in the window. Null when `gated` is true (suppressed to prevent membership inference on thin instruments).
   @BuiltValueField(wireName: r'sampleSize')
-  int get sampleSize;
+  int? get sampleSize;
 
   /// Number of distinct user IDs contributing entries. Null when `gated` is true.
   @BuiltValueField(wireName: r'distinctTraders')
-  int get distinctTraders;
+  int? get distinctTraders;
 
   /// True when sample is below thresholds; percentages, sampleSize, and distinctTraders are all null.
   @BuiltValueField(wireName: r'gated')
   bool get gated;
 
   @BuiltValueField(wireName: r'buyPct')
-  int get buyPct;
+  int? get buyPct;
 
   @BuiltValueField(wireName: r'sellPct')
-  int get sellPct;
+  int? get sellPct;
 
   JournalSentiment._();
 
-  factory JournalSentiment([void updates(JournalSentimentBuilder b)]) = _$JournalSentiment;
+  factory JournalSentiment([void updates(JournalSentimentBuilder b)]) =
+      _$JournalSentiment;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(JournalSentimentBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<JournalSentiment> get serializer => _$JournalSentimentSerializer();
+  static Serializer<JournalSentiment> get serializer =>
+      _$JournalSentimentSerializer();
 }
 
-class _$JournalSentimentSerializer implements PrimitiveSerializer<JournalSentiment> {
+class _$JournalSentimentSerializer
+    implements PrimitiveSerializer<JournalSentiment> {
   @override
   final Iterable<Type> types = const [JournalSentiment, _$JournalSentiment];
 
@@ -98,12 +102,12 @@ class _$JournalSentimentSerializer implements PrimitiveSerializer<JournalSentime
     yield r'sampleSize';
     yield serializers.serialize(
       object.sampleSize,
-      specifiedType: const FullType(int),
+      specifiedType: const FullType.nullable(int),
     );
     yield r'distinctTraders';
     yield serializers.serialize(
       object.distinctTraders,
-      specifiedType: const FullType(int),
+      specifiedType: const FullType.nullable(int),
     );
     yield r'gated';
     yield serializers.serialize(
@@ -113,12 +117,12 @@ class _$JournalSentimentSerializer implements PrimitiveSerializer<JournalSentime
     yield r'buyPct';
     yield serializers.serialize(
       object.buyPct,
-      specifiedType: const FullType(int),
+      specifiedType: const FullType.nullable(int),
     );
     yield r'sellPct';
     yield serializers.serialize(
       object.sellPct,
-      specifiedType: const FullType(int),
+      specifiedType: const FullType.nullable(int),
     );
   }
 
@@ -128,7 +132,9 @@ class _$JournalSentimentSerializer implements PrimitiveSerializer<JournalSentime
     JournalSentiment object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -174,15 +180,15 @@ class _$JournalSentimentSerializer implements PrimitiveSerializer<JournalSentime
         case r'sampleSize':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(int),
-          ) as int;
+            specifiedType: const FullType.nullable(int),
+          ) as int?;
           result.sampleSize = valueDes;
           break;
         case r'distinctTraders':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(int),
-          ) as int;
+            specifiedType: const FullType.nullable(int),
+          ) as int?;
           result.distinctTraders = valueDes;
           break;
         case r'gated':
@@ -195,15 +201,15 @@ class _$JournalSentimentSerializer implements PrimitiveSerializer<JournalSentime
         case r'buyPct':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(int),
-          ) as int;
+            specifiedType: const FullType.nullable(int),
+          ) as int?;
           result.buyPct = valueDes;
           break;
         case r'sellPct':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(int),
-          ) as int;
+            specifiedType: const FullType.nullable(int),
+          ) as int?;
           result.sellPct = valueDes;
           break;
         default:
@@ -234,4 +240,3 @@ class _$JournalSentimentSerializer implements PrimitiveSerializer<JournalSentime
     return result.build();
   }
 }
-

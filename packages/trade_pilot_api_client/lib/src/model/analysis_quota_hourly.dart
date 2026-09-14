@@ -11,11 +11,12 @@ part 'analysis_quota_hourly.g.dart';
 /// AnalysisQuotaHourly
 ///
 /// Properties:
-/// * [limit] 
-/// * [used] 
-/// * [remaining] 
+/// * [limit]
+/// * [used]
+/// * [remaining]
 @BuiltValue()
-abstract class AnalysisQuotaHourly implements Built<AnalysisQuotaHourly, AnalysisQuotaHourlyBuilder> {
+abstract class AnalysisQuotaHourly
+    implements Built<AnalysisQuotaHourly, AnalysisQuotaHourlyBuilder> {
   @BuiltValueField(wireName: r'limit')
   int get limit;
 
@@ -27,18 +28,24 @@ abstract class AnalysisQuotaHourly implements Built<AnalysisQuotaHourly, Analysi
 
   AnalysisQuotaHourly._();
 
-  factory AnalysisQuotaHourly([void updates(AnalysisQuotaHourlyBuilder b)]) = _$AnalysisQuotaHourly;
+  factory AnalysisQuotaHourly([void updates(AnalysisQuotaHourlyBuilder b)]) =
+      _$AnalysisQuotaHourly;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AnalysisQuotaHourlyBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AnalysisQuotaHourly> get serializer => _$AnalysisQuotaHourlySerializer();
+  static Serializer<AnalysisQuotaHourly> get serializer =>
+      _$AnalysisQuotaHourlySerializer();
 }
 
-class _$AnalysisQuotaHourlySerializer implements PrimitiveSerializer<AnalysisQuotaHourly> {
+class _$AnalysisQuotaHourlySerializer
+    implements PrimitiveSerializer<AnalysisQuotaHourly> {
   @override
-  final Iterable<Type> types = const [AnalysisQuotaHourly, _$AnalysisQuotaHourly];
+  final Iterable<Type> types = const [
+    AnalysisQuotaHourly,
+    _$AnalysisQuotaHourly
+  ];
 
   @override
   final String wireName = r'AnalysisQuotaHourly';
@@ -71,7 +78,9 @@ class _$AnalysisQuotaHourlySerializer implements PrimitiveSerializer<AnalysisQuo
     AnalysisQuotaHourly object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -135,4 +144,3 @@ class _$AnalysisQuotaHourlySerializer implements PrimitiveSerializer<AnalysisQuo
     return result.build();
   }
 }
-

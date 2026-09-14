@@ -4,28 +4,59 @@ import 'package:tradepilotapp/models/history_filters.dart';
 import 'package:tradepilotapp/models/history_sort.dart';
 
 void main() {
+  test('preserves the backend other-instruments bucket key', () {
+    final filters = const HistoryFilters(
+      instruments: ['__OTHER__', 'xau/usd'],
+    ).normalized();
+
+    expect(filters.instruments, ['__other__', 'XAU/USD']);
+  });
+
   group('HistoryFilters', () {
-    test('outcome filter maps success correctly', () {
-      const filter = HistoryFilters(outcome: HistoryOutcomeFilter.success);
+    test('outcome filters map to distinct server statuses', () {
+      const filter = HistoryFilters(
+        outcome: HistoryOutcomeFilter.targetReached,
+      );
 
       expect(filter.apiOutcome, ['tp1_hit', 'tp2_hit']);
-    });
-
-    test('confidence normalized between 0-100', () {
-      const filter = HistoryFilters(minConfidence: 150);
-
-      final result = filter.normalized();
-
-      expect(result.minConfidence, 100);
+      expect(
+        const HistoryFilters(
+          outcome: HistoryOutcomeFilter.riskLimitHit,
+        ).apiOutcome,
+        ['sl_hit'],
+      );
+      expect(
+        const HistoryFilters(outcome: HistoryOutcomeFilter.expired).apiOutcome,
+        ['expired'],
+      );
+      expect(
+        const HistoryFilters(
+          outcome: HistoryOutcomeFilter.invalidated,
+        ).apiOutcome,
+        ['invalidated'],
+      );
     });
 
     test('active category count includes new filters', () {
-      const filter = HistoryFilters(
+      const filter = HistoryFilters(outcome: HistoryOutcomeFilter.pending);
+
+      expect(filter.activeCategoryCount, 1);
+    });
+
+    test('the filter badge ignores the search query', () {
+      const searchOnly = HistoryFilters(query: 'xau');
+
+      // Pencarian punya kolom sendiri dan tidak ada di filter sheet, jadi
+      // lencana tidak boleh menghitungnya.
+      expect(searchOnly.activeCategoryCount, 0);
+      expect(searchOnly.isActive, isTrue);
+
+      const searchAndOutcome = HistoryFilters(
+        query: 'xau',
         outcome: HistoryOutcomeFilter.pending,
-        minConfidence: 70,
       );
 
-      expect(filter.activeCategoryCount, 2);
+      expect(searchAndOutcome.activeCategoryCount, 1);
     });
 
     test(
@@ -34,10 +65,9 @@ void main() {
         const filter = HistoryFilters(
           query: 'private journal context',
           mode: HistoryModeFilter.pro,
-          outcome: HistoryOutcomeFilter.failed,
+          outcome: HistoryOutcomeFilter.targetReached,
           instruments: [' xau/usd '],
           timeframes: ['1h'],
-          minConfidence: 70,
           sort: HistorySort.confidenceHighest,
           from: null,
           to: null,
@@ -50,11 +80,12 @@ void main() {
         expect(payload, isNot(contains('from')));
         expect(restored.query, isEmpty);
         expect(restored.mode, HistoryModeFilter.pro);
-        expect(restored.outcome, HistoryOutcomeFilter.failed);
+        expect(restored.outcome, HistoryOutcomeFilter.targetReached);
         expect(restored.instruments, ['XAU/USD']);
         expect(restored.timeframes, ['1h']);
-        expect(restored.minConfidence, 70);
-        expect(restored.sort, HistorySort.confidenceHighest);
+        expect(payload, isNot(contains('minConfidence')));
+        expect(payload, isNot(contains('sort')));
+        expect(restored.sort, HistorySort.newest);
       },
     );
 
@@ -73,7 +104,6 @@ void main() {
         expect(restored.mode, HistoryModeFilter.all);
         expect(restored.outcome, HistoryOutcomeFilter.all);
         expect(restored.instruments, ['BTC/USD']);
-        expect(restored.minConfidence, 100);
         expect(restored.sort, HistorySort.newest);
       },
     );

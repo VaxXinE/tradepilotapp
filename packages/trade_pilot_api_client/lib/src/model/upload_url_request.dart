@@ -11,11 +11,12 @@ part 'upload_url_request.g.dart';
 /// UploadUrlRequest
 ///
 /// Properties:
-/// * [name] 
-/// * [size] 
-/// * [contentType] 
+/// * [name]
+/// * [size]
+/// * [contentType]
 @BuiltValue()
-abstract class UploadUrlRequest implements Built<UploadUrlRequest, UploadUrlRequestBuilder> {
+abstract class UploadUrlRequest
+    implements Built<UploadUrlRequest, UploadUrlRequestBuilder> {
   @BuiltValueField(wireName: r'name')
   String get name;
 
@@ -27,16 +28,19 @@ abstract class UploadUrlRequest implements Built<UploadUrlRequest, UploadUrlRequ
 
   UploadUrlRequest._();
 
-  factory UploadUrlRequest([void updates(UploadUrlRequestBuilder b)]) = _$UploadUrlRequest;
+  factory UploadUrlRequest([void updates(UploadUrlRequestBuilder b)]) =
+      _$UploadUrlRequest;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(UploadUrlRequestBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<UploadUrlRequest> get serializer => _$UploadUrlRequestSerializer();
+  static Serializer<UploadUrlRequest> get serializer =>
+      _$UploadUrlRequestSerializer();
 }
 
-class _$UploadUrlRequestSerializer implements PrimitiveSerializer<UploadUrlRequest> {
+class _$UploadUrlRequestSerializer
+    implements PrimitiveSerializer<UploadUrlRequest> {
   @override
   final Iterable<Type> types = const [UploadUrlRequest, _$UploadUrlRequest];
 
@@ -71,7 +75,9 @@ class _$UploadUrlRequestSerializer implements PrimitiveSerializer<UploadUrlReque
     UploadUrlRequest object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -135,4 +141,3 @@ class _$UploadUrlRequestSerializer implements PrimitiveSerializer<UploadUrlReque
     return result.build();
   }
 }
-

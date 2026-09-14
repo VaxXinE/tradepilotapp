@@ -16,7 +16,6 @@ import 'package:trade_pilot_api_client/src/model/user_price_alert.dart';
 import 'package:trade_pilot_api_client/src/model/user_price_alert_list.dart';
 
 class UserPriceAlertsApi {
-
   final Dio _dio;
 
   final Serializers _serializers;
@@ -24,10 +23,10 @@ class UserPriceAlertsApi {
   const UserPriceAlertsApi(this._dio, this._serializers);
 
   /// Create a new price alert for an instrument
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [createUserPriceAlertBody] 
+  /// * [createUserPriceAlertBody]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -37,7 +36,7 @@ class UserPriceAlertsApi {
   ///
   /// Returns a [Future] containing a [Response] with a [UserPriceAlert] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<UserPriceAlert>> createUserPriceAlert({ 
+  Future<Response<UserPriceAlert>> createUserPriceAlert({
     required CreateUserPriceAlertBody createUserPriceAlertBody,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -64,11 +63,11 @@ class UserPriceAlertsApi {
 
     try {
       const _type = FullType(CreateUserPriceAlertBody);
-      _bodyData = _serializers.serialize(createUserPriceAlertBody, specifiedType: _type);
-
-    } catch(error, stackTrace) {
+      _bodyData = _serializers.serialize(createUserPriceAlertBody,
+          specifiedType: _type);
+    } catch (error, stackTrace) {
       throw DioException(
-         requestOptions: _options.compose(
+        requestOptions: _options.compose(
           _dio.options,
           _path,
         ),
@@ -91,11 +90,12 @@ class UserPriceAlertsApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(UserPriceAlert),
-      ) as UserPriceAlert;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(UserPriceAlert),
+            ) as UserPriceAlert;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -119,10 +119,10 @@ class UserPriceAlertsApi {
   }
 
   /// Delete one of the user&#39;s price alerts
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [id] 
+  /// * [id]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -132,7 +132,7 @@ class UserPriceAlertsApi {
   ///
   /// Returns a [Future] containing a [Response] with a [MessageResponse] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<MessageResponse>> deleteUserPriceAlert({ 
+  Future<Response<MessageResponse>> deleteUserPriceAlert({
     required int id,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -141,7 +141,8 @@ class UserPriceAlertsApi {
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
   }) async {
-    final _path = r'/user-price-alerts/{id}'.replaceAll('{' r'id' '}', encodeQueryParameter(_serializers, id, const FullType(int)).toString());
+    final _path = r'/user-price-alerts/{id}'.replaceAll('{' r'id' '}',
+        encodeQueryParameter(_serializers, id, const FullType(int)).toString());
     final _options = Options(
       method: r'DELETE',
       headers: <String, dynamic>{
@@ -166,11 +167,12 @@ class UserPriceAlertsApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(MessageResponse),
-      ) as MessageResponse;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(MessageResponse),
+            ) as MessageResponse;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -194,7 +196,7 @@ class UserPriceAlertsApi {
   }
 
   /// List the current user&#39;s price alerts (active + recently triggered)
-  /// 
+  ///
   ///
   /// Parameters:
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
@@ -206,7 +208,7 @@ class UserPriceAlertsApi {
   ///
   /// Returns a [Future] containing a [Response] with a [UserPriceAlertList] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<UserPriceAlertList>> listUserPriceAlerts({ 
+  Future<Response<UserPriceAlertList>> listUserPriceAlerts({
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -239,11 +241,12 @@ class UserPriceAlertsApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(UserPriceAlertList),
-      ) as UserPriceAlertList;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(UserPriceAlertList),
+            ) as UserPriceAlertList;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -265,5 +268,4 @@ class UserPriceAlertsApi {
       extra: _response.extra,
     );
   }
-
 }

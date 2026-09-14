@@ -81,11 +81,11 @@ class _$PerformanceBanner extends PerformanceBanner {
   @override
   final int baselineSample;
   @override
-  final num recentHitRate;
+  final num? recentHitRate;
   @override
-  final num baselineHitRate;
+  final num? baselineHitRate;
   @override
-  final num delta;
+  final num? delta;
 
   factory _$PerformanceBanner(
           [void Function(PerformanceBannerBuilder)? updates]) =>
@@ -96,9 +96,9 @@ class _$PerformanceBanner extends PerformanceBanner {
       required this.recentDays,
       required this.recentSample,
       required this.baselineSample,
-      required this.recentHitRate,
-      required this.baselineHitRate,
-      required this.delta})
+      this.recentHitRate,
+      this.baselineHitRate,
+      this.delta})
       : super._();
   @override
   PerformanceBanner rebuild(void Function(PerformanceBannerBuilder) updates) =>
@@ -228,12 +228,9 @@ class PerformanceBannerBuilder
               recentSample, r'PerformanceBanner', 'recentSample'),
           baselineSample: BuiltValueNullFieldError.checkNotNull(
               baselineSample, r'PerformanceBanner', 'baselineSample'),
-          recentHitRate: BuiltValueNullFieldError.checkNotNull(
-              recentHitRate, r'PerformanceBanner', 'recentHitRate'),
-          baselineHitRate: BuiltValueNullFieldError.checkNotNull(
-              baselineHitRate, r'PerformanceBanner', 'baselineHitRate'),
-          delta: BuiltValueNullFieldError.checkNotNull(
-              delta, r'PerformanceBanner', 'delta'),
+          recentHitRate: recentHitRate,
+          baselineHitRate: baselineHitRate,
+          delta: delta,
         );
     replace(_$result);
     return _$result;

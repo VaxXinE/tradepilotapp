@@ -74,7 +74,10 @@ void main() {
       expect(adapter.profileCalls, 0);
 
       expect(await auth.updateDisplayName('Nama Valid'), isFalse);
-      expect(auth.profileError, 'Gagal memperbarui profil. Silakan coba lagi.');
+      expect(
+        auth.profileError,
+        'Could not update your profile. Please try again.',
+      );
       expect(auth.profileError, isNot(contains('SQL')));
     },
   );
@@ -135,7 +138,51 @@ void main() {
       isFalse,
     );
     expect(auth.isChangingPassword, isFalse);
-    expect(auth.profileError, 'Gagal mengubah password. Silakan coba lagi.');
+    expect(
+      auth.profileError,
+      'Could not change your password. Please try again.',
+    );
+  });
+
+  test('Google ID token is exchanged for a TradePilot session', () async {
+    var forcedAccountPicker = true;
+    final auth = AuthProvider(
+      googleIdTokenProvider: ({required forceAccountPicker}) async {
+        forcedAccountPicker = forceAccountPicker;
+        return 'google-id-token';
+      },
+    );
+    final adapter = _GoogleAuthAdapter();
+    auth.client.dio.httpClientAdapter = adapter;
+    await pumpEventQueue();
+
+    expect(await auth.loginWithGoogle(), isTrue);
+    expect(forcedAccountPicker, isFalse);
+    expect(adapter.loginIdToken, 'google-id-token');
+    expect(auth.status, AuthStatus.authenticated);
+    expect(auth.user?.hasPassword, isFalse);
+  });
+
+  test('Google-only deletion uses a fresh token and one-time proof', () async {
+    var forcedAccountPicker = false;
+    final auth = AuthProvider(
+      googleIdTokenProvider: ({required forceAccountPicker}) async {
+        forcedAccountPicker = forceAccountPicker;
+        return 'fresh-google-id-token';
+      },
+    );
+    final adapter = _GoogleAuthAdapter();
+    auth.client.dio.httpClientAdapter = adapter;
+    await pumpEventQueue();
+    auth
+      ..status = AuthStatus.authenticated
+      ..user = _user(name: 'Google User', hasPassword: false);
+
+    expect(await auth.deleteGoogleAccount(), isTrue);
+    expect(forcedAccountPicker, isTrue);
+    expect(adapter.reauthIdToken, 'fresh-google-id-token');
+    expect(adapter.deleteReauthToken, 'single-use-reauth-token');
+    expect(auth.status, AuthStatus.unauthenticated);
   });
 }
 
@@ -147,7 +194,11 @@ Future<AuthProvider> _authenticatedUser() async {
     ..user = _user(name: 'User Lama');
 }
 
-User _user({required String name, String mode = 'beginner'}) => User(
+User _user({
+  required String name,
+  String mode = 'beginner',
+  bool hasPassword = true,
+}) => User(
   (builder) => builder
     ..id = 1
     ..email = 'user@example.com'
@@ -157,9 +208,67 @@ User _user({required String name, String mode = 'beginner'}) => User(
         ? UserSelectedModeEnum.pro
         : UserSelectedModeEnum.beginner
     ..themePreference = UserThemePreferenceEnum.dark
-    ..securityQuestion = 'Nama hewan pertama?'
-    ..onboardingCompleted = true,
+    ..createdAt = DateTime.utc(2026)
+    ..onboardingCompleted = true
+    ..hasPassword = hasPassword,
 );
+
+class _GoogleAuthAdapter implements HttpClientAdapter {
+  String? loginIdToken;
+  String? reauthIdToken;
+  String? deleteReauthToken;
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    final data = Map<String, dynamic>.from(options.data as Map);
+    if (options.path == '/auth/google/native') {
+      loginIdToken = data['idToken'] as String?;
+      return _jsonResponse({
+        'token': 'tradepilot-session-token',
+        'user': _googleUserJson,
+      });
+    }
+    if (options.path == '/auth/reauth/google') {
+      reauthIdToken = data['idToken'] as String?;
+      return _jsonResponse({
+        'reauthToken': 'single-use-reauth-token',
+        'expiresAt': '2026-01-01T00:05:00.000Z',
+      });
+    }
+    if (options.path == '/auth/account') {
+      deleteReauthToken = data['reauthToken'] as String?;
+      return _jsonResponse({'message': 'deleted'});
+    }
+    throw StateError('Unexpected request: ${options.path}');
+  }
+
+  static const _googleUserJson = {
+    'id': 2,
+    'email': 'google@example.com',
+    'displayName': 'Google User',
+    'role': 'user',
+    'selectedMode': 'beginner',
+    'themePreference': 'dark',
+    'onboardingCompleted': true,
+    'hasPassword': false,
+    'createdAt': '2026-01-01T00:00:00.000Z',
+  };
+
+  ResponseBody _jsonResponse(Object data) => ResponseBody.fromString(
+    jsonEncode(data),
+    200,
+    headers: {
+      Headers.contentTypeHeader: [Headers.jsonContentType],
+    },
+  );
+
+  @override
+  void close({bool force = false}) {}
+}
 
 class _ProfileAdapter implements HttpClientAdapter {
   int profileCalls = 0;
@@ -205,7 +314,9 @@ class _ProfileAdapter implements HttpClientAdapter {
       'selectedMode': mode,
       'themePreference': 'dark',
       'securityQuestion': 'Nama hewan pertama?',
+      'createdAt': '2026-01-01T00:00:00.000Z',
       'onboardingCompleted': true,
+      'hasPassword': true,
     });
   }
 
@@ -253,7 +364,9 @@ class _RegisterAdapter implements HttpClientAdapter {
           'selectedMode': 'beginner',
           'themePreference': 'dark',
           'securityQuestion': 'Nama hewan peliharaan pertama kamu?',
+          'createdAt': '2026-01-01T00:00:00.000Z',
           'onboardingCompleted': false,
+          'hasPassword': true,
         },
       }),
       201,

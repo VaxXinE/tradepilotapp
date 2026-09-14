@@ -108,7 +108,7 @@ void main() {
     );
 
     expect(result, isNull);
-    expect(auth.errorMessage, 'Jawaban keamanan tidak sesuai.');
+    expect(auth.errorMessage, 'That security answer is incorrect.');
     expect(auth.status, AuthStatus.authenticated);
   });
 
@@ -160,8 +160,9 @@ User _user() => User(
     ..role = UserRoleEnum.user
     ..selectedMode = UserSelectedModeEnum.beginner
     ..themePreference = UserThemePreferenceEnum.dark
-    ..securityQuestion = 'Nama hewan pertama?'
-    ..onboardingCompleted = true,
+    ..createdAt = DateTime.utc(2026)
+    ..onboardingCompleted = true
+    ..hasPassword = true,
 );
 
 /// Answers 401 to everything, so each test is defined purely by which endpoint

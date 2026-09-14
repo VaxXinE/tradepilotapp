@@ -11,17 +11,18 @@ part 'daily_summary_analysis.g.dart';
 /// DailySummaryAnalysis
 ///
 /// Properties:
-/// * [id] 
-/// * [instrument] 
-/// * [timeframe] 
-/// * [tradingBias] 
-/// * [confidenceMin] 
-/// * [confidenceMax] 
-/// * [preferredSide] 
-/// * [mainScenario] 
-/// * [createdAt] 
+/// * [id]
+/// * [instrument]
+/// * [timeframe]
+/// * [tradingBias]
+/// * [confidenceMin]
+/// * [confidenceMax]
+/// * [preferredSide]
+/// * [mainScenario]
+/// * [createdAt]
 @BuiltValue()
-abstract class DailySummaryAnalysis implements Built<DailySummaryAnalysis, DailySummaryAnalysisBuilder> {
+abstract class DailySummaryAnalysis
+    implements Built<DailySummaryAnalysis, DailySummaryAnalysisBuilder> {
   @BuiltValueField(wireName: r'id')
   int get id;
 
@@ -51,18 +52,24 @@ abstract class DailySummaryAnalysis implements Built<DailySummaryAnalysis, Daily
 
   DailySummaryAnalysis._();
 
-  factory DailySummaryAnalysis([void updates(DailySummaryAnalysisBuilder b)]) = _$DailySummaryAnalysis;
+  factory DailySummaryAnalysis([void updates(DailySummaryAnalysisBuilder b)]) =
+      _$DailySummaryAnalysis;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(DailySummaryAnalysisBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<DailySummaryAnalysis> get serializer => _$DailySummaryAnalysisSerializer();
+  static Serializer<DailySummaryAnalysis> get serializer =>
+      _$DailySummaryAnalysisSerializer();
 }
 
-class _$DailySummaryAnalysisSerializer implements PrimitiveSerializer<DailySummaryAnalysis> {
+class _$DailySummaryAnalysisSerializer
+    implements PrimitiveSerializer<DailySummaryAnalysis> {
   @override
-  final Iterable<Type> types = const [DailySummaryAnalysis, _$DailySummaryAnalysis];
+  final Iterable<Type> types = const [
+    DailySummaryAnalysis,
+    _$DailySummaryAnalysis
+  ];
 
   @override
   final String wireName = r'DailySummaryAnalysis';
@@ -135,7 +142,9 @@ class _$DailySummaryAnalysisSerializer implements PrimitiveSerializer<DailySumma
     DailySummaryAnalysis object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -246,4 +255,3 @@ class _$DailySummaryAnalysisSerializer implements PrimitiveSerializer<DailySumma
     return result.build();
   }
 }
-

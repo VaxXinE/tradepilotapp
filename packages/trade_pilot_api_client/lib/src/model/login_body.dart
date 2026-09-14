@@ -12,8 +12,8 @@ part 'login_body.g.dart';
 ///
 /// Properties:
 /// * [email] - Username or email used to identify the account
-/// * [password] 
-/// * [rememberMe] 
+/// * [password]
+/// * [rememberMe]
 @BuiltValue()
 abstract class LoginBody implements Built<LoginBody, LoginBodyBuilder> {
   /// Username or email used to identify the account
@@ -31,8 +31,7 @@ abstract class LoginBody implements Built<LoginBody, LoginBodyBuilder> {
   factory LoginBody([void updates(LoginBodyBuilder b)]) = _$LoginBody;
 
   @BuiltValueHook(initializeBuilder: true)
-  static void _defaults(LoginBodyBuilder b) => b
-      ..rememberMe = false;
+  static void _defaults(LoginBodyBuilder b) => b..rememberMe = false;
 
   @BuiltValueSerializer(custom: true)
   static Serializer<LoginBody> get serializer => _$LoginBodySerializer();
@@ -75,7 +74,9 @@ class _$LoginBodySerializer implements PrimitiveSerializer<LoginBody> {
     LoginBody object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -140,4 +141,3 @@ class _$LoginBodySerializer implements PrimitiveSerializer<LoginBody> {
     return result.build();
   }
 }
-

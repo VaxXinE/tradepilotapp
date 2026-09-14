@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
 import '../../core/api/api_config.dart';
+import '../../core/storage/signed_upload.dart';
 import '../../providers/auth_provider.dart';
 import '../../l10n/l10n.dart';
 import '../../widgets/error_banner.dart';
+import '../../widgets/responsive_page.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -58,36 +58,27 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (file == null || !mounted) return;
     final bytes = await file.readAsBytes();
     if (!mounted) return;
-    final contentType = _imageContentType(file);
-    if (contentType == null || bytes.length > 5 * 1024 * 1024) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.avatarRequirements)),
-        );
-      }
-      return;
-    }
 
     setState(() => _uploadingAvatar = true);
     final auth = context.read<AuthProvider>();
     try {
-      final response = await auth.client.storage.requestUploadUrl(
-        uploadUrlRequest: UploadUrlRequest(
-          (builder) => builder
-            ..name = file.name
-            ..size = bytes.length
-            ..contentType = contentType,
-        ),
-      );
-      final target = response.data;
-      if (target == null) throw StateError('Missing upload target');
-      await Dio().putUri<void>(
-        Uri.parse(target.uploadURL),
-        data: bytes,
-        options: Options(contentType: contentType),
-      );
-      final saved = await auth.updateAvatarPath(target.objectPath);
+      final objectPath = await SignedUploadService(
+        auth.client,
+      ).uploadImage(fileName: file.name, bytes: bytes, mimeType: file.mimeType);
+      final saved = await auth.updateAvatarPath(objectPath);
       if (!saved) throw StateError('Profile update failed');
+    } on SignedUploadException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              error.failure == SignedUploadFailure.failed
+                  ? context.l10n.avatarUploadFailed
+                  : context.l10n.avatarRequirements,
+            ),
+          ),
+        );
+      }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -116,7 +107,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       appBar: AppBar(title: Text(l10n.editProfile)),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: responsivePagePadding(
+            context,
+            horizontal: 24,
+            maxWidth: 480,
+          ),
           child: Form(
             key: _formKey,
             child: Column(
@@ -197,24 +192,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ),
       ),
     );
-  }
-
-  String? _imageContentType(XFile file) {
-    final mime = file.mimeType?.toLowerCase();
-    if (const {
-      'image/jpeg',
-      'image/png',
-      'image/webp',
-      'image/gif',
-    }.contains(mime)) {
-      return mime;
-    }
-    final name = file.name.toLowerCase();
-    if (name.endsWith('.jpg') || name.endsWith('.jpeg')) return 'image/jpeg';
-    if (name.endsWith('.png')) return 'image/png';
-    if (name.endsWith('.webp')) return 'image/webp';
-    if (name.endsWith('.gif')) return 'image/gif';
-    return null;
   }
 
   String? _avatarUrl(String? path) {

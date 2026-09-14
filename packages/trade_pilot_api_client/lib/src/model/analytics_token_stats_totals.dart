@@ -11,11 +11,13 @@ part 'analytics_token_stats_totals.g.dart';
 /// AnalyticsTokenStatsTotals
 ///
 /// Properties:
-/// * [totalTokens] 
-/// * [totalCostUsd] 
-/// * [totalCalls] 
+/// * [totalTokens]
+/// * [totalCostUsd]
+/// * [totalCalls]
 @BuiltValue()
-abstract class AnalyticsTokenStatsTotals implements Built<AnalyticsTokenStatsTotals, AnalyticsTokenStatsTotalsBuilder> {
+abstract class AnalyticsTokenStatsTotals
+    implements
+        Built<AnalyticsTokenStatsTotals, AnalyticsTokenStatsTotalsBuilder> {
   @BuiltValueField(wireName: r'totalTokens')
   int get totalTokens;
 
@@ -27,18 +29,25 @@ abstract class AnalyticsTokenStatsTotals implements Built<AnalyticsTokenStatsTot
 
   AnalyticsTokenStatsTotals._();
 
-  factory AnalyticsTokenStatsTotals([void updates(AnalyticsTokenStatsTotalsBuilder b)]) = _$AnalyticsTokenStatsTotals;
+  factory AnalyticsTokenStatsTotals(
+          [void updates(AnalyticsTokenStatsTotalsBuilder b)]) =
+      _$AnalyticsTokenStatsTotals;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AnalyticsTokenStatsTotalsBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AnalyticsTokenStatsTotals> get serializer => _$AnalyticsTokenStatsTotalsSerializer();
+  static Serializer<AnalyticsTokenStatsTotals> get serializer =>
+      _$AnalyticsTokenStatsTotalsSerializer();
 }
 
-class _$AnalyticsTokenStatsTotalsSerializer implements PrimitiveSerializer<AnalyticsTokenStatsTotals> {
+class _$AnalyticsTokenStatsTotalsSerializer
+    implements PrimitiveSerializer<AnalyticsTokenStatsTotals> {
   @override
-  final Iterable<Type> types = const [AnalyticsTokenStatsTotals, _$AnalyticsTokenStatsTotals];
+  final Iterable<Type> types = const [
+    AnalyticsTokenStatsTotals,
+    _$AnalyticsTokenStatsTotals
+  ];
 
   @override
   final String wireName = r'AnalyticsTokenStatsTotals';
@@ -71,7 +80,9 @@ class _$AnalyticsTokenStatsTotalsSerializer implements PrimitiveSerializer<Analy
     AnalyticsTokenStatsTotals object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -135,4 +146,3 @@ class _$AnalyticsTokenStatsTotalsSerializer implements PrimitiveSerializer<Analy
     return result.build();
   }
 }
-

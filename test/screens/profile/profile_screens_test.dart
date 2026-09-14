@@ -8,8 +8,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 import 'package:tradepilotapp/core/theme/theme_controller.dart';
 import 'package:tradepilotapp/core/localization/locale_controller.dart';
+import 'package:tradepilotapp/core/preferences/mental_checklist_controller.dart';
 import 'package:tradepilotapp/l10n/l10n.dart';
 import 'package:tradepilotapp/providers/auth_provider.dart';
+import 'package:tradepilotapp/providers/credit_provider.dart';
+import 'package:tradepilotapp/providers/progression_provider.dart';
+import 'package:tradepilotapp/repositories/topup_repository.dart';
 import 'package:tradepilotapp/screens/home/tabs/profile_tab.dart';
 import 'package:tradepilotapp/screens/profile/change_password_screen.dart';
 import 'package:tradepilotapp/screens/profile/delete_account_screen.dart';
@@ -42,6 +46,13 @@ void main() {
     _authenticate(auth);
     final theme = ThemeController(await SharedPreferences.getInstance());
     final locale = LocaleController(await SharedPreferences.getInstance());
+    final checklist = MentalChecklistController(
+      await SharedPreferences.getInstance(),
+    );
+    final progression = ProgressionProvider(auth);
+    addTearDown(progression.dispose);
+    final credit = CreditProvider(auth, TopupRepository(auth.client));
+    addTearDown(credit.dispose);
 
     await tester.pumpWidget(
       MultiProvider(
@@ -49,6 +60,9 @@ void main() {
           ChangeNotifierProvider.value(value: auth),
           ChangeNotifierProvider.value(value: theme),
           ChangeNotifierProvider.value(value: locale),
+          ChangeNotifierProvider.value(value: checklist),
+          ChangeNotifierProvider.value(value: progression),
+          ChangeNotifierProvider.value(value: credit),
         ],
         child: const _LocalizedApp(home: ProfileTab()),
       ),
@@ -58,16 +72,12 @@ void main() {
     expect(find.text('user@example.com'), findsOneWidget);
     expect(find.text('Profile Information'), findsOneWidget);
     expect(find.text('Analysis mode'), findsOneWidget);
-    expect(find.text('Dark theme'), findsOneWidget);
-    expect(
-      tester
-          .widget<SwitchListTile>(
-            find.widgetWithText(SwitchListTile, 'Dark theme'),
-          )
-          .value,
-      isTrue,
-    );
+    expect(find.text('Appearance'), findsOneWidget);
+    expect(find.byKey(const Key('profile-theme-segmented')), findsOneWidget);
+    expect(find.text('Light'), findsOneWidget);
+    expect(find.text('Dark'), findsOneWidget);
     expect(find.textContaining('Current: Beginner'), findsOneWidget);
+    expect(find.text('Top Up Credit'), findsOneWidget);
     expect(find.text('Change Password'), findsOneWidget);
     expect(find.text('Privacy Policy'), findsOneWidget);
     expect(find.text('Terms of Service'), findsOneWidget);
@@ -165,6 +175,13 @@ void main() {
     auth.client.dio.httpClientAdapter = _LogoutAdapter();
     final theme = ThemeController(await SharedPreferences.getInstance());
     final locale = LocaleController(await SharedPreferences.getInstance());
+    final checklist = MentalChecklistController(
+      await SharedPreferences.getInstance(),
+    );
+    final progression = ProgressionProvider(auth);
+    addTearDown(progression.dispose);
+    final credit = CreditProvider(auth, TopupRepository(auth.client));
+    addTearDown(credit.dispose);
 
     await tester.pumpWidget(
       MultiProvider(
@@ -172,6 +189,9 @@ void main() {
           ChangeNotifierProvider.value(value: auth),
           ChangeNotifierProvider.value(value: theme),
           ChangeNotifierProvider.value(value: locale),
+          ChangeNotifierProvider.value(value: checklist),
+          ChangeNotifierProvider.value(value: progression),
+          ChangeNotifierProvider.value(value: credit),
         ],
         child: const _LocalizedApp(home: ProfileTab()),
       ),
@@ -222,8 +242,9 @@ void _authenticate(AuthProvider auth) {
         ..role = UserRoleEnum.user
         ..selectedMode = UserSelectedModeEnum.beginner
         ..themePreference = UserThemePreferenceEnum.dark
-        ..securityQuestion = 'Nama hewan pertama?'
-        ..onboardingCompleted = true,
+        ..createdAt = DateTime.utc(2026)
+        ..onboardingCompleted = true
+        ..hasPassword = true,
     );
 }
 

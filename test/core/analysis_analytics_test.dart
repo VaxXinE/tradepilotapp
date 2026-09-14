@@ -37,7 +37,7 @@ Analysis _analysis(
   int min,
   int max,
   bool hasNote,
-) => Analysis(
+) => $Analysis(
   (builder) => builder
     ..id = id
     ..userId = 1

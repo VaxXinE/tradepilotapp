@@ -140,8 +140,9 @@ User _user() => User(
     ..role = UserRoleEnum.user
     ..selectedMode = UserSelectedModeEnum.beginner
     ..themePreference = UserThemePreferenceEnum.dark
-    ..securityQuestion = 'Nama hewan pertama?'
-    ..onboardingCompleted = true,
+    ..createdAt = DateTime.utc(2026)
+    ..onboardingCompleted = true
+    ..hasPassword = true,
 );
 
 Future<void> _pumpLockScreen(

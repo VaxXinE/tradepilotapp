@@ -13,10 +13,11 @@ part 'daily_summary_response.g.dart';
 /// DailySummaryResponse
 ///
 /// Properties:
-/// * [settings] 
-/// * [today] 
+/// * [settings]
+/// * [today]
 @BuiltValue()
-abstract class DailySummaryResponse implements Built<DailySummaryResponse, DailySummaryResponseBuilder> {
+abstract class DailySummaryResponse
+    implements Built<DailySummaryResponse, DailySummaryResponseBuilder> {
   @BuiltValueField(wireName: r'settings')
   DailySummarySettings get settings;
 
@@ -25,18 +26,24 @@ abstract class DailySummaryResponse implements Built<DailySummaryResponse, Daily
 
   DailySummaryResponse._();
 
-  factory DailySummaryResponse([void updates(DailySummaryResponseBuilder b)]) = _$DailySummaryResponse;
+  factory DailySummaryResponse([void updates(DailySummaryResponseBuilder b)]) =
+      _$DailySummaryResponse;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(DailySummaryResponseBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<DailySummaryResponse> get serializer => _$DailySummaryResponseSerializer();
+  static Serializer<DailySummaryResponse> get serializer =>
+      _$DailySummaryResponseSerializer();
 }
 
-class _$DailySummaryResponseSerializer implements PrimitiveSerializer<DailySummaryResponse> {
+class _$DailySummaryResponseSerializer
+    implements PrimitiveSerializer<DailySummaryResponse> {
   @override
-  final Iterable<Type> types = const [DailySummaryResponse, _$DailySummaryResponse];
+  final Iterable<Type> types = const [
+    DailySummaryResponse,
+    _$DailySummaryResponse
+  ];
 
   @override
   final String wireName = r'DailySummaryResponse';
@@ -66,7 +73,9 @@ class _$DailySummaryResponseSerializer implements PrimitiveSerializer<DailySumma
     DailySummaryResponse object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -124,4 +133,3 @@ class _$DailySummaryResponseSerializer implements PrimitiveSerializer<DailySumma
     return result.build();
   }
 }
-

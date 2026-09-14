@@ -36,11 +36,14 @@ void main() {
 
     expect(
       tester.getSize(find.byKey(const Key('login-brand-mark'))),
-      const Size(120, 80),
+      const Size(56, 56),
     );
-    expect(find.text('Welcome back'), findsOneWidget);
+    expect(find.text('Welcome Back'), findsOneWidget);
+    expect(find.byKey(const Key('google-sign-in-button')), findsOneWidget);
 
-    await tester.tap(find.widgetWithText(ElevatedButton, 'Sign In'));
+    await tester.ensureVisible(find.text('Sign In to Dashboard'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Sign In to Dashboard'));
     await tester.pump();
 
     expect(find.text('Enter a valid email address'), findsOneWidget);

@@ -4,6 +4,7 @@ import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 import '../core/theme/app_colors.dart';
 import '../models/market_models.dart';
 import 'market_mini_chart.dart';
+import '../l10n/l10n.dart';
 
 class AnalysisLevelsChart extends StatelessWidget {
   const AnalysisLevelsChart({
@@ -11,12 +12,14 @@ class AnalysisLevelsChart extends StatelessWidget {
     required this.candles,
     this.tradePlan,
     this.tradingBias,
+    this.currentPrice,
     this.isLoading = false,
   });
 
   final List<MarketCandle> candles;
   final TradePlan? tradePlan;
   final String? tradingBias;
+  final double? currentPrice;
 
   final bool isLoading;
 
@@ -36,7 +39,7 @@ class AnalysisLevelsChart extends StatelessWidget {
         height: 180,
         child: Center(
           child: Text(
-            'Data chart belum tersedia.',
+            context.l10n.chartDataUnavailable,
             style: TextStyle(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontSize: 12.5,
@@ -48,7 +51,18 @@ class AnalysisLevelsChart extends StatelessWidget {
 
     final visible = candles.length > _maxCandles
         ? candles.sublist(candles.length - _maxCandles)
-        : candles;
+        : List<MarketCandle>.of(candles);
+    final live = currentPrice;
+    if (live != null && live.isFinite && live > 0) {
+      final last = visible.last;
+      visible[visible.length - 1] = MarketCandle(
+        date: last.date,
+        open: last.open,
+        high: live > last.high ? live : last.high,
+        low: live < last.low ? live : last.low,
+        close: live,
+      );
+    }
 
     final levels = _buildLevels(tradePlan, tradingBias);
 
@@ -122,7 +136,10 @@ class AnalysisLevelsChart extends StatelessWidget {
   }
 
   double? _parsePriceLevel(String raw) {
-    final matches = RegExp(r'\d[\d.,]*').allMatches(raw);
+    final cleaned = raw
+        .replaceAll(RegExp(r'\b[HMDWhmdw]\d{1,3}\b'), ' ')
+        .replaceAll(RegExp(r'\b\d{1,3}[mhdwMHDW]\b'), ' ');
+    final matches = RegExp(r'\d[\d.,]*').allMatches(cleaned);
 
     final values = <double>[];
 

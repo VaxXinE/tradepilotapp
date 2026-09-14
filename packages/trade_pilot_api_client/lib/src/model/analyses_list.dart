@@ -13,12 +13,13 @@ part 'analyses_list.g.dart';
 /// AnalysesList
 ///
 /// Properties:
-/// * [analyses] 
-/// * [total] 
-/// * [page] 
-/// * [limit] 
+/// * [analyses]
+/// * [total]
+/// * [page]
+/// * [limit]
 @BuiltValue()
-abstract class AnalysesList implements Built<AnalysesList, AnalysesListBuilder> {
+abstract class AnalysesList
+    implements Built<AnalysesList, AnalysesListBuilder> {
   @BuiltValueField(wireName: r'analyses')
   BuiltList<Analysis> get analyses;
 
@@ -82,7 +83,9 @@ class _$AnalysesListSerializer implements PrimitiveSerializer<AnalysesList> {
     AnalysesList object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -153,4 +156,3 @@ class _$AnalysesListSerializer implements PrimitiveSerializer<AnalysesList> {
     return result.build();
   }
 }
-

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/l10n.dart';
 
 class AnalysisNoteCard extends StatefulWidget {
   const AnalysisNoteCard({
@@ -58,23 +59,25 @@ class _AnalysisNoteCardState extends State<AnalysisNoteCard> {
               children: [
                 const Icon(Icons.menu_book_outlined),
                 const SizedBox(width: 10),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Catatan Pribadi',
-                    style: TextStyle(fontWeight: FontWeight.w800),
+                    context.l10n.personalNote,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
                   ),
                 ),
                 if (!_editing)
                   IconButton(
-                    tooltip: widget.note == null ? 'Tambah catatan' : 'Edit',
+                    tooltip: widget.note == null
+                        ? context.l10n.addNote
+                        : context.l10n.edit,
                     onPressed: () => setState(() => _editing = true),
                     icon: const Icon(Icons.edit_outlined),
                   ),
               ],
             ),
-            const Text(
-              'Tersimpan privat di akunmu dan tidak dikirim ke AI.',
-              style: TextStyle(fontSize: 12),
+            Text(
+              context.l10n.notePrivateHint,
+              style: const TextStyle(fontSize: 12),
             ),
             const SizedBox(height: 12),
             if (_editing) ...[
@@ -84,9 +87,9 @@ class _AnalysisNoteCardState extends State<AnalysisNoteCard> {
                 minLines: 3,
                 maxLines: 7,
                 maxLength: 5000,
-                decoration: const InputDecoration(
-                  hintText: 'Tulis alasan, observasi, atau pelajaranmu…',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  hintText: context.l10n.noteHint,
+                  border: const OutlineInputBorder(),
                 ),
               ),
               Row(
@@ -99,7 +102,7 @@ class _AnalysisNoteCardState extends State<AnalysisNoteCard> {
                             _controller.text = widget.note ?? '';
                             setState(() => _editing = false);
                           },
-                    child: const Text('Batal'),
+                    child: Text(context.l10n.cancel),
                   ),
                   const SizedBox(width: 8),
                   FilledButton(
@@ -111,7 +114,7 @@ class _AnalysisNoteCardState extends State<AnalysisNoteCard> {
                             dimension: 18,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('Simpan'),
+                        : Text(context.l10n.save),
                   ),
                 ],
               ),
@@ -122,11 +125,11 @@ class _AnalysisNoteCardState extends State<AnalysisNoteCard> {
                 child: TextButton.icon(
                   onPressed: widget.isSaving ? null : () => _save(''),
                   icon: const Icon(Icons.delete_outline),
-                  label: const Text('Hapus catatan'),
+                  label: Text(context.l10n.deleteNote),
                 ),
               ),
             ] else
-              const Text('Belum ada catatan untuk analisis ini.'),
+              Text(context.l10n.noNoteYet),
           ],
         ),
       ),

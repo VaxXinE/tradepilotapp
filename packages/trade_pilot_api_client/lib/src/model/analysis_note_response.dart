@@ -11,10 +11,11 @@ part 'analysis_note_response.g.dart';
 /// Response shape for PUT /analyses/{id}/note — the persisted note body (null when cleared) and the server-stamped updatedAt.
 ///
 /// Properties:
-/// * [note] 
-/// * [updatedAt] 
+/// * [note]
+/// * [updatedAt]
 @BuiltValue()
-abstract class AnalysisNoteResponse implements Built<AnalysisNoteResponse, AnalysisNoteResponseBuilder> {
+abstract class AnalysisNoteResponse
+    implements Built<AnalysisNoteResponse, AnalysisNoteResponseBuilder> {
   @BuiltValueField(wireName: r'note')
   String get note;
 
@@ -23,18 +24,24 @@ abstract class AnalysisNoteResponse implements Built<AnalysisNoteResponse, Analy
 
   AnalysisNoteResponse._();
 
-  factory AnalysisNoteResponse([void updates(AnalysisNoteResponseBuilder b)]) = _$AnalysisNoteResponse;
+  factory AnalysisNoteResponse([void updates(AnalysisNoteResponseBuilder b)]) =
+      _$AnalysisNoteResponse;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AnalysisNoteResponseBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AnalysisNoteResponse> get serializer => _$AnalysisNoteResponseSerializer();
+  static Serializer<AnalysisNoteResponse> get serializer =>
+      _$AnalysisNoteResponseSerializer();
 }
 
-class _$AnalysisNoteResponseSerializer implements PrimitiveSerializer<AnalysisNoteResponse> {
+class _$AnalysisNoteResponseSerializer
+    implements PrimitiveSerializer<AnalysisNoteResponse> {
   @override
-  final Iterable<Type> types = const [AnalysisNoteResponse, _$AnalysisNoteResponse];
+  final Iterable<Type> types = const [
+    AnalysisNoteResponse,
+    _$AnalysisNoteResponse
+  ];
 
   @override
   final String wireName = r'AnalysisNoteResponse';
@@ -62,7 +69,9 @@ class _$AnalysisNoteResponseSerializer implements PrimitiveSerializer<AnalysisNo
     AnalysisNoteResponse object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -119,4 +128,3 @@ class _$AnalysisNoteResponseSerializer implements PrimitiveSerializer<AnalysisNo
     return result.build();
   }
 }
-

@@ -12,14 +12,16 @@ part 'broadcast_notification_body.g.dart';
 /// BroadcastNotificationBody
 ///
 /// Properties:
-/// * [title] 
-/// * [message] 
-/// * [type] 
-/// * [audienceType] 
+/// * [title]
+/// * [message]
+/// * [type]
+/// * [audienceType]
 /// * [audienceValue] - Role name when audienceType=role; tag name when audienceType=tag
 /// * [targetRole] - Deprecated: use audienceType=role + audienceValue instead
 @BuiltValue()
-abstract class BroadcastNotificationBody implements Built<BroadcastNotificationBody, BroadcastNotificationBodyBuilder> {
+abstract class BroadcastNotificationBody
+    implements
+        Built<BroadcastNotificationBody, BroadcastNotificationBodyBuilder> {
   @BuiltValueField(wireName: r'title')
   String get title;
 
@@ -46,20 +48,27 @@ abstract class BroadcastNotificationBody implements Built<BroadcastNotificationB
 
   BroadcastNotificationBody._();
 
-  factory BroadcastNotificationBody([void updates(BroadcastNotificationBodyBuilder b)]) = _$BroadcastNotificationBody;
+  factory BroadcastNotificationBody(
+          [void updates(BroadcastNotificationBodyBuilder b)]) =
+      _$BroadcastNotificationBody;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(BroadcastNotificationBodyBuilder b) => b
-      ..type = BroadcastNotificationBodyTypeEnum.valueOf('info')
-      ..audienceType = BroadcastNotificationBodyAudienceTypeEnum.valueOf('all');
+    ..type = BroadcastNotificationBodyTypeEnum.valueOf('info')
+    ..audienceType = BroadcastNotificationBodyAudienceTypeEnum.valueOf('all');
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<BroadcastNotificationBody> get serializer => _$BroadcastNotificationBodySerializer();
+  static Serializer<BroadcastNotificationBody> get serializer =>
+      _$BroadcastNotificationBodySerializer();
 }
 
-class _$BroadcastNotificationBodySerializer implements PrimitiveSerializer<BroadcastNotificationBody> {
+class _$BroadcastNotificationBodySerializer
+    implements PrimitiveSerializer<BroadcastNotificationBody> {
   @override
-  final Iterable<Type> types = const [BroadcastNotificationBody, _$BroadcastNotificationBody];
+  final Iterable<Type> types = const [
+    BroadcastNotificationBody,
+    _$BroadcastNotificationBody
+  ];
 
   @override
   final String wireName = r'BroadcastNotificationBody';
@@ -90,7 +99,8 @@ class _$BroadcastNotificationBodySerializer implements PrimitiveSerializer<Broad
       yield r'audienceType';
       yield serializers.serialize(
         object.audienceType,
-        specifiedType: const FullType(BroadcastNotificationBodyAudienceTypeEnum),
+        specifiedType:
+            const FullType(BroadcastNotificationBodyAudienceTypeEnum),
       );
     }
     if (object.audienceValue != null) {
@@ -115,7 +125,9 @@ class _$BroadcastNotificationBodySerializer implements PrimitiveSerializer<Broad
     BroadcastNotificationBody object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -147,7 +159,8 @@ class _$BroadcastNotificationBodySerializer implements PrimitiveSerializer<Broad
         case r'type':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(BroadcastNotificationBodyTypeEnum),
+            specifiedType:
+                const FullType.nullable(BroadcastNotificationBodyTypeEnum),
           ) as BroadcastNotificationBodyTypeEnum?;
           if (valueDes == null) continue;
           result.type = valueDes;
@@ -155,7 +168,8 @@ class _$BroadcastNotificationBodySerializer implements PrimitiveSerializer<Broad
         case r'audienceType':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(BroadcastNotificationBodyAudienceTypeEnum),
+            specifiedType: const FullType.nullable(
+                BroadcastNotificationBodyAudienceTypeEnum),
           ) as BroadcastNotificationBodyAudienceTypeEnum?;
           if (valueDes == null) continue;
           result.audienceType = valueDes;
@@ -171,7 +185,8 @@ class _$BroadcastNotificationBodySerializer implements PrimitiveSerializer<Broad
         case r'targetRole':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(BroadcastNotificationBodyTargetRoleEnum),
+            specifiedType: const FullType.nullable(
+                BroadcastNotificationBodyTargetRoleEnum),
           ) as BroadcastNotificationBodyTargetRoleEnum?;
           if (valueDes == null) continue;
           result.targetRole = valueDes;
@@ -206,56 +221,72 @@ class _$BroadcastNotificationBodySerializer implements PrimitiveSerializer<Broad
 }
 
 class BroadcastNotificationBodyTypeEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'info')
-  static const BroadcastNotificationBodyTypeEnum info = _$broadcastNotificationBodyTypeEnum_info;
+  static const BroadcastNotificationBodyTypeEnum info =
+      _$broadcastNotificationBodyTypeEnum_info;
   @BuiltValueEnumConst(wireName: r'warning')
-  static const BroadcastNotificationBodyTypeEnum warning = _$broadcastNotificationBodyTypeEnum_warning;
+  static const BroadcastNotificationBodyTypeEnum warning =
+      _$broadcastNotificationBodyTypeEnum_warning;
   @BuiltValueEnumConst(wireName: r'error')
-  static const BroadcastNotificationBodyTypeEnum error = _$broadcastNotificationBodyTypeEnum_error;
+  static const BroadcastNotificationBodyTypeEnum error =
+      _$broadcastNotificationBodyTypeEnum_error;
 
-  static Serializer<BroadcastNotificationBodyTypeEnum> get serializer => _$broadcastNotificationBodyTypeEnumSerializer;
+  static Serializer<BroadcastNotificationBodyTypeEnum> get serializer =>
+      _$broadcastNotificationBodyTypeEnumSerializer;
 
-  const BroadcastNotificationBodyTypeEnum._(String name): super(name);
+  const BroadcastNotificationBodyTypeEnum._(String name) : super(name);
 
-  static BuiltSet<BroadcastNotificationBodyTypeEnum> get values => _$broadcastNotificationBodyTypeEnumValues;
-  static BroadcastNotificationBodyTypeEnum valueOf(String name) => _$broadcastNotificationBodyTypeEnumValueOf(name);
+  static BuiltSet<BroadcastNotificationBodyTypeEnum> get values =>
+      _$broadcastNotificationBodyTypeEnumValues;
+  static BroadcastNotificationBodyTypeEnum valueOf(String name) =>
+      _$broadcastNotificationBodyTypeEnumValueOf(name);
 }
 
 class BroadcastNotificationBodyAudienceTypeEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'all')
-  static const BroadcastNotificationBodyAudienceTypeEnum all = _$broadcastNotificationBodyAudienceTypeEnum_all;
+  static const BroadcastNotificationBodyAudienceTypeEnum all =
+      _$broadcastNotificationBodyAudienceTypeEnum_all;
   @BuiltValueEnumConst(wireName: r'role')
-  static const BroadcastNotificationBodyAudienceTypeEnum role = _$broadcastNotificationBodyAudienceTypeEnum_role;
+  static const BroadcastNotificationBodyAudienceTypeEnum role =
+      _$broadcastNotificationBodyAudienceTypeEnum_role;
   @BuiltValueEnumConst(wireName: r'tag')
-  static const BroadcastNotificationBodyAudienceTypeEnum tag = _$broadcastNotificationBodyAudienceTypeEnum_tag;
+  static const BroadcastNotificationBodyAudienceTypeEnum tag =
+      _$broadcastNotificationBodyAudienceTypeEnum_tag;
 
-  static Serializer<BroadcastNotificationBodyAudienceTypeEnum> get serializer => _$broadcastNotificationBodyAudienceTypeEnumSerializer;
+  static Serializer<BroadcastNotificationBodyAudienceTypeEnum> get serializer =>
+      _$broadcastNotificationBodyAudienceTypeEnumSerializer;
 
-  const BroadcastNotificationBodyAudienceTypeEnum._(String name): super(name);
+  const BroadcastNotificationBodyAudienceTypeEnum._(String name) : super(name);
 
-  static BuiltSet<BroadcastNotificationBodyAudienceTypeEnum> get values => _$broadcastNotificationBodyAudienceTypeEnumValues;
-  static BroadcastNotificationBodyAudienceTypeEnum valueOf(String name) => _$broadcastNotificationBodyAudienceTypeEnumValueOf(name);
+  static BuiltSet<BroadcastNotificationBodyAudienceTypeEnum> get values =>
+      _$broadcastNotificationBodyAudienceTypeEnumValues;
+  static BroadcastNotificationBodyAudienceTypeEnum valueOf(String name) =>
+      _$broadcastNotificationBodyAudienceTypeEnumValueOf(name);
 }
 
 class BroadcastNotificationBodyTargetRoleEnum extends EnumClass {
-
   /// Deprecated: use audienceType=role + audienceValue instead
   @BuiltValueEnumConst(wireName: r'user')
-  static const BroadcastNotificationBodyTargetRoleEnum user = _$broadcastNotificationBodyTargetRoleEnum_user;
+  static const BroadcastNotificationBodyTargetRoleEnum user =
+      _$broadcastNotificationBodyTargetRoleEnum_user;
+
   /// Deprecated: use audienceType=role + audienceValue instead
   @BuiltValueEnumConst(wireName: r'admin')
-  static const BroadcastNotificationBodyTargetRoleEnum admin = _$broadcastNotificationBodyTargetRoleEnum_admin;
+  static const BroadcastNotificationBodyTargetRoleEnum admin =
+      _$broadcastNotificationBodyTargetRoleEnum_admin;
+
   /// Deprecated: use audienceType=role + audienceValue instead
   @BuiltValueEnumConst(wireName: r'super_admin')
-  static const BroadcastNotificationBodyTargetRoleEnum superAdmin = _$broadcastNotificationBodyTargetRoleEnum_superAdmin;
+  static const BroadcastNotificationBodyTargetRoleEnum superAdmin =
+      _$broadcastNotificationBodyTargetRoleEnum_superAdmin;
 
-  static Serializer<BroadcastNotificationBodyTargetRoleEnum> get serializer => _$broadcastNotificationBodyTargetRoleEnumSerializer;
+  static Serializer<BroadcastNotificationBodyTargetRoleEnum> get serializer =>
+      _$broadcastNotificationBodyTargetRoleEnumSerializer;
 
-  const BroadcastNotificationBodyTargetRoleEnum._(String name): super(name);
+  const BroadcastNotificationBodyTargetRoleEnum._(String name) : super(name);
 
-  static BuiltSet<BroadcastNotificationBodyTargetRoleEnum> get values => _$broadcastNotificationBodyTargetRoleEnumValues;
-  static BroadcastNotificationBodyTargetRoleEnum valueOf(String name) => _$broadcastNotificationBodyTargetRoleEnumValueOf(name);
+  static BuiltSet<BroadcastNotificationBodyTargetRoleEnum> get values =>
+      _$broadcastNotificationBodyTargetRoleEnumValues;
+  static BroadcastNotificationBodyTargetRoleEnum valueOf(String name) =>
+      _$broadcastNotificationBodyTargetRoleEnumValueOf(name);
 }
-

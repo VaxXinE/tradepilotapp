@@ -34,8 +34,7 @@ class _ChangeSecurityQuestionScreenState
   @override
   void initState() {
     super.initState();
-    final current = context.read<AuthProvider>().user?.securityQuestion;
-    _question = _questions.contains(current) ? current! : _questions.first;
+    _question = _questions.first;
   }
 
   @override
@@ -99,6 +98,9 @@ class _ChangeSecurityQuestionScreenState
                     decoration: InputDecoration(
                       labelText: l10n.newSecurityAnswer,
                       suffixIcon: IconButton(
+                        tooltip: _obscureAnswer
+                            ? l10n.showPassword
+                            : l10n.hidePassword,
                         onPressed: () =>
                             setState(() => _obscureAnswer = !_obscureAnswer),
                         icon: Icon(
@@ -119,6 +121,9 @@ class _ChangeSecurityQuestionScreenState
                     decoration: InputDecoration(
                       labelText: l10n.currentPassword,
                       suffixIcon: IconButton(
+                        tooltip: _obscurePassword
+                            ? l10n.showPassword
+                            : l10n.hidePassword,
                         onPressed: () => setState(
                           () => _obscurePassword = !_obscurePassword,
                         ),

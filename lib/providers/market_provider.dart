@@ -10,6 +10,8 @@ import '../models/market_models.dart';
 import '../models/technical_summary.dart';
 import '../repositories/market_repository.dart';
 import 'auth_provider.dart';
+import '../l10n/app_messages.dart';
+import '../l10n/generated/app_localizations.dart';
 
 class MarketProvider extends ChangeNotifier {
   MarketProvider(this._authProvider, this._repository) {
@@ -25,10 +27,24 @@ class MarketProvider extends ChangeNotifier {
   // SOURCE OF TRUTH — INSTRUMENTS
   // ===========================================================================
 
+  // Id kategori bersifat internal — label yang dilihat pengguna diambil dari
+  // [instrumentCategoryLabel]. Web memberi label ketiganya "Futures", "Forex",
+  // dan "Crypto", tetapi grup pertama sebenarnya berisi logam spot dan indeks,
+  // bukan kontrak berjangka, sehingga mobile memakai penamaan yang jujur.
+
+  /// Logam spot, energi, dan indeks saham.
+  static const commoditiesIndicesCategory = 'commoditiesIndices';
+
+  /// Pasangan mata uang.
+  static const forexCategory = 'forex';
+
+  /// Aset kripto.
+  static const cryptoCategory = 'crypto';
+
   /// Disamakan dengan Trade-Pilot web `prod`
   /// dan SUPPORTED_INSTRUMENTS backend.
   static const instrumentGroups = {
-    'Futures': [
+    commoditiesIndicesCategory: [
       'XAU/USD',
       'BRENT',
       'XAG/USD',
@@ -38,9 +54,52 @@ class MarketProvider extends ChangeNotifier {
       'NASDAQ',
       'DXY',
     ],
-    'Forex': ['AUD/USD', 'EUR/USD', 'GBP/USD', 'USD/CHF', 'USD/JPY', 'USD/IDR'],
-    'Crypto': ['BTC/USD', 'ETH/USD', 'SOL/USD', 'BNB/USD', 'XRP/USD'],
+    forexCategory: [
+      'AUD/USD',
+      'EUR/USD',
+      'GBP/USD',
+      'USD/CHF',
+      'USD/JPY',
+      'USD/IDR',
+    ],
+    cryptoCategory: ['BTC/USD', 'ETH/USD', 'SOL/USD', 'BNB/USD', 'XRP/USD'],
   };
+
+  /// Label tampil untuk sebuah id kategori pada [instrumentGroups].
+  static String instrumentCategoryLabel(AppLocalizations l10n, String id) =>
+      switch (id) {
+        commoditiesIndicesCategory => l10n.instrumentCategoryCommoditiesIndices,
+        forexCategory => l10n.instrumentCategoryForex,
+        cryptoCategory => l10n.instrumentCategoryCrypto,
+        _ => id,
+      };
+
+  /// Instrumen yang boleh dipilih pada layar Analisis.
+  ///
+  /// Mengikuti `VISIBLE_INSTRUMENTS` pada `pages/analyze.tsx` di web. Daftar
+  /// penuh di atas tetap dipakai untuk quote, watchlist, dan riwayat, sehingga
+  /// data lama pengguna tidak hilang ketika daftar ini dipersempit.
+  static const analyzeVisibleInstruments = {
+    'XAU/USD',
+    'BRENT',
+    'NIKKEI',
+    'HSI',
+  };
+
+  /// [instrumentGroups] yang sudah disaring oleh [analyzeVisibleInstruments].
+  ///
+  /// Kategori tanpa instrumen yang terlihat ikut dihilangkan, sama seperti
+  /// `VISIBLE_INSTRUMENT_CATEGORIES` pada web.
+  static Map<String, List<String>> get analyzeInstrumentGroups {
+    final groups = <String, List<String>>{};
+    for (final entry in instrumentGroups.entries) {
+      final visible = entry.value
+          .where(analyzeVisibleInstruments.contains)
+          .toList();
+      if (visible.isNotEmpty) groups[entry.key] = visible;
+    }
+    return groups;
+  }
 
   static final Set<String> supportedInstruments = {
     for (final group in instrumentGroups.values) ...group,
@@ -62,6 +121,15 @@ class MarketProvider extends ChangeNotifier {
   // ===========================================================================
 
   String selectedInstrument = 'XAU/USD';
+
+  /// True ketika instrumen aktif diketik sendiri dan bukan bagian dari
+  /// [supportedInstruments].
+  ///
+  /// Web mengirim simbol yang diketik apa adanya ke endpoint analisis dan tidak
+  /// punya data chart untuk simbol itu. Mobile mengikuti hal yang sama: simbol
+  /// tetap dipakai untuk analisis, tetapi permintaan candle, teknikal, dan
+  /// kalender dilewati agar tidak memunculkan error dari backend.
+  bool isCustomInstrument = false;
 
   String selectedTimeframe = '1h';
 
@@ -194,6 +262,8 @@ class MarketProvider extends ChangeNotifier {
     _selectionGeneration++;
 
     selectedInstrument = 'XAU/USD';
+
+    isCustomInstrument = false;
     selectedTimeframe = '1h';
     selectedCandles = const [];
     selectedTechnical = null;
@@ -292,7 +362,10 @@ class MarketProvider extends ChangeNotifier {
       marketError = null;
     } catch (e) {
       if (epoch == _sessionEpoch) {
-        marketError = _friendlyError(e, fallback: 'Gagal memuat harga live.');
+        marketError = _friendlyError(
+          e,
+          fallback: AppMessages.l10n.errLivePricesFailed,
+        );
       }
     } finally {
       _quotesRequestInFlight = false;
@@ -315,11 +388,13 @@ class MarketProvider extends ChangeNotifier {
     String instrument, {
     String? timeframe,
     bool force = false,
+    bool allowUnsupported = false,
   }) async {
     final normalized = _normalizeInstrument(instrument);
+    final isSupported = supportedInstruments.contains(normalized);
 
-    if (!supportedInstruments.contains(normalized)) {
-      marketError = 'Instrumen tidak didukung.';
+    if (!isSupported && !allowUnsupported) {
+      marketError = AppMessages.l10n.errInstrumentUnsupported;
 
       notifyListeners();
       return;
@@ -328,13 +403,15 @@ class MarketProvider extends ChangeNotifier {
     final nextTimeframe = timeframe ?? selectedTimeframe;
 
     if (!supportedTimeframes.contains(nextTimeframe)) {
-      marketError = 'Timeframe tidak didukung.';
+      marketError = AppMessages.l10n.errTimeframeUnsupported;
 
       notifyListeners();
       return;
     }
 
     selectedInstrument = normalized;
+
+    isCustomInstrument = !isSupported;
 
     selectedTimeframe = nextTimeframe;
 
@@ -344,12 +421,22 @@ class MarketProvider extends ChangeNotifier {
 
     selectedCalendar = const [];
 
+    if (isCustomInstrument) {
+      // Tidak ada feed market untuk simbol bebas; hentikan di sini agar layar
+      // menampilkan status kosong, bukan error backend.
+      isLoadingSelectedMarket = false;
+      marketError = null;
+
+      notifyListeners();
+      return;
+    }
+
     await loadSelectedMarketData(force: force);
   }
 
   Future<void> selectTimeframe(String timeframe, {bool force = false}) async {
     if (!supportedTimeframes.contains(timeframe)) {
-      marketError = 'Timeframe tidak didukung.';
+      marketError = AppMessages.l10n.errTimeframeUnsupported;
 
       notifyListeners();
       return;
@@ -359,6 +446,11 @@ class MarketProvider extends ChangeNotifier {
 
     selectedCandles = const [];
     selectedTechnical = null;
+
+    if (isCustomInstrument) {
+      notifyListeners();
+      return;
+    }
 
     await loadSelectedTechnicalData(force: force);
   }
@@ -447,7 +539,7 @@ class MarketProvider extends ChangeNotifier {
       if (firstError != null) {
         marketError = _friendlyError(
           firstError!,
-          fallback: 'Sebagian data pasar belum tersedia.',
+          fallback: AppMessages.l10n.errMarketDataPartial,
         );
       } else {
         marketError = null;
@@ -493,7 +585,7 @@ class MarketProvider extends ChangeNotifier {
       if (generation == _selectionGeneration) {
         marketError = _friendlyError(
           e,
-          fallback: 'Gagal memuat data teknikal.',
+          fallback: AppMessages.l10n.errTechnicalDataFailed,
         );
       }
     } finally {
@@ -655,7 +747,7 @@ class MarketProvider extends ChangeNotifier {
       throw ArgumentError.value(
         instrument,
         'instrument',
-        'Instrument tidak didukung.',
+        AppMessages.l10n.errInstrumentUnsupported,
       );
     }
   }
@@ -665,7 +757,7 @@ class MarketProvider extends ChangeNotifier {
       throw ArgumentError.value(
         timeframe,
         'timeframe',
-        'Timeframe tidak didukung.',
+        AppMessages.l10n.errTimeframeUnsupported,
       );
     }
   }
@@ -691,12 +783,12 @@ class MarketProvider extends ChangeNotifier {
       }
 
       if (error.response?.statusCode == 401) {
-        return 'Sesi login sudah berakhir.';
+        return AppMessages.l10n.errSessionExpired;
       }
 
       if (error.type == DioExceptionType.connectionError ||
           error.type == DioExceptionType.connectionTimeout) {
-        return 'Tidak dapat terhubung ke server.';
+        return AppMessages.l10n.errServerUnreachable;
       }
     }
 

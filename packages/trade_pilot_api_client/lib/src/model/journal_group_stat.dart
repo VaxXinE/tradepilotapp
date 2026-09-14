@@ -11,12 +11,13 @@ part 'journal_group_stat.g.dart';
 /// Aggregate stats for one instrument or session bucket (best/worst rankings).
 ///
 /// Properties:
-/// * [key] 
-/// * [winRate] 
-/// * [total] 
-/// * [avgPnlPercent] 
+/// * [key]
+/// * [winRate]
+/// * [total]
+/// * [avgPnlPercent]
 @BuiltValue()
-abstract class JournalGroupStat implements Built<JournalGroupStat, JournalGroupStatBuilder> {
+abstract class JournalGroupStat
+    implements Built<JournalGroupStat, JournalGroupStatBuilder> {
   @BuiltValueField(wireName: r'key')
   String get key;
 
@@ -31,16 +32,19 @@ abstract class JournalGroupStat implements Built<JournalGroupStat, JournalGroupS
 
   JournalGroupStat._();
 
-  factory JournalGroupStat([void updates(JournalGroupStatBuilder b)]) = _$JournalGroupStat;
+  factory JournalGroupStat([void updates(JournalGroupStatBuilder b)]) =
+      _$JournalGroupStat;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(JournalGroupStatBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<JournalGroupStat> get serializer => _$JournalGroupStatSerializer();
+  static Serializer<JournalGroupStat> get serializer =>
+      _$JournalGroupStatSerializer();
 }
 
-class _$JournalGroupStatSerializer implements PrimitiveSerializer<JournalGroupStat> {
+class _$JournalGroupStatSerializer
+    implements PrimitiveSerializer<JournalGroupStat> {
   @override
   final Iterable<Type> types = const [JournalGroupStat, _$JournalGroupStat];
 
@@ -82,7 +86,9 @@ class _$JournalGroupStatSerializer implements PrimitiveSerializer<JournalGroupSt
     JournalGroupStat object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -154,4 +160,3 @@ class _$JournalGroupStatSerializer implements PrimitiveSerializer<JournalGroupSt
     return result.build();
   }
 }
-

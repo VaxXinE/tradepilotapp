@@ -11,11 +11,12 @@ part 'trader_mirror_highlight.g.dart';
 /// Short bilingual one-liner pulled from the insights bundle. Used for both the dashboard hero strip and the weekly trader-report push. `id` is the stable highlight key; `en` and `idText` are the English and Indonesian copy.
 ///
 /// Properties:
-/// * [id] 
-/// * [en] 
-/// * [idText] 
+/// * [id]
+/// * [en]
+/// * [idText]
 @BuiltValue()
-abstract class TraderMirrorHighlight implements Built<TraderMirrorHighlight, TraderMirrorHighlightBuilder> {
+abstract class TraderMirrorHighlight
+    implements Built<TraderMirrorHighlight, TraderMirrorHighlightBuilder> {
   @BuiltValueField(wireName: r'id')
   String get id;
 
@@ -27,18 +28,24 @@ abstract class TraderMirrorHighlight implements Built<TraderMirrorHighlight, Tra
 
   TraderMirrorHighlight._();
 
-  factory TraderMirrorHighlight([void updates(TraderMirrorHighlightBuilder b)]) = _$TraderMirrorHighlight;
+  factory TraderMirrorHighlight(
+      [void updates(TraderMirrorHighlightBuilder b)]) = _$TraderMirrorHighlight;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(TraderMirrorHighlightBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<TraderMirrorHighlight> get serializer => _$TraderMirrorHighlightSerializer();
+  static Serializer<TraderMirrorHighlight> get serializer =>
+      _$TraderMirrorHighlightSerializer();
 }
 
-class _$TraderMirrorHighlightSerializer implements PrimitiveSerializer<TraderMirrorHighlight> {
+class _$TraderMirrorHighlightSerializer
+    implements PrimitiveSerializer<TraderMirrorHighlight> {
   @override
-  final Iterable<Type> types = const [TraderMirrorHighlight, _$TraderMirrorHighlight];
+  final Iterable<Type> types = const [
+    TraderMirrorHighlight,
+    _$TraderMirrorHighlight
+  ];
 
   @override
   final String wireName = r'TraderMirrorHighlight';
@@ -71,7 +78,9 @@ class _$TraderMirrorHighlightSerializer implements PrimitiveSerializer<TraderMir
     TraderMirrorHighlight object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -135,4 +144,3 @@ class _$TraderMirrorHighlightSerializer implements PrimitiveSerializer<TraderMir
     return result.build();
   }
 }
-

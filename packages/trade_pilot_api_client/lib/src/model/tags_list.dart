@@ -12,7 +12,7 @@ part 'tags_list.g.dart';
 /// TagsList
 ///
 /// Properties:
-/// * [tags] 
+/// * [tags]
 @BuiltValue()
 abstract class TagsList implements Built<TagsList, TagsListBuilder> {
   @BuiltValueField(wireName: r'tags')
@@ -54,7 +54,9 @@ class _$TagsListSerializer implements PrimitiveSerializer<TagsList> {
     TagsList object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -104,4 +106,3 @@ class _$TagsListSerializer implements PrimitiveSerializer<TagsList> {
     return result.build();
   }
 }
-

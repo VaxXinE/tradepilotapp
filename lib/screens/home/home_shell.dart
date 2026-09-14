@@ -7,12 +7,18 @@ import '../../providers/analysis_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/market_provider.dart';
 import '../../providers/notifications_provider.dart';
+import '../../providers/progression_provider.dart';
 import '../../providers/watchlist_provider.dart';
+import '../../core/theme/theme_controller.dart';
 import '../../l10n/l10n.dart';
+import '../../widgets/app_shell_chrome.dart';
+import '../../widgets/language_menu_button.dart';
+import '../notifications/notifications_screen.dart';
 import 'tabs/analyze_tab.dart';
 import 'tabs/dashboard_tab.dart';
 import 'tabs/history_tab.dart';
 import 'tabs/profile_tab.dart';
+import '../mindset/mindset_screen.dart';
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
@@ -23,12 +29,16 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   static const Duration _analysisPollInterval = Duration(seconds: 15);
+  static const _tabPaths = ['/', '/analyze', '/history', '/guide', '/profile'];
+
+  /// Indeks view yang punya tab pada navigasi bawah. Profil (4) tetap tanpa
+  /// tab dan dibuka lewat avatar header, sama seperti web.
+  static const _navIds = {0, 1, 2, 3};
 
   int _index = 0;
+  int _analyzeTabRevision = 0;
 
   Timer? _analysisSyncTimer;
-
-  late final List<Widget> _tabs;
 
   // ===========================================================================
   // LIFECYCLE
@@ -37,16 +47,6 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-
-    _tabs = [
-      DashboardTab(
-        onOpenAnalyze: _openAnalyzeFromDashboard,
-        onOpenHistory: _openHistoryFromDashboard,
-      ),
-      const AnalyzeTab(),
-      HistoryTab(onReanalyze: _openAnalyzeFromHistory),
-      const ProfileTab(),
-    ];
 
     WidgetsBinding.instance.addObserver(this);
 
@@ -61,6 +61,8 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       // -------------------------------------------------------------------
 
       context.read<NotificationsProvider>().setRealtimeEnabled(true);
+
+      unawaited(context.read<AuthProvider>().telemetry.pageView(_tabPaths[0]));
 
       // Initial sync tab.
       _syncCurrentTab(showLoading: true);
@@ -242,10 +244,17 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         break;
 
       // ---------------------------------------------------------------------
-      // PROFILE
+      // GUIDE
       // ---------------------------------------------------------------------
 
       case 3:
+        break;
+
+      // ---------------------------------------------------------------------
+      // PROFILE
+      // ---------------------------------------------------------------------
+
+      case 4:
         break;
     }
   }
@@ -305,6 +314,8 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
 
         unawaited(watchlistProvider.loadWatchlist());
 
+        unawaited(context.read<ProgressionProvider>().refresh(silent: true));
+
         break;
 
       // ---------------------------------------------------------------------
@@ -315,14 +326,25 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         // P2-A:
         // menghormati search/filter aktif.
         unawaited(analysisProvider.refreshVisibleHistory(silent: !showLoading));
+        unawaited(
+          analysisProvider.loadHistoryOutcomeSummary(silent: !showLoading),
+        );
 
+        break;
+
+      // ---------------------------------------------------------------------
+      // GUIDE
+      // ---------------------------------------------------------------------
+
+      case 3:
         break;
 
       // ---------------------------------------------------------------------
       // PROFILE
       // ---------------------------------------------------------------------
 
-      case 3:
+      case 4:
+        unawaited(context.read<ProgressionProvider>().refresh(silent: true));
         break;
     }
   }
@@ -342,11 +364,25 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       unawaited(market.selectInstrument(instrument));
     }
 
-    _onTabSelected(1);
+    _openNewAnalysis();
   }
 
   void _openHistoryFromDashboard() {
     _onTabSelected(2);
+  }
+
+  void _openNotifications() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const NotificationsScreen()));
+  }
+
+  Future<void> _toggleTheme() async {
+    final theme = context.read<ThemeController>();
+    final enabled = !theme.isDarkMode;
+    await theme.setDarkMode(enabled);
+    if (!mounted) return;
+    await context.read<AuthProvider>().updateTheme(enabled);
   }
 
   void _openAnalyzeFromHistory(String instrument, String timeframe) {
@@ -356,7 +392,19 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         timeframe: timeframe,
       ),
     );
-    _onTabSelected(1);
+    _openNewAnalysis();
+  }
+
+  void _openNewAnalysis() {
+    final trackPageView = _index != 1;
+    setState(() {
+      _analyzeTabRevision++;
+      _index = 1;
+    });
+    if (trackPageView) {
+      unawaited(context.read<AuthProvider>().telemetry.pageView(_tabPaths[1]));
+    }
+    _syncTab(1);
   }
 
   // ===========================================================================
@@ -368,6 +416,9 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       setState(() {
         _index = index;
       });
+      unawaited(
+        context.read<AuthProvider>().telemetry.pageView(_tabPaths[index]),
+      );
     }
 
     // -----------------------------------------------------------------------
@@ -387,42 +438,72 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final auth = context.watch<AuthProvider>();
+    final market = context.watch<MarketProvider>();
+    final notifications = context.watch<NotificationsProvider>();
+    final themeController = context.watch<ThemeController>();
+    final user = auth.user;
+    final tabs = [
+      DashboardTab(
+        onOpenAnalyze: _openAnalyzeFromDashboard,
+        onOpenHistory: _openHistoryFromDashboard,
+      ),
+      AnalyzeTab(
+        key: ValueKey(_analyzeTabRevision),
+        onNewAnalysis: _openNewAnalysis,
+      ),
+      HistoryTab(
+        onReanalyze: _openAnalyzeFromHistory,
+        onNewAnalysis: _openNewAnalysis,
+      ),
+      const MindsetScreen(embedded: true),
+      const ProfileTab(),
+    ];
+
     return Scaffold(
-      body: IndexedStack(index: _index, children: _tabs),
-      bottomNavigationBar: DecoratedBox(
-        decoration: BoxDecoration(
-          border: Border(
-            top: BorderSide(
-              color: Theme.of(context).colorScheme.outlineVariant,
-            ),
+      body: Column(
+        children: [
+          TradePilotAppHeader(
+            displayName: user?.displayName ?? l10n.trader,
+            avatarUrl: user?.avatarUrl,
+            unreadCount: notifications.unreadCount,
+            languageButton: const LanguageMenuButton(),
+            isDarkMode: themeController.isDarkMode,
+            onToggleTheme: _toggleTheme,
+            onOpenNotifications: _openNotifications,
+            onOpenProfile: () => _onTabSelected(4),
+            onOpenHome: () => _onTabSelected(0),
+            profileActive: _index == 4,
+            onBack: _navIds.contains(_index) ? null : () => _onTabSelected(1),
+            notificationsLabel: l10n.notifications,
+            profileLabel: l10n.profile,
+            themeLabel: l10n.darkTheme,
+            logoLabel: l10n.tradePilotLogo,
+            backLabel: l10n.back,
           ),
-        ),
-        child: NavigationBar(
-          selectedIndex: _index,
-          onDestinationSelected: _onTabSelected,
-          destinations: [
-            NavigationDestination(
-              icon: Icon(Icons.space_dashboard_outlined),
-              selectedIcon: Icon(Icons.space_dashboard_rounded),
-              label: l10n.dashboard,
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.auto_awesome_outlined),
-              selectedIcon: Icon(Icons.auto_awesome_rounded),
-              label: l10n.analysis,
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.history_outlined),
-              selectedIcon: Icon(Icons.history_rounded),
-              label: l10n.history,
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.person_outline_rounded),
-              selectedIcon: Icon(Icons.person_rounded),
-              label: l10n.profile,
-            ),
-          ],
-        ),
+          LiveMarketTicker(quotes: market.quotes.values),
+          Expanded(
+            child: IndexedStack(index: _index, children: tabs),
+          ),
+        ],
+      ),
+      bottomNavigationBar: AppBottomNav(
+        activeId: _index,
+        onSelected: _onTabSelected,
+        items: [
+          AppNavItem(id: 0, icon: Icons.home_rounded, label: l10n.dashboard),
+          AppNavItem(
+            id: 1,
+            icon: Icons.trending_up_rounded,
+            label: l10n.analysis,
+          ),
+          AppNavItem(id: 2, icon: Icons.schedule_rounded, label: l10n.history),
+          AppNavItem(
+            id: 3,
+            icon: Icons.menu_book_rounded,
+            label: l10n.guideNavLabel,
+          ),
+        ],
       ),
     );
   }

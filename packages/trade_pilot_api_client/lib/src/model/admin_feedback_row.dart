@@ -12,17 +12,18 @@ part 'admin_feedback_row.g.dart';
 /// AdminFeedbackRow
 ///
 /// Properties:
-/// * [id] 
-/// * [analysisId] 
-/// * [instrument] 
-/// * [userId] 
-/// * [userEmail] 
-/// * [feedbackType] 
-/// * [outcome] 
-/// * [note] 
-/// * [createdAt] 
+/// * [id]
+/// * [analysisId]
+/// * [instrument]
+/// * [userId]
+/// * [userEmail]
+/// * [feedbackType]
+/// * [outcome]
+/// * [note]
+/// * [createdAt]
 @BuiltValue()
-abstract class AdminFeedbackRow implements Built<AdminFeedbackRow, AdminFeedbackRowBuilder> {
+abstract class AdminFeedbackRow
+    implements Built<AdminFeedbackRow, AdminFeedbackRowBuilder> {
   @BuiltValueField(wireName: r'id')
   int get id;
 
@@ -54,16 +55,19 @@ abstract class AdminFeedbackRow implements Built<AdminFeedbackRow, AdminFeedback
 
   AdminFeedbackRow._();
 
-  factory AdminFeedbackRow([void updates(AdminFeedbackRowBuilder b)]) = _$AdminFeedbackRow;
+  factory AdminFeedbackRow([void updates(AdminFeedbackRowBuilder b)]) =
+      _$AdminFeedbackRow;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AdminFeedbackRowBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AdminFeedbackRow> get serializer => _$AdminFeedbackRowSerializer();
+  static Serializer<AdminFeedbackRow> get serializer =>
+      _$AdminFeedbackRowSerializer();
 }
 
-class _$AdminFeedbackRowSerializer implements PrimitiveSerializer<AdminFeedbackRow> {
+class _$AdminFeedbackRowSerializer
+    implements PrimitiveSerializer<AdminFeedbackRow> {
   @override
   final Iterable<Type> types = const [AdminFeedbackRow, _$AdminFeedbackRow];
 
@@ -132,7 +136,9 @@ class _$AdminFeedbackRowSerializer implements PrimitiveSerializer<AdminFeedbackR
     AdminFeedbackRow object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -242,34 +248,42 @@ class _$AdminFeedbackRowSerializer implements PrimitiveSerializer<AdminFeedbackR
 }
 
 class AdminFeedbackRowFeedbackTypeEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'useful')
-  static const AdminFeedbackRowFeedbackTypeEnum useful = _$adminFeedbackRowFeedbackTypeEnum_useful;
+  static const AdminFeedbackRowFeedbackTypeEnum useful =
+      _$adminFeedbackRowFeedbackTypeEnum_useful;
   @BuiltValueEnumConst(wireName: r'not_useful')
-  static const AdminFeedbackRowFeedbackTypeEnum notUseful = _$adminFeedbackRowFeedbackTypeEnum_notUseful;
+  static const AdminFeedbackRowFeedbackTypeEnum notUseful =
+      _$adminFeedbackRowFeedbackTypeEnum_notUseful;
 
-  static Serializer<AdminFeedbackRowFeedbackTypeEnum> get serializer => _$adminFeedbackRowFeedbackTypeEnumSerializer;
+  static Serializer<AdminFeedbackRowFeedbackTypeEnum> get serializer =>
+      _$adminFeedbackRowFeedbackTypeEnumSerializer;
 
-  const AdminFeedbackRowFeedbackTypeEnum._(String name): super(name);
+  const AdminFeedbackRowFeedbackTypeEnum._(String name) : super(name);
 
-  static BuiltSet<AdminFeedbackRowFeedbackTypeEnum> get values => _$adminFeedbackRowFeedbackTypeEnumValues;
-  static AdminFeedbackRowFeedbackTypeEnum valueOf(String name) => _$adminFeedbackRowFeedbackTypeEnumValueOf(name);
+  static BuiltSet<AdminFeedbackRowFeedbackTypeEnum> get values =>
+      _$adminFeedbackRowFeedbackTypeEnumValues;
+  static AdminFeedbackRowFeedbackTypeEnum valueOf(String name) =>
+      _$adminFeedbackRowFeedbackTypeEnumValueOf(name);
 }
 
 class AdminFeedbackRowOutcomeEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'correct')
-  static const AdminFeedbackRowOutcomeEnum correct = _$adminFeedbackRowOutcomeEnum_correct;
+  static const AdminFeedbackRowOutcomeEnum correct =
+      _$adminFeedbackRowOutcomeEnum_correct;
   @BuiltValueEnumConst(wireName: r'wrong')
-  static const AdminFeedbackRowOutcomeEnum wrong = _$adminFeedbackRowOutcomeEnum_wrong;
+  static const AdminFeedbackRowOutcomeEnum wrong =
+      _$adminFeedbackRowOutcomeEnum_wrong;
   @BuiltValueEnumConst(wireName: r'unknown')
-  static const AdminFeedbackRowOutcomeEnum unknown = _$adminFeedbackRowOutcomeEnum_unknown;
+  static const AdminFeedbackRowOutcomeEnum unknown =
+      _$adminFeedbackRowOutcomeEnum_unknown;
 
-  static Serializer<AdminFeedbackRowOutcomeEnum> get serializer => _$adminFeedbackRowOutcomeEnumSerializer;
+  static Serializer<AdminFeedbackRowOutcomeEnum> get serializer =>
+      _$adminFeedbackRowOutcomeEnumSerializer;
 
-  const AdminFeedbackRowOutcomeEnum._(String name): super(name);
+  const AdminFeedbackRowOutcomeEnum._(String name) : super(name);
 
-  static BuiltSet<AdminFeedbackRowOutcomeEnum> get values => _$adminFeedbackRowOutcomeEnumValues;
-  static AdminFeedbackRowOutcomeEnum valueOf(String name) => _$adminFeedbackRowOutcomeEnumValueOf(name);
+  static BuiltSet<AdminFeedbackRowOutcomeEnum> get values =>
+      _$adminFeedbackRowOutcomeEnumValues;
+  static AdminFeedbackRowOutcomeEnum valueOf(String name) =>
+      _$adminFeedbackRowOutcomeEnumValueOf(name);
 }
-

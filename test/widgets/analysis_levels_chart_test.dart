@@ -86,6 +86,41 @@ void main() {
     expect(find.textContaining('BUY Entry'), findsOneWidget);
     expect(find.textContaining('SELL Entry'), findsOneWidget);
   });
+
+  testWidgets('does not treat timeframe text as an entry range', (
+    tester,
+  ) async {
+    final plan = TradePlan(
+      (builder) => builder
+        ..preferredSide = TradePlanPreferredSideEnum.wait
+        ..buy.replace(
+          _side('di atas 4421 setelah breakout 5m', '4400', '4450', '4480'),
+        )
+        ..sell.replace(
+          _side('di bawah 4384 setelah breakdown 5m', '4410', '4360', '4330'),
+        ),
+    );
+
+    await tester.pumpWidget(
+      localizedTestApp(
+        home: Scaffold(
+          body: AnalysisLevelsChart(
+            candles: [
+              _candle(open: 4390, close: 4400),
+              _candle(open: 4400, close: 4395),
+            ],
+            tradePlan: plan,
+            tradingBias: 'neutral',
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('4421.00'), findsOneWidget);
+    expect(find.text('4384.00'), findsOneWidget);
+    expect(find.text('2213.00'), findsNothing);
+    expect(find.text('2194.50'), findsNothing);
+  });
 }
 
 TradeSide _side(String entry, String stop, String tp1, String tp2) => TradeSide(
