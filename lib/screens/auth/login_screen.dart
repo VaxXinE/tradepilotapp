@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../l10n/l10n.dart';
@@ -239,6 +241,29 @@ class _LoginScreenState extends State<LoginScreen> {
                                         ),
                                         label: Text(l10n.continueWithGoogle),
                                       ),
+                                      if (defaultTargetPlatform ==
+                                          TargetPlatform.iOS) ...[
+                                        const SizedBox(height: 10),
+                                        SignInWithAppleButton(
+                                          key: const Key(
+                                            'apple-sign-in-button',
+                                          ),
+                                          onPressed: auth.isBusy
+                                              ? null
+                                              : auth.loginWithApple,
+                                          text: l10n.continueWithApple,
+                                          height: 48,
+                                          // Samakan dengan OutlinedButton
+                                          // Google tepat di atasnya.
+                                          borderRadius: const BorderRadius.all(
+                                            Radius.circular(AppColors.radiusMd),
+                                          ),
+                                          style: isDark
+                                              ? SignInWithAppleButtonStyle.white
+                                              : SignInWithAppleButtonStyle
+                                                    .black,
+                                        ),
+                                      ],
                                       const SizedBox(height: 18),
                                       Row(
                                         children: [

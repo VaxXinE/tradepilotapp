@@ -64,6 +64,9 @@ export 'package:trade_pilot_api_client/src/model/analytics_usage_stats_country_b
 export 'package:trade_pilot_api_client/src/model/analytics_usage_stats_daily_activity_inner.dart';
 export 'package:trade_pilot_api_client/src/model/analytics_usage_stats_device_breakdown_inner.dart';
 export 'package:trade_pilot_api_client/src/model/analytics_usage_stats_feature_breakdown_inner.dart';
+export 'package:trade_pilot_api_client/src/model/apple_native_login_body.dart';
+export 'package:trade_pilot_api_client/src/model/apple_reauth_body.dart';
+export 'package:trade_pilot_api_client/src/model/apple_reauth_response.dart';
 export 'package:trade_pilot_api_client/src/model/auth_response.dart';
 export 'package:trade_pilot_api_client/src/model/broadcast.dart';
 export 'package:trade_pilot_api_client/src/model/broadcast_notification_body.dart';
@@ -117,6 +120,7 @@ export 'package:trade_pilot_api_client/src/model/message_response.dart';
 export 'package:trade_pilot_api_client/src/model/mirror_gated_insight.dart';
 export 'package:trade_pilot_api_client/src/model/mirror_group_stat.dart';
 export 'package:trade_pilot_api_client/src/model/native_push_register_body.dart';
+export 'package:trade_pilot_api_client/src/model/native_push_test_result.dart';
 export 'package:trade_pilot_api_client/src/model/native_push_unregister_body.dart';
 export 'package:trade_pilot_api_client/src/model/notification.dart';
 export 'package:trade_pilot_api_client/src/model/notifications_list.dart';

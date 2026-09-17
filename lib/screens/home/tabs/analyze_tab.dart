@@ -1089,6 +1089,8 @@ class _LiveStatusChip extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(999),
         color: color.withValues(alpha: 0.1),
+        border: Border.all(color: color.withValues(alpha: 0.32)),
+        boxShadow: AppColors.signalGlow(color, enabled: isDark),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1198,7 +1200,11 @@ class _SessionContainer extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+        boxShadow: AppColors.signalGlow(
+          color,
+          enabled: Theme.of(context).brightness == Brightness.dark,
+        ),
       ),
       child: Row(
         children: [

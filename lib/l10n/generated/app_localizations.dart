@@ -2096,17 +2096,35 @@ abstract class AppLocalizations {
   /// **'Continue with Google'**
   String get continueWithGoogle;
 
+  /// No description provided for @continueWithApple.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Apple'**
+  String get continueWithApple;
+
   /// No description provided for @googleDeleteReauthDescription.
   ///
   /// In en, this message translates to:
   /// **'To protect your account, verify your identity with Google before deletion.'**
   String get googleDeleteReauthDescription;
 
+  /// No description provided for @federatedDeleteReauthDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'To protect your account, verify with the sign-in method linked to this account before deletion.'**
+  String get federatedDeleteReauthDescription;
+
   /// No description provided for @verifyGoogleAndDelete.
   ///
   /// In en, this message translates to:
   /// **'Verify with Google and delete'**
   String get verifyGoogleAndDelete;
+
+  /// No description provided for @verifyAppleAndDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify with Apple and delete'**
+  String get verifyAppleAndDelete;
 
   /// No description provided for @errGoogleTokenInvalid.
   ///
@@ -2126,11 +2144,41 @@ abstract class AppLocalizations {
   /// **'Google Sign-In is temporarily unavailable. Please try again later.'**
   String get errGoogleUnavailable;
 
+  /// No description provided for @errGoogleConfiguration.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Sign-In is not configured for this app build. Please contact support.'**
+  String get errGoogleConfiguration;
+
   /// No description provided for @errGoogleSignInFailed.
   ///
   /// In en, this message translates to:
   /// **'Could not sign in with Google. Please try again.'**
   String get errGoogleSignInFailed;
+
+  /// No description provided for @errAppleTokenInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple could not verify this sign-in. Please try again.'**
+  String get errAppleTokenInvalid;
+
+  /// No description provided for @errAppleAccountConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'This email is linked to another sign-in method. Sign in with that method first.'**
+  String get errAppleAccountConflict;
+
+  /// No description provided for @errAppleUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Apple is not available yet. Please try again later.'**
+  String get errAppleUnavailable;
+
+  /// No description provided for @errAppleSignInFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not sign in with Apple. Please try again.'**
+  String get errAppleSignInFailed;
 
   /// No description provided for @verifying.
   ///
@@ -2183,8 +2231,26 @@ abstract class AppLocalizations {
   /// No description provided for @registerDescription.
   ///
   /// In en, this message translates to:
-  /// **'Create an account and tailor the analysis to your experience.'**
+  /// **'Join for free and start your analysis'**
   String get registerDescription;
+
+  /// No description provided for @registerValueInsight.
+  ///
+  /// In en, this message translates to:
+  /// **'Market insight, not blind signals'**
+  String get registerValueInsight;
+
+  /// No description provided for @registerValueFast.
+  ///
+  /// In en, this message translates to:
+  /// **'First analysis in under 30 seconds'**
+  String get registerValueFast;
+
+  /// No description provided for @registerValueRisk.
+  ///
+  /// In en, this message translates to:
+  /// **'Know exactly when you\'re wrong'**
+  String get registerValueRisk;
 
   /// No description provided for @fullName.
   ///
@@ -2437,6 +2503,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Receive push notifications while the app is inactive.'**
   String get pushReceiveWhenInactive;
+
+  /// No description provided for @sendTestPush.
+  ///
+  /// In en, this message translates to:
+  /// **'Send test notification'**
+  String get sendTestPush;
+
+  /// No description provided for @pushTestConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Test notification received on this device. FCM accepted {count} message(s) from the server.'**
+  String pushTestConfirmed(int count);
 
   /// No description provided for @notificationPreferences.
   ///
@@ -4709,7 +4787,7 @@ abstract class AppLocalizations {
   /// No description provided for @topUpProofLabel.
   ///
   /// In en, this message translates to:
-  /// **'Payment proof (optional)'**
+  /// **'Payment proof (required)'**
   String get topUpProofLabel;
 
   /// No description provided for @topUpAddProof.
@@ -4739,8 +4817,50 @@ abstract class AppLocalizations {
   /// No description provided for @topUpSubmitted.
   ///
   /// In en, this message translates to:
-  /// **'Top-up request submitted. It will be reviewed shortly.'**
+  /// **'Top-up request submitted.'**
   String get topUpSubmitted;
+
+  /// No description provided for @topUpApprovedInstantly.
+  ///
+  /// In en, this message translates to:
+  /// **'Top-up approved. {credits} credit has been added to your balance.'**
+  String topUpApprovedInstantly(int credits);
+
+  /// No description provided for @topUpProofRequiredHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Required — upload your transfer proof before submitting.'**
+  String get topUpProofRequiredHint;
+
+  /// No description provided for @topUpProofNoticeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer Proof Is Required'**
+  String get topUpProofNoticeTitle;
+
+  /// No description provided for @topUpProofNoticeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Before submitting, upload your transfer proof on this page. A request without proof cannot be sent.'**
+  String get topUpProofNoticeBody;
+
+  /// No description provided for @topUpProofNoticeAcknowledge.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get topUpProofNoticeAcknowledge;
+
+  /// No description provided for @topUpWhatsAppSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Having trouble? Contact support on WhatsApp'**
+  String get topUpWhatsAppSupport;
+
+  /// No description provided for @topUpWhatsAppMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Hi, I need help with a TradePilot.id credit top-up'**
+  String get topUpWhatsAppMessage;
 
   /// No description provided for @topUpProofFailed.
   ///
@@ -5024,6 +5144,12 @@ abstract class AppLocalizations {
   /// **'The top-up amount must be greater than 0.'**
   String get errTopupAmountPositive;
 
+  /// No description provided for @errTopupProofRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload your transfer proof before submitting.'**
+  String get errTopupProofRequired;
+
   /// No description provided for @errLivePricesFailed.
   ///
   /// In en, this message translates to:
@@ -5149,6 +5275,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The push token could not be synced.'**
   String get errPushTokenSyncFailed;
+
+  /// No description provided for @errPushEnableFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Mobile Push before sending a test notification.'**
+  String get errPushEnableFirst;
+
+  /// No description provided for @errPushTestNoDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'The server did not find a registered device, or the test endpoint has not been deployed yet.'**
+  String get errPushTestNoDevice;
+
+  /// No description provided for @errPushTestRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many test notifications were requested. Wait a moment and try again.'**
+  String get errPushTestRateLimited;
+
+  /// No description provided for @errPushTestNotReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'The server accepted the test, but this device did not receive an FCM message within 15 seconds. Backend Firebase credentials and project configuration need to be checked.'**
+  String get errPushTestNotReceived;
+
+  /// No description provided for @errPushTestFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The test notification request failed. Check your connection and try again.'**
+  String get errPushTestFailed;
+
+  /// No description provided for @errPushTestRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'FCM rejected every test message. Check the device tokens and backend Firebase configuration.'**
+  String get errPushTestRejected;
+
+  /// No description provided for @errPushTestNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'The push notification service is not configured on the backend.'**
+  String get errPushTestNotConfigured;
 
   /// No description provided for @appErrInstrumentUnsupported.
   ///

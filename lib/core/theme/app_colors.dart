@@ -63,8 +63,9 @@ class AppColors {
   /// `--background: 0 0% 2%`
   static const darkBackground = Color(0xFF050505);
 
-  /// `--card: 0 0% 4%`
-  static const darkCard = Color(0xFF0A0A0A);
+  /// Surface kartu sedikit terangkat dari background agar hierarki tetap
+  /// terbaca tanpa mengubah identitas hitam-emas TradePilot.
+  static const darkCard = Color(0xFF101216);
 
   /// `--primary: 43 96% 50%`
   static const darkPrimary = Color(0xFFFAB505);
@@ -94,8 +95,9 @@ class AppColors {
   /// `--destructive: 0 62.8% 50%`
   static const darkDestructive = Color(0xFFD02F2F);
 
-  /// `--border: 0 0% 12%`
-  static const darkBorder = Color(0xFF1F1F1F);
+  /// Border mobile dibuat sedikit lebih terang daripada token web agar batas
+  /// kartu tetap terbaca pada layar OLED dan brightness rendah.
+  static const darkBorder = Color(0xFF34373E);
 
   // ---- Trader-safety signal colors (same in both themes' intent) ----
   static const bullishLight = Color(0xFF059669);
@@ -115,6 +117,21 @@ class AppColors {
   static const chartGridLight = Color(0xFF64748B);
   static const chartGridDark = Color(0xFF94A3B8);
   static const chartShadow = Color(0x33000000);
+
+  /// Glow halus untuk status bullish/bearish di dark mode.
+  ///
+  /// Warna tidak boleh menjadi satu-satunya penanda status; widget pemakai
+  /// tetap wajib menampilkan ikon atau label.
+  static List<BoxShadow> signalGlow(Color color, {required bool enabled}) =>
+      enabled
+      ? [
+          BoxShadow(
+            color: color.withValues(alpha: 0.18),
+            blurRadius: 14,
+            spreadRadius: -3,
+          ),
+        ]
+      : const [];
 
   // ---- Radius scale ----
   //

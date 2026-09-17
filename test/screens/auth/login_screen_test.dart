@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/services.dart';
@@ -40,6 +41,7 @@ void main() {
     );
     expect(find.text('Welcome Back'), findsOneWidget);
     expect(find.byKey(const Key('google-sign-in-button')), findsOneWidget);
+    expect(find.byKey(const Key('apple-sign-in-button')), findsNothing);
 
     await tester.ensureVisible(find.text('Sign In to Dashboard'));
     await tester.pumpAndSettle();
@@ -48,6 +50,36 @@ void main() {
 
     expect(find.text('Enter a valid email address'), findsOneWidget);
     expect(find.text('Password is required'), findsOneWidget);
+  });
+
+  testWidgets('login exposes Sign in with Apple only on iOS', (tester) async {
+    // Kerangka test memverifikasi debug variable sebelum tearDown berjalan,
+    // jadi override dikembalikan di sini — bukan lewat addTearDown.
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    try {
+      await _pumpAuthScreen(tester, const LoginScreen());
+
+      expect(find.byKey(const Key('google-sign-in-button')), findsOneWidget);
+      expect(find.byKey(const Key('apple-sign-in-button')), findsOneWidget);
+      expect(find.text('Continue with Apple'), findsOneWidget);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
+  testWidgets('login hides Sign in with Apple on Android', (tester) async {
+    // Apple mewajibkan tombolnya hanya muncul di platform Apple; di Android
+    // tombol Google tetap satu-satunya opsi sosial.
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    try {
+      await _pumpAuthScreen(tester, const LoginScreen());
+
+      expect(find.byKey(const Key('google-sign-in-button')), findsOneWidget);
+      expect(find.byKey(const Key('apple-sign-in-button')), findsNothing);
+      expect(find.text('Continue with Apple'), findsNothing);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
   });
 
   testWidgets('login restores the remembered email but never a password', (
@@ -106,27 +138,15 @@ void main() {
     expect(find.byKey(const Key('biometric-login-button')), findsNothing);
   });
 
-  testWidgets('register uses accessible mode selection and validates input', (
+  testWidgets('register follows provider-only account creation', (
     tester,
   ) async {
     await _pumpAuthScreen(tester, const RegisterScreen());
 
-    expect(find.text('Beginner'), findsOneWidget);
-    expect(find.text('Pro'), findsOneWidget);
-    await tester.tap(find.text('Pro'));
-    await tester.pump();
-    expect(
-      find.text('More concise and technical market information.'),
-      findsOneWidget,
-    );
-
-    final submit = find.widgetWithText(ElevatedButton, 'Create Account');
-    await tester.ensureVisible(submit);
-    await tester.tap(submit);
-    await tester.pump();
-
-    expect(find.text('Name is required'), findsOneWidget);
-    expect(find.text('Enter a valid email address'), findsOneWidget);
+    expect(find.byKey(const Key('register-google-button')), findsOneWidget);
+    expect(find.byType(TextFormField), findsNothing);
+    expect(find.text('Beginner'), findsNothing);
+    expect(find.text('Security Question'), findsNothing);
   });
 
   testWidgets('forgot password explains progress and reports invalid email', (

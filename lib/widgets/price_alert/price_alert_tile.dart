@@ -77,6 +77,13 @@ class PriceAlertTile extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: statusColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(999),
+                      border: Border.all(
+                        color: statusColor.withValues(alpha: 0.32),
+                      ),
+                      boxShadow: AppColors.signalGlow(
+                        statusColor,
+                        enabled: isDark,
+                      ),
                     ),
                     child: Text(
                       statusLabel,

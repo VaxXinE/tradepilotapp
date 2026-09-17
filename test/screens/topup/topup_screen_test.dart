@@ -76,31 +76,32 @@ void main() {
     harness.dispose();
   });
 
-  testWidgets('submits without proof and clears the form', (tester) async {
+  testWidgets('requires proof before submitting', (tester) async {
     final harness = await _pump(tester);
 
     await _type(tester, _amountField, '50000');
-    await _tap(tester, 'Continue to payment');
-    await _type(tester, _referenceField, 'BCA 1234');
+    await _openPaymentStep(tester);
 
-    await _tap(tester, 'Submit top-up request');
-
-    expect(
-      find.text('Top-up request submitted. It will be reviewed shortly.'),
-      findsOneWidget,
+    final qris = tester.widget<Image>(
+      find.byKey(const ValueKey('topup-qris-image')),
     );
-
-    final posts = harness.adapter.requests
-        .where((options) => options.path == '/topups')
-        .toList();
-    expect(posts, hasLength(1));
-
-    final body = Map<String, dynamic>.from(posts.single.data as Map);
-    expect(body['amountRupiah'], 50000);
-    expect(body['paymentReferenceNote'], 'BCA 1234');
-    expect(body['proofObjectPath'], isNull);
-
-    expect(tester.widget<TextField>(_amountField).controller?.text, isEmpty);
+    expect(
+      (qris.image as AssetImage).assetName,
+      'assets/images/trade_pilot_qris.jpeg',
+    );
+    expect(find.text('Payment proof (required)'), findsOneWidget);
+    expect(
+      tester
+          .widget<FilledButton>(
+            find.widgetWithText(FilledButton, 'Submit top-up request'),
+          )
+          .onPressed,
+      isNull,
+    );
+    expect(
+      harness.adapter.requests.where((options) => options.path == '/topups'),
+      isEmpty,
+    );
 
     harness.dispose();
   });
@@ -109,12 +110,17 @@ void main() {
     final harness = await _pump(tester, picker: _FakePicker());
 
     await _type(tester, _amountField, '50000');
-    await _tap(tester, 'Continue to payment');
+    await _openPaymentStep(tester);
 
     await _tap(tester, 'Attach proof');
     expect(find.text('Proof attached'), findsOneWidget);
 
     await _tap(tester, 'Submit top-up request');
+
+    expect(
+      find.text('Top-up approved. 10 credit has been added to your balance.'),
+      findsOneWidget,
+    );
 
     final post = harness.adapter.requests.firstWhere(
       (options) => options.path == '/topups',
@@ -139,7 +145,7 @@ void main() {
     harness.adapter.failUpload = true;
 
     await _type(tester, _amountField, '50000');
-    await _tap(tester, 'Continue to payment');
+    await _openPaymentStep(tester);
 
     await _tap(tester, 'Attach proof');
 
@@ -169,7 +175,7 @@ void main() {
     );
 
     await _type(tester, _amountField, '50000');
-    await _tap(tester, 'Continue to payment');
+    await _openPaymentStep(tester);
 
     await _tap(tester, 'Attach proof');
 
@@ -193,7 +199,7 @@ void main() {
     );
 
     await _type(tester, _amountField, '50000');
-    await _tap(tester, 'Continue to payment');
+    await _openPaymentStep(tester);
 
     await _tap(tester, 'Attach proof');
 
@@ -210,10 +216,11 @@ void main() {
   });
 
   testWidgets('double tap on submit only posts once', (tester) async {
-    final harness = await _pump(tester);
+    final harness = await _pump(tester, picker: _FakePicker());
 
     await _type(tester, _amountField, '50000');
-    await _tap(tester, 'Continue to payment');
+    await _openPaymentStep(tester);
+    await _tap(tester, 'Attach proof');
 
     final submit = find.text('Submit top-up request');
     await tester.ensureVisible(submit);
@@ -304,6 +311,12 @@ Future<void> _tap(WidgetTester tester, String label) async {
   await tester.pumpAndSettle();
 }
 
+Future<void> _openPaymentStep(WidgetTester tester) async {
+  await _tap(tester, 'Continue to payment');
+  expect(find.text('Transfer Proof Is Required'), findsOneWidget);
+  await _tap(tester, 'Got it');
+}
+
 Future<void> _type(WidgetTester tester, Finder field, String text) async {
   await tester.ensureVisible(field);
   await tester.pumpAndSettle();
@@ -312,10 +325,6 @@ Future<void> _type(WidgetTester tester, Finder field, String text) async {
 }
 
 final _amountField = find.widgetWithText(TextField, 'Amount (Rupiah)');
-final _referenceField = find.widgetWithText(
-  TextField,
-  'Payment reference (optional)',
-);
 
 class _Harness {
   _Harness(this.adapter, this.credit, this.auth);
@@ -492,7 +501,7 @@ class _TopupAdapter implements HttpClientAdapter {
       case '/topups':
         final body = Map<String, dynamic>.from(options.data as Map);
         return _json({
-          ..._row(id: 99, status: 'pending'),
+          ..._row(id: 99, status: 'approved', creditsGranted: 10),
           'amountRupiah': body['amountRupiah'],
           'paymentReferenceNote': body['paymentReferenceNote'],
           'proofObjectPath': body['proofObjectPath'],

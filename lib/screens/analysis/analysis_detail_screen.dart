@@ -1683,6 +1683,13 @@ class _HeaderCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: biasColor.withValues(alpha: 0.14),
                         borderRadius: BorderRadius.circular(999),
+                        border: Border.all(
+                          color: biasColor.withValues(alpha: 0.38),
+                        ),
+                        boxShadow: AppColors.signalGlow(
+                          biasColor,
+                          enabled: isDark,
+                        ),
                       ),
                       child: Text(
                         biasLabel,
@@ -1709,6 +1716,13 @@ class _HeaderCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: riskColor.withValues(alpha: 0.14),
                         borderRadius: BorderRadius.circular(999),
+                        border: Border.all(
+                          color: riskColor.withValues(alpha: 0.38),
+                        ),
+                        boxShadow: AppColors.signalGlow(
+                          riskColor,
+                          enabled: isDark,
+                        ),
                       ),
                       child: Text(
                         riskLabel,
@@ -1777,6 +1791,13 @@ class _HeaderCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: condition.$2.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(999),
+                      border: Border.all(
+                        color: condition.$2.withValues(alpha: 0.34),
+                      ),
+                      boxShadow: AppColors.signalGlow(
+                        condition.$2,
+                        enabled: isDark,
+                      ),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -2984,6 +3005,10 @@ class _SignalSummary extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: _signalColor(context, signal).withValues(alpha: 0.35),
+        ),
+        boxShadow: AppColors.signalGlow(
+          _signalColor(context, signal),
+          enabled: Theme.of(context).brightness == Brightness.dark,
         ),
       ),
       child: Column(

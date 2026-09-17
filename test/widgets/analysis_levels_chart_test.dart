@@ -46,6 +46,7 @@ void main() {
     );
     await tester.pump(kLongPressTimeout);
     expect(find.byKey(const ValueKey('chart-price-tooltip')), findsOneWidget);
+    expect(find.textContaining('02/09/2026 00:00'), findsOneWidget);
     await gesture.up();
     await tester.pump();
     expect(find.byKey(const ValueKey('chart-price-tooltip')), findsNothing);

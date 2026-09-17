@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:built_value/built_value.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -90,7 +91,10 @@ void main() {
       client.analyses.recordGuardrailTelemetry,
       client.analyses.waitGuardrail,
       client.auth.deleteAccount,
+      client.auth.loginWithAppleNative,
+      client.auth.reauthenticateWithApple,
       client.nativePush.registerNativePushDevice,
+      client.nativePush.sendNativePushTest,
       client.nativePush.unregisterNativePushDevice,
       client.progression.getProgressionCatalog,
       client.progression.getProgressionHistory,
@@ -98,7 +102,21 @@ void main() {
       client.progression.recordProgressionActivity,
       client.progression.startProgressionEvidence,
       client.tradingRules.getStandardTradingRules,
-    ], hasLength(16));
+    ], hasLength(19));
+
+    final appleBody = AppleNativeLoginBody(
+      (builder) => builder
+        ..identityToken = 'identity-token'
+        ..authorizationCode = 'authorization-code'
+        ..nonce = 'raw-nonce',
+    );
+    final appleJson =
+        standardSerializers.serializeWith(
+              AppleNativeLoginBody.serializer,
+              appleBody,
+            )!
+            as Map<String, Object?>;
+    expect(appleJson['nonce'], 'raw-nonce');
 
     final prefs = PushPrefsUpdate(
       (builder) => builder
@@ -207,6 +225,11 @@ void main() {
     });
     expect(topup?.status, TopupRequestStatus.pending);
     expect(topup?.reviewNote, isNull);
+
+    expect(
+      () => CreateTopupRequestBody((builder) => builder.amountRupiah = 5000),
+      throwsA(isA<BuiltValueNullFieldError>()),
+    );
   });
 
   test('top-up endpoints round-trip through the generated TopupsApi', () async {
@@ -279,6 +302,23 @@ void main() {
       expect(adapter.requests.single.path, '/native-push/unregister');
     },
   );
+
+  test('native push test uses POST /native-push/test', () async {
+    final client = TradePilotClient(baseUrl: 'https://example.com/api');
+    final adapter = _TopupsAdapter();
+    client.dio.httpClientAdapter = adapter;
+
+    final response = await client.nativePush.sendNativePushTest();
+
+    expect(response.data?.targeted, 2);
+    expect(response.data?.accepted, 1);
+    expect(
+      response.data?.failures.single,
+      NativePushTestResultFailuresEnum.unregistered,
+    );
+    expect(adapter.requests.single.method, 'POST');
+    expect(adapter.requests.single.path, '/native-push/test');
+  });
 }
 
 const _pendingTopup = {
@@ -336,6 +376,11 @@ class _TopupsAdapter implements HttpClientAdapter {
         'total': 2,
         'page': 1,
         'limit': 20,
+      },
+      '/native-push/test' => {
+        'targeted': 2,
+        'accepted': 1,
+        'failures': ['unregistered'],
       },
       _ => {'message': 'ok'},
     };

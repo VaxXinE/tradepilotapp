@@ -37,7 +37,7 @@ class TopupRepository {
   Future<TopupRequest?> createRequest({
     required int amountRupiah,
     String? paymentReferenceNote,
-    String? proofObjectPath,
+    required String proofObjectPath,
   }) async {
     if (amountRupiah < 1) {
       throw ArgumentError.value(
@@ -48,14 +48,21 @@ class TopupRepository {
     }
 
     final note = paymentReferenceNote?.trim();
-    final proof = proofObjectPath?.trim();
+    final proof = proofObjectPath.trim();
+    if (proof.isEmpty) {
+      throw ArgumentError.value(
+        proofObjectPath,
+        'proofObjectPath',
+        AppMessages.l10n.errTopupProofRequired,
+      );
+    }
 
     final response = await _client.topups.createTopupRequest(
       createTopupRequestBody: CreateTopupRequestBody(
         (builder) => builder
           ..amountRupiah = amountRupiah
           ..paymentReferenceNote = (note == null || note.isEmpty) ? null : note
-          ..proofObjectPath = (proof == null || proof.isEmpty) ? null : proof,
+          ..proofObjectPath = proof,
       ),
     );
 

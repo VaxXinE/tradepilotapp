@@ -98,6 +98,27 @@ void main() {
     expect(deletedKeys, isNot(contains('trade_pilot_token')));
   });
 
+  test('401 during Apple reauthentication keeps the user signed in', () async {
+    final auth = AuthProvider(
+      appleCredentialProvider: () async => (
+        identityToken: 'identity-token',
+        authorizationCode: 'authorization-code',
+        nonce: 'raw-nonce',
+        givenName: null,
+        familyName: null,
+      ),
+    );
+    await pumpEventQueue();
+    auth
+      ..status = AuthStatus.authenticated
+      ..user = _user(hasPassword: false)
+      ..client.dio.httpClientAdapter = _UnauthorizedAdapter();
+
+    expect(await auth.deleteAppleAccount(), isFalse);
+    expect(auth.status, AuthStatus.authenticated);
+    expect(deletedKeys, isNot(contains('trade_pilot_token')));
+  });
+
   test('wrong security answer has a specific validation message', () async {
     final auth = await _authenticatedUser();
     auth.client.dio.httpClientAdapter = _UnauthorizedAdapter();
@@ -152,7 +173,7 @@ Future<AuthProvider> _authenticatedUser() async {
     ..user = _user();
 }
 
-User _user() => User(
+User _user({bool hasPassword = true}) => User(
   (builder) => builder
     ..id = 1
     ..email = 'user@example.com'
@@ -162,7 +183,7 @@ User _user() => User(
     ..themePreference = UserThemePreferenceEnum.dark
     ..createdAt = DateTime.utc(2026)
     ..onboardingCompleted = true
-    ..hasPassword = true,
+    ..hasPassword = hasPassword,
 );
 
 /// Answers 401 to everything, so each test is defined purely by which endpoint

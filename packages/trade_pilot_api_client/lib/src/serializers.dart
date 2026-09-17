@@ -47,6 +47,9 @@ import 'package:trade_pilot_api_client/src/model/analytics_usage_stats_country_b
 import 'package:trade_pilot_api_client/src/model/analytics_usage_stats_daily_activity_inner.dart';
 import 'package:trade_pilot_api_client/src/model/analytics_usage_stats_device_breakdown_inner.dart';
 import 'package:trade_pilot_api_client/src/model/analytics_usage_stats_feature_breakdown_inner.dart';
+import 'package:trade_pilot_api_client/src/model/apple_native_login_body.dart';
+import 'package:trade_pilot_api_client/src/model/apple_reauth_body.dart';
+import 'package:trade_pilot_api_client/src/model/apple_reauth_response.dart';
 import 'package:trade_pilot_api_client/src/model/auth_response.dart';
 import 'package:trade_pilot_api_client/src/model/broadcast.dart';
 import 'package:trade_pilot_api_client/src/model/broadcast_notification_body.dart';
@@ -100,6 +103,7 @@ import 'package:trade_pilot_api_client/src/model/message_response.dart';
 import 'package:trade_pilot_api_client/src/model/mirror_gated_insight.dart';
 import 'package:trade_pilot_api_client/src/model/mirror_group_stat.dart';
 import 'package:trade_pilot_api_client/src/model/native_push_register_body.dart';
+import 'package:trade_pilot_api_client/src/model/native_push_test_result.dart';
 import 'package:trade_pilot_api_client/src/model/native_push_unregister_body.dart';
 import 'package:trade_pilot_api_client/src/model/notification.dart';
 import 'package:trade_pilot_api_client/src/model/notifications_list.dart';
@@ -223,6 +227,9 @@ part 'serializers.g.dart';
   AnalyticsUsageStatsDailyActivityInner,
   AnalyticsUsageStatsDeviceBreakdownInner,
   AnalyticsUsageStatsFeatureBreakdownInner,
+  AppleNativeLoginBody,
+  AppleReauthBody,
+  AppleReauthResponse,
   AuthResponse,
   Broadcast,
   BroadcastNotificationBody,
@@ -276,6 +283,7 @@ part 'serializers.g.dart';
   MirrorGatedInsight,
   MirrorGroupStat,
   NativePushRegisterBody,
+  NativePushTestResult,
   NativePushUnregisterBody,
   Notification,
   NotificationsList,

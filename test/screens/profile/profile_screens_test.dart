@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/services.dart';
@@ -142,6 +143,35 @@ void main() {
     expect(auth.user, isNull);
   });
 
+  testWidgets('passwordless deletion offers Apple and Google on iOS', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    try {
+      final auth = AuthProvider();
+      await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+      _authenticate(auth, hasPassword: false);
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider.value(
+          value: auth,
+          child: const _LocalizedApp(home: DeleteAccountScreen()),
+        ),
+      );
+
+      expect(find.byKey(const Key('delete-with-apple')), findsOneWidget);
+      expect(find.byKey(const Key('delete-with-google')), findsOneWidget);
+      expect(
+        find.text(
+          'To protect your account, verify with the sign-in method linked to this account before deletion.',
+        ),
+        findsOneWidget,
+      );
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
   testWidgets('change password rejects confirmation mismatch locally', (
     tester,
   ) async {
@@ -231,7 +261,7 @@ class _LocalizedApp extends StatelessWidget {
   }
 }
 
-void _authenticate(AuthProvider auth) {
+void _authenticate(AuthProvider auth, {bool hasPassword = true}) {
   auth
     ..status = AuthStatus.authenticated
     ..user = User(
@@ -244,7 +274,7 @@ void _authenticate(AuthProvider auth) {
         ..themePreference = UserThemePreferenceEnum.dark
         ..createdAt = DateTime.utc(2026)
         ..onboardingCompleted = true
-        ..hasPassword = true,
+        ..hasPassword = hasPassword,
     );
 }
 

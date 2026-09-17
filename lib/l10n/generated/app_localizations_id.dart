@@ -1111,11 +1111,21 @@ class AppLocalizationsId extends AppLocalizations {
   String get continueWithGoogle => 'Lanjutkan dengan Google';
 
   @override
+  String get continueWithApple => 'Lanjutkan dengan Apple';
+
+  @override
   String get googleDeleteReauthDescription =>
       'Untuk melindungi akunmu, verifikasi identitas dengan Google sebelum penghapusan.';
 
   @override
+  String get federatedDeleteReauthDescription =>
+      'Untuk melindungi akunmu, verifikasi dengan metode masuk yang terhubung ke akun ini sebelum penghapusan.';
+
+  @override
   String get verifyGoogleAndDelete => 'Verifikasi dengan Google dan hapus';
+
+  @override
+  String get verifyAppleAndDelete => 'Verifikasi dengan Apple dan hapus';
 
   @override
   String get errGoogleTokenInvalid =>
@@ -1130,8 +1140,28 @@ class AppLocalizationsId extends AppLocalizations {
       'Google Sign-In sedang tidak tersedia. Silakan coba lagi nanti.';
 
   @override
+  String get errGoogleConfiguration =>
+      'Google Sign-In belum dikonfigurasi untuk build aplikasi ini. Hubungi tim dukungan.';
+
+  @override
   String get errGoogleSignInFailed =>
       'Gagal masuk dengan Google. Silakan coba lagi.';
+
+  @override
+  String get errAppleTokenInvalid =>
+      'Apple tidak dapat memverifikasi proses masuk ini. Silakan coba lagi.';
+
+  @override
+  String get errAppleAccountConflict =>
+      'Email ini terhubung ke metode masuk lain. Masuklah dengan metode tersebut terlebih dahulu.';
+
+  @override
+  String get errAppleUnavailable =>
+      'Sign in with Apple belum tersedia. Silakan coba lagi nanti.';
+
+  @override
+  String get errAppleSignInFailed =>
+      'Gagal masuk dengan Apple. Silakan coba lagi.';
 
   @override
   String get verifying => 'Memverifikasi...';
@@ -1160,8 +1190,16 @@ class AppLocalizationsId extends AppLocalizations {
   String get startTradingJourney => 'Mulai perjalanan tradingmu';
 
   @override
-  String get registerDescription =>
-      'Buat akun dan sesuaikan analisis dengan pengalamanmu.';
+  String get registerDescription => 'Daftar gratis dan mulai analisis';
+
+  @override
+  String get registerValueInsight => 'Insight pasar, bukan sinyal buta';
+
+  @override
+  String get registerValueFast => 'Analisis pertama di bawah 30 detik';
+
+  @override
+  String get registerValueRisk => 'Tahu persis kapan kamu salah';
 
   @override
   String get fullName => 'Nama Lengkap';
@@ -1300,6 +1338,14 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get pushReceiveWhenInactive =>
       'Terima push saat aplikasi tidak aktif.';
+
+  @override
+  String get sendTestPush => 'Kirim notifikasi tes';
+
+  @override
+  String pushTestConfirmed(int count) {
+    return 'Notifikasi tes diterima di perangkat ini. FCM menerima $count pesan dari server.';
+  }
 
   @override
   String get notificationPreferences => 'Preferensi Notifikasi';
@@ -2600,7 +2646,7 @@ class AppLocalizationsId extends AppLocalizations {
       'mis. nama pengirim atau nomor referensi transfer';
 
   @override
-  String get topUpProofLabel => 'Bukti pembayaran (opsional)';
+  String get topUpProofLabel => 'Bukti pembayaran (wajib)';
 
   @override
   String get topUpAddProof => 'Lampirkan bukti';
@@ -2615,8 +2661,33 @@ class AppLocalizationsId extends AppLocalizations {
   String get topUpSubmit => 'Kirim permintaan top-up';
 
   @override
-  String get topUpSubmitted =>
-      'Permintaan top-up terkirim. Akan segera ditinjau.';
+  String get topUpSubmitted => 'Permintaan top-up terkirim.';
+
+  @override
+  String topUpApprovedInstantly(int credits) {
+    return 'Top-up disetujui. $credits credit sudah ditambahkan ke saldo kamu.';
+  }
+
+  @override
+  String get topUpProofRequiredHint =>
+      'Wajib — upload bukti transfer sebelum mengirim.';
+
+  @override
+  String get topUpProofNoticeTitle => 'Bukti Transfer Wajib Diupload';
+
+  @override
+  String get topUpProofNoticeBody =>
+      'Sebelum mengirim, upload bukti transfer di halaman ini. Permintaan tanpa bukti tidak dapat dikirim.';
+
+  @override
+  String get topUpProofNoticeAcknowledge => 'Oke, mengerti';
+
+  @override
+  String get topUpWhatsAppSupport => 'Ada kendala? Hubungi CS via WhatsApp';
+
+  @override
+  String get topUpWhatsAppMessage =>
+      'Halo, saya butuh bantuan terkait top up kredit TradePilot.id';
 
   @override
   String get topUpProofFailed =>
@@ -2787,6 +2858,9 @@ class AppLocalizationsId extends AppLocalizations {
       'Nominal top-up harus lebih besar dari 0.';
 
   @override
+  String get errTopupProofRequired => 'Upload bukti transfer sebelum mengirim.';
+
+  @override
   String get errLivePricesFailed => 'Gagal memuat harga live.';
 
   @override
@@ -2857,6 +2931,34 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get errPushTokenSyncFailed => 'Token push belum dapat disinkronkan.';
+
+  @override
+  String get errPushEnableFirst =>
+      'Aktifkan Push Mobile sebelum mengirim notifikasi tes.';
+
+  @override
+  String get errPushTestNoDevice =>
+      'Server belum menemukan perangkat terdaftar, atau endpoint tes belum di-deploy.';
+
+  @override
+  String get errPushTestRateLimited =>
+      'Terlalu banyak permintaan notifikasi tes. Tunggu sebentar lalu coba lagi.';
+
+  @override
+  String get errPushTestNotReceived =>
+      'Server menerima permintaan tes, tetapi perangkat ini tidak menerima pesan FCM dalam 15 detik. Credential Firebase dan konfigurasi project di backend perlu diperiksa.';
+
+  @override
+  String get errPushTestFailed =>
+      'Permintaan notifikasi tes gagal. Periksa koneksi lalu coba lagi.';
+
+  @override
+  String get errPushTestRejected =>
+      'FCM menolak semua pesan tes. Periksa token perangkat dan konfigurasi Firebase di backend.';
+
+  @override
+  String get errPushTestNotConfigured =>
+      'Layanan push notification belum dikonfigurasi di backend.';
 
   @override
   String get appErrInstrumentUnsupported =>

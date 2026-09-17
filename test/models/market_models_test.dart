@@ -2,6 +2,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tradepilotapp/models/market_models.dart';
 
 void main() {
+  test('candle ISO timestamps use the device local timezone', () {
+    final candle = MarketCandle.fromJson({
+      'date': '2026-09-14T14:30:00.000Z',
+      'open': 100,
+      'high': 102,
+      'low': 99,
+      'close': 101,
+    });
+
+    expect(candle.date.isUtc, isFalse);
+    expect(candle.date.toUtc(), DateTime.utc(2026, 9, 14, 14, 30));
+  });
+
   test('technical snapshot keeps the full indicator payload', () {
     final snapshot = BeginnerTechnicalSnapshot.fromJson({
       'lastClose': 4321.79,

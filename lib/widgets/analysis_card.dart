@@ -47,6 +47,7 @@ class AnalysisCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: biasColor,
                   borderRadius: BorderRadius.circular(4),
+                  boxShadow: AppColors.signalGlow(biasColor, enabled: isDark),
                 ),
               ),
               const SizedBox(width: 12),
@@ -74,6 +75,13 @@ class AnalysisCard extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: biasColor.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(999),
+                            border: Border.all(
+                              color: biasColor.withValues(alpha: 0.38),
+                            ),
+                            boxShadow: AppColors.signalGlow(
+                              biasColor,
+                              enabled: isDark,
+                            ),
                           ),
                           child: Text(
                             biasLabel,

@@ -980,6 +980,11 @@ class _RateTile extends StatelessWidget {
     decoration: BoxDecoration(
       color: color.withValues(alpha: .1),
       borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: color.withValues(alpha: .3)),
+      boxShadow: AppColors.signalGlow(
+        color,
+        enabled: Theme.of(context).brightness == Brightness.dark,
+      ),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
