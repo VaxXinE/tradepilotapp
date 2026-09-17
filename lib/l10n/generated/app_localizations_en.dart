@@ -1115,11 +1115,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get continueWithGoogle => 'Continue with Google';
 
   @override
+  String get continueWithApple => 'Continue with Apple';
+
+  @override
   String get googleDeleteReauthDescription =>
       'To protect your account, verify your identity with Google before deletion.';
 
   @override
+  String get federatedDeleteReauthDescription =>
+      'To protect your account, verify with the sign-in method linked to this account before deletion.';
+
+  @override
   String get verifyGoogleAndDelete => 'Verify with Google and delete';
+
+  @override
+  String get verifyAppleAndDelete => 'Verify with Apple and delete';
 
   @override
   String get errGoogleTokenInvalid =>
@@ -1134,8 +1144,28 @@ class AppLocalizationsEn extends AppLocalizations {
       'Google Sign-In is temporarily unavailable. Please try again later.';
 
   @override
+  String get errGoogleConfiguration =>
+      'Google Sign-In is not configured for this app build. Please contact support.';
+
+  @override
   String get errGoogleSignInFailed =>
       'Could not sign in with Google. Please try again.';
+
+  @override
+  String get errAppleTokenInvalid =>
+      'Apple could not verify this sign-in. Please try again.';
+
+  @override
+  String get errAppleAccountConflict =>
+      'This email is linked to another sign-in method. Sign in with that method first.';
+
+  @override
+  String get errAppleUnavailable =>
+      'Sign in with Apple is not available yet. Please try again later.';
+
+  @override
+  String get errAppleSignInFailed =>
+      'Could not sign in with Apple. Please try again.';
 
   @override
   String get verifying => 'Verifying...';
@@ -1164,8 +1194,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get startTradingJourney => 'Start your trading journey';
 
   @override
-  String get registerDescription =>
-      'Create an account and tailor the analysis to your experience.';
+  String get registerDescription => 'Join for free and start your analysis';
+
+  @override
+  String get registerValueInsight => 'Market insight, not blind signals';
+
+  @override
+  String get registerValueFast => 'First analysis in under 30 seconds';
+
+  @override
+  String get registerValueRisk => 'Know exactly when you\'re wrong';
 
   @override
   String get fullName => 'Full Name';
@@ -1306,6 +1344,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get pushReceiveWhenInactive =>
       'Receive push notifications while the app is inactive.';
+
+  @override
+  String get sendTestPush => 'Send test notification';
+
+  @override
+  String pushTestConfirmed(int count) {
+    return 'Test notification received on this device. FCM accepted $count message(s) from the server.';
+  }
 
   @override
   String get notificationPreferences => 'Notification preferences';
@@ -2608,7 +2654,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get topUpReferenceHint => 'e.g. sender name or transfer reference';
 
   @override
-  String get topUpProofLabel => 'Payment proof (optional)';
+  String get topUpProofLabel => 'Payment proof (required)';
 
   @override
   String get topUpAddProof => 'Attach proof';
@@ -2623,8 +2669,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get topUpSubmit => 'Submit top-up request';
 
   @override
-  String get topUpSubmitted =>
-      'Top-up request submitted. It will be reviewed shortly.';
+  String get topUpSubmitted => 'Top-up request submitted.';
+
+  @override
+  String topUpApprovedInstantly(int credits) {
+    return 'Top-up approved. $credits credit has been added to your balance.';
+  }
+
+  @override
+  String get topUpProofRequiredHint =>
+      'Required — upload your transfer proof before submitting.';
+
+  @override
+  String get topUpProofNoticeTitle => 'Transfer Proof Is Required';
+
+  @override
+  String get topUpProofNoticeBody =>
+      'Before submitting, upload your transfer proof on this page. A request without proof cannot be sent.';
+
+  @override
+  String get topUpProofNoticeAcknowledge => 'Got it';
+
+  @override
+  String get topUpWhatsAppSupport =>
+      'Having trouble? Contact support on WhatsApp';
+
+  @override
+  String get topUpWhatsAppMessage =>
+      'Hi, I need help with a TradePilot.id credit top-up';
 
   @override
   String get topUpProofFailed =>
@@ -2796,6 +2868,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'The top-up amount must be greater than 0.';
 
   @override
+  String get errTopupProofRequired =>
+      'Upload your transfer proof before submitting.';
+
+  @override
   String get errLivePricesFailed => 'Could not load live prices.';
 
   @override
@@ -2866,6 +2942,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errPushTokenSyncFailed => 'The push token could not be synced.';
+
+  @override
+  String get errPushEnableFirst =>
+      'Enable Mobile Push before sending a test notification.';
+
+  @override
+  String get errPushTestNoDevice =>
+      'The server did not find a registered device, or the test endpoint has not been deployed yet.';
+
+  @override
+  String get errPushTestRateLimited =>
+      'Too many test notifications were requested. Wait a moment and try again.';
+
+  @override
+  String get errPushTestNotReceived =>
+      'The server accepted the test, but this device did not receive an FCM message within 15 seconds. Backend Firebase credentials and project configuration need to be checked.';
+
+  @override
+  String get errPushTestFailed =>
+      'The test notification request failed. Check your connection and try again.';
+
+  @override
+  String get errPushTestRejected =>
+      'FCM rejected every test message. Check the device tokens and backend Firebase configuration.';
+
+  @override
+  String get errPushTestNotConfigured =>
+      'The push notification service is not configured on the backend.';
 
   @override
   String get appErrInstrumentUnsupported =>

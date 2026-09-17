@@ -125,8 +125,14 @@ void main() {
     final (provider, adapter, _) = await _provider();
 
     final results = await Future.wait([
-      provider.submitTopup(amountRupiah: 50000),
-      provider.submitTopup(amountRupiah: 50000),
+      provider.submitTopup(
+        amountRupiah: 50000,
+        proofObjectPath: 'topups/proof-1.jpg',
+      ),
+      provider.submitTopup(
+        amountRupiah: 50000,
+        proofObjectPath: 'topups/proof-1.jpg',
+      ),
     ]);
 
     expect(results.where((request) => request != null), hasLength(1));
@@ -139,7 +145,10 @@ void main() {
   test('rejects a non-positive amount before hitting the network', () async {
     final (provider, adapter, _) = await _provider();
 
-    final created = await provider.submitTopup(amountRupiah: 0);
+    final created = await provider.submitTopup(
+      amountRupiah: 0,
+      proofObjectPath: 'topups/proof-1.jpg',
+    );
 
     expect(created, isNull);
     expect(provider.submitError, 'The top-up amount must be greater than 0.');
@@ -156,7 +165,10 @@ void main() {
     final (provider, _, _) = await _provider();
     await provider.loadConfig();
 
-    final created = await provider.submitTopup(amountRupiah: 1);
+    final created = await provider.submitTopup(
+      amountRupiah: 1,
+      proofObjectPath: 'topups/proof-1.jpg',
+    );
 
     expect(created, isNull);
     expect(provider.submitError, 'Nominal minimal Rp10.000.');
@@ -381,11 +393,11 @@ class _TopupsAdapter implements HttpClientAdapter {
           ..._rows().first,
           'id': 99,
           'amountRupiah': amount,
-          'status': 'pending',
+          'status': 'approved',
           'reviewedByUserId': null,
-          'reviewedAt': null,
+          'reviewedAt': DateTime.utc(2026, 9, 9).toIso8601String(),
           'reviewNote': null,
-          'creditsGranted': null,
+          'creditsGranted': amount ~/ 5000,
           'paymentReferenceNote': body['paymentReferenceNote'],
           'proofObjectPath': body['proofObjectPath'],
           'createdAt': DateTime.utc(2026, 9, 9).toIso8601String(),

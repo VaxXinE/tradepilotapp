@@ -50,6 +50,9 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(AnalyticsUsageStatsDailyActivityInner.serializer)
       ..add(AnalyticsUsageStatsDeviceBreakdownInner.serializer)
       ..add(AnalyticsUsageStatsFeatureBreakdownInner.serializer)
+      ..add(AppleNativeLoginBody.serializer)
+      ..add(AppleReauthBody.serializer)
+      ..add(AppleReauthResponse.serializer)
       ..add(AuthResponse.serializer)
       ..add(Broadcast.serializer)
       ..add(BroadcastAudienceTypeEnum.serializer)
@@ -127,6 +130,8 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(MirrorGroupStat.serializer)
       ..add(NativePushRegisterBody.serializer)
       ..add(NativePushRegisterBodyPlatformEnum.serializer)
+      ..add(NativePushTestResult.serializer)
+      ..add(NativePushTestResultFailuresEnum.serializer)
       ..add(NativePushUnregisterBody.serializer)
       ..add(Notification.serializer)
       ..add(NotificationActionTypeEnum.serializer)
@@ -344,6 +349,10 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(JournalEntry)]),
           () => ListBuilder<JournalEntry>())
+      ..addBuilderFactory(
+          const FullType(BuiltList,
+              const [const FullType(NativePushTestResultFailuresEnum)]),
+          () => ListBuilder<NativePushTestResultFailuresEnum>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(Notification)]),
           () => ListBuilder<Notification>())

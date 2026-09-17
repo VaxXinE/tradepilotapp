@@ -214,6 +214,11 @@ class _CandlestickPlotState extends State<CandlestickPlot> {
       height - axisHeight,
       labelHeight,
     );
+    final showTimeAxis =
+        candles.length > 1 &&
+        candles.last.date.difference(candles.first.date).abs().inMilliseconds /
+                (candles.length - 1) <
+            const Duration(days: 1).inMilliseconds;
 
     final plot = ClipRect(
       child: Stack(
@@ -307,9 +312,12 @@ class _CandlestickPlotState extends State<CandlestickPlot> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _AxisLabel(candles.first.date),
-                _AxisLabel(candles[candles.length ~/ 2].date),
-                _AxisLabel(candles.last.date),
+                _AxisLabel(candles.first.date, showTime: showTimeAxis),
+                _AxisLabel(
+                  candles[candles.length ~/ 2].date,
+                  showTime: showTimeAxis,
+                ),
+                _AxisLabel(candles.last.date, showTime: showTimeAxis),
               ],
             ),
           ),
@@ -444,15 +452,18 @@ class _LevelBadge extends StatelessWidget {
 }
 
 class _AxisLabel extends StatelessWidget {
-  const _AxisLabel(this.date);
+  const _AxisLabel(this.date, {required this.showTime});
 
   final DateTime date;
+  final bool showTime;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Text(
-      '${date.day}/${date.month}',
+      showTime
+          ? '${_pad2(date.hour)}:${_pad2(date.minute)}'
+          : '${_pad2(date.day)}/${_pad2(date.month)}',
       style: TextStyle(
         color: isDark ? AppColors.chartTextDark : AppColors.chartTextLight,
         fontSize: 9,
@@ -489,7 +500,9 @@ class _CandleTooltip extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '${candle.date.day}/${candle.date.month}/${candle.date.year}',
+            '${_pad2(candle.date.day)}/${_pad2(candle.date.month)}/'
+            '${candle.date.year} ${_pad2(candle.date.hour)}:'
+            '${_pad2(candle.date.minute)}',
             style: TextStyle(
               color: colors.onInverseSurface.withValues(alpha: .72),
               fontSize: 8,
@@ -588,3 +601,5 @@ String _formatPrice(double value) {
   }
   return value.toStringAsFixed(6);
 }
+
+String _pad2(int value) => value.toString().padLeft(2, '0');

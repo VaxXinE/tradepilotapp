@@ -55,6 +55,13 @@ class MarketSessionCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: statusColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: statusColor.withValues(alpha: 0.32),
+                    ),
+                    boxShadow: AppColors.signalGlow(
+                      statusColor,
+                      enabled: isDark,
+                    ),
                   ),
                   child: Icon(
                     isActive

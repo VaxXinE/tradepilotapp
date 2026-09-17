@@ -288,6 +288,18 @@ class _NativePushCard extends StatelessWidget {
 
   final NativePushService service;
 
+  Future<void> _sendTest(BuildContext context) async {
+    final accepted = await service.sendTestPush();
+    if (!context.mounted) return;
+
+    final message = accepted == null
+        ? service.errorMessage ?? context.l10n.errPushTestFailed
+        : context.l10n.pushTestConfirmed(accepted);
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -305,18 +317,43 @@ class _NativePushCard extends StatelessWidget {
         : service.errorMessage ?? l10n.pushReceiveWhenInactive;
 
     return Card(
-      child: SwitchListTile(
-        secondary: const Icon(Icons.phone_android_rounded),
-        title: Text(
-          l10n.mobilePush,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
-        ),
-        subtitle: Text(subtitle, style: const TextStyle(fontSize: 11)),
-        value: service.isEnabled,
-        onChanged: service.isBusy
-            ? null
-            : (enabled) =>
-                  unawaited(enabled ? service.enable() : service.disable()),
+      child: Column(
+        children: [
+          SwitchListTile(
+            secondary: const Icon(Icons.phone_android_rounded),
+            title: Text(
+              l10n.mobilePush,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+            ),
+            subtitle: Text(subtitle, style: const TextStyle(fontSize: 11)),
+            value: service.isEnabled,
+            onChanged: service.isBusy
+                ? null
+                : (enabled) =>
+                      unawaited(enabled ? service.enable() : service.disable()),
+          ),
+          if (service.isEnabled && service.isRegistered) ...[
+            const Divider(height: 1),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+              child: SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: service.isBusy
+                      ? null
+                      : () => unawaited(_sendTest(context)),
+                  icon: service.isBusy
+                      ? const SizedBox.square(
+                          dimension: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.send_to_mobile_rounded),
+                  label: Text(l10n.sendTestPush),
+                ),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

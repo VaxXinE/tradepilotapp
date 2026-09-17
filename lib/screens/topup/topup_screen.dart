@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/storage/signed_upload.dart';
 import '../../l10n/l10n.dart';
@@ -13,9 +14,8 @@ import '../../widgets/error_banner.dart';
 
 /// Halaman Top Up Credit.
 ///
-/// Alur pembayarannya manual: pengguna membayar lewat QRIS backend, lalu
-/// mengirim permintaan top-up yang ditinjau admin. Karena itu saldo tidak
-/// berubah saat submit — hanya riwayat yang bertambah dengan status `pending`.
+/// Pengguna membayar lewat QRIS dan wajib mengunggah bukti transfer. Backend
+/// saat ini meng-approve permintaan secara langsung dan memperbarui saldo.
 class TopUpScreen extends StatefulWidget {
   const TopUpScreen({super.key, this.imagePicker});
 
@@ -29,6 +29,7 @@ class TopUpScreen extends StatefulWidget {
 class _TopUpScreenState extends State<TopUpScreen> {
   // Nominal preset mengikuti mobile web (PRESET_AMOUNTS pada pages/topup.tsx).
   static const _presetAmounts = [5000, 10000, 15000, 20000];
+  static const _whatsAppSupportNumber = '6282310384866';
 
   final _amountController = TextEditingController();
   final _referenceController = TextEditingController();
@@ -64,7 +65,7 @@ class _TopUpScreenState extends State<TopUpScreen> {
   bool get _isBusy =>
       _uploadingProof || context.read<CreditProvider>().isSubmitting;
 
-  void _continueToPayment() {
+  Future<void> _continueToPayment() async {
     final amount = _amount;
     final rate = context.read<CreditProvider>().config?.rupiahPerCredit;
     if (amount == null || amount <= 0) {
@@ -77,6 +78,42 @@ class _TopUpScreenState extends State<TopUpScreen> {
     }
     FocusScope.of(context).unfocus();
     setState(() => _paymentStep = true);
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(dialogContext.l10n.topUpProofNoticeTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(dialogContext.l10n.topUpProofNoticeBody),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () => _openWhatsApp(dialogContext),
+              icon: const Icon(Icons.chat_rounded, color: Color(0xFF25D366)),
+              label: Text(dialogContext.l10n.topUpWhatsAppSupport),
+            ),
+          ],
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(dialogContext.l10n.topUpProofNoticeAcknowledge),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openWhatsApp(BuildContext context) async {
+    final fallbackMessage = context.l10n.errGeneric;
+    final uri = Uri.https('wa.me', '/$_whatsAppSupportNumber', {
+      'text': context.l10n.topUpWhatsAppMessage,
+    });
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication) &&
+        mounted) {
+      _showMessage(fallbackMessage);
+    }
   }
 
   Future<void> _pickProof() async {
@@ -151,43 +188,45 @@ class _TopUpScreenState extends State<TopUpScreen> {
       return;
     }
 
-    String? proofObjectPath;
     final proof = _proof;
+    if (proof == null) {
+      setState(() => _proofError = l10n.errTopupProofRequired);
+      return;
+    }
 
-    if (proof != null) {
-      setState(() {
-        _uploadingProof = true;
-        _proofError = null;
-      });
+    setState(() {
+      _uploadingProof = true;
+      _proofError = null;
+    });
 
-      try {
-        proofObjectPath =
-            await SignedUploadService(
-              context.read<AuthProvider>().client,
-            ).uploadImage(
-              fileName: proof.fileName,
-              bytes: proof.bytes,
-              mimeType: proof.mimeType,
-            );
-      } on SignedUploadException catch (error) {
-        if (!mounted) return;
-
-        setState(() {
-          _uploadingProof = false;
-          _proofError = error.failure == SignedUploadFailure.failed
-              ? l10n.topUpProofFailed
-              : l10n.avatarRequirements;
-        });
-
-        // Upload gagal berarti tidak ada POST /topups sama sekali — tidak boleh
-        // ada top-up yang terkirim setengah jalan tanpa buktinya.
-        return;
-      }
-
+    late final String proofObjectPath;
+    try {
+      proofObjectPath =
+          await SignedUploadService(
+            context.read<AuthProvider>().client,
+          ).uploadImage(
+            fileName: proof.fileName,
+            bytes: proof.bytes,
+            mimeType: proof.mimeType,
+          );
+    } on SignedUploadException catch (error) {
       if (!mounted) return;
 
-      setState(() => _uploadingProof = false);
+      setState(() {
+        _uploadingProof = false;
+        _proofError = error.failure == SignedUploadFailure.failed
+            ? l10n.topUpProofFailed
+            : l10n.avatarRequirements;
+      });
+
+      // Upload gagal berarti tidak ada POST /topups sama sekali — tidak boleh
+      // ada top-up yang terkirim setengah jalan tanpa buktinya.
+      return;
     }
+
+    if (!mounted) return;
+
+    setState(() => _uploadingProof = false);
 
     final created = await credit.submitTopup(
       amountRupiah: amount,
@@ -206,7 +245,13 @@ class _TopUpScreenState extends State<TopUpScreen> {
       _paymentStep = false;
     });
 
-    _showMessage(l10n.topUpSubmitted);
+    _showMessage(
+      created.status == TopupRequestStatus.approved
+          ? l10n.topUpApprovedInstantly(
+              created.creditsGranted ?? created.creditsRequested,
+            )
+          : l10n.topUpSubmitted,
+    );
   }
 
   void _showMessage(String message) {
@@ -223,6 +268,13 @@ class _TopUpScreenState extends State<TopUpScreen> {
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.topUpCredit)),
+      floatingActionButton: FloatingActionButton(
+        tooltip: l10n.topUpWhatsAppSupport,
+        backgroundColor: const Color(0xFF25D366),
+        foregroundColor: Colors.white,
+        onPressed: () => _openWhatsApp(context),
+        child: const Icon(Icons.chat_rounded),
+      ),
       body: RefreshIndicator(
         onRefresh: credit.refreshAll,
         child: ListView(
@@ -407,9 +459,16 @@ class _TopUpScreenState extends State<TopUpScreen> {
                   onPick: _pickProof,
                   onRemove: _removeProof,
                 ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    l10n.topUpProofRequiredHint,
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ),
                 const SizedBox(height: 16),
                 FilledButton(
-                  onPressed: busy ? null : _submit,
+                  onPressed: busy || _proof == null ? null : _submit,
                   child: busy
                       ? const SizedBox(
                           height: 18,
@@ -555,17 +614,11 @@ class _QrisCard extends StatelessWidget {
           const SizedBox(height: 12),
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: Image.network(
-              config.qrisImageUrl,
+            child: Image.asset(
+              'assets/images/trade_pilot_qris.jpeg',
+              key: const ValueKey('topup-qris-image'),
               height: 220,
               fit: BoxFit.contain,
-              errorBuilder: (context, _, _) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 24),
-                child: Text(
-                  l10n.topUpQrisUnavailable,
-                  style: theme.textTheme.bodySmall,
-                ),
-              ),
             ),
           ),
           const SizedBox(height: 12),

@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
@@ -34,6 +35,7 @@ class NativePushService extends ChangeNotifier {
   StreamSubscription<RemoteMessage>? _openedSubscription;
   Future<void>? _initialization;
   Future<bool>? _registrationRequest;
+  Completer<void>? _testReceipt;
   String? _registeredToken;
   int? _activeUserId;
   int _sessionEpoch = 0;
@@ -59,7 +61,20 @@ class NativePushService extends ChangeNotifier {
   bool _isCurrentSession(int epoch, int userId) =>
       epoch == _sessionEpoch && userId == _currentUserId;
 
-  Future<void> initialize() => _initialization ??= _initialize();
+  Future<void> initialize() {
+    final pending = _initialization;
+    if (pending != null) return pending;
+
+    final request = _initialize();
+    _initialization = request;
+    return request.onError((error, stackTrace) {
+      if (identical(_initialization, request)) _initialization = null;
+      Error.throwWithStackTrace(
+        error ?? StateError('Native push initialization failed.'),
+        stackTrace,
+      );
+    });
+  }
 
   Future<void> _initialize() async {
     // Widget tests construct the provider without bootstrapping Firebase.
@@ -194,7 +209,7 @@ class NativePushService extends ChangeNotifier {
     }
   }
 
-  Future<bool> syncToken() async {
+  Future<bool> syncToken({bool forceRegister = false}) async {
     await initialize();
     if (Firebase.apps.isEmpty) return false;
     final userId = _currentUserId;
@@ -202,11 +217,17 @@ class NativePushService extends ChangeNotifier {
     final epoch = _sessionEpoch;
 
     if (defaultTargetPlatform == TargetPlatform.iOS) {
+      String? apnsToken;
       for (var attempt = 0; attempt < 10; attempt++) {
-        final apnsToken = await _messaging.getAPNSToken();
+        apnsToken = await _messaging.getAPNSToken();
         if (apnsToken != null && apnsToken.isNotEmpty) break;
         await Future<void>.delayed(const Duration(milliseconds: 500));
         if (!_isCurrentSession(epoch, userId)) return false;
+      }
+      if (apnsToken == null || apnsToken.isEmpty) {
+        errorMessage = AppMessages.l10n.errPushTokenUnavailable;
+        notifyListeners();
+        return false;
       }
     }
 
@@ -217,17 +238,72 @@ class NativePushService extends ChangeNotifier {
       notifyListeners();
       return false;
     }
-    return _registerToken(token, epoch, userId);
+    return _registerToken(token, epoch, userId, forceRegister: forceRegister);
   }
 
-  Future<bool> _registerToken(String token, int epoch, int userId) async {
+  Future<int?> sendTestPush() async {
+    await initialize();
+    if (Firebase.apps.isEmpty || isBusy || _currentUserId == null) return null;
+
+    isBusy = true;
+    errorMessage = null;
+    final receipt = Completer<void>();
+    _testReceipt = receipt;
+    notifyListeners();
+    try {
+      if (!isEnabled) {
+        errorMessage = AppMessages.l10n.errPushEnableFirst;
+        return null;
+      }
+      if (!_permissionGranted) {
+        errorMessage = AppMessages.l10n.errPushPermissionSystem;
+        return null;
+      }
+      if (!await syncToken(forceRegister: true)) return null;
+
+      final response = await _auth.client.nativePush.sendNativePushTest();
+      final accepted = response.data?.accepted;
+      await receipt.future.timeout(const Duration(seconds: 15));
+      return accepted;
+    } on DioException catch (error) {
+      errorMessage = switch (error.response?.statusCode) {
+        404 => AppMessages.l10n.errPushTestNoDevice,
+        502 => AppMessages.l10n.errPushTestRejected,
+        503 => AppMessages.l10n.errPushTestNotConfigured,
+        429 => AppMessages.l10n.errPushTestRateLimited,
+        _ => AppMessages.l10n.errPushTestFailed,
+      };
+      return null;
+    } on TimeoutException {
+      errorMessage = AppMessages.l10n.errPushTestNotReceived;
+      return null;
+    } catch (_) {
+      errorMessage = AppMessages.l10n.errPushTestFailed;
+      return null;
+    } finally {
+      if (identical(_testReceipt, receipt)) _testReceipt = null;
+      isBusy = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> _registerToken(
+    String token,
+    int epoch,
+    int userId, {
+    bool forceRegister = false,
+  }) async {
     if (!_isCurrentSession(epoch, userId)) return false;
-    if (token == _registeredToken && isRegistered) return true;
+    if (!forceRegister && token == _registeredToken && isRegistered) {
+      return true;
+    }
 
     final pending = _registrationRequest;
     if (pending != null) await pending;
     if (!_isCurrentSession(epoch, userId)) return false;
-    if (token == _registeredToken && isRegistered) return true;
+    if (!forceRegister && token == _registeredToken && isRegistered) {
+      return true;
+    }
 
     final request = _sendRegistration(token, epoch, userId);
     _registrationRequest = request;
@@ -353,6 +429,8 @@ class NativePushService extends ChangeNotifier {
 
   void _markMessageReceived() {
     lastMessageReceivedAt = DateTime.now();
+    final receipt = _testReceipt;
+    if (receipt != null && !receipt.isCompleted) receipt.complete();
     notifyListeners();
   }
 

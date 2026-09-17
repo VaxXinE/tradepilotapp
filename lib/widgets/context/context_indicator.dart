@@ -33,6 +33,8 @@ class ContextIndicator extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+        boxShadow: AppColors.signalGlow(color, enabled: isDark),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

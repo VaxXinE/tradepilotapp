@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 import 'package:tradepilotapp/providers/auth_provider.dart';
 
@@ -163,6 +164,75 @@ void main() {
     expect(auth.user?.hasPassword, isFalse);
   });
 
+  test('Google client configuration failure is explained', () async {
+    final auth = AuthProvider(
+      googleIdTokenProvider: ({required forceAccountPicker}) async {
+        throw const GoogleSignInException(
+          code: GoogleSignInExceptionCode.clientConfigurationError,
+          description: 'OAuth client does not match the signing certificate',
+        );
+      },
+    );
+    await pumpEventQueue();
+
+    expect(await auth.loginWithGoogle(), isFalse);
+    expect(
+      auth.errorMessage,
+      'Google Sign-In is not configured for this app build. Please contact support.',
+    );
+  });
+
+  test(
+    'Apple credential is exchanged with nonce for a TradePilot session',
+    () async {
+      final auth = AuthProvider(
+        appleCredentialProvider: () async => (
+          identityToken: 'apple-identity-token',
+          authorizationCode: 'apple-authorization-code',
+          nonce: 'raw-single-use-nonce',
+          givenName: '  Apple ',
+          familyName: ' Trader  ',
+        ),
+      );
+      final adapter = _GoogleAuthAdapter();
+      auth.client.dio.httpClientAdapter = adapter;
+      await pumpEventQueue();
+
+      expect(await auth.loginWithApple(), isTrue);
+      expect(adapter.appleLoginData, {
+        'identityToken': 'apple-identity-token',
+        'authorizationCode': 'apple-authorization-code',
+        'nonce': 'raw-single-use-nonce',
+        'givenName': 'Apple',
+        'familyName': 'Trader',
+      });
+      expect(auth.status, AuthStatus.authenticated);
+      expect(auth.user?.hasPassword, isFalse);
+    },
+  );
+
+  test('an over-long Apple name is capped instead of failing login', () async {
+    // Skema backend memakai .strict() dengan max 100 karakter, jadi nama
+    // panjang menolak seluruh permintaan login — bukan hanya namanya.
+    final auth = AuthProvider(
+      appleCredentialProvider: () async => (
+        identityToken: 'apple-identity-token',
+        authorizationCode: 'apple-authorization-code',
+        nonce: 'raw-single-use-nonce',
+        givenName: 'A' * 140,
+        familyName: '   ',
+      ),
+    );
+    final adapter = _GoogleAuthAdapter();
+    auth.client.dio.httpClientAdapter = adapter;
+    await pumpEventQueue();
+
+    expect(await auth.loginWithApple(), isTrue);
+    expect((adapter.appleLoginData!['givenName'] as String).length, 100);
+    // Nama yang hanya berisi spasi tidak dikirim sama sekali.
+    expect(adapter.appleLoginData!.containsKey('familyName'), isFalse);
+  });
+
   test('Google-only deletion uses a fresh token and one-time proof', () async {
     var forcedAccountPicker = false;
     final auth = AuthProvider(
@@ -184,6 +254,36 @@ void main() {
     expect(adapter.deleteReauthToken, 'single-use-reauth-token');
     expect(auth.status, AuthStatus.unauthenticated);
   });
+
+  test(
+    'Apple-only deletion uses a fresh credential and one-time proof',
+    () async {
+      final auth = AuthProvider(
+        appleCredentialProvider: () async => (
+          identityToken: 'fresh-apple-identity-token',
+          authorizationCode: 'fresh-apple-authorization-code',
+          nonce: 'fresh-raw-nonce',
+          givenName: null,
+          familyName: null,
+        ),
+      );
+      final adapter = _GoogleAuthAdapter();
+      auth.client.dio.httpClientAdapter = adapter;
+      await pumpEventQueue();
+      auth
+        ..status = AuthStatus.authenticated
+        ..user = _user(name: 'Apple User', hasPassword: false);
+
+      expect(await auth.deleteAppleAccount(), isTrue);
+      expect(adapter.appleReauthData, {
+        'identityToken': 'fresh-apple-identity-token',
+        'authorizationCode': 'fresh-apple-authorization-code',
+        'nonce': 'fresh-raw-nonce',
+      });
+      expect(adapter.deleteReauthToken, 'single-use-reauth-token');
+      expect(auth.status, AuthStatus.unauthenticated);
+    },
+  );
 }
 
 Future<AuthProvider> _authenticatedUser() async {
@@ -217,6 +317,8 @@ class _GoogleAuthAdapter implements HttpClientAdapter {
   String? loginIdToken;
   String? reauthIdToken;
   String? deleteReauthToken;
+  Map<String, dynamic>? appleLoginData;
+  Map<String, dynamic>? appleReauthData;
 
   @override
   Future<ResponseBody> fetch(
@@ -232,8 +334,22 @@ class _GoogleAuthAdapter implements HttpClientAdapter {
         'user': _googleUserJson,
       });
     }
+    if (options.path == '/auth/apple/native') {
+      appleLoginData = data;
+      return _jsonResponse({
+        'token': 'tradepilot-session-token',
+        'user': _googleUserJson,
+      });
+    }
     if (options.path == '/auth/reauth/google') {
       reauthIdToken = data['idToken'] as String?;
+      return _jsonResponse({
+        'reauthToken': 'single-use-reauth-token',
+        'expiresAt': '2026-01-01T00:05:00.000Z',
+      });
+    }
+    if (options.path == '/auth/reauth/apple') {
+      appleReauthData = data;
       return _jsonResponse({
         'reauthToken': 'single-use-reauth-token',
         'expiresAt': '2026-01-01T00:05:00.000Z',

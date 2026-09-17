@@ -11,6 +11,7 @@ import 'package:dio/dio.dart';
 import 'package:trade_pilot_api_client/src/model/error_response.dart';
 import 'package:trade_pilot_api_client/src/model/message_response.dart';
 import 'package:trade_pilot_api_client/src/model/native_push_register_body.dart';
+import 'package:trade_pilot_api_client/src/model/native_push_test_result.dart';
 import 'package:trade_pilot_api_client/src/model/native_push_unregister_body.dart';
 
 class NativePushApi {
@@ -105,6 +106,71 @@ class NativePushApi {
     }
 
     return Response<MessageResponse>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// Send a sample FCM push to the caller's registered mobile devices
+  ///
+  /// Returns a [Future] containing a [Response] with a [NativePushTestResult] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<NativePushTestResult>> sendNativePushTest({
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/native-push/test';
+    final _options = Options(
+      method: r'POST',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    NativePushTestResult? _responseData;
+
+    try {
+      final rawResponse = _response.data;
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(NativePushTestResult),
+            ) as NativePushTestResult;
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<NativePushTestResult>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,

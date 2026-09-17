@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 
+import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 import 'package:trade_pilot_api_client/trade_pilot_client.dart';
 
@@ -13,14 +16,28 @@ import '../l10n/app_messages.dart';
 
 enum AuthStatus { unknown, authenticated, unauthenticated }
 
+enum _ReauthProvider { google, apple }
+
 typedef GoogleIdTokenProvider =
     Future<String> Function({required bool forceAccountPicker});
+typedef AppleCredentialData = ({
+  String identityToken,
+  String authorizationCode,
+  String nonce,
+  String? givenName,
+  String? familyName,
+});
+typedef AppleCredentialProvider = Future<AppleCredentialData> Function();
 
 /// State management untuk sesi login, setara dengan `AuthContext.tsx`
 /// pada app Expo di repo Trade-Pilot (`artifacts/mobile`).
 class AuthProvider extends ChangeNotifier {
-  AuthProvider({GoogleIdTokenProvider? googleIdTokenProvider})
-    : _googleIdTokenProvider = googleIdTokenProvider ?? _requestGoogleIdToken {
+  AuthProvider({
+    GoogleIdTokenProvider? googleIdTokenProvider,
+    AppleCredentialProvider? appleCredentialProvider,
+  }) : _googleIdTokenProvider = googleIdTokenProvider ?? _requestGoogleIdToken,
+       _appleCredentialProvider =
+           appleCredentialProvider ?? _requestAppleCredential {
     _client = TradePilotClient(
       baseUrl: ApiConfig.baseUrl,
       getToken: () async => _token,
@@ -34,6 +51,7 @@ class AuthProvider extends ChangeNotifier {
 
   final _storage = TokenStorage();
   final GoogleIdTokenProvider _googleIdTokenProvider;
+  final AppleCredentialProvider _appleCredentialProvider;
   late final TradePilotClient _client;
   late final TelemetryService telemetry;
 
@@ -80,7 +98,9 @@ class AuthProvider extends ChangeNotifier {
     '/auth/register',
     '/auth/logout',
     '/auth/google/native',
+    '/auth/apple/native',
     '/auth/reauth/google',
+    '/auth/reauth/apple',
     '/auth/password',
     '/auth/account',
     '/auth/security-question',
@@ -232,7 +252,44 @@ class AuthProvider extends ChangeNotifier {
       return true;
     } catch (error) {
       if (!_isGoogleCancellation(error)) {
+        if (kDebugMode && error is GoogleSignInException) {
+          debugPrint(
+            'Google Sign-In failed: ${error.code.name} — '
+            '${error.description ?? 'no description'}',
+          );
+        }
         errorMessage = _googleFriendlyError(error);
+      }
+      return false;
+    } finally {
+      isBusy = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> loginWithApple() async {
+    isBusy = true;
+    errorMessage = null;
+    notifyListeners();
+    try {
+      final credential = await _appleCredentialProvider();
+      final response = await _client.auth.loginWithAppleNative(
+        appleNativeLoginBody: AppleNativeLoginBody((builder) {
+          builder
+            ..identityToken = credential.identityToken
+            ..authorizationCode = credential.authorizationCode
+            ..nonce = credential.nonce;
+          final givenName = _appleNamePart(credential.givenName);
+          final familyName = _appleNamePart(credential.familyName);
+          if (givenName != null) builder.givenName = givenName;
+          if (familyName != null) builder.familyName = familyName;
+        }),
+      );
+      await _applyAuthResponse(response.data);
+      return true;
+    } catch (error) {
+      if (!_isAppleCancellation(error)) {
+        errorMessage = _appleFriendlyError(error);
       }
       return false;
     } finally {
@@ -258,6 +315,56 @@ class AuthProvider extends ChangeNotifier {
       throw StateError('Google did not return an ID token.');
     }
     return idToken;
+  }
+
+  /// Panjang maksimum `givenName`/`familyName` pada `AppleNativeLoginBody`.
+  ///
+  /// Skema backend memakai `.strict()`, sehingga nama yang melampaui batas
+  /// membuat seluruh permintaan login ditolak `400` — bukan sekadar namanya
+  /// yang diabaikan. Nama hanya dipakai sebagai kandidat display name saat
+  /// akun baru dibuat, jadi memotongnya jauh lebih baik daripada menggagalkan
+  /// proses masuk yang sebenarnya sah.
+  static const _maxAppleNameLength = 100;
+
+  static String? _appleNamePart(String? value) {
+    final trimmed = value?.trim();
+    if (trimmed == null || trimmed.isEmpty) return null;
+    return trimmed.length <= _maxAppleNameLength
+        ? trimmed
+        : trimmed.substring(0, _maxAppleNameLength).trim();
+  }
+
+  static Future<AppleCredentialData> _requestAppleCredential() async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) {
+      throw UnsupportedError('Sign in with Apple is only enabled on iOS.');
+    }
+    if (!await SignInWithApple.isAvailable()) {
+      throw const SignInWithAppleNotSupportedException(
+        message: 'Sign in with Apple is unavailable on this device.',
+      );
+    }
+
+    final rawNonce = generateNonce();
+    final nonceHash = sha256.convert(utf8.encode(rawNonce)).toString();
+    final credential = await SignInWithApple.getAppleIDCredential(
+      scopes: const [
+        AppleIDAuthorizationScopes.email,
+        AppleIDAuthorizationScopes.fullName,
+      ],
+      nonce: nonceHash,
+    );
+    final identityToken = credential.identityToken;
+    if (identityToken == null || identityToken.isEmpty) {
+      throw StateError('Apple did not return an identity token.');
+    }
+
+    return (
+      identityToken: identityToken,
+      authorizationCode: credential.authorizationCode,
+      nonce: rawNonce,
+      givenName: credential.givenName,
+      familyName: credential.familyName,
+    );
   }
 
   Future<bool> register({
@@ -595,12 +702,32 @@ class AuthProvider extends ChangeNotifier {
         throw StateError('Backend did not return a reauthentication token.');
       }
       return DeleteAccountBody((builder) => builder.reauthToken = reauthToken);
-    }, googleReauth: true);
+    }, reauthProvider: _ReauthProvider.google);
+  }
+
+  Future<bool> deleteAppleAccount() async {
+    if (user?.hasPassword != false) return false;
+    return _deleteAccount(() async {
+      final credential = await _appleCredentialProvider();
+      final reauth = await _client.auth.reauthenticateWithApple(
+        appleReauthBody: AppleReauthBody(
+          (builder) => builder
+            ..identityToken = credential.identityToken
+            ..authorizationCode = credential.authorizationCode
+            ..nonce = credential.nonce,
+        ),
+      );
+      final reauthToken = reauth.data?.reauthToken;
+      if (reauthToken == null || reauthToken.isEmpty) {
+        throw StateError('Backend did not return a reauthentication token.');
+      }
+      return DeleteAccountBody((builder) => builder.reauthToken = reauthToken);
+    }, reauthProvider: _ReauthProvider.apple);
   }
 
   Future<bool> _deleteAccount(
     Future<DeleteAccountBody> Function() buildProof, {
-    bool googleReauth = false,
+    _ReauthProvider? reauthProvider,
   }) async {
     final currentUser = user;
     if (status != AuthStatus.authenticated ||
@@ -639,10 +766,17 @@ class AuthProvider extends ChangeNotifier {
       return true;
     } catch (error) {
       if (_isCurrentProfileSession(epoch, userId)) {
-        if (!_isGoogleCancellation(error)) {
-          profileError = googleReauth
-              ? _googleFriendlyError(error)
-              : _deleteAccountFriendlyError(error);
+        final cancelled = switch (reauthProvider) {
+          _ReauthProvider.google => _isGoogleCancellation(error),
+          _ReauthProvider.apple => _isAppleCancellation(error),
+          null => false,
+        };
+        if (!cancelled) {
+          profileError = switch (reauthProvider) {
+            _ReauthProvider.google => _googleFriendlyError(error),
+            _ReauthProvider.apple => _appleFriendlyError(error),
+            null => _deleteAccountFriendlyError(error),
+          };
         }
       }
       return false;
@@ -704,7 +838,17 @@ class AuthProvider extends ChangeNotifier {
       error is GoogleSignInException &&
       error.code == GoogleSignInExceptionCode.canceled;
 
+  bool _isAppleCancellation(Object error) =>
+      error is SignInWithAppleAuthorizationException &&
+      error.code == AuthorizationErrorCode.canceled;
+
   String _googleFriendlyError(Object error) {
+    if (error is GoogleSignInException &&
+        (error.code == GoogleSignInExceptionCode.clientConfigurationError ||
+            error.code ==
+                GoogleSignInExceptionCode.providerConfigurationError)) {
+      return AppMessages.l10n.errGoogleConfiguration;
+    }
     if (error is DioException) {
       switch (error.response?.statusCode) {
         case 401:
@@ -722,6 +866,31 @@ class AuthProvider extends ChangeNotifier {
       }
     }
     return AppMessages.l10n.errGoogleSignInFailed;
+  }
+
+  String _appleFriendlyError(Object error) {
+    if (error is DioException) {
+      switch (error.response?.statusCode) {
+        case 401:
+          return AppMessages.l10n.errAppleTokenInvalid;
+        case 409:
+          return AppMessages.l10n.errAppleAccountConflict;
+        case 429:
+          return AppMessages.l10n.errTooManyAttempts;
+        case 404:
+        case 501:
+        case 503:
+          return AppMessages.l10n.errAppleUnavailable;
+      }
+      if (error.type == DioExceptionType.connectionError ||
+          error.type == DioExceptionType.connectionTimeout) {
+        return AppMessages.l10n.errNoConnection;
+      }
+    }
+    if (error is SignInWithAppleNotSupportedException) {
+      return AppMessages.l10n.errAppleUnavailable;
+    }
+    return AppMessages.l10n.errAppleSignInFailed;
   }
 
   /// Step 1 lupa password: ambil pertanyaan keamanan berdasar email.

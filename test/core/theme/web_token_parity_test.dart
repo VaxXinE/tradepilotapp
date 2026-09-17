@@ -47,9 +47,10 @@ void main() {
       // --background: 0 0% 2%  /  --foreground: 0 0% 98%
       expect(AppColors.darkBackground, const Color(0xFF050505));
       expect(AppColors.darkText, const Color(0xFFFAFAFA));
-      // --card: 0 0% 4%  /  --border: 0 0% 12%
-      expect(AppColors.darkCard, const Color(0xFF0A0A0A));
-      expect(AppColors.darkBorder, const Color(0xFF1F1F1F));
+      // Surface dan border mobile sengaja dibuat lebih terpisah agar hierarki
+      // tetap terbaca pada OLED dan brightness rendah.
+      expect(AppColors.darkCard, const Color(0xFF101216));
+      expect(AppColors.darkBorder, const Color(0xFF34373E));
       // --secondary + --muted: 0 0% 10%
       expect(AppColors.darkSecondary, const Color(0xFF1A1A1A));
       expect(AppColors.darkMuted, const Color(0xFF1A1A1A));

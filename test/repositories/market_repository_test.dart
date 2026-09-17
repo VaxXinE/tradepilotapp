@@ -88,8 +88,11 @@ void main() {
     ).getCandles(instrument: 'XAU/USD', timeframe: '1h');
 
     expect(candles, hasLength(2));
-    expect(candles.first.date, DateTime.parse('2026-01-01T00:00:00Z'));
-    expect(candles.last.date, DateTime.parse('2026-01-02T00:00:00Z'));
+    expect(
+      candles.first.date,
+      DateTime.parse('2026-01-01T00:00:00Z').toLocal(),
+    );
+    expect(candles.last.date, DateTime.parse('2026-01-02T00:00:00Z').toLocal());
   });
 
   test('getCandles parses and sorts daily or weekly API dates', () async {

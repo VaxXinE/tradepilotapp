@@ -302,7 +302,7 @@ class CreditProvider extends ChangeNotifier {
   Future<TopupRequest?> submitTopup({
     required int amountRupiah,
     String? paymentReferenceNote,
-    String? proofObjectPath,
+    required String proofObjectPath,
   }) async {
     final userId = _currentUserId;
 
@@ -345,6 +345,12 @@ class CreditProvider extends ChangeNotifier {
       // akan muncul dua kali.
       _history = _mergeUnique(_history, [created]);
       _historyTotal += 1;
+
+      // Backend terbaru meng-approve dan mengkredit top-up langsung. Ambil
+      // saldo authoritative agar UI tidak tetap menampilkan nilai lama.
+      if (created.status == TopupRequestStatus.approved) {
+        await loadBalance();
+      }
 
       return created;
     } catch (error) {

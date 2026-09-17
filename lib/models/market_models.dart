@@ -7,7 +7,7 @@ DateTime? _parseMarketDate(Object? value) {
   if (raw == null || raw.isEmpty) return null;
 
   final isoDate = DateTime.tryParse(raw);
-  if (isoDate != null) return isoDate;
+  if (isoDate != null) return isoDate.isUtc ? isoDate.toLocal() : isoDate;
 
   try {
     return _marketDayFormat.parseStrict(raw, true);
