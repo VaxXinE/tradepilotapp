@@ -11,26 +11,34 @@ part 'rename_filter_preset_body.g.dart';
 /// RenameFilterPresetBody
 ///
 /// Properties:
-/// * [name] 
+/// * [name]
 @BuiltValue()
-abstract class RenameFilterPresetBody implements Built<RenameFilterPresetBody, RenameFilterPresetBodyBuilder> {
+abstract class RenameFilterPresetBody
+    implements Built<RenameFilterPresetBody, RenameFilterPresetBodyBuilder> {
   @BuiltValueField(wireName: r'name')
   String get name;
 
   RenameFilterPresetBody._();
 
-  factory RenameFilterPresetBody([void updates(RenameFilterPresetBodyBuilder b)]) = _$RenameFilterPresetBody;
+  factory RenameFilterPresetBody(
+          [void updates(RenameFilterPresetBodyBuilder b)]) =
+      _$RenameFilterPresetBody;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(RenameFilterPresetBodyBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<RenameFilterPresetBody> get serializer => _$RenameFilterPresetBodySerializer();
+  static Serializer<RenameFilterPresetBody> get serializer =>
+      _$RenameFilterPresetBodySerializer();
 }
 
-class _$RenameFilterPresetBodySerializer implements PrimitiveSerializer<RenameFilterPresetBody> {
+class _$RenameFilterPresetBodySerializer
+    implements PrimitiveSerializer<RenameFilterPresetBody> {
   @override
-  final Iterable<Type> types = const [RenameFilterPresetBody, _$RenameFilterPresetBody];
+  final Iterable<Type> types = const [
+    RenameFilterPresetBody,
+    _$RenameFilterPresetBody
+  ];
 
   @override
   final String wireName = r'RenameFilterPresetBody';
@@ -53,7 +61,9 @@ class _$RenameFilterPresetBodySerializer implements PrimitiveSerializer<RenameFi
     RenameFilterPresetBody object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -103,4 +113,3 @@ class _$RenameFilterPresetBodySerializer implements PrimitiveSerializer<RenameFi
     return result.build();
   }
 }
-

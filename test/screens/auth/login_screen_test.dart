@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tradepilotapp/core/localization/locale_controller.dart';
 import 'package:tradepilotapp/core/theme/app_theme.dart';
 import 'package:tradepilotapp/l10n/l10n.dart';
 import 'package:tradepilotapp/providers/auth_provider.dart';
@@ -35,34 +37,69 @@ void main() {
 
     expect(
       tester.getSize(find.byKey(const Key('login-brand-mark'))),
-      const Size(120, 80),
+      const Size(56, 56),
     );
-    expect(find.text('Welcome back'), findsOneWidget);
+    expect(find.text('Welcome Back'), findsOneWidget);
+    expect(find.byKey(const Key('google-sign-in-button')), findsOneWidget);
+    expect(find.byKey(const Key('apple-sign-in-button')), findsNothing);
 
-    await tester.tap(find.widgetWithText(ElevatedButton, 'Sign In'));
+    await tester.ensureVisible(find.text('Sign In to Dashboard'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Sign In to Dashboard'));
     await tester.pump();
 
     expect(find.text('Enter a valid email address'), findsOneWidget);
     expect(find.text('Password is required'), findsOneWidget);
   });
 
-  testWidgets('login restores remembered credentials from secure storage', (
+  testWidgets('login exposes Sign in with Apple only on iOS', (tester) async {
+    // Kerangka test memverifikasi debug variable sebelum tearDown berjalan,
+    // jadi override dikembalikan di sini — bukan lewat addTearDown.
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    try {
+      await _pumpAuthScreen(tester, const LoginScreen());
+
+      expect(find.byKey(const Key('google-sign-in-button')), findsOneWidget);
+      expect(find.byKey(const Key('apple-sign-in-button')), findsOneWidget);
+      expect(find.text('Continue with Apple'), findsOneWidget);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
+  testWidgets('login hides Sign in with Apple on Android', (tester) async {
+    // Apple mewajibkan tombolnya hanya muncul di platform Apple; di Android
+    // tombol Google tetap satu-satunya opsi sosial.
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    try {
+      await _pumpAuthScreen(tester, const LoginScreen());
+
+      expect(find.byKey(const Key('google-sign-in-button')), findsOneWidget);
+      expect(find.byKey(const Key('apple-sign-in-button')), findsNothing);
+      expect(find.text('Continue with Apple'), findsNothing);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
+  testWidgets('login restores the remembered email but never a password', (
     tester,
   ) async {
-    final localAuthentication = _FakeLocalAuthentication();
+    // Stands in for a device upgraded from 1.0.1, which stored the plaintext
+    // password and typed it back into the form. Storage still hands one over;
+    // the screen must refuse it.
+    final readKeys = <String>[];
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(storageChannel, (call) async {
           if (call.method != 'read') return null;
-          final key = (call.arguments as Map)['key'];
+          final key = (call.arguments as Map)['key'] as String;
+          readKeys.add(key);
           return key == 'remembered_login_email'
               ? 'trader@example.com'
               : 'secure-password';
         });
 
-    await _pumpAuthScreen(
-      tester,
-      LoginScreen(localAuthentication: localAuthentication),
-    );
+    await _pumpAuthScreen(tester, const LoginScreen());
     await tester.pumpAndSettle();
 
     expect(find.text('trader@example.com'), findsOneWidget);
@@ -74,42 +111,42 @@ void main() {
           .value,
       isTrue,
     );
+
+    expect(
+      readKeys,
+      isNot(contains('remembered_login_password')),
+      reason: 'the password key must not be read back at all',
+    );
     expect(
       tester
           .widget<TextFormField>(find.byType(TextFormField).at(1))
           .controller
           ?.text,
-      'secure-password',
+      isEmpty,
+      reason: 'a prefilled password is readable by anyone holding the phone',
     );
-
-    final biometricButton = find.byKey(const Key('biometric-login-button'));
-    await tester.ensureVisible(biometricButton);
-    await tester.tap(biometricButton);
-    await tester.pump();
-    expect(localAuthentication.authenticateCalls, 1);
   });
 
-  testWidgets('register uses accessible mode selection and validates input', (
+  testWidgets('login offers no biometric shortcut into a stored password', (
+    tester,
+  ) async {
+    await _pumpAuthScreen(tester, const LoginScreen());
+    await tester.pumpAndSettle();
+
+    // Biometrics unlock an existing session on LockScreen. Reaching the login
+    // screen means there is no session, so there is nothing to unlock.
+    expect(find.byKey(const Key('biometric-login-button')), findsNothing);
+  });
+
+  testWidgets('register follows provider-only account creation', (
     tester,
   ) async {
     await _pumpAuthScreen(tester, const RegisterScreen());
 
-    expect(find.text('Beginner'), findsOneWidget);
-    expect(find.text('Pro'), findsOneWidget);
-    await tester.tap(find.text('Pro'));
-    await tester.pump();
-    expect(
-      find.text('More concise and technical market information.'),
-      findsOneWidget,
-    );
-
-    final submit = find.widgetWithText(ElevatedButton, 'Create Account');
-    await tester.ensureVisible(submit);
-    await tester.tap(submit);
-    await tester.pump();
-
-    expect(find.text('Name is required'), findsOneWidget);
-    expect(find.text('Enter a valid email address'), findsOneWidget);
+    expect(find.byKey(const Key('register-google-button')), findsOneWidget);
+    expect(find.byType(TextFormField), findsNothing);
+    expect(find.text('Beginner'), findsNothing);
+    expect(find.text('Security Question'), findsNothing);
   });
 
   testWidgets('forgot password explains progress and reports invalid email', (
@@ -127,31 +164,15 @@ void main() {
   });
 }
 
-class _FakeLocalAuthentication extends LocalAuthentication {
-  int authenticateCalls = 0;
-
-  @override
-  Future<List<BiometricType>> getAvailableBiometrics() async => [
-    BiometricType.face,
-  ];
-
-  @override
-  Future<bool> authenticate({
-    required String localizedReason,
-    Iterable<Object> authMessages = const [],
-    bool biometricOnly = false,
-    bool sensitiveTransaction = true,
-    bool persistAcrossBackgrounding = false,
-  }) async {
-    authenticateCalls++;
-    return false;
-  }
-}
-
-Future<void> _pumpAuthScreen(WidgetTester tester, Widget screen) {
+Future<void> _pumpAuthScreen(WidgetTester tester, Widget screen) async {
+  SharedPreferences.setMockInitialValues({});
+  final preferences = await SharedPreferences.getInstance();
   return tester.pumpWidget(
-    ChangeNotifierProvider(
-      create: (_) => AuthProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => LocaleController(preferences)),
+      ],
       child: MaterialApp(
         theme: AppTheme.light,
         locale: const Locale('en'),

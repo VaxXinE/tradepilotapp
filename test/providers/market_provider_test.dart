@@ -3,11 +3,13 @@ import 'dart:math' as math;
 
 import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 import 'package:tradepilotapp/models/market_context.dart';
 import 'package:tradepilotapp/models/market_models.dart';
 import 'package:tradepilotapp/providers/auth_provider.dart';
+import 'package:tradepilotapp/l10n/generated/app_localizations.dart';
 import 'package:tradepilotapp/providers/market_provider.dart';
 import 'package:tradepilotapp/repositories/market_repository.dart';
 
@@ -28,6 +30,98 @@ void main() {
   tearDown(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(storageChannel, null);
+  });
+
+  test('analyze instrument groups follow the web allowlist', () {
+    expect(MarketProvider.analyzeVisibleInstruments, {
+      'XAU/USD',
+      'BRENT',
+      'NIKKEI',
+      'HSI',
+    });
+    // Only the commodities/indices category still has visible symbols, so the
+    // picker has no category tabs to show — matching
+    // VISIBLE_INSTRUMENT_CATEGORIES.
+    expect(MarketProvider.analyzeInstrumentGroups.keys, [
+      MarketProvider.commoditiesIndicesCategory,
+    ]);
+    expect(
+      MarketProvider.analyzeInstrumentGroups[MarketProvider
+          .commoditiesIndicesCategory],
+      ['XAU/USD', 'BRENT', 'HSI', 'NIKKEI'],
+    );
+    for (final instrument in MarketProvider.analyzeVisibleInstruments) {
+      expect(MarketProvider.supportedInstruments, contains(instrument));
+    }
+  });
+
+  test('instrument categories are localized, never raw ids', () async {
+    final en = await AppLocalizations.delegate.load(const Locale('en'));
+    final id = await AppLocalizations.delegate.load(const Locale('id'));
+
+    // Grup pertama berisi logam spot dan indeks, bukan kontrak berjangka,
+    // jadi labelnya tidak boleh "Futures" seperti pada web.
+    expect(
+      MarketProvider.instrumentCategoryLabel(
+        en,
+        MarketProvider.commoditiesIndicesCategory,
+      ),
+      'Commodities & Indices',
+    );
+    expect(
+      MarketProvider.instrumentCategoryLabel(
+        id,
+        MarketProvider.commoditiesIndicesCategory,
+      ),
+      'Komoditas & Indeks',
+    );
+    expect(
+      MarketProvider.instrumentCategoryLabel(id, MarketProvider.forexCategory),
+      'Valas',
+    );
+    expect(
+      MarketProvider.instrumentCategoryLabel(id, MarketProvider.cryptoCategory),
+      'Kripto',
+    );
+
+    // Setiap id pada peta punya terjemahan — tidak ada yang jatuh ke id mentah.
+    for (final id in MarketProvider.instrumentGroups.keys) {
+      expect(MarketProvider.instrumentCategoryLabel(en, id), isNot(id));
+    }
+  });
+
+  test('a typed instrument is kept without asking the market API', () async {
+    final auth = AuthProvider();
+    await Future<void>.delayed(Duration.zero);
+    auth
+      ..status = AuthStatus.authenticated
+      ..user = _user(1);
+    final repository = _FakeMarketRepository();
+    final provider = MarketProvider(auth, repository);
+    addTearDown(provider.dispose);
+
+    // Without the opt-in the symbol is still refused, as before.
+    await provider.selectInstrument('NASDAQ100');
+    expect(provider.selectedInstrument, 'XAU/USD');
+    expect(provider.isCustomInstrument, isFalse);
+    expect(provider.marketError, isNotNull);
+
+    await provider.selectInstrument('nasdaq100', allowUnsupported: true);
+    expect(provider.selectedInstrument, 'NASDAQ100');
+    expect(provider.isCustomInstrument, isTrue);
+    expect(provider.marketError, isNull);
+    expect(provider.selectedCandles, isEmpty);
+    expect(provider.selectedTechnical, isNull);
+    expect(repository.candleRequests, isEmpty);
+
+    // Changing the timeframe must not start a request either.
+    await provider.selectTimeframe('4h');
+    expect(provider.selectedTimeframe, '4h');
+    expect(repository.candleRequests, isEmpty);
+
+    // Going back to a supported symbol clears the custom flag.
+    await provider.selectInstrument('XAU/USD');
+    expect(provider.isCustomInstrument, isFalse);
   });
 
   test('logout resets user-scoped and selected market state', () async {
@@ -90,7 +184,7 @@ void main() {
       await provider.loadQuotes(force: true);
 
       expect(provider.quoteFor('BTC/USD')?.price, 65000);
-      expect(provider.marketError, 'Gagal memuat harga live.');
+      expect(provider.marketError, 'Could not load live prices.');
 
       repository.error = null;
       await provider.loadQuotes(force: true);
@@ -320,7 +414,9 @@ User _user(int id) => User(
     ..role = UserRoleEnum.user
     ..selectedMode = UserSelectedModeEnum.beginner
     ..themePreference = UserThemePreferenceEnum.dark
-    ..onboardingCompleted = true,
+    ..createdAt = DateTime.utc(2026)
+    ..onboardingCompleted = true
+    ..hasPassword = true,
 );
 
 class _FakeMarketRepository extends MarketRepository {

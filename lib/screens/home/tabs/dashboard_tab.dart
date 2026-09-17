@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/config/sponsor_config.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../l10n/l10n.dart';
 import '../../../models/market_models.dart';
@@ -14,14 +16,14 @@ import '../../../providers/market_provider.dart';
 import '../../../providers/notifications_provider.dart';
 import '../../../providers/watchlist_provider.dart';
 import '../../../widgets/analysis_card.dart';
-import '../../../widgets/market/market_overview_card.dart';
+import '../../../widgets/calendar/economic_calendar_card.dart';
+// import '../../../widgets/market/market_overview_card.dart';
 import '../../../widgets/market/market_session_card.dart';
+import '../../../widgets/news_feed_card.dart';
 import '../../../widgets/price_alert/price_alert_sheet.dart';
-import '../../price_alert/price_alert_list_screen.dart';
 import '../../../widgets/watchlist/instrument_picker_sheet.dart';
 import '../../../widgets/watchlist/watchlist_item_card.dart';
 import '../../analysis/analysis_detail_screen.dart';
-import '../../notifications/notifications_screen.dart';
 
 class DashboardTab extends StatefulWidget {
   const DashboardTab({
@@ -39,6 +41,44 @@ class DashboardTab extends StatefulWidget {
 }
 
 class _DashboardTabState extends State<DashboardTab> {
+  AnalysisOutcomesSummary? _outcomes;
+
+  bool _outcomesLoadFailed = false;
+
+  bool _outcomesRequestInFlight = false;
+
+  final _newsFeedKey = GlobalKey<NewsFeedCardState>();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadOutcomes());
+  }
+
+  Future<void> _loadOutcomes() async {
+    if (_outcomesRequestInFlight) return;
+    _outcomesRequestInFlight = true;
+    try {
+      final response = await context
+          .read<AuthProvider>()
+          .client
+          .analyses
+          .getAnalysisOutcomesSummary();
+      if (mounted) {
+        setState(() {
+          _outcomes = response.data;
+          _outcomesLoadFailed = response.data == null;
+        });
+      }
+    } catch (_) {
+      if (mounted && _outcomes == null) {
+        setState(() => _outcomesLoadFailed = true);
+      }
+    } finally {
+      _outcomesRequestInFlight = false;
+    }
+  }
+
   Future<void> _openWatchlistManager() async {
     final watchlist = context.read<WatchlistProvider>();
 
@@ -71,11 +111,16 @@ class _DashboardTabState extends State<DashboardTab> {
 
     final notifications = context.read<NotificationsProvider>();
 
+    final newsRefresh = _newsFeedKey.currentState?.load();
+
     await Future.wait([
       analysis.refreshCoreData(silent: false),
       watchlist.loadWatchlist(),
       market.loadQuotes(force: true),
+      market.loadSelectedMarketData(force: true),
       notifications.load(silent: true),
+      _loadOutcomes(),
+      ?newsRefresh,
     ]);
   }
 
@@ -95,9 +140,37 @@ class _DashboardTabState extends State<DashboardTab> {
     }
 
     if (created == true) {
+      unawaited(
+        context.read<AuthProvider>().telemetry.track(
+          AnalyticsEventBodyEventTypeEnum.alertArmed,
+          path: '/',
+          metadata: {'instrument': instrument},
+        ),
+      );
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.l10n.priceAlertCreated(instrument))),
       );
+    }
+  }
+
+  Future<void> _openSponsorTikTok() async {
+    unawaited(
+      context.read<AuthProvider>().telemetry.recordOutboundClick(
+        placement: OutboundClickBodyPlacementEnum.dashboardTiktok,
+        target: OutboundClickBodyTargetEnum.tiktok,
+        languageCode: Localizations.localeOf(context).languageCode,
+      ),
+    );
+    final uri = Uri.parse(sponsorTikTokUrl);
+    try {
+      if (await launchUrl(uri, mode: LaunchMode.externalApplication)) return;
+    } catch (_) {
+      // Telemetry dan browser eksternal tidak boleh merusak dashboard.
+    }
+    if (mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.linkOpenFailed)));
     }
   }
 
@@ -121,7 +194,6 @@ class _DashboardTabState extends State<DashboardTab> {
 
     final watchlist = context.watch<WatchlistProvider>();
 
-    final notifications = context.watch<NotificationsProvider>();
     final l10n = context.l10n;
 
     final user = auth.user;
@@ -130,30 +202,13 @@ class _DashboardTabState extends State<DashboardTab> {
 
     final recentAnalyses = analysisProvider.history.take(5).toList();
 
+    final isLoadingAnalysisData =
+        (analysisProvider.isLoadingSummary ||
+            analysisProvider.isLoadingHistory) &&
+        summary == null &&
+        analysisProvider.history.isEmpty;
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.dashboard),
-        actions: [
-          IconButton(
-            tooltip: l10n.myPriceAlerts,
-            icon: const Icon(Icons.price_check_outlined),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const PriceAlertListScreen()),
-              );
-            },
-          ),
-          IconButton(
-            tooltip: l10n.notifications,
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
-              );
-            },
-            icon: _NotificationIcon(unreadCount: notifications.unreadCount),
-          ),
-        ],
-      ),
       body: RefreshIndicator(
         onRefresh: _refresh,
         child: ListView(
@@ -163,120 +218,77 @@ class _DashboardTabState extends State<DashboardTab> {
             // ---------------------------------------------------------------
             // GREETING
             // ---------------------------------------------------------------
-            Text(
-              l10n.welcomeBack,
-              style: TextStyle(color: muted, fontSize: 12.5),
-            ),
-
-            const SizedBox(height: 3),
-
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    user?.displayName.trim().isNotEmpty == true
-                        ? user!.displayName.trim()
-                        : l10n.trader,
-                    style: const TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.6,
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.secondary,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    user?.selectedMode == UserSelectedModeEnum.pro
-                        ? 'PRO'
-                        : l10n.beginner.toUpperCase(),
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSecondary,
-                      fontSize: 9.5,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.7,
-                    ),
-                  ),
-                ),
-              ],
+            _DashboardGreeting(
+              displayName: user?.displayName.trim().isNotEmpty == true
+                  ? user!.displayName.trim()
+                  : l10n.trader,
+              isPro: user?.selectedMode == UserSelectedModeEnum.pro,
+              muted: muted,
+              onAnalyze: () => widget.onOpenAnalyze(null),
             ),
 
             const SizedBox(height: 18),
 
-            MarketOverviewCard(
-              quote: market.selectedQuote,
-              isLoading: market.isLoadingQuotes,
-              error: market.marketError,
-              updatedAt: market.quotesUpdatedAt,
-              onRetry: () {
-                unawaited(market.loadQuotes(force: true));
-              },
-              onOpen: () {
-                widget.onOpenAnalyze(market.selectedInstrument);
-              },
-            ),
+            if (user?.onboardingCompleted != true) ...[
+              _OnboardingCard(
+                onStart: () {
+                  unawaited(context.read<AuthProvider>().completeOnboarding());
+                  widget.onOpenAnalyze(null);
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
 
-            const SizedBox(height: 16),
+            // MarketOverviewCard(
+            //   quote: market.selectedQuote,
+            //   isLoading: market.isLoadingQuotes,
+            //   error: market.marketError,
+            //   updatedAt: market.quotesUpdatedAt,
+            //   onRetry: () {
+            //     unawaited(market.loadQuotes(force: true));
+            //   },
+            //   onOpen: () {
+            //     widget.onOpenAnalyze(market.selectedInstrument);
+            //   },
+            // ),
+            // const SizedBox(height: 16),
 
-            MarketSessionCard(instrument: market.selectedInstrument),
-
-            const SizedBox(height: 16),
-
-            // ---------------------------------------------------------------
-            // BEGINNER HERO
-            // ---------------------------------------------------------------
-            _BeginnerHeroCard(
-              onAnalyze: () {
-                widget.onOpenAnalyze(null);
-              },
-            ),
-
-            const SizedBox(height: 16),
-
-            // ---------------------------------------------------------------
-            // WATCHLIST / LIVE MARKET
-            // ---------------------------------------------------------------
-            _WatchlistMarketCard(
-              market: market,
-              watchlist: watchlist,
-              onOpenInstrument: widget.onOpenAnalyze,
-              onCreateAlert: _openAlert,
-              onManageWatchlist: _openWatchlistManager,
-            ),
-
-            const SizedBox(height: 20),
-
-            if ((analysisProvider.isLoadingSummary ||
-                    analysisProvider.isLoadingHistory) &&
-                summary == null &&
-                analysisProvider.history.isEmpty)
+            // _BeginnerHeroCard(
+            //   onAnalyze: () {
+            //     widget.onOpenAnalyze(null);
+            //   },
+            // ),
+            // const SizedBox(height: 16),
+            if (isLoadingAnalysisData)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 28),
                 child: Center(child: CircularProgressIndicator()),
               )
             else ...[
-              // -------------------------------------------------------------
-              // BEGINNER STATS
-              // -------------------------------------------------------------
-              _StatsRow(summary: summary),
-
+              DashboardStats(summary: summary),
               const SizedBox(height: 14),
-
-              // -------------------------------------------------------------
-              // QUOTA
-              // -------------------------------------------------------------
+              if (_outcomes case final outcomes?) ...[
+                _OutcomeSummaryCard(outcomes: outcomes),
+                const SizedBox(height: 14),
+              ] else if (_outcomesLoadFailed) ...[
+                _DashboardLoadErrorCard(
+                  message: l10n.outcomeSummaryLoadFailed,
+                  onRetry: () => unawaited(_loadOutcomes()),
+                ),
+                const SizedBox(height: 14),
+              ],
               if (analysisProvider.quota != null)
                 _QuotaCard(quota: analysisProvider.quota!),
+              if (analysisProvider.quotaLoadFailed)
+                _DashboardLoadErrorCard(
+                  message: l10n.analysisQuotaLoadFailed,
+                  onRetry: () =>
+                      unawaited(analysisProvider.loadQuota(ensureFresh: true)),
+                ),
+              const SizedBox(height: 16),
+            ],
 
-              const SizedBox(height: 22),
-
+            if (!isLoadingAnalysisData) ...[
               // -------------------------------------------------------------
               // RECENT ANALYSIS HEADER
               // -------------------------------------------------------------
@@ -319,6 +331,10 @@ class _DashboardTabState extends State<DashboardTab> {
                             builder: (_) => AnalysisDetailScreen(
                               analysisId: analysis.id,
                               preloaded: analysis,
+                              onNewAnalysis: () {
+                                Navigator.of(context).pop();
+                                widget.onOpenAnalyze(null);
+                              },
                             ),
                           ),
                         );
@@ -328,12 +344,54 @@ class _DashboardTabState extends State<DashboardTab> {
                 }),
             ],
 
+            const SizedBox(height: 16),
+
+            _WatchlistMarketCard(
+              market: market,
+              watchlist: watchlist,
+              onOpenInstrument: widget.onOpenAnalyze,
+              onCreateAlert: _openAlert,
+              onManageWatchlist: _openWatchlistManager,
+            ),
+
+            const SizedBox(height: 16),
+
+            MarketSessionCard(instrument: market.selectedInstrument),
+
+            const SizedBox(height: 16),
+
+            EconomicCalendarCard(
+              instrument: market.selectedInstrument,
+              events: market.selectedCalendar,
+              isLoading: market.isLoadingSelectedMarket,
+              hasError: market.marketError != null,
+              onRetry: () =>
+                  unawaited(market.loadSelectedMarketData(force: true)),
+            ),
+
+            const SizedBox(height: 16),
+
+            NewsFeedCard(key: _newsFeedKey),
+
+            if (showSponsor) ...[
+              const SizedBox(height: 16),
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.live_tv_outlined),
+                  title: Text(l10n.liveAnalysisTitle),
+                  subtitle: Text(l10n.liveAnalysisSponsorSubtitle),
+                  trailing: const Icon(Icons.open_in_new_rounded),
+                  onTap: _openSponsorTikTok,
+                ),
+              ),
+            ],
+
             const SizedBox(height: 20),
 
             Text(
               l10n.decisionDisclaimer,
               textAlign: TextAlign.center,
-              style: TextStyle(color: muted, fontSize: 10.5, height: 1.4),
+              style: TextStyle(color: muted, fontSize: 12, height: 1.4),
             ),
 
             const SizedBox(height: 24),
@@ -348,49 +406,138 @@ class _DashboardTabState extends State<DashboardTab> {
 // NOTIFICATION ICON
 // =============================================================================
 
-class _NotificationIcon extends StatelessWidget {
-  const _NotificationIcon({required this.unreadCount});
+class _DashboardGreeting extends StatelessWidget {
+  const _DashboardGreeting({
+    required this.displayName,
+    required this.isPro,
+    required this.muted,
+    required this.onAnalyze,
+  });
 
-  final int unreadCount;
+  final String displayName;
+  final bool isPro;
+  final Color muted;
+  final VoidCallback onAnalyze;
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
+    final greeting = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Icon(Icons.notifications_outlined),
-
-        if (unreadCount > 0)
-          Positioned(
-            right: -7,
-            top: -7,
-            child: Container(
-              constraints: const BoxConstraints(minWidth: 17, minHeight: 17),
-              padding: const EdgeInsets.symmetric(horizontal: 4),
+        Wrap(
+          spacing: 8,
+          runSpacing: 6,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Text(
+              context.l10n.welcomeBack.toUpperCase(),
+              style: TextStyle(
+                color: muted,
+                fontSize: 12,
+                letterSpacing: 1,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.error,
+                color: Theme.of(context).colorScheme.secondary,
                 borderRadius: BorderRadius.circular(999),
               ),
-              alignment: Alignment.center,
               child: Text(
-                unreadCount > 99 ? '99+' : '$unreadCount',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 8.5,
-                  fontWeight: FontWeight.w900,
+                isPro ? 'PRO' : context.l10n.beginner.toUpperCase(),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSecondary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.7,
                 ),
               ),
             ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          displayName,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.4,
           ),
+        ),
       ],
     );
+    final action = FilledButton.icon(
+      key: const Key('dashboard-new-analysis'),
+      onPressed: onAnalyze,
+      style: FilledButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        minimumSize: const Size(0, 48),
+        textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+      ),
+      icon: const Icon(Icons.add_rounded, size: 18),
+      label: Text(context.l10n.analysis),
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final stack =
+            constraints.maxWidth < 340 ||
+            MediaQuery.textScalerOf(context).scale(1) > 1.3;
+        if (stack) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [greeting, const SizedBox(height: 12), action],
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(child: greeting),
+            const SizedBox(width: 10),
+            action,
+          ],
+        );
+      },
+    );
   }
+}
+
+class _OnboardingCard extends StatelessWidget {
+  const _OnboardingCard({required this.onStart});
+  final VoidCallback onStart;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            context.l10n.getStarted,
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+          ),
+          const SizedBox(height: 8),
+          Text(context.l10n.onboardingSteps),
+          const SizedBox(height: 12),
+          FilledButton(
+            onPressed: onStart,
+            child: Text(context.l10n.chooseMarketAndStartAnalysis),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 // =============================================================================
 // BEGINNER HERO
 // =============================================================================
 
+/*
 class _BeginnerHeroCard extends StatelessWidget {
   const _BeginnerHeroCard({required this.onAnalyze});
 
@@ -408,13 +555,15 @@ class _BeginnerHeroCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.auto_awesome_rounded, size: 20),
-                SizedBox(width: 8),
-                Text(
-                  context.l10n.wantMarketAnalysis,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w900,
+                const Icon(Icons.auto_awesome_rounded, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    context.l10n.wantMarketAnalysis,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ),
               ],
@@ -443,6 +592,7 @@ class _BeginnerHeroCard extends StatelessWidget {
     );
   }
 }
+*/
 
 // =============================================================================
 // WATCHLIST
@@ -517,28 +667,37 @@ class _WatchlistMarketCard extends StatelessWidget {
 
             Text(
               context.l10n.watchlistDescription,
-              style: TextStyle(color: muted, fontSize: 11),
+              style: TextStyle(color: muted, fontSize: 12),
             ),
 
             const SizedBox(height: 14),
 
             if (instruments.isEmpty)
               _EmptyWatchlist(onAdd: onManageWatchlist)
-            else ...[
-              for (var i = 0; i < instruments.length; i++) ...[
-                _WatchlistRow(
-                  instrument: instruments[i],
-                  quote: market.quoteFor(instruments[i]),
-                  onOpen: () {
-                    onOpenInstrument(instruments[i]);
-                  },
-                  onAlert: (quote) {
-                    onCreateAlert(instruments[i], quote);
-                  },
+            else
+              SizedBox(
+                height:
+                    instruments.length.clamp(1, 3) *
+                    68 *
+                    MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.6),
+                child: Scrollbar(
+                  child: ListView.separated(
+                    key: const Key('dashboard-watchlist-list'),
+                    primary: false,
+                    itemCount: instruments.length,
+                    separatorBuilder: (_, _) => const Divider(height: 18),
+                    itemBuilder: (_, index) {
+                      final instrument = instruments[index];
+                      return _WatchlistRow(
+                        instrument: instrument,
+                        quote: market.quoteFor(instrument),
+                        onOpen: () => onOpenInstrument(instrument),
+                        onAlert: (quote) => onCreateAlert(instrument, quote),
+                      );
+                    },
+                  ),
                 ),
-                if (i != instruments.length - 1) const Divider(height: 18),
-              ],
-            ],
+              ),
 
             if (market.quotesUpdatedAt != null) ...[
               const SizedBox(height: 10),
@@ -548,8 +707,13 @@ class _WatchlistMarketCard extends StatelessWidget {
                     'HH:mm:ss',
                   ).format(market.quotesUpdatedAt!.toLocal()),
                 ),
-                style: TextStyle(color: muted, fontSize: 9.5),
+                style: TextStyle(color: muted, fontSize: 12),
               ),
+            ],
+
+            if (instruments.length > 3) ...[
+              const SizedBox(height: 8),
+              _ScrollForMoreHint(color: muted),
             ],
           ],
         ),
@@ -584,7 +748,12 @@ class _WatchlistRow extends StatelessWidget {
 
     final bearish = isDark ? AppColors.bearishDark : AppColors.bearishLight;
 
-    final changeColor = (quote?.changePercent ?? 0) >= 0 ? bullish : bearish;
+    final change = quote?.changePercent ?? 0;
+    final changeColor = change > 0
+        ? bullish
+        : change < 0
+        ? bearish
+        : muted;
 
     return Row(
       children: [
@@ -621,7 +790,7 @@ class _WatchlistRow extends StatelessWidget {
                         else
                           Text(
                             context.l10n.livePriceUnavailable,
-                            style: TextStyle(color: muted, fontSize: 10.5),
+                            style: TextStyle(color: muted, fontSize: 12),
                           ),
                       ],
                     ),
@@ -638,11 +807,11 @@ class _WatchlistRow extends StatelessWidget {
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
-                        '${quote!.changePercent >= 0 ? '+' : ''}'
+                        '${quote!.changePercent > 0 ? '+' : ''}'
                         '${quote!.changePercent.toStringAsFixed(2)}%',
                         style: TextStyle(
                           color: changeColor,
-                          fontSize: 10,
+                          fontSize: 12,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -723,8 +892,120 @@ class _EmptyWatchlist extends StatelessWidget {
 // STATS
 // =============================================================================
 
-class _StatsRow extends StatelessWidget {
-  const _StatsRow({required this.summary});
+class _OutcomeSummaryCard extends StatelessWidget {
+  const _OutcomeSummaryCard({required this.outcomes});
+
+  final AnalysisOutcomesSummary outcomes;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              context.l10n.outcomeSummary,
+              style: const TextStyle(fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 12),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final stack =
+                    constraints.maxWidth < 330 ||
+                    MediaQuery.textScalerOf(context).scale(1) > 1.3;
+                final target = _RateTile(
+                  label: context.l10n.targetHitRate,
+                  rate: outcomes.tpHitRate,
+                  count: outcomes.tp1Hit + outcomes.tp2Hit,
+                  total: outcomes.scored,
+                  color: isDark
+                      ? AppColors.bullishDark
+                      : AppColors.bullishLight,
+                );
+                final stop = _RateTile(
+                  label: context.l10n.stopHitRate,
+                  rate: outcomes.slHitRate,
+                  count: outcomes.slHit,
+                  total: outcomes.scored,
+                  color: Theme.of(context).colorScheme.error,
+                );
+                if (stack) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [target, const SizedBox(height: 10), stop],
+                  );
+                }
+                return Row(
+                  children: [
+                    Expanded(child: target),
+                    const SizedBox(width: 10),
+                    Expanded(child: stop),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 10),
+            Text(
+              context.l10n.resolvedSample(outcomes.scored),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RateTile extends StatelessWidget {
+  const _RateTile({
+    required this.label,
+    required this.rate,
+    required this.count,
+    required this.total,
+    required this.color,
+  });
+
+  final String label;
+  final num? rate;
+  final int count;
+  final int total;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: color.withValues(alpha: .1),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: color.withValues(alpha: .3)),
+      boxShadow: AppColors.signalGlow(
+        color,
+        enabled: Theme.of(context).brightness == Brightness.dark,
+      ),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: TextStyle(color: color, fontSize: 12)),
+        Text(
+          rate == null ? '—' : '${(rate! * 100).round()}%',
+          style: TextStyle(
+            color: color,
+            fontWeight: FontWeight.w900,
+            fontSize: 20,
+          ),
+        ),
+        Text('$count / $total', style: Theme.of(context).textTheme.bodySmall),
+      ],
+    ),
+  );
+}
+
+class DashboardStats extends StatelessWidget {
+  const DashboardStats({super.key, required this.summary});
 
   final AnalysesSummary? summary;
 
@@ -748,42 +1029,50 @@ class _StatsRow extends StatelessWidget {
       confidence = '${maxConfidence.round()}%';
     }
 
-    return Row(
-      children: [
-        Expanded(
-          child: _StatCard(
-            label: context.l10n.totalAnalyses,
-            value: '$total',
-            icon: Icons.insert_chart_outlined_rounded,
-          ),
-        ),
+    final cards = [
+      _StatCard(
+        key: const ValueKey('dashboard-stat-total'),
+        label: context.l10n.totalAnalyses,
+        value: '$total',
+        icon: Icons.insert_chart_outlined_rounded,
+      ),
+      _StatCard(
+        key: const ValueKey('dashboard-stat-beginner'),
+        label: context.l10n.beginnerMode,
+        value: '$beginner',
+        icon: Icons.school_outlined,
+      ),
+      _StatCard(
+        key: const ValueKey('dashboard-stat-confidence'),
+        label: context.l10n.aiConfidence,
+        value: confidence,
+        icon: Icons.speed_rounded,
+      ),
+    ];
 
-        const SizedBox(width: 8),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final textScale = MediaQuery.textScalerOf(context).scale(14) / 14;
+        final stackCards = textScale > 1.3;
+        final cardWidth = stackCards
+            ? constraints.maxWidth
+            : (constraints.maxWidth - 16) / 3;
 
-        Expanded(
-          child: _StatCard(
-            label: context.l10n.beginnerMode,
-            value: '$beginner',
-            icon: Icons.school_outlined,
-          ),
-        ),
-
-        const SizedBox(width: 8),
-
-        Expanded(
-          child: _StatCard(
-            label: context.l10n.aiConfidence,
-            value: confidence,
-            icon: Icons.speed_rounded,
-          ),
-        ),
-      ],
+        return Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final card in cards) SizedBox(width: cardWidth, child: card),
+          ],
+        );
+      },
     );
   }
 }
 
 class _StatCard extends StatelessWidget {
   const _StatCard({
+    super.key,
     required this.label,
     required this.value,
     required this.icon,
@@ -797,7 +1086,10 @@ class _StatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final primary = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
+    // Glyph/teks memakai nada emas yang terbaca; isian tetap emas web.
+    final primaryText = isDark
+        ? AppColors.darkPrimaryText
+        : AppColors.lightPrimaryText;
 
     final muted = isDark
         ? AppColors.darkMutedForeground
@@ -809,7 +1101,7 @@ class _StatCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: primary, size: 19),
+            Icon(icon, color: primaryText, size: 19),
 
             const SizedBox(height: 9),
 
@@ -824,7 +1116,7 @@ class _StatCard extends StatelessWidget {
             Text(
               label,
               maxLines: 2,
-              style: TextStyle(fontSize: 10, color: muted),
+              style: TextStyle(fontSize: 12, color: muted),
             ),
           ],
         ),
@@ -846,7 +1138,11 @@ class _QuotaCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    // Bar kuota adalah isian, ikon di sebelahnya adalah glyph.
     final primary = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
+    final primaryText = isDark
+        ? AppColors.darkPrimaryText
+        : AppColors.lightPrimaryText;
 
     final muted = isDark
         ? AppColors.darkMutedForeground
@@ -858,7 +1154,7 @@ class _QuotaCard extends StatelessWidget {
           padding: const EdgeInsets.all(14),
           child: Row(
             children: [
-              Icon(Icons.all_inclusive_rounded, color: primary),
+              Icon(Icons.all_inclusive_rounded, color: primaryText),
               const SizedBox(width: 10),
               Text(
                 context.l10n.unlimitedAnalysisQuota,
@@ -900,11 +1196,80 @@ class _QuotaCard extends StatelessWidget {
               primary: primary,
               muted: muted,
             ),
+
+            const SizedBox(height: 10),
+
+            Row(
+              children: [
+                Icon(Icons.toll_rounded, size: 16, color: primaryText),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    context.l10n.creditBalance,
+                    style: TextStyle(fontSize: 12, color: muted),
+                  ),
+                ),
+                Text(
+                  '${quota.credits.balance}',
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ],
+            ),
           ],
         ),
       ),
     );
   }
+}
+
+class _DashboardLoadErrorCard extends StatelessWidget {
+  const _DashboardLoadErrorCard({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    child: Padding(
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.error_outline_rounded,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              const SizedBox(width: 10),
+              Expanded(child: Text(message)),
+            ],
+          ),
+          const SizedBox(height: 4),
+          TextButton(onPressed: onRetry, child: Text(context.l10n.tryAgain)),
+        ],
+      ),
+    ),
+  );
+}
+
+class _ScrollForMoreHint extends StatelessWidget {
+  const _ScrollForMoreHint({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Icon(Icons.swipe_vertical_rounded, size: 15, color: color),
+      const SizedBox(width: 6),
+      Text(
+        context.l10n.scrollForMore,
+        style: TextStyle(color: color, fontSize: 11),
+      ),
+    ],
+  );
 }
 
 class _QuotaBar extends StatelessWidget {
@@ -927,31 +1292,34 @@ class _QuotaBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final ratio = limit == 0 ? 0.0 : (used / limit).clamp(0, 1).toDouble();
 
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(label, style: TextStyle(fontSize: 11.5, color: muted)),
-            Text(
-              '$used / $limit',
-              style: TextStyle(fontSize: 11.5, color: muted),
-            ),
-          ],
-        ),
-
-        const SizedBox(height: 5),
-
-        ClipRRect(
-          borderRadius: BorderRadius.circular(999),
-          child: LinearProgressIndicator(
-            value: ratio,
-            minHeight: 6,
-            backgroundColor: muted.withValues(alpha: 0.15),
-            valueColor: AlwaysStoppedAnimation(primary),
+    return Semantics(
+      label: '$label, $used / $limit',
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(label, style: TextStyle(fontSize: 12, color: muted)),
+              Text(
+                '$used / $limit',
+                style: TextStyle(fontSize: 12, color: muted),
+              ),
+            ],
           ),
-        ),
-      ],
+
+          const SizedBox(height: 5),
+
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: ratio,
+              minHeight: 6,
+              backgroundColor: muted.withValues(alpha: 0.15),
+              valueColor: AlwaysStoppedAnimation(primary),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

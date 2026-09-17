@@ -14,13 +14,14 @@ part 'outbound_click_stats.g.dart';
 /// OutboundClickStats
 ///
 /// Properties:
-/// * [windowDays] 
-/// * [totalAllTime] 
-/// * [totalInWindow] 
-/// * [byPlacement] 
-/// * [byTarget] 
+/// * [windowDays]
+/// * [totalAllTime]
+/// * [totalInWindow]
+/// * [byPlacement]
+/// * [byTarget]
 @BuiltValue()
-abstract class OutboundClickStats implements Built<OutboundClickStats, OutboundClickStatsBuilder> {
+abstract class OutboundClickStats
+    implements Built<OutboundClickStats, OutboundClickStatsBuilder> {
   @BuiltValueField(wireName: r'windowDays')
   int get windowDays;
 
@@ -38,16 +39,19 @@ abstract class OutboundClickStats implements Built<OutboundClickStats, OutboundC
 
   OutboundClickStats._();
 
-  factory OutboundClickStats([void updates(OutboundClickStatsBuilder b)]) = _$OutboundClickStats;
+  factory OutboundClickStats([void updates(OutboundClickStatsBuilder b)]) =
+      _$OutboundClickStats;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(OutboundClickStatsBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<OutboundClickStats> get serializer => _$OutboundClickStatsSerializer();
+  static Serializer<OutboundClickStats> get serializer =>
+      _$OutboundClickStatsSerializer();
 }
 
-class _$OutboundClickStatsSerializer implements PrimitiveSerializer<OutboundClickStats> {
+class _$OutboundClickStatsSerializer
+    implements PrimitiveSerializer<OutboundClickStats> {
   @override
   final Iterable<Type> types = const [OutboundClickStats, _$OutboundClickStats];
 
@@ -77,12 +81,14 @@ class _$OutboundClickStatsSerializer implements PrimitiveSerializer<OutboundClic
     yield r'byPlacement';
     yield serializers.serialize(
       object.byPlacement,
-      specifiedType: const FullType(BuiltList, [FullType(OutboundClickStatsByPlacementInner)]),
+      specifiedType: const FullType(
+          BuiltList, [FullType(OutboundClickStatsByPlacementInner)]),
     );
     yield r'byTarget';
     yield serializers.serialize(
       object.byTarget,
-      specifiedType: const FullType(BuiltList, [FullType(OutboundClickStatsByTargetInner)]),
+      specifiedType: const FullType(
+          BuiltList, [FullType(OutboundClickStatsByTargetInner)]),
     );
   }
 
@@ -92,7 +98,9 @@ class _$OutboundClickStatsSerializer implements PrimitiveSerializer<OutboundClic
     OutboundClickStats object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -131,14 +139,16 @@ class _$OutboundClickStatsSerializer implements PrimitiveSerializer<OutboundClic
         case r'byPlacement':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltList, [FullType(OutboundClickStatsByPlacementInner)]),
+            specifiedType: const FullType(
+                BuiltList, [FullType(OutboundClickStatsByPlacementInner)]),
           ) as BuiltList<OutboundClickStatsByPlacementInner>;
           result.byPlacement.replace(valueDes);
           break;
         case r'byTarget':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltList, [FullType(OutboundClickStatsByTargetInner)]),
+            specifiedType: const FullType(
+                BuiltList, [FullType(OutboundClickStatsByTargetInner)]),
           ) as BuiltList<OutboundClickStatsByTargetInner>;
           result.byTarget.replace(valueDes);
           break;
@@ -170,4 +180,3 @@ class _$OutboundClickStatsSerializer implements PrimitiveSerializer<OutboundClic
     return result.build();
   }
 }
-

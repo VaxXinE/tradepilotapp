@@ -12,7 +12,6 @@ import 'package:trade_pilot_api_client/src/api_util.dart';
 import 'package:trade_pilot_api_client/src/model/performance_summary.dart';
 
 class PerformanceApi {
-
   final Dio _dio;
 
   final Serializers _serializers;
@@ -20,7 +19,7 @@ class PerformanceApi {
   const PerformanceApi(this._dio, this._serializers);
 
   /// Public AI transparency dashboard (task
-  /// Anonymised, aggregated outcome ledger across every analysis the AI has produced inside the rolling window. No per-user data is included — this is the AI&#39;s own track record. Every segment (by instrument, FX session, market condition) is gated by a minimum-sample guardrail so a 3-trade hot streak never reads as a confident win rate. 
+  /// Anonymised, aggregated outcome ledger across every analysis the AI has produced inside the rolling window. No per-user data is included — this is the AI&#39;s own track record. Every segment (by instrument, FX session, market condition) is gated by a minimum-sample guardrail so a 3-trade hot streak never reads as a confident win rate.
   ///
   /// Parameters:
   /// * [window] - Rolling window in days. Only 30 or 90 are accepted; anything else falls back to 30.
@@ -33,7 +32,7 @@ class PerformanceApi {
   ///
   /// Returns a [Future] containing a [Response] with a [PerformanceSummary] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<PerformanceSummary>> getPerformanceSummary({ 
+  Future<Response<PerformanceSummary>> getPerformanceSummary({
     int? window = 30,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -56,7 +55,9 @@ class PerformanceApi {
     );
 
     final _queryParameters = <String, dynamic>{
-      if (window != null) r'window': encodeQueryParameter(_serializers, window, const FullType(int)),
+      if (window != null)
+        r'window':
+            encodeQueryParameter(_serializers, window, const FullType(int)),
     };
 
     final _response = await _dio.request<Object>(
@@ -72,11 +73,12 @@ class PerformanceApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(PerformanceSummary),
-      ) as PerformanceSummary;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(PerformanceSummary),
+            ) as PerformanceSummary;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -98,5 +100,4 @@ class PerformanceApi {
       extra: _response.extra,
     );
   }
-
 }

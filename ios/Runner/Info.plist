@@ -8,6 +8,17 @@
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
 	<string>Trade Pilot</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.929958103345-cieflfi7p13t6dnhqt8j0qfif9iia57g</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -26,8 +37,14 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>GIDClientID</key>
+	<string>929958103345-cieflfi7p13t6dnhqt8j0qfif9iia57g.apps.googleusercontent.com</string>
+	<key>GIDServerClientID</key>
+	<string>929958103345-cbf424vgelrer7nkrr81l4iptsikuc1u.apps.googleusercontent.com</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Gunakan Face ID untuk masuk dengan aman ke Trade Pilot.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Pilih foto profil untuk akun Trade Pilot Anda.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -51,6 +68,10 @@
 	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

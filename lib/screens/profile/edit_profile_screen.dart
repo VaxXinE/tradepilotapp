@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
 
+import '../../core/api/api_config.dart';
+import '../../core/storage/signed_upload.dart';
 import '../../providers/auth_provider.dart';
 import '../../l10n/l10n.dart';
 import '../../widgets/error_banner.dart';
+import '../../widgets/responsive_page.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -15,6 +19,7 @@ class EditProfileScreen extends StatefulWidget {
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _displayNameController;
+  bool _uploadingAvatar = false;
 
   @override
   void initState() {
@@ -44,23 +49,104 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     Navigator.of(context).pop();
   }
 
+  Future<void> _pickAvatar() async {
+    final file = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 88,
+      maxWidth: 1600,
+    );
+    if (file == null || !mounted) return;
+    final bytes = await file.readAsBytes();
+    if (!mounted) return;
+
+    setState(() => _uploadingAvatar = true);
+    final auth = context.read<AuthProvider>();
+    try {
+      final objectPath = await SignedUploadService(
+        auth.client,
+      ).uploadImage(fileName: file.name, bytes: bytes, mimeType: file.mimeType);
+      final saved = await auth.updateAvatarPath(objectPath);
+      if (!saved) throw StateError('Profile update failed');
+    } on SignedUploadException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              error.failure == SignedUploadFailure.failed
+                  ? context.l10n.avatarUploadFailed
+                  : context.l10n.avatarRequirements,
+            ),
+          ),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.avatarUploadFailed)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _uploadingAvatar = false);
+    }
+  }
+
+  Future<void> _removeAvatar() async {
+    setState(() => _uploadingAvatar = true);
+    await context.read<AuthProvider>().updateAvatarPath(null);
+    if (mounted) setState(() => _uploadingAvatar = false);
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final user = auth.user;
     final l10n = context.l10n;
+    final avatar = _avatarUrl(user?.avatarUrl);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.editProfile)),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: responsivePagePadding(
+            context,
+            horizontal: 24,
+            maxWidth: 480,
+          ),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 ErrorBanner(message: auth.profileError),
+                Center(
+                  child: CircleAvatar(
+                    radius: 48,
+                    foregroundImage: avatar == null
+                        ? null
+                        : NetworkImage(avatar),
+                    child: user?.avatarUrl == null
+                        ? const Icon(Icons.person_rounded, size: 42)
+                        : null,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    TextButton.icon(
+                      onPressed: _uploadingAvatar ? null : _pickAvatar,
+                      icon: const Icon(Icons.photo_library_outlined),
+                      label: Text(l10n.changePhoto),
+                    ),
+                    if (user?.avatarUrl != null)
+                      TextButton(
+                        onPressed: _uploadingAvatar ? null : _removeAvatar,
+                        child: Text(l10n.remove),
+                      ),
+                  ],
+                ),
+                if (_uploadingAvatar) const LinearProgressIndicator(),
+                const SizedBox(height: 18),
                 TextFormField(
                   controller: _displayNameController,
                   autofocus: true,
@@ -106,5 +192,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ),
       ),
     );
+  }
+
+  String? _avatarUrl(String? path) {
+    if (path == null || path.isEmpty) return null;
+    final clean = path.startsWith('/') ? path.substring(1) : path;
+    return '${ApiConfig.baseUrl}/storage/$clean';
   }
 }

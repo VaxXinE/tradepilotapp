@@ -26,39 +26,21 @@ class MarketOverviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currentQuote = quote;
-    final premiumBackground = Theme.of(context).brightness == Brightness.dark
-        ? AppColors.darkCard
-        : const Color(0xFF1B1B18);
 
     return Card(
-      color: currentQuote == null ? null : premiumBackground,
       clipBehavior: Clip.antiAlias,
-      child: DefaultTextStyle.merge(
-        style: TextStyle(
-          color: currentQuote == null ? null : AppColors.darkText,
-        ),
-        child: IconTheme.merge(
-          data: IconThemeData(
-            color: currentQuote == null ? null : AppColors.darkText,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(18),
-            child: currentQuote == null
-                ? _EmptyState(
-                    isLoading: isLoading,
-                    error: error,
-                    onRetry: onRetry,
-                  )
-                : _QuoteState(
-                    quote: currentQuote,
-                    isLoading: isLoading,
-                    hasError: error != null,
-                    updatedAt: updatedAt,
-                    onRetry: onRetry,
-                    onOpen: onOpen,
-                  ),
-          ),
-        ),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: currentQuote == null
+            ? _EmptyState(isLoading: isLoading, error: error, onRetry: onRetry)
+            : _QuoteState(
+                quote: currentQuote,
+                isLoading: isLoading,
+                hasError: error != null,
+                updatedAt: updatedAt,
+                onRetry: onRetry,
+                onOpen: onOpen,
+              ),
       ),
     );
   }
@@ -123,10 +105,11 @@ class _QuoteState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final changeColor = quote.changePercent >= 0
-        ? AppColors.bullishDark
-        : AppColors.bearishDark;
-    const muted = AppColors.darkMutedForeground;
+        ? (isDark ? AppColors.bullishDark : AppColors.bullishLight)
+        : (isDark ? AppColors.bearishDark : AppColors.bearishLight);
+    final muted = Theme.of(context).colorScheme.onSurfaceVariant;
 
     return InkWell(
       onTap: onOpen,

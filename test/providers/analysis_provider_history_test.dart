@@ -29,34 +29,23 @@ void main() {
         .setMockMethodCallHandler(storageChannel, null);
   });
 
-  test(
-    'sorting and client filters never mutate dashboard base history',
-    () async {
-      final auth = await _authenticatedUser(1);
-      final provider = AnalysisProvider(auth);
-      addTearDown(provider.dispose);
-      final newest = _analysis(2, confidence: 60, day: 23);
-      final oldest = _analysis(1, confidence: 90, day: 22);
-      provider.history = [newest, oldest];
-      provider.historyTotal = 2;
+  test('unsupported client sorting is normalized to server order', () async {
+    final auth = await _authenticatedUser(1);
+    final provider = AnalysisProvider(auth);
+    addTearDown(provider.dispose);
+    final newest = _analysis(2, confidence: 60, day: 23);
+    final oldest = _analysis(1, confidence: 90, day: 22);
+    provider.history = [newest, oldest];
+    provider.historyTotal = 2;
 
-      await provider.applyHistoryFilters(
-        const HistoryFilters(
-          minConfidence: 70,
-          sort: HistorySort.confidenceHighest,
-        ),
-      );
+    await provider.applyHistoryFilters(
+      const HistoryFilters(sort: HistorySort.confidenceHighest),
+    );
 
-      expect(provider.visibleHistory.map((item) => item.id), [1]);
-      expect(provider.history.map((item) => item.id), [2, 1]);
-
-      await provider.applyHistoryFilters(
-        const HistoryFilters(sort: HistorySort.oldest),
-      );
-      expect(provider.visibleHistory.map((item) => item.id), [1, 2]);
-      expect(provider.history.map((item) => item.id), [2, 1]);
-    },
-  );
+    expect(provider.visibleHistory.map((item) => item.id), [2, 1]);
+    expect(provider.history.map((item) => item.id), [2, 1]);
+    expect(provider.historyFilters.sort, HistorySort.newest);
+  });
 
   test(
     'preferences exclude query and remain isolated per authenticated user',
@@ -68,7 +57,7 @@ void main() {
       await provider.applyHistoryFilters(
         const HistoryFilters(
           query: 'private context',
-          outcome: HistoryOutcomeFilter.success,
+          outcome: HistoryOutcomeFilter.targetReached,
           sort: HistorySort.oldest,
         ),
       );
@@ -78,7 +67,8 @@ void main() {
           jsonDecode(preferences.getString('history_preferences_v1_1')!)
               as Map<String, dynamic>;
       expect(userOne.containsKey('query'), isFalse);
-      expect(userOne['outcome'], 'success');
+      expect(userOne['outcome'], 'targetReached');
+      expect(userOne.containsKey('sort'), isFalse);
 
       auth
         ..status = AuthStatus.authenticated
@@ -120,10 +110,15 @@ void main() {
     );
 
     final newRequest = provider.applyHistoryFilters(
-      const HistoryFilters(query: 'new'),
+      const HistoryFilters(
+        query: 'new',
+        outcome: HistoryOutcomeFilter.targetReached,
+      ),
     );
     await pumpEventQueue();
     expect(adapter.hasRequest('new'), isTrue);
+    expect(adapter.outcomesFor('new'), contains('tp1_hit'));
+    expect(adapter.outcomesFor('new'), contains('tp2_hit'));
     adapter.complete('new', [_analysis(2, confidence: 80, day: 23)]);
     await newRequest;
 
@@ -132,6 +127,28 @@ void main() {
 
     expect(provider.filteredHistory.map((item) => item.id), [2]);
     expect(provider.historyFilters.query, 'new');
+  });
+
+  test('analysis creation errors never leak into History', () async {
+    final auth = await _authenticatedUser(1);
+    final provider = AnalysisProvider(auth)
+      ..errorMessage = 'Analysis failed. Please try again.';
+    addTearDown(provider.dispose);
+
+    expect(provider.visibleHistoryError, isNull);
+  });
+
+  test('history summary requests the complete server aggregate', () async {
+    final auth = await _authenticatedUser(1);
+    final adapter = _DeferredHistoryAdapter();
+    auth.client.dio.httpClientAdapter = adapter;
+    final provider = AnalysisProvider(auth);
+    addTearDown(provider.dispose);
+
+    await provider.loadHistoryOutcomeSummary();
+
+    expect(adapter.historySummaryRange, 'all');
+    expect(provider.historyOutcomeSummary?.overall.total, 340);
   });
 
   test(
@@ -152,7 +169,7 @@ void main() {
       await pumpEventQueue();
 
       expect(provider.historyFilters.outcome, HistoryOutcomeFilter.pending);
-      expect(provider.historyFilters.sort, HistorySort.oldest);
+      expect(provider.historyFilters.sort, HistorySort.newest);
 
       auth
         ..user = _user(2)
@@ -181,11 +198,13 @@ User _user(int id) => User(
     ..role = UserRoleEnum.user
     ..selectedMode = UserSelectedModeEnum.beginner
     ..themePreference = UserThemePreferenceEnum.dark
-    ..onboardingCompleted = true,
+    ..createdAt = DateTime.utc(2026)
+    ..onboardingCompleted = true
+    ..hasPassword = true,
 );
 
 Analysis _analysis(int id, {required int confidence, required int day}) {
-  return Analysis(
+  return $Analysis(
     (builder) => builder
       ..id = id
       ..userId = 1
@@ -201,8 +220,13 @@ Analysis _analysis(int id, {required int confidence, required int day}) {
 
 class _DeferredHistoryAdapter implements HttpClientAdapter {
   final Map<String, Completer<ResponseBody>> _requests = {};
+  final Map<String, RequestOptions> _options = {};
+  String? historySummaryRange;
 
   bool hasRequest(String query) => _requests.containsKey(query);
+
+  String outcomesFor(String query) =>
+      _options[query]?.queryParameters['outcomes'].toString() ?? '';
 
   void complete(String query, List<Analysis> analyses) {
     _requests[query]!.complete(
@@ -241,9 +265,39 @@ class _DeferredHistoryAdapter implements HttpClientAdapter {
     Stream<Uint8List>? requestStream,
     Future<void>? cancelFuture,
   ) {
+    if (options.path.endsWith('/analyses/history-summary')) {
+      historySummaryRange = options.queryParameters['range']?.toString();
+      return Future.value(
+        ResponseBody.fromString(
+          jsonEncode({
+            'range': 'all',
+            'minSamples': 10,
+            'overall': {
+              'total': 340,
+              'pending': 20,
+              'activeValid': 12,
+              'tp1Hit': 100,
+              'tp2Hit': 40,
+              'slHit': 80,
+              'expired': 60,
+              'invalidated': 40,
+              'winRate': 0.636,
+              'completionRate': 0.5,
+            },
+            'byInstrument': [],
+            'byTimeframe': [],
+          }),
+          200,
+          headers: {
+            Headers.contentTypeHeader: [Headers.jsonContentType],
+          },
+        ),
+      );
+    }
     final query = options.queryParameters['q'].toString();
     final response = Completer<ResponseBody>();
     _requests[query] = response;
+    _options[query] = options;
 
     if (cancelFuture == null) {
       return response.future;

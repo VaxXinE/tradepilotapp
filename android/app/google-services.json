@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1043474442890",
+    "project_id": "trade-pilot-newsmaker23",
+    "storage_bucket": "trade-pilot-newsmaker23.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1043474442890:android:8bc5ec539fa8d8f62a9b73",
+        "android_client_info": {
+          "package_name": "id.tradepilot.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3-A8EsD6FcJVv-yDS0AaIOqlto3posEE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -30,7 +30,7 @@ void main() {
 }
 
 Analysis _analysis(int id, {String instrument = 'XAU/USD', int minute = 0}) =>
-    Analysis(
+    $Analysis(
       (builder) => builder
         ..id = id
         ..userId = 1

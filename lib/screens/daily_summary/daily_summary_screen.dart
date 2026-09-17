@@ -4,6 +4,8 @@ import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
 import '../../providers/auth_provider.dart';
 import '../analysis/analysis_detail_screen.dart';
+import '../../l10n/l10n.dart';
+import '../../widgets/responsive_page.dart';
 
 class DailySummaryScreen extends StatefulWidget {
   const DailySummaryScreen({super.key});
@@ -38,7 +40,7 @@ class _DailySummaryScreenState extends State<DailySummaryScreen> {
       });
     } catch (_) {
       if (mounted && auth.user?.id == userId) {
-        setState(() => _error = 'Ringkasan harian belum dapat dimuat.');
+        setState(() => _error = context.l10n.dailySummaryLoadFailed);
       }
     } finally {
       if (mounted && auth.user?.id == userId) setState(() => _loading = false);
@@ -69,7 +71,7 @@ class _DailySummaryScreenState extends State<DailySummaryScreen> {
     } catch (_) {
       if (mounted && auth.user?.id == userId) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Pengaturan ringkasan gagal disimpan.')),
+          SnackBar(content: Text(context.l10n.dailySummarySaveFailed)),
         );
       }
     } finally {
@@ -99,15 +101,13 @@ class _DailySummaryScreenState extends State<DailySummaryScreen> {
     final currentUserId = context.watch<AuthProvider>().user?.id;
     if (_ownerUserId != null && currentUserId != _ownerUserId) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Ringkasan Harian')),
-        body: const Center(
-          child: Text('Sesi berubah. Buka kembali halaman ini.'),
-        ),
+        appBar: AppBar(title: Text(context.l10n.dailySummary)),
+        body: Center(child: Text(context.l10n.sessionChangedReopen)),
       );
     }
     final data = _data;
     return Scaffold(
-      appBar: AppBar(title: const Text('Ringkasan Harian')),
+      appBar: AppBar(title: Text(context.l10n.dailySummary)),
       body: RefreshIndicator(
         onRefresh: _load,
         child: _loading && data == null
@@ -125,35 +125,61 @@ class _DailySummaryScreenState extends State<DailySummaryScreen> {
                   Center(
                     child: TextButton(
                       onPressed: _load,
-                      child: const Text('Coba lagi'),
+                      child: Text(context.l10n.tryAgain),
                     ),
                   ),
                 ],
               )
             : ListView(
-                padding: const EdgeInsets.all(16),
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: responsivePagePadding(context),
                 children: [
                   SwitchListTile.adaptive(
                     value: data!.settings.enabled,
                     onChanged: _saving
                         ? null
                         : (value) => _update(enabled: value),
-                    title: const Text('Ringkasan harian'),
-                    subtitle: Text('Zona waktu: ${data.settings.timezone}'),
+                    title: Text(context.l10n.dailySummary),
+                    subtitle: Text(
+                      context.l10n.dailySummaryTimezone(data.settings.timezone),
+                    ),
                   ),
                   ListTile(
                     enabled: !_saving && data.settings.enabled,
                     leading: const Icon(Icons.schedule_outlined),
-                    title: const Text('Waktu pengiriman'),
+                    title: Text(context.l10n.dailySummaryDeliveryTime),
                     subtitle: Text(data.settings.time),
                     onTap: _pickTime,
                   ),
                   const Divider(),
                   if (data.today case final today?) ...[
-                    Text(
-                      today.digestDate,
-                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            today.digestDate,
+                            style: const TextStyle(fontWeight: FontWeight.w800),
+                          ),
+                        ),
+                        Chip(
+                          label: Text(
+                            today.kind == DailySummaryTodayKindEnum.full
+                                ? context.l10n.dailySummaryFullDigest
+                                : context.l10n.dailySummaryQuotaOnly,
+                          ),
+                        ),
+                      ],
                     ),
+                    if (today.instruments.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Wrap(
+                          spacing: 6,
+                          children: today.instruments
+                              .map((value) => Chip(label: Text(value)))
+                              .toList(),
+                        ),
+                      ),
                     const SizedBox(height: 8),
                     Card(
                       child: Padding(
@@ -167,31 +193,82 @@ class _DailySummaryScreenState extends State<DailySummaryScreen> {
                     const SizedBox(height: 8),
                     ...today.analyses.map(
                       (analysis) => Card(
-                        child: ListTile(
-                          title: Text(
-                            '${analysis.instrument} · ${analysis.timeframe}',
-                          ),
-                          subtitle: const Text(
-                            'Buka analisis untuk melihat konteks lengkap.',
-                          ),
-                          trailing: const Icon(Icons.chevron_right),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
                           onTap: () => Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (_) =>
                                   AnalysisDetailScreen(analysisId: analysis.id),
                             ),
                           ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        '${analysis.instrument} · ${analysis.timeframe}',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                    ),
+                                    const Icon(Icons.chevron_right),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 6,
+                                  children: [
+                                    if (analysis.tradingBias != null)
+                                      Chip(label: Text(analysis.tradingBias!)),
+                                    if (analysis.confidenceMin != null &&
+                                        analysis.confidenceMax != null)
+                                      Chip(
+                                        label: Text(
+                                          context.l10n.confidenceValue(
+                                            '${analysis.confidenceMin}–${analysis.confidenceMax}%',
+                                          ),
+                                        ),
+                                      ),
+                                    if (analysis.preferredSide != null)
+                                      Chip(
+                                        label: Text(
+                                          context.l10n
+                                              .dailySummaryPreferredSide(
+                                                analysis.preferredSide!,
+                                              ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                                if (analysis.mainScenario?.trim().isNotEmpty ==
+                                    true) ...[
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    analysis.mainScenario!,
+                                    maxLines: 4,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   ] else
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 56),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 56),
                       child: Column(
                         children: [
-                          Icon(Icons.today_outlined, size: 48),
-                          SizedBox(height: 12),
-                          Text('Belum ada ringkasan untuk hari ini.'),
+                          const Icon(Icons.today_outlined, size: 48),
+                          const SizedBox(height: 12),
+                          Text(context.l10n.dailySummaryEmpty),
                         ],
                       ),
                     ),

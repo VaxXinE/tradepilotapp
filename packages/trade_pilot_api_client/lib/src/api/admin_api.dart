@@ -20,20 +20,95 @@ import 'package:trade_pilot_api_client/src/model/broadcasts_list.dart';
 import 'package:trade_pilot_api_client/src/model/date.dart';
 import 'package:trade_pilot_api_client/src/model/error_response.dart';
 import 'package:trade_pilot_api_client/src/model/outbound_click_stats.dart';
+import 'package:trade_pilot_api_client/src/model/progression_audit.dart';
+import 'package:trade_pilot_api_client/src/model/progression_backfill_result.dart';
 
 class AdminApi {
-
   final Dio _dio;
 
   final Serializers _serializers;
 
   const AdminApi(this._dio, this._serializers);
 
-  /// Broadcast notification to selected audience
-  /// 
+  /// Safely backfill only unequivocal historical progression evidence
+  ///
   ///
   /// Parameters:
-  /// * [broadcastNotificationBody] 
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [ProgressionBackfillResult] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<ProgressionBackfillResult>> backfillProgression({
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/admin/progression/backfill';
+    final _options = Options(
+      method: r'POST',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    ProgressionBackfillResult? _responseData;
+
+    try {
+      final rawResponse = _response.data;
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(ProgressionBackfillResult),
+            ) as ProgressionBackfillResult;
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<ProgressionBackfillResult>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// Broadcast notification to selected audience
+  ///
+  ///
+  /// Parameters:
+  /// * [broadcastNotificationBody]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -43,7 +118,7 @@ class AdminApi {
   ///
   /// Returns a [Future] containing a [Response] with a [BroadcastSendResult] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<BroadcastSendResult>> broadcastNotification({ 
+  Future<Response<BroadcastSendResult>> broadcastNotification({
     required BroadcastNotificationBody broadcastNotificationBody,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -70,11 +145,11 @@ class AdminApi {
 
     try {
       const _type = FullType(BroadcastNotificationBody);
-      _bodyData = _serializers.serialize(broadcastNotificationBody, specifiedType: _type);
-
-    } catch(error, stackTrace) {
+      _bodyData = _serializers.serialize(broadcastNotificationBody,
+          specifiedType: _type);
+    } catch (error, stackTrace) {
       throw DioException(
-         requestOptions: _options.compose(
+        requestOptions: _options.compose(
           _dio.options,
           _path,
         ),
@@ -97,11 +172,12 @@ class AdminApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(BroadcastSendResult),
-      ) as BroadcastSendResult;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(BroadcastSendResult),
+            ) as BroadcastSendResult;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -125,7 +201,7 @@ class AdminApi {
   }
 
   /// AI (OpenAI) token usage and estimated cost breakdown
-  /// 
+  ///
   ///
   /// Parameters:
   /// * [days] - Window size in days. Defaults to 30. Clamped 1..365.
@@ -138,7 +214,7 @@ class AdminApi {
   ///
   /// Returns a [Future] containing a [Response] with a [AnalyticsTokenStats] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<AnalyticsTokenStats>> getAdminAnalyticsTokens({ 
+  Future<Response<AnalyticsTokenStats>> getAdminAnalyticsTokens({
     int? days = 30,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -161,7 +237,8 @@ class AdminApi {
     );
 
     final _queryParameters = <String, dynamic>{
-      if (days != null) r'days': encodeQueryParameter(_serializers, days, const FullType(int)),
+      if (days != null)
+        r'days': encodeQueryParameter(_serializers, days, const FullType(int)),
     };
 
     final _response = await _dio.request<Object>(
@@ -177,11 +254,12 @@ class AdminApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(AnalyticsTokenStats),
-      ) as AnalyticsTokenStats;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(AnalyticsTokenStats),
+            ) as AnalyticsTokenStats;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -205,7 +283,7 @@ class AdminApi {
   }
 
   /// Feature-usage, device, browser, and country breakdown from analytics events
-  /// 
+  ///
   ///
   /// Parameters:
   /// * [days] - Window size in days. Defaults to 30. Clamped 1..365.
@@ -218,7 +296,7 @@ class AdminApi {
   ///
   /// Returns a [Future] containing a [Response] with a [AnalyticsUsageStats] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<AnalyticsUsageStats>> getAdminAnalyticsUsage({ 
+  Future<Response<AnalyticsUsageStats>> getAdminAnalyticsUsage({
     int? days = 30,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -241,7 +319,8 @@ class AdminApi {
     );
 
     final _queryParameters = <String, dynamic>{
-      if (days != null) r'days': encodeQueryParameter(_serializers, days, const FullType(int)),
+      if (days != null)
+        r'days': encodeQueryParameter(_serializers, days, const FullType(int)),
     };
 
     final _response = await _dio.request<Object>(
@@ -257,11 +336,12 @@ class AdminApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(AnalyticsUsageStats),
-      ) as AnalyticsUsageStats;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(AnalyticsUsageStats),
+            ) as AnalyticsUsageStats;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -285,11 +365,11 @@ class AdminApi {
   }
 
   /// List user feedback rows (admin only)
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [page] 
-  /// * [limit] 
+  /// * [page]
+  /// * [limit]
   /// * [search] - Free-text ILIKE filter matched against the user's email or the analysis instrument
   /// * [feedbackType] - Restrict to a single feedback reaction
   /// * [from] - Only include feedback created on or after this date (ISO 8601 date)
@@ -304,7 +384,7 @@ class AdminApi {
   ///
   /// Returns a [Future] containing a [Response] with a [AdminFeedbackList] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<AdminFeedbackList>> getAdminFeedback({ 
+  Future<Response<AdminFeedbackList>> getAdminFeedback({
     int? page = 1,
     int? limit = 50,
     String? search,
@@ -333,13 +413,24 @@ class AdminApi {
     );
 
     final _queryParameters = <String, dynamic>{
-      if (page != null) r'page': encodeQueryParameter(_serializers, page, const FullType(int)),
-      if (limit != null) r'limit': encodeQueryParameter(_serializers, limit, const FullType(int)),
-      if (search != null) r'search': encodeQueryParameter(_serializers, search, const FullType(String)),
-      if (feedbackType != null) r'feedbackType': encodeQueryParameter(_serializers, feedbackType, const FullType(String)),
-      if (from != null) r'from': encodeQueryParameter(_serializers, from, const FullType(Date)),
-      if (to != null) r'to': encodeQueryParameter(_serializers, to, const FullType(Date)),
-      if (analysisId != null) r'analysisId': encodeQueryParameter(_serializers, analysisId, const FullType(int)),
+      if (page != null)
+        r'page': encodeQueryParameter(_serializers, page, const FullType(int)),
+      if (limit != null)
+        r'limit':
+            encodeQueryParameter(_serializers, limit, const FullType(int)),
+      if (search != null)
+        r'search':
+            encodeQueryParameter(_serializers, search, const FullType(String)),
+      if (feedbackType != null)
+        r'feedbackType': encodeQueryParameter(
+            _serializers, feedbackType, const FullType(String)),
+      if (from != null)
+        r'from': encodeQueryParameter(_serializers, from, const FullType(Date)),
+      if (to != null)
+        r'to': encodeQueryParameter(_serializers, to, const FullType(Date)),
+      if (analysisId != null)
+        r'analysisId':
+            encodeQueryParameter(_serializers, analysisId, const FullType(int)),
     };
 
     final _response = await _dio.request<Object>(
@@ -355,11 +446,12 @@ class AdminApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(AdminFeedbackList),
-      ) as AdminFeedbackList;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(AdminFeedbackList),
+            ) as AdminFeedbackList;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -383,7 +475,7 @@ class AdminApi {
   }
 
   /// Get admin statistics
-  /// 
+  ///
   ///
   /// Parameters:
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
@@ -395,7 +487,7 @@ class AdminApi {
   ///
   /// Returns a [Future] containing a [Response] with a [AdminStats] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<AdminStats>> getAdminStats({ 
+  Future<Response<AdminStats>> getAdminStats({
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -428,11 +520,12 @@ class AdminApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(AdminStats),
-      ) as AdminStats;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(AdminStats),
+            ) as AdminStats;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -456,11 +549,11 @@ class AdminApi {
   }
 
   /// Get all analyses (admin only)
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [page] 
-  /// * [limit] 
+  /// * [page]
+  /// * [limit]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -470,7 +563,7 @@ class AdminApi {
   ///
   /// Returns a [Future] containing a [Response] with a [AnalysesList] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<AnalysesList>> getAllAnalyses({ 
+  Future<Response<AnalysesList>> getAllAnalyses({
     int? page = 1,
     int? limit = 20,
     CancelToken? cancelToken,
@@ -494,8 +587,11 @@ class AdminApi {
     );
 
     final _queryParameters = <String, dynamic>{
-      if (page != null) r'page': encodeQueryParameter(_serializers, page, const FullType(int)),
-      if (limit != null) r'limit': encodeQueryParameter(_serializers, limit, const FullType(int)),
+      if (page != null)
+        r'page': encodeQueryParameter(_serializers, page, const FullType(int)),
+      if (limit != null)
+        r'limit':
+            encodeQueryParameter(_serializers, limit, const FullType(int)),
     };
 
     final _response = await _dio.request<Object>(
@@ -511,11 +607,12 @@ class AdminApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(AnalysesList),
-      ) as AnalysesList;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(AnalysesList),
+            ) as AnalysesList;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -539,11 +636,11 @@ class AdminApi {
   }
 
   /// Broadcast history
-  /// 
+  ///
   ///
   /// Parameters:
-  /// * [page] 
-  /// * [limit] 
+  /// * [page]
+  /// * [limit]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -553,7 +650,7 @@ class AdminApi {
   ///
   /// Returns a [Future] containing a [Response] with a [BroadcastsList] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<BroadcastsList>> getBroadcasts({ 
+  Future<Response<BroadcastsList>> getBroadcasts({
     int? page = 1,
     int? limit = 20,
     CancelToken? cancelToken,
@@ -577,8 +674,11 @@ class AdminApi {
     );
 
     final _queryParameters = <String, dynamic>{
-      if (page != null) r'page': encodeQueryParameter(_serializers, page, const FullType(int)),
-      if (limit != null) r'limit': encodeQueryParameter(_serializers, limit, const FullType(int)),
+      if (page != null)
+        r'page': encodeQueryParameter(_serializers, page, const FullType(int)),
+      if (limit != null)
+        r'limit':
+            encodeQueryParameter(_serializers, limit, const FullType(int)),
     };
 
     final _response = await _dio.request<Object>(
@@ -594,11 +694,12 @@ class AdminApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(BroadcastsList),
-      ) as BroadcastsList;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(BroadcastsList),
+            ) as BroadcastsList;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -622,7 +723,7 @@ class AdminApi {
   }
 
   /// Aggregated counts of sponsor / partner outbound link clicks
-  /// 
+  ///
   ///
   /// Parameters:
   /// * [days] - Window size for the \"recent\" totals. Defaults to 30. Clamped 1..365.
@@ -635,7 +736,7 @@ class AdminApi {
   ///
   /// Returns a [Future] containing a [Response] with a [OutboundClickStats] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<OutboundClickStats>> getOutboundClickStats({ 
+  Future<Response<OutboundClickStats>> getOutboundClickStats({
     int? days = 30,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -658,7 +759,8 @@ class AdminApi {
     );
 
     final _queryParameters = <String, dynamic>{
-      if (days != null) r'days': encodeQueryParameter(_serializers, days, const FullType(int)),
+      if (days != null)
+        r'days': encodeQueryParameter(_serializers, days, const FullType(int)),
     };
 
     final _response = await _dio.request<Object>(
@@ -674,11 +776,12 @@ class AdminApi {
 
     try {
       final rawResponse = _response.data;
-      _responseData = rawResponse == null ? null : _serializers.deserialize(
-        rawResponse,
-        specifiedType: const FullType(OutboundClickStats),
-      ) as OutboundClickStats;
-
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(OutboundClickStats),
+            ) as OutboundClickStats;
     } catch (error, stackTrace) {
       throw DioException(
         requestOptions: _response.requestOptions,
@@ -701,4 +804,86 @@ class AdminApi {
     );
   }
 
+  /// Read-only progression ledger audit; never a leaderboard
+  ///
+  ///
+  /// Parameters:
+  /// * [userId]
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [ProgressionAudit] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<ProgressionAudit>> getProgressionAudit({
+    int? userId,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/admin/progression/audit';
+    final _options = Options(
+      method: r'GET',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _queryParameters = <String, dynamic>{
+      if (userId != null)
+        r'userId':
+            encodeQueryParameter(_serializers, userId, const FullType(int)),
+    };
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      queryParameters: _queryParameters,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    ProgressionAudit? _responseData;
+
+    try {
+      final rawResponse = _response.data;
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(ProgressionAudit),
+            ) as ProgressionAudit;
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<ProgressionAudit>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
 }

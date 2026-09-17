@@ -11,12 +11,15 @@ part 'analytics_token_stats_top_users_inner.g.dart';
 /// AnalyticsTokenStatsTopUsersInner
 ///
 /// Properties:
-/// * [userId] 
-/// * [email] 
-/// * [totalTokens] 
-/// * [estimatedCostUsd] 
+/// * [userId]
+/// * [email]
+/// * [totalTokens]
+/// * [estimatedCostUsd]
 @BuiltValue()
-abstract class AnalyticsTokenStatsTopUsersInner implements Built<AnalyticsTokenStatsTopUsersInner, AnalyticsTokenStatsTopUsersInnerBuilder> {
+abstract class AnalyticsTokenStatsTopUsersInner
+    implements
+        Built<AnalyticsTokenStatsTopUsersInner,
+            AnalyticsTokenStatsTopUsersInnerBuilder> {
   @BuiltValueField(wireName: r'userId')
   int get userId;
 
@@ -31,18 +34,25 @@ abstract class AnalyticsTokenStatsTopUsersInner implements Built<AnalyticsTokenS
 
   AnalyticsTokenStatsTopUsersInner._();
 
-  factory AnalyticsTokenStatsTopUsersInner([void updates(AnalyticsTokenStatsTopUsersInnerBuilder b)]) = _$AnalyticsTokenStatsTopUsersInner;
+  factory AnalyticsTokenStatsTopUsersInner(
+          [void updates(AnalyticsTokenStatsTopUsersInnerBuilder b)]) =
+      _$AnalyticsTokenStatsTopUsersInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AnalyticsTokenStatsTopUsersInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AnalyticsTokenStatsTopUsersInner> get serializer => _$AnalyticsTokenStatsTopUsersInnerSerializer();
+  static Serializer<AnalyticsTokenStatsTopUsersInner> get serializer =>
+      _$AnalyticsTokenStatsTopUsersInnerSerializer();
 }
 
-class _$AnalyticsTokenStatsTopUsersInnerSerializer implements PrimitiveSerializer<AnalyticsTokenStatsTopUsersInner> {
+class _$AnalyticsTokenStatsTopUsersInnerSerializer
+    implements PrimitiveSerializer<AnalyticsTokenStatsTopUsersInner> {
   @override
-  final Iterable<Type> types = const [AnalyticsTokenStatsTopUsersInner, _$AnalyticsTokenStatsTopUsersInner];
+  final Iterable<Type> types = const [
+    AnalyticsTokenStatsTopUsersInner,
+    _$AnalyticsTokenStatsTopUsersInner
+  ];
 
   @override
   final String wireName = r'AnalyticsTokenStatsTopUsersInner';
@@ -80,7 +90,9 @@ class _$AnalyticsTokenStatsTopUsersInnerSerializer implements PrimitiveSerialize
     AnalyticsTokenStatsTopUsersInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -151,4 +163,3 @@ class _$AnalyticsTokenStatsTopUsersInnerSerializer implements PrimitiveSerialize
     return result.build();
   }
 }
-

@@ -1,19 +1,21 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../l10n/l10n.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/error_banner.dart';
+import '../../widgets/language_menu_button.dart';
 import 'forgot_password_screen.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key, this.localAuthentication});
-
-  final LocalAuthentication? localAuthentication;
+  const LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -21,25 +23,23 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   static const _rememberedEmailKey = 'remembered_login_email';
-  static const _rememberedPasswordKey = 'remembered_login_password';
 
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _storage = const FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
-  );
-  late final LocalAuthentication _localAuthentication;
+  final _storage = const FlutterSecureStorage(aOptions: AndroidOptions());
   bool _obscurePassword = true;
   bool _rememberMe = false;
-  bool _biometricsAvailable = false;
-  bool _isAuthenticatingBiometric = false;
 
   @override
   void initState() {
     super.initState();
-    _localAuthentication = widget.localAuthentication ?? LocalAuthentication();
-    _restoreRememberedCredentials();
+    _restoreRememberedEmail();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        unawaited(context.read<AuthProvider>().telemetry.pageView('/login'));
+      }
+    });
   }
 
   @override
@@ -62,73 +62,43 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       if (rememberMe) {
         await _storage.write(key: _rememberedEmailKey, value: email);
-        await _storage.write(key: _rememberedPasswordKey, value: password);
       } else {
-        await _clearRememberedCredentials();
+        await _storage.delete(key: _rememberedEmailKey);
       }
     } catch (_) {
       // Login tetap berhasil jika secure storage perangkat bermasalah.
     }
   }
 
-  Future<void> _restoreRememberedCredentials() async {
+  /// Restores the email only.
+  ///
+  /// Builds up to 1.0.1 also persisted the password here and typed it back into
+  /// the form, which meant a stolen unlocked phone handed over a credential
+  /// that — unlike a session token — the server cannot revoke, and that one tap
+  /// on the reveal icon would show in plain text. The password is now never
+  /// written; [TokenStorage.purgeLegacyCredentials] deletes whatever older
+  /// builds left behind.
+  Future<void> _restoreRememberedEmail() async {
     try {
       final email = await _storage.read(key: _rememberedEmailKey);
-      final password = await _storage.read(key: _rememberedPasswordKey);
-      if (!mounted || email == null || password == null) return;
+      if (!mounted || email == null) return;
 
       _emailController.text = email;
-      _passwordController.text = password;
-      final biometrics = await _localAuthentication.getAvailableBiometrics();
-      if (!mounted) return;
-      setState(() {
-        _rememberMe = true;
-        _biometricsAvailable = biometrics.isNotEmpty;
-      });
+      setState(() => _rememberMe = true);
     } catch (_) {
-      // Form tetap bisa dipakai tanpa kredensial tersimpan.
+      // Form tetap bisa dipakai tanpa email tersimpan.
     }
   }
 
   Future<void> _setRememberMe(bool? value) async {
     final enabled = value ?? false;
-    setState(() {
-      _rememberMe = enabled;
-      if (!enabled) _biometricsAvailable = false;
-    });
+    setState(() => _rememberMe = enabled);
     if (!enabled) {
       try {
-        await _clearRememberedCredentials();
+        await _storage.delete(key: _rememberedEmailKey);
       } catch (_) {
         // Penghapusan akan dicoba lagi saat login berikutnya.
       }
-    }
-  }
-
-  Future<void> _clearRememberedCredentials() async {
-    await _storage.delete(key: _rememberedEmailKey);
-    await _storage.delete(key: _rememberedPasswordKey);
-  }
-
-  Future<void> _loginWithBiometrics() async {
-    if (_isAuthenticatingBiometric) return;
-    setState(() => _isAuthenticatingBiometric = true);
-
-    try {
-      final authenticated = await _localAuthentication.authenticate(
-        localizedReason: context.l10n.biometricReason,
-        biometricOnly: true,
-        persistAcrossBackgrounding: true,
-      );
-      if (authenticated && mounted) await _submit();
-    } on LocalAuthException {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.biometricUnavailable)),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isAuthenticatingBiometric = false);
     }
   }
 
@@ -144,173 +114,275 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: SafeArea(
         child: Consumer<AuthProvider>(
-          builder: (context, auth, _) {
-            return Center(
+          builder: (context, auth, _) => Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 448),
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 440),
-                  child: AutofillGroup(
-                    child: Form(
-                      key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Align(
+                      alignment: Alignment.centerRight,
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
+                        child: LanguageMenuButton(),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(24, 32, 24, 40),
+                      decoration: const BoxDecoration(
+                        gradient: RadialGradient(
+                          center: Alignment(0, -1.25),
+                          radius: 1.25,
+                          colors: [
+                            Color(0xFF201700),
+                            Color(0xFF0A0802),
+                            Color(0xFF000000),
+                          ],
+                          stops: [0, 0.45, 1],
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Container(
+                            key: const Key('login-brand-mark'),
+                            width: 56,
+                            height: 56,
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  AppColors.darkPrimary.withValues(alpha: 0.20),
+                                  const Color(
+                                    0xFFFACC15,
+                                  ).withValues(alpha: 0.15),
+                                ],
+                              ),
+                              border: Border.all(
+                                color: AppColors.darkPrimary.withValues(
+                                  alpha: 0.30,
+                                ),
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.darkPrimary.withValues(
+                                    alpha: 0.24,
+                                  ),
+                                  blurRadius: 24,
+                                ),
+                              ],
+                            ),
+                            child: Image.asset(
+                              'assets/images/trade_pilot_app_icon.png',
+                              fit: BoxFit.contain,
+                              filterQuality: FilterQuality.high,
+                              semanticLabel: l10n.tradePilotLogo,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            l10n.welcomeBack,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            l10n.loginDescription,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Color(0xFFCBD5E1),
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Center(
-                            child: Container(
-                              key: const Key('login-brand-mark'),
-                              width: 120,
-                              height: 80,
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: AppColors.darkBackground,
-                                borderRadius: BorderRadius.circular(20),
+                          ErrorBanner(message: auth.errorMessage),
+                          Card(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24),
+                              side: BorderSide(
+                                color: theme.colorScheme.outline,
                               ),
-                              child: Image.asset(
-                                'assets/images/trade_pilot_logo.png',
-                                fit: BoxFit.contain,
-                                filterQuality: FilterQuality.high,
-                                semanticLabel: l10n.tradePilotLogo,
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: AutofillGroup(
+                                child: Form(
+                                  key: _formKey,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      OutlinedButton.icon(
+                                        key: const Key('google-sign-in-button'),
+                                        onPressed: auth.isBusy
+                                            ? null
+                                            : auth.loginWithGoogle,
+                                        icon: const ExcludeSemantics(
+                                          child: Text(
+                                            'G',
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w800,
+                                              color: Color(0xFF4285F4),
+                                            ),
+                                          ),
+                                        ),
+                                        label: Text(l10n.continueWithGoogle),
+                                      ),
+                                      if (defaultTargetPlatform ==
+                                          TargetPlatform.iOS) ...[
+                                        const SizedBox(height: 10),
+                                        SignInWithAppleButton(
+                                          key: const Key(
+                                            'apple-sign-in-button',
+                                          ),
+                                          onPressed: auth.isBusy
+                                              ? null
+                                              : auth.loginWithApple,
+                                          text: l10n.continueWithApple,
+                                          height: 48,
+                                          // Samakan dengan OutlinedButton
+                                          // Google tepat di atasnya.
+                                          borderRadius: const BorderRadius.all(
+                                            Radius.circular(AppColors.radiusMd),
+                                          ),
+                                          style: isDark
+                                              ? SignInWithAppleButtonStyle.white
+                                              : SignInWithAppleButtonStyle
+                                                    .black,
+                                        ),
+                                      ],
+                                      const SizedBox(height: 18),
+                                      Row(
+                                        children: [
+                                          const Expanded(child: Divider()),
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                            ),
+                                            child: Text(
+                                              l10n.or.toUpperCase(),
+                                              style: TextStyle(
+                                                color: muted,
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w600,
+                                                letterSpacing: 0.8,
+                                              ),
+                                            ),
+                                          ),
+                                          const Expanded(child: Divider()),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 18),
+                                      _FieldLabel(l10n.usernameEmail),
+                                      const SizedBox(height: 6),
+                                      TextFormField(
+                                        controller: _emailController,
+                                        keyboardType:
+                                            TextInputType.emailAddress,
+                                        textInputAction: TextInputAction.next,
+                                        textCapitalization:
+                                            TextCapitalization.none,
+                                        autocorrect: false,
+                                        autofillHints: const [
+                                          AutofillHints.username,
+                                        ],
+                                        decoration: InputDecoration(
+                                          hintText: l10n.usernameEmailHint,
+                                        ),
+                                        validator: (value) {
+                                          final email = value?.trim() ?? '';
+                                          return email.contains('@')
+                                              ? null
+                                              : l10n.invalidEmail;
+                                        },
+                                      ),
+                                      const SizedBox(height: 16),
+                                      _FieldLabel(l10n.password),
+                                      const SizedBox(height: 6),
+                                      TextFormField(
+                                        controller: _passwordController,
+                                        obscureText: _obscurePassword,
+                                        textInputAction: TextInputAction.done,
+                                        autofillHints: const [
+                                          AutofillHints.password,
+                                        ],
+                                        onFieldSubmitted: (_) => _submit(),
+                                        decoration: InputDecoration(
+                                          hintText: l10n.password,
+                                          suffixIcon: IconButton(
+                                            tooltip: _obscurePassword
+                                                ? l10n.showPassword
+                                                : l10n.hidePassword,
+                                            icon: Icon(
+                                              _obscurePassword
+                                                  ? Icons.visibility_outlined
+                                                  : Icons
+                                                        .visibility_off_outlined,
+                                              size: 20,
+                                            ),
+                                            onPressed: () => setState(
+                                              () => _obscurePassword =
+                                                  !_obscurePassword,
+                                            ),
+                                          ),
+                                        ),
+                                        validator: (value) =>
+                                            (value == null || value.isEmpty)
+                                            ? l10n.passwordRequired
+                                            : null,
+                                      ),
+                                      CheckboxListTile(
+                                        key: const Key('remember-me-checkbox'),
+                                        value: _rememberMe,
+                                        onChanged: _setRememberMe,
+                                        title: Text(
+                                          l10n.rememberMe,
+                                          style: TextStyle(
+                                            color: muted,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                        controlAffinity:
+                                            ListTileControlAffinity.leading,
+                                        contentPadding: EdgeInsets.zero,
+                                        dense: true,
+                                      ),
+                                      _PremiumLoginButton(
+                                        busy: auth.isBusy,
+                                        label: l10n.signIn,
+                                        onPressed: _submit,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                builder: (_) =>
+                                                    const ForgotPasswordScreen(),
+                                              ),
+                                            ),
+                                        child: Text(l10n.forgotPassword),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
                           ),
                           const SizedBox(height: 12),
-                          Text(
-                            l10n.aiTradingAssistant,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: muted),
-                          ),
-                          const SizedBox(height: 40),
-                          Text(
-                            l10n.welcomeBack,
-                            style: const TextStyle(
-                              fontSize: 21,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            l10n.loginDescription,
-                            style: TextStyle(color: muted, height: 1.4),
-                          ),
-                          const SizedBox(height: 22),
-                          ErrorBanner(message: auth.errorMessage),
-                          TextFormField(
-                            controller: _emailController,
-                            keyboardType: TextInputType.emailAddress,
-                            textInputAction: TextInputAction.next,
-                            textCapitalization: TextCapitalization.none,
-                            autocorrect: false,
-                            autofillHints: const [AutofillHints.email],
-                            decoration: InputDecoration(
-                              labelText: l10n.email,
-                              hintText: l10n.emailHint,
-                              prefixIcon: const Icon(
-                                Icons.mail_outline_rounded,
-                              ),
-                            ),
-                            validator: (value) {
-                              final email = value?.trim() ?? '';
-                              return email.contains('@')
-                                  ? null
-                                  : l10n.invalidEmail;
-                            },
-                          ),
-                          const SizedBox(height: 14),
-                          TextFormField(
-                            controller: _passwordController,
-                            obscureText: _obscurePassword,
-                            textInputAction: TextInputAction.done,
-                            autofillHints: const [AutofillHints.password],
-                            onFieldSubmitted: (_) => _submit(),
-                            decoration: InputDecoration(
-                              labelText: l10n.password,
-                              prefixIcon: const Icon(
-                                Icons.lock_outline_rounded,
-                              ),
-                              suffixIcon: IconButton(
-                                tooltip: _obscurePassword
-                                    ? l10n.showPassword
-                                    : l10n.hidePassword,
-                                icon: Icon(
-                                  _obscurePassword
-                                      ? Icons.visibility_off_rounded
-                                      : Icons.visibility_rounded,
-                                ),
-                                onPressed: () => setState(
-                                  () => _obscurePassword = !_obscurePassword,
-                                ),
-                              ),
-                            ),
-                            validator: (value) =>
-                                (value == null || value.isEmpty)
-                                ? l10n.passwordRequired
-                                : null,
-                          ),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: CheckboxListTile(
-                                  key: const Key('remember-me-checkbox'),
-                                  value: _rememberMe,
-                                  onChanged: _setRememberMe,
-                                  title: Text(l10n.rememberMe),
-                                  controlAffinity:
-                                      ListTileControlAffinity.leading,
-                                  contentPadding: EdgeInsets.zero,
-                                  dense: true,
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () => Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) =>
-                                        const ForgotPasswordScreen(),
-                                  ),
-                                ),
-                                child: Text(l10n.forgotPassword),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          ElevatedButton(
-                            onPressed: auth.isBusy ? null : _submit,
-                            child: auth.isBusy
-                                ? SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.4,
-                                      color: theme.colorScheme.onPrimary,
-                                    ),
-                                  )
-                                : Text(l10n.signIn),
-                          ),
-                          if (_biometricsAvailable) ...[
-                            const SizedBox(height: 16),
-                            Row(
-                              children: [
-                                const Expanded(child: Divider(endIndent: 12)),
-                                Text(l10n.or, style: TextStyle(color: muted)),
-                                const Expanded(child: Divider(indent: 12)),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            OutlinedButton.icon(
-                              key: const Key('biometric-login-button'),
-                              onPressed:
-                                  auth.isBusy || _isAuthenticatingBiometric
-                                  ? null
-                                  : _loginWithBiometrics,
-                              icon: const Icon(Icons.fingerprint_rounded),
-                              label: Text(
-                                _isAuthenticatingBiometric
-                                    ? l10n.verifying
-                                    : l10n.signInWithBiometrics,
-                              ),
-                            ),
-                          ],
-                          const SizedBox(height: 22),
                           Wrap(
                             alignment: WrapAlignment.center,
                             crossAxisAlignment: WrapCrossAlignment.center,
@@ -325,10 +397,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                     builder: (_) => const RegisterScreen(),
                                   ),
                                 ),
-                                style: TextButton.styleFrom(
-                                  padding: EdgeInsets.zero,
-                                  minimumSize: const Size(48, 48),
-                                ),
                                 child: Text(l10n.register),
                               ),
                             ],
@@ -336,13 +404,74 @@ class _LoginScreenState extends State<LoginScreen> {
                         ],
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ),
-            );
-          },
+            ),
+          ),
         ),
       ),
     );
   }
+}
+
+class _FieldLabel extends StatelessWidget {
+  const _FieldLabel(this.label);
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Text(
+    label.toUpperCase(),
+    style: TextStyle(
+      color: Theme.of(context).colorScheme.onSurfaceVariant,
+      fontSize: 12,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 0.6,
+    ),
+  );
+}
+
+class _PremiumLoginButton extends StatelessWidget {
+  const _PremiumLoginButton({
+    required this.busy,
+    required this.label,
+    required this.onPressed,
+  });
+
+  final bool busy;
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      gradient: const LinearGradient(
+        colors: [Color(0xFFFFE06A), Color(0xFFE3A400)],
+      ),
+      borderRadius: BorderRadius.circular(12),
+      boxShadow: [
+        BoxShadow(
+          color: AppColors.darkPrimary.withValues(alpha: 0.32),
+          blurRadius: 20,
+          offset: const Offset(0, 4),
+        ),
+      ],
+    ),
+    child: ElevatedButton.icon(
+      onPressed: busy ? null : onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.transparent,
+        disabledBackgroundColor: Colors.transparent,
+        shadowColor: Colors.transparent,
+      ),
+      icon: busy
+          ? const SizedBox.square(
+              dimension: 18,
+              child: CircularProgressIndicator(strokeWidth: 2.2),
+            )
+          : const Icon(Icons.psychology_alt_outlined, size: 19),
+      label: Text(label),
+    ),
+  );
 }

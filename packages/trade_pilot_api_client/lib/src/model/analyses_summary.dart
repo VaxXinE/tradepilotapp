@@ -13,14 +13,15 @@ part 'analyses_summary.g.dart';
 /// AnalysesSummary
 ///
 /// Properties:
-/// * [totalAnalyses] 
-/// * [beginnerCount] 
-/// * [proCount] 
-/// * [avgConfidenceMin] 
-/// * [avgConfidenceMax] 
-/// * [recentAnalyses] 
+/// * [totalAnalyses]
+/// * [beginnerCount]
+/// * [proCount]
+/// * [avgConfidenceMin]
+/// * [avgConfidenceMax]
+/// * [recentAnalyses]
 @BuiltValue()
-abstract class AnalysesSummary implements Built<AnalysesSummary, AnalysesSummaryBuilder> {
+abstract class AnalysesSummary
+    implements Built<AnalysesSummary, AnalysesSummaryBuilder> {
   @BuiltValueField(wireName: r'totalAnalyses')
   int get totalAnalyses;
 
@@ -41,16 +42,19 @@ abstract class AnalysesSummary implements Built<AnalysesSummary, AnalysesSummary
 
   AnalysesSummary._();
 
-  factory AnalysesSummary([void updates(AnalysesSummaryBuilder b)]) = _$AnalysesSummary;
+  factory AnalysesSummary([void updates(AnalysesSummaryBuilder b)]) =
+      _$AnalysesSummary;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(AnalysesSummaryBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AnalysesSummary> get serializer => _$AnalysesSummarySerializer();
+  static Serializer<AnalysesSummary> get serializer =>
+      _$AnalysesSummarySerializer();
 }
 
-class _$AnalysesSummarySerializer implements PrimitiveSerializer<AnalysesSummary> {
+class _$AnalysesSummarySerializer
+    implements PrimitiveSerializer<AnalysesSummary> {
   @override
   final Iterable<Type> types = const [AnalysesSummary, _$AnalysesSummary];
 
@@ -104,7 +108,9 @@ class _$AnalysesSummarySerializer implements PrimitiveSerializer<AnalysesSummary
     AnalysesSummary object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -191,4 +197,3 @@ class _$AnalysesSummarySerializer implements PrimitiveSerializer<AnalysesSummary
     return result.build();
   }
 }
-

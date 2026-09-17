@@ -15,7 +15,8 @@ part 'performance_min_samples.g.dart';
 /// * [overall] - Minimum resolved analyses overall before any segment renders.
 /// * [banner] - Minimum resolved analyses in the recent window before the current-state banner makes a claim.
 @BuiltValue()
-abstract class PerformanceMinSamples implements Built<PerformanceMinSamples, PerformanceMinSamplesBuilder> {
+abstract class PerformanceMinSamples
+    implements Built<PerformanceMinSamples, PerformanceMinSamplesBuilder> {
   /// Minimum resolved analyses per bucket before that bucket renders.
   @BuiltValueField(wireName: r'bucket')
   int get bucket;
@@ -30,18 +31,24 @@ abstract class PerformanceMinSamples implements Built<PerformanceMinSamples, Per
 
   PerformanceMinSamples._();
 
-  factory PerformanceMinSamples([void updates(PerformanceMinSamplesBuilder b)]) = _$PerformanceMinSamples;
+  factory PerformanceMinSamples(
+      [void updates(PerformanceMinSamplesBuilder b)]) = _$PerformanceMinSamples;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(PerformanceMinSamplesBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<PerformanceMinSamples> get serializer => _$PerformanceMinSamplesSerializer();
+  static Serializer<PerformanceMinSamples> get serializer =>
+      _$PerformanceMinSamplesSerializer();
 }
 
-class _$PerformanceMinSamplesSerializer implements PrimitiveSerializer<PerformanceMinSamples> {
+class _$PerformanceMinSamplesSerializer
+    implements PrimitiveSerializer<PerformanceMinSamples> {
   @override
-  final Iterable<Type> types = const [PerformanceMinSamples, _$PerformanceMinSamples];
+  final Iterable<Type> types = const [
+    PerformanceMinSamples,
+    _$PerformanceMinSamples
+  ];
 
   @override
   final String wireName = r'PerformanceMinSamples';
@@ -74,7 +81,9 @@ class _$PerformanceMinSamplesSerializer implements PrimitiveSerializer<Performan
     PerformanceMinSamples object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -138,4 +147,3 @@ class _$PerformanceMinSamplesSerializer implements PrimitiveSerializer<Performan
     return result.build();
   }
 }
-

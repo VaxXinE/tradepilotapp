@@ -12,23 +12,24 @@ part 'journal_entry.g.dart';
 /// A single manual trade-journal entry (task #161). Prices are returned as strings to preserve the exact precision the user typed.
 ///
 /// Properties:
-/// * [id] 
+/// * [id]
 /// * [analysisId] - Optional FK to the originating analysis. Nulled out (but row preserved) if the analysis is later deleted.
-/// * [instrument] 
-/// * [side] 
-/// * [entryPrice] 
-/// * [exitPrice] 
-/// * [quantity] 
+/// * [instrument]
+/// * [side]
+/// * [entryPrice]
+/// * [exitPrice]
+/// * [quantity]
 /// * [pnlAmount] - Auto-computed from (exit - entry) * direction * quantity unless the user overrode it.
 /// * [pnlPercent] - Auto-computed from (exit - entry) / entry * 100 (signed by side) unless the user overrode it.
-/// * [outcome] 
-/// * [mood] 
-/// * [note] 
-/// * [tradedAt] 
-/// * [createdAt] 
-/// * [updatedAt] 
+/// * [outcome]
+/// * [mood]
+/// * [note]
+/// * [tradedAt]
+/// * [createdAt]
+/// * [updatedAt]
 @BuiltValue()
-abstract class JournalEntry implements Built<JournalEntry, JournalEntryBuilder> {
+abstract class JournalEntry
+    implements Built<JournalEntry, JournalEntryBuilder> {
   @BuiltValueField(wireName: r'id')
   int get id;
 
@@ -201,7 +202,9 @@ class _$JournalEntrySerializer implements PrimitiveSerializer<JournalEntry> {
     JournalEntry object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -359,38 +362,43 @@ class _$JournalEntrySerializer implements PrimitiveSerializer<JournalEntry> {
 }
 
 class JournalEntrySideEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'buy')
   static const JournalEntrySideEnum buy = _$journalEntrySideEnum_buy;
   @BuiltValueEnumConst(wireName: r'sell')
   static const JournalEntrySideEnum sell = _$journalEntrySideEnum_sell;
 
-  static Serializer<JournalEntrySideEnum> get serializer => _$journalEntrySideEnumSerializer;
+  static Serializer<JournalEntrySideEnum> get serializer =>
+      _$journalEntrySideEnumSerializer;
 
-  const JournalEntrySideEnum._(String name): super(name);
+  const JournalEntrySideEnum._(String name) : super(name);
 
-  static BuiltSet<JournalEntrySideEnum> get values => _$journalEntrySideEnumValues;
-  static JournalEntrySideEnum valueOf(String name) => _$journalEntrySideEnumValueOf(name);
+  static BuiltSet<JournalEntrySideEnum> get values =>
+      _$journalEntrySideEnumValues;
+  static JournalEntrySideEnum valueOf(String name) =>
+      _$journalEntrySideEnumValueOf(name);
 }
 
 class JournalEntryOutcomeEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'win')
   static const JournalEntryOutcomeEnum win = _$journalEntryOutcomeEnum_win;
   @BuiltValueEnumConst(wireName: r'loss')
   static const JournalEntryOutcomeEnum loss = _$journalEntryOutcomeEnum_loss;
   @BuiltValueEnumConst(wireName: r'breakeven')
-  static const JournalEntryOutcomeEnum breakeven = _$journalEntryOutcomeEnum_breakeven;
+  static const JournalEntryOutcomeEnum breakeven =
+      _$journalEntryOutcomeEnum_breakeven;
   @BuiltValueEnumConst(wireName: r'open')
   static const JournalEntryOutcomeEnum open = _$journalEntryOutcomeEnum_open;
   @BuiltValueEnumConst(wireName: r'skipped')
-  static const JournalEntryOutcomeEnum skipped = _$journalEntryOutcomeEnum_skipped;
+  static const JournalEntryOutcomeEnum skipped =
+      _$journalEntryOutcomeEnum_skipped;
 
-  static Serializer<JournalEntryOutcomeEnum> get serializer => _$journalEntryOutcomeEnumSerializer;
+  static Serializer<JournalEntryOutcomeEnum> get serializer =>
+      _$journalEntryOutcomeEnumSerializer;
 
-  const JournalEntryOutcomeEnum._(String name): super(name);
+  const JournalEntryOutcomeEnum._(String name) : super(name);
 
-  static BuiltSet<JournalEntryOutcomeEnum> get values => _$journalEntryOutcomeEnumValues;
-  static JournalEntryOutcomeEnum valueOf(String name) => _$journalEntryOutcomeEnumValueOf(name);
+  static BuiltSet<JournalEntryOutcomeEnum> get values =>
+      _$journalEntryOutcomeEnumValues;
+  static JournalEntryOutcomeEnum valueOf(String name) =>
+      _$journalEntryOutcomeEnumValueOf(name);
 }
-

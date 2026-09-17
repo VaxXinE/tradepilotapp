@@ -5,6 +5,8 @@ import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 import '../../core/mindset/mindset_engine.dart';
 import '../../providers/analysis_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../l10n/l10n.dart';
+import '../../widgets/responsive_page.dart';
 
 class TraderMirrorScreen extends StatefulWidget {
   const TraderMirrorScreen({super.key});
@@ -38,7 +40,7 @@ class _TraderMirrorScreenState extends State<TraderMirrorScreen> {
       });
     } catch (_) {
       if (mounted && auth.user?.id == userId) {
-        setState(() => _error = 'Trader Mirror belum dapat dimuat.');
+        setState(() => _error = context.l10n.traderMirrorLoadFailed);
       }
     } finally {
       if (mounted && auth.user?.id == userId) setState(() => _loading = false);
@@ -50,17 +52,15 @@ class _TraderMirrorScreenState extends State<TraderMirrorScreen> {
     final currentUserId = context.watch<AuthProvider>().user?.id;
     if (_ownerUserId != null && currentUserId != _ownerUserId) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Trader Mirror')),
-        body: const Center(
-          child: Text('Sesi berubah. Buka kembali halaman ini.'),
-        ),
+        appBar: AppBar(title: Text(context.l10n.traderMirror)),
+        body: Center(child: Text(context.l10n.sessionChangedReopen)),
       );
     }
     final analysis = context.watch<AnalysisProvider>();
     final reflections = const MindsetEngine().evaluate(analysis.history);
     final data = _data;
     return Scaffold(
-      appBar: AppBar(title: const Text('Trader Mirror')),
+      appBar: AppBar(title: Text(context.l10n.traderMirror)),
       body: RefreshIndicator(
         onRefresh: _load,
         child: _loading && data == null
@@ -78,23 +78,22 @@ class _TraderMirrorScreenState extends State<TraderMirrorScreen> {
                   Center(
                     child: TextButton(
                       onPressed: _load,
-                      child: const Text('Coba lagi'),
+                      child: Text(context.l10n.tryAgain),
                     ),
                   ),
                 ],
               )
             : ListView(
-                padding: const EdgeInsets.all(16),
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: responsivePagePadding(context),
                 children: [
-                  const Text(
-                    'Cermin kebiasaan ini bersifat retrospektif dan tidak memberikan instruksi trading.',
-                  ),
+                  Text(context.l10n.traderMirrorDisclaimer),
                   const SizedBox(height: 16),
                   if (data!.highlights.isEmpty)
-                    const Card(
+                    Card(
                       child: Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Text('Belum cukup data untuk membuat sorotan.'),
+                        padding: const EdgeInsets.all(16),
+                        child: Text(context.l10n.traderMirrorNoHighlights),
                       ),
                     )
                   else
@@ -102,53 +101,61 @@ class _TraderMirrorScreenState extends State<TraderMirrorScreen> {
                       (highlight) => Card(
                         child: ListTile(
                           leading: const Icon(Icons.auto_awesome_outlined),
-                          title: Text(highlight.idText),
+                          title: Text(
+                            Localizations.localeOf(context).languageCode == 'id'
+                                ? highlight.idText
+                                : highlight.en,
+                          ),
                         ),
                       ),
                     ),
                   const SizedBox(height: 18),
                   Text(
-                    'Cakupan ${data.insights.windowDays} hari · ${data.insights.totalResolved} evaluasi selesai',
+                    context.l10n.traderMirrorCoverage(
+                      data.insights.windowDays,
+                      data.insights.totalResolved,
+                    ),
                     style: const TextStyle(fontWeight: FontWeight.w800),
                   ),
                   const SizedBox(height: 8),
                   _GateRow(
-                    label: 'Sesi pasar',
+                    label: context.l10n.traderMirrorSessions,
                     insight: data.insights.sessions,
                   ),
                   _GateRow(
-                    label: 'Konsentrasi instrumen',
+                    label: context.l10n.traderMirrorInstruments,
                     insight: data.insights.instruments,
                   ),
                   _GateRow(
-                    label: 'Waktu analisis',
+                    label: context.l10n.traderMirrorTiming,
                     insight: data.insights.timing,
                   ),
                   _GateRow(
-                    label: 'Pola setelah outcome negatif',
+                    label: context.l10n.traderMirrorPostLoss,
                     insight: data.insights.postLoss,
                   ),
                   _GateRow(
-                    label: 'Disiplin evaluasi',
+                    label: context.l10n.traderMirrorEvaluationDiscipline,
                     insight: data.insights.exitDiscipline,
                   ),
                   const SizedBox(height: 22),
-                  const Text(
-                    'Refleksi proses',
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
+                  Text(
+                    context.l10n.traderMirrorProcessReflection,
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                   Text(
-                    'Berdasarkan ${analysis.history.length} analisis yang sedang dimuat di perangkat.',
+                    context.l10n.traderMirrorBasedOn(analysis.history.length),
                     style: const TextStyle(fontSize: 12),
                   ),
                   const SizedBox(height: 8),
                   if (reflections.isEmpty)
-                    const Card(
+                    Card(
                       child: Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Text(
-                          'Butuh sedikitnya 3 analisis untuk refleksi yang cukup hati-hati.',
-                        ),
+                        padding: const EdgeInsets.all(16),
+                        child: Text(context.l10n.traderMirrorNeedMore),
                       ),
                     )
                   else
@@ -175,17 +182,58 @@ class _GateRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      dense: true,
-      leading: Icon(
-        insight.gated ? Icons.lock_clock_outlined : Icons.check_circle_outline,
-      ),
-      title: Text(label),
-      subtitle: Text(
-        insight.gated
-            ? 'Perlu ${insight.need ?? 'lebih banyak'} data; tersedia ${insight.have ?? 0}.'
-            : 'Data cukup. Sorotan terverifikasi ditampilkan di atas.',
+    final data = insight.data;
+    return Card(
+      child: ExpansionTile(
+        leading: Icon(
+          insight.gated
+              ? Icons.lock_clock_outlined
+              : Icons.check_circle_outline,
+        ),
+        title: Text(label),
+        subtitle: Text(
+          insight.gated
+              ? context.l10n.traderMirrorGated(
+                  '${insight.need ?? context.l10n.traderMirrorNeedMoreGeneric}',
+                  insight.have ?? 0,
+                )
+              : context.l10n.traderMirrorUngated,
+        ),
+        children: insight.gated || data == null
+            ? const []
+            : data.entries
+                  .map(
+                    (entry) => ListTile(
+                      dense: true,
+                      title: Text(_label(entry.key)),
+                      subtitle: Text(_summary(context, entry.value?.value)),
+                    ),
+                  )
+                  .toList(),
       ),
     );
+  }
+
+  static String _label(String value) {
+    final normalized = value.replaceAll('_', ' ');
+    return normalized.isEmpty
+        ? normalized
+        : '${normalized[0].toUpperCase()}${normalized.substring(1)}';
+  }
+
+  static String _summary(BuildContext context, Object? value) {
+    if (value is Map) {
+      final key = value['key'];
+      final rate = value['winRate'];
+      final total = value['total'];
+      if (key != null && rate is num) {
+        return '$key · ${(rate * 100).round()}% · '
+            '${context.l10n.traderMirrorSamples((total as num?)?.round() ?? 0)}';
+      }
+      return value.entries
+          .map((entry) => '${_label('${entry.key}')}: ${entry.value}')
+          .join(' · ');
+    }
+    return value?.toString() ?? '—';
   }
 }

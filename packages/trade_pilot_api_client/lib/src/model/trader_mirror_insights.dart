@@ -12,16 +12,17 @@ part 'trader_mirror_insights.g.dart';
 /// Personal trader-mirror insights bundle (task #162). Every category respects a minimum-sample guardrail.
 ///
 /// Properties:
-/// * [windowDays] 
-/// * [totalResolved] 
-/// * [overallGated] 
-/// * [sessions] 
-/// * [instruments] 
-/// * [timing] 
-/// * [postLoss] 
-/// * [exitDiscipline] 
+/// * [windowDays]
+/// * [totalResolved]
+/// * [overallGated]
+/// * [sessions]
+/// * [instruments]
+/// * [timing]
+/// * [postLoss]
+/// * [exitDiscipline]
 @BuiltValue()
-abstract class TraderMirrorInsights implements Built<TraderMirrorInsights, TraderMirrorInsightsBuilder> {
+abstract class TraderMirrorInsights
+    implements Built<TraderMirrorInsights, TraderMirrorInsightsBuilder> {
   @BuiltValueField(wireName: r'windowDays')
   int get windowDays;
 
@@ -48,18 +49,24 @@ abstract class TraderMirrorInsights implements Built<TraderMirrorInsights, Trade
 
   TraderMirrorInsights._();
 
-  factory TraderMirrorInsights([void updates(TraderMirrorInsightsBuilder b)]) = _$TraderMirrorInsights;
+  factory TraderMirrorInsights([void updates(TraderMirrorInsightsBuilder b)]) =
+      _$TraderMirrorInsights;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(TraderMirrorInsightsBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<TraderMirrorInsights> get serializer => _$TraderMirrorInsightsSerializer();
+  static Serializer<TraderMirrorInsights> get serializer =>
+      _$TraderMirrorInsightsSerializer();
 }
 
-class _$TraderMirrorInsightsSerializer implements PrimitiveSerializer<TraderMirrorInsights> {
+class _$TraderMirrorInsightsSerializer
+    implements PrimitiveSerializer<TraderMirrorInsights> {
   @override
-  final Iterable<Type> types = const [TraderMirrorInsights, _$TraderMirrorInsights];
+  final Iterable<Type> types = const [
+    TraderMirrorInsights,
+    _$TraderMirrorInsights
+  ];
 
   @override
   final String wireName = r'TraderMirrorInsights';
@@ -117,7 +124,9 @@ class _$TraderMirrorInsightsSerializer implements PrimitiveSerializer<TraderMirr
     TraderMirrorInsights object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -216,4 +225,3 @@ class _$TraderMirrorInsightsSerializer implements PrimitiveSerializer<TraderMirr
     return result.build();
   }
 }
-

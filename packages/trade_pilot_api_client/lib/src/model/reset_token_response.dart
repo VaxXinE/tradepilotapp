@@ -11,10 +11,11 @@ part 'reset_token_response.g.dart';
 /// ResetTokenResponse
 ///
 /// Properties:
-/// * [resetToken] 
-/// * [message] 
+/// * [resetToken]
+/// * [message]
 @BuiltValue()
-abstract class ResetTokenResponse implements Built<ResetTokenResponse, ResetTokenResponseBuilder> {
+abstract class ResetTokenResponse
+    implements Built<ResetTokenResponse, ResetTokenResponseBuilder> {
   @BuiltValueField(wireName: r'resetToken')
   String get resetToken;
 
@@ -23,16 +24,19 @@ abstract class ResetTokenResponse implements Built<ResetTokenResponse, ResetToke
 
   ResetTokenResponse._();
 
-  factory ResetTokenResponse([void updates(ResetTokenResponseBuilder b)]) = _$ResetTokenResponse;
+  factory ResetTokenResponse([void updates(ResetTokenResponseBuilder b)]) =
+      _$ResetTokenResponse;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(ResetTokenResponseBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<ResetTokenResponse> get serializer => _$ResetTokenResponseSerializer();
+  static Serializer<ResetTokenResponse> get serializer =>
+      _$ResetTokenResponseSerializer();
 }
 
-class _$ResetTokenResponseSerializer implements PrimitiveSerializer<ResetTokenResponse> {
+class _$ResetTokenResponseSerializer
+    implements PrimitiveSerializer<ResetTokenResponse> {
   @override
   final Iterable<Type> types = const [ResetTokenResponse, _$ResetTokenResponse];
 
@@ -62,7 +66,9 @@ class _$ResetTokenResponseSerializer implements PrimitiveSerializer<ResetTokenRe
     ResetTokenResponse object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -119,4 +125,3 @@ class _$ResetTokenResponseSerializer implements PrimitiveSerializer<ResetTokenRe
     return result.build();
   }
 }
-

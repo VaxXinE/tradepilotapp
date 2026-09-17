@@ -15,7 +15,8 @@ part 'fundamental_citations.g.dart';
 /// * [newsTitles] - News headlines the AI cited (matched against the snapshot in fundamentalContext.newsItems).
 /// * [calendarEvents] - Calendar event names the AI cited (matched against the snapshot in fundamentalContext.calendarEvents).
 @BuiltValue()
-abstract class FundamentalCitations implements Built<FundamentalCitations, FundamentalCitationsBuilder> {
+abstract class FundamentalCitations
+    implements Built<FundamentalCitations, FundamentalCitationsBuilder> {
   /// News headlines the AI cited (matched against the snapshot in fundamentalContext.newsItems).
   @BuiltValueField(wireName: r'newsTitles')
   BuiltList<String> get newsTitles;
@@ -26,18 +27,24 @@ abstract class FundamentalCitations implements Built<FundamentalCitations, Funda
 
   FundamentalCitations._();
 
-  factory FundamentalCitations([void updates(FundamentalCitationsBuilder b)]) = _$FundamentalCitations;
+  factory FundamentalCitations([void updates(FundamentalCitationsBuilder b)]) =
+      _$FundamentalCitations;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(FundamentalCitationsBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<FundamentalCitations> get serializer => _$FundamentalCitationsSerializer();
+  static Serializer<FundamentalCitations> get serializer =>
+      _$FundamentalCitationsSerializer();
 }
 
-class _$FundamentalCitationsSerializer implements PrimitiveSerializer<FundamentalCitations> {
+class _$FundamentalCitationsSerializer
+    implements PrimitiveSerializer<FundamentalCitations> {
   @override
-  final Iterable<Type> types = const [FundamentalCitations, _$FundamentalCitations];
+  final Iterable<Type> types = const [
+    FundamentalCitations,
+    _$FundamentalCitations
+  ];
 
   @override
   final String wireName = r'FundamentalCitations';
@@ -65,7 +72,9 @@ class _$FundamentalCitationsSerializer implements PrimitiveSerializer<Fundamenta
     FundamentalCitations object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -122,4 +131,3 @@ class _$FundamentalCitationsSerializer implements PrimitiveSerializer<Fundamenta
     return result.build();
   }
 }
-

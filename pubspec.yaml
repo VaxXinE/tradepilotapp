@@ -2,7 +2,7 @@ name: tradepilotapp
 description: "Trade Pilot — AI Trading Assistant (Flutter mobile app)."
 publish_to: 'none'
 
-version: 1.0.0+2
+version: 1.0.2+4
 
 environment:
   sdk: ^3.10.4
@@ -14,6 +14,9 @@ dependencies:
     sdk: flutter
 
   cupertino_icons: ^1.0.8
+  firebase_core: ^4.13.0
+  firebase_messaging: ^16.5.0
+  flutter_local_notifications: ^22.3.0
 
   # Generated Trade Pilot API client (vendored from Trade-Pilot repo, lib/api-client-dart)
   trade_pilot_api_client:
@@ -26,15 +29,29 @@ dependencies:
   provider: ^6.1.2
 
   # Local/secure storage for session token + cached user
-  flutter_secure_storage: ^9.2.2
+  # Pinned to 10.x on purpose — do NOT jump straight to 11.
+  # v11 removed the EncryptedSharedPreferences backend outright; upgrading
+  # 9.x -> 11 makes every already-stored session token unreadable. v10 still
+  # reads the old backend and migrates it to the new cipher storage on first
+  # access, so it is the required stepping stone. Move to 11 only in a later
+  # release, once 10.x has field adoption.
+  flutter_secure_storage: ^10.3.1
+  in_app_update: ^4.2.5
   local_auth: ^3.0.2
   shared_preferences: ^2.3.3
+  upgrader: ^13.7.0
   url_launcher: ^6.3.2
 
   # Utilities
   intl: ^0.20.2
   fl_chart: ^0.69.0
   built_collection: ^5.1.1
+  built_value: ^8.12.0
+  one_of: ^1.5.0
+  image_picker: ^1.1.2
+  google_sign_in: ^7.2.0
+  sign_in_with_apple: ^7.0.1
+  crypto: ^3.0.7
 
 dev_dependencies:
   flutter_test:
@@ -50,3 +67,7 @@ flutter:
   assets:
     - assets/images/
     - shorebird.yaml
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-VariableFont_opsz_wght.ttf

@@ -11,13 +11,14 @@ part 'mirror_group_stat.g.dart';
 /// Aggregate stats for one bucket inside a trader-mirror category (session, instrument, time-of-day, etc.).
 ///
 /// Properties:
-/// * [key] 
-/// * [total] 
-/// * [wins] 
-/// * [winRate] 
-/// * [avgPnlPercent] 
+/// * [key]
+/// * [total]
+/// * [wins]
+/// * [winRate]
+/// * [avgPnlPercent]
 @BuiltValue()
-abstract class MirrorGroupStat implements Built<MirrorGroupStat, MirrorGroupStatBuilder> {
+abstract class MirrorGroupStat
+    implements Built<MirrorGroupStat, MirrorGroupStatBuilder> {
   @BuiltValueField(wireName: r'key')
   String get key;
 
@@ -35,16 +36,19 @@ abstract class MirrorGroupStat implements Built<MirrorGroupStat, MirrorGroupStat
 
   MirrorGroupStat._();
 
-  factory MirrorGroupStat([void updates(MirrorGroupStatBuilder b)]) = _$MirrorGroupStat;
+  factory MirrorGroupStat([void updates(MirrorGroupStatBuilder b)]) =
+      _$MirrorGroupStat;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(MirrorGroupStatBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<MirrorGroupStat> get serializer => _$MirrorGroupStatSerializer();
+  static Serializer<MirrorGroupStat> get serializer =>
+      _$MirrorGroupStatSerializer();
 }
 
-class _$MirrorGroupStatSerializer implements PrimitiveSerializer<MirrorGroupStat> {
+class _$MirrorGroupStatSerializer
+    implements PrimitiveSerializer<MirrorGroupStat> {
   @override
   final Iterable<Type> types = const [MirrorGroupStat, _$MirrorGroupStat];
 
@@ -89,7 +93,9 @@ class _$MirrorGroupStatSerializer implements PrimitiveSerializer<MirrorGroupStat
     MirrorGroupStat object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -167,4 +173,3 @@ class _$MirrorGroupStatSerializer implements PrimitiveSerializer<MirrorGroupStat
     return result.build();
   }
 }
-

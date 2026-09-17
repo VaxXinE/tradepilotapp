@@ -19,7 +19,11 @@ class NotificationAction {
 
   static NotificationAction? fromData(Map<String, dynamic> data) {
     final type = switch (data['actionType']?.toString()) {
+      'open_analysis' ||
+      'openAnalysis' ||
       'analysis' => NotificationActionType.analysis,
+      'open_notification' ||
+      'openNotification' => NotificationActionType.notifications,
       'history' => NotificationActionType.history,
       'notifications' => NotificationActionType.notifications,
       'daily_summary' => NotificationActionType.dailySummary,

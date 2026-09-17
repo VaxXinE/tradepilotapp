@@ -9,8 +9,25 @@ import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 import 'package:trade_pilot_api_client/trade_pilot_client.dart';
 
 import '../models/history_filters.dart';
-import '../models/history_sort.dart';
 import 'auth_provider.dart';
+import '../l10n/app_messages.dart';
+
+/// Detail rate-limit dari `POST /analyses` untuk ditampilkan UI tanpa
+/// bergantung pada teks error backend.
+@immutable
+class AnalysisQuotaLimit {
+  const AnalysisQuotaLimit({
+    required this.scope,
+    this.limit,
+    this.used,
+    this.retryAfter,
+  });
+
+  final String scope;
+  final int? limit;
+  final int? used;
+  final Duration? retryAfter;
+}
 
 /// Single source of truth untuk seluruh state analisis.
 ///
@@ -53,7 +70,11 @@ class AnalysisProvider extends ChangeNotifier {
 
   bool isLoadingSummary = false;
 
+  bool isLoadingHistoryOutcomeSummary = false;
+
   String? errorMessage;
+
+  String? historyError;
 
   List<Analysis> history = [];
 
@@ -65,7 +86,19 @@ class AnalysisProvider extends ChangeNotifier {
 
   AnalysesSummary? summary;
 
+  AnalysisHistorySummary? historyOutcomeSummary;
+
+  String? historyOutcomeSummaryError;
+
   AnalysisQuota? quota;
+
+  bool quotaLoadFailed = false;
+
+  AnalysisQuotaLimit? quotaLimit;
+
+  bool lastAnalysisConsumedCredit = false;
+
+  int? lastAnalysisCreditBalance;
 
   // ===========================================================================
   // PUBLIC STATE — FILTERED HISTORY
@@ -99,36 +132,17 @@ class AnalysisProvider extends ChangeNotifier {
   }
 
   List<Analysis> get visibleHistory {
-    // The generated API has no outcome/confidence/sort parameters yet.
-    // Refine a copy of the loaded page so Dashboard's base history stays intact.
-    final result = List<Analysis>.of(
+    return List<Analysis>.of(
       historyFilters.hasServerFilters ? filteredHistory : history,
     );
-
-    result.removeWhere((analysis) => !_matchesClientFilters(analysis));
-    result.sort(_compareVisibleHistory);
-
-    return result;
   }
 
-  int get visibleHistoryTotal {
-    if (historyFilters.outcome != HistoryOutcomeFilter.all ||
-        historyFilters.minConfidence != null) {
-      return visibleHistory.length;
-    }
-
-    return visibleHistorySourceTotal;
-  }
+  int get visibleHistoryTotal => visibleHistorySourceTotal;
 
   int get visibleHistorySourceTotal {
     return historyFilters.hasServerFilters
         ? filteredHistoryTotal
         : historyTotal;
-  }
-
-  bool get hasClientHistoryRefinement {
-    return historyFilters.outcome != HistoryOutcomeFilter.all ||
-        historyFilters.minConfidence != null;
   }
 
   bool get isLoadingVisibleHistory {
@@ -146,7 +160,7 @@ class AnalysisProvider extends ChangeNotifier {
   String? get visibleHistoryError {
     return historyFilters.hasServerFilters
         ? filteredHistoryError
-        : errorMessage;
+        : historyError;
   }
 
   // ===========================================================================
@@ -167,9 +181,15 @@ class AnalysisProvider extends ChangeNotifier {
 
   bool _quotaRequestInFlight = false;
 
+  bool _quotaRefreshPending = false;
+
   int _historyRequestId = 0;
 
   int _summaryRequestId = 0;
+
+  int _historyOutcomeSummaryRequestId = 0;
+
+  bool _historyOutcomeSummaryRequestInFlight = false;
 
   int _quotaRequestId = 0;
 
@@ -231,6 +251,8 @@ class AnalysisProvider extends ChangeNotifier {
 
     _summaryRequestId++;
 
+    _historyOutcomeSummaryRequestId++;
+
     _quotaRequestId++;
 
     _createRequestId++;
@@ -250,7 +272,11 @@ class AnalysisProvider extends ChangeNotifier {
 
     _summaryRequestInFlight = false;
 
+    _historyOutcomeSummaryRequestInFlight = false;
+
     _quotaRequestInFlight = false;
+
+    _quotaRefreshPending = false;
 
     _filteredHistoryRequestInFlight = false;
 
@@ -306,21 +332,38 @@ class AnalysisProvider extends ChangeNotifier {
 
     summary = null;
 
+    isLoadingHistoryOutcomeSummary = false;
+
+    historyOutcomeSummary = null;
+
+    historyOutcomeSummaryError = null;
+
     quota = null;
 
+    quotaLoadFailed = false;
+
+    quotaLimit = null;
+
+    lastAnalysisConsumedCredit = false;
+
+    lastAnalysisCreditBalance = null;
+
     errorMessage = null;
+
+    historyError = null;
   }
 
   // ===========================================================================
   // QUOTA
   // ===========================================================================
 
-  Future<void> loadQuota() async {
+  Future<void> loadQuota({bool ensureFresh = false}) async {
     if (_authProvider.status != AuthStatus.authenticated) {
       return;
     }
 
     if (_quotaRequestInFlight) {
+      _quotaRefreshPending |= ensureFresh;
       return;
     }
 
@@ -337,18 +380,34 @@ class AnalysisProvider extends ChangeNotifier {
         return;
       }
 
-      quota = response.data;
+      final loadedQuota = response.data;
+
+      if (loadedQuota == null) {
+        quotaLoadFailed = quota == null;
+        return;
+      }
+
+      quota = loadedQuota;
+      quotaLoadFailed = false;
     } catch (_) {
       // Quota bukan critical state.
       //
       // Kalau background refresh gagal,
       // pertahankan cache terakhir.
+      quotaLoadFailed = quota == null;
     } finally {
       if (requestId == _quotaRequestId) {
         _quotaRequestInFlight = false;
 
+        final refreshAgain = _quotaRefreshPending && _isSessionCurrent(epoch);
+        _quotaRefreshPending = false;
+
         if (_isSessionCurrent(epoch)) {
           notifyListeners();
+        }
+
+        if (refreshAgain) {
+          unawaited(loadQuota());
         }
       }
     }
@@ -406,6 +465,52 @@ class AnalysisProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> loadHistoryOutcomeSummary({
+    bool silent = false,
+    String range = 'all',
+  }) async {
+    if (_authProvider.status != AuthStatus.authenticated ||
+        _historyOutcomeSummaryRequestInFlight) {
+      return;
+    }
+
+    final epoch = _sessionEpoch;
+    final requestId = ++_historyOutcomeSummaryRequestId;
+    _historyOutcomeSummaryRequestInFlight = true;
+
+    if (!silent) {
+      isLoadingHistoryOutcomeSummary = true;
+      historyOutcomeSummaryError = null;
+      notifyListeners();
+    }
+
+    try {
+      final response = await _client.analyses.getAnalysisHistorySummary(
+        range: range,
+      );
+      if (!_isSessionCurrent(epoch) ||
+          requestId != _historyOutcomeSummaryRequestId) {
+        return;
+      }
+      historyOutcomeSummary = response.data;
+      historyOutcomeSummaryError = response.data == null
+          ? AppMessages.l10n.errGeneric
+          : null;
+    } catch (error) {
+      if (_isSessionCurrent(epoch)) {
+        historyOutcomeSummaryError = _friendlyError(error);
+      }
+    } finally {
+      if (requestId == _historyOutcomeSummaryRequestId) {
+        _historyOutcomeSummaryRequestInFlight = false;
+        if (_isSessionCurrent(epoch)) {
+          isLoadingHistoryOutcomeSummary = false;
+          notifyListeners();
+        }
+      }
+    }
+  }
+
   // ===========================================================================
   // CORE REFRESH
   // ===========================================================================
@@ -442,7 +547,7 @@ class AnalysisProvider extends ChangeNotifier {
     String? userInputContext,
   }) async {
     if (_authProvider.status != AuthStatus.authenticated) {
-      errorMessage = 'Sesi login sudah berakhir. Silakan login kembali.';
+      errorMessage = AppMessages.l10n.errSessionExpiredRelogin;
 
       notifyListeners();
 
@@ -463,6 +568,12 @@ class AnalysisProvider extends ChangeNotifier {
 
     errorMessage = null;
 
+    quotaLimit = null;
+
+    lastAnalysisConsumedCredit = false;
+
+    lastAnalysisCreditBalance = null;
+
     notifyListeners();
 
     try {
@@ -481,6 +592,10 @@ class AnalysisProvider extends ChangeNotifier {
       }
 
       final created = response.data;
+
+      lastAnalysisConsumedCredit = created?.creditConsumed ?? false;
+
+      lastAnalysisCreditBalance = created?.creditBalance;
 
       isSubmitting = false;
 
@@ -505,7 +620,9 @@ class AnalysisProvider extends ChangeNotifier {
 
       unawaited(loadSummary(silent: true));
 
-      unawaited(loadQuota());
+      unawaited(loadHistoryOutcomeSummary(silent: true));
+
+      unawaited(loadQuota(ensureFresh: true));
 
       return created;
     } catch (error) {
@@ -522,12 +639,14 @@ class AnalysisProvider extends ChangeNotifier {
               error.type == DioExceptionType.connectionTimeout);
 
       if (isTimeout) {
-        errorMessage =
-            'Koneksi ke AI lama meresponsnya. Analisis mungkin tetap '
-            'berhasil dibuat — data akan disinkronkan otomatis.';
+        errorMessage = AppMessages.l10n.errAnalysisSlowSync;
 
         _scheduleTimeoutRevalidation(epoch: epoch, userId: _activeUserId);
       } else {
+        if (error is DioException && error.response?.statusCode == 429) {
+          quotaLimit = _parseQuotaLimit(error);
+        }
+
         errorMessage = _friendlyError(error);
       }
 
@@ -586,6 +705,8 @@ class AnalysisProvider extends ChangeNotifier {
     _historyRequestInFlight = true;
 
     if (!silent) {
+      historyError = null;
+
       if (isLoadMore) {
         isLoadingMoreHistory = true;
       } else {
@@ -628,9 +749,11 @@ class AnalysisProvider extends ChangeNotifier {
       }
 
       historyTotal = data.total;
+
+      historyError = null;
     } catch (error) {
       if (_isSessionCurrent(epoch) && !silent) {
-        errorMessage = _friendlyError(error);
+        historyError = _friendlyError(error);
       }
     } finally {
       if (requestId == _historyRequestId) {
@@ -692,7 +815,7 @@ class AnalysisProvider extends ChangeNotifier {
     final to = normalized.to;
 
     if (from != null && to != null && from.isAfter(to)) {
-      filteredHistoryError = 'Tanggal awal tidak boleh melewati tanggal akhir.';
+      filteredHistoryError = AppMessages.l10n.errDateRangeInvalid;
 
       notifyListeners();
 
@@ -879,6 +1002,10 @@ class AnalysisProvider extends ChangeNotifier {
             ? null
             : BuiltList<String>(filters.timeframes),
 
+        outcomes: filters.apiOutcome == null
+            ? null
+            : BuiltList<String>(filters.apiOutcome!),
+
         q: filters.query.isEmpty ? null : filters.query,
 
         from: _toApiDate(filters.from),
@@ -977,72 +1104,6 @@ class AnalysisProvider extends ChangeNotifier {
     return Date(date.year, date.month, date.day);
   }
 
-  bool _matchesClientFilters(Analysis analysis) {
-    switch (historyFilters.outcome) {
-      case HistoryOutcomeFilter.success:
-        if (analysis.outcomeStatus != AnalysisOutcomeStatusEnum.tp1Hit &&
-            analysis.outcomeStatus != AnalysisOutcomeStatusEnum.tp2Hit) {
-          return false;
-        }
-        break;
-      case HistoryOutcomeFilter.failed:
-        if (analysis.outcomeStatus != AnalysisOutcomeStatusEnum.slHit &&
-            analysis.outcomeStatus != AnalysisOutcomeStatusEnum.expired &&
-            analysis.outcomeStatus != AnalysisOutcomeStatusEnum.invalidated) {
-          return false;
-        }
-        break;
-      case HistoryOutcomeFilter.pending:
-        if (analysis.outcomeStatus != null &&
-            analysis.outcomeStatus != AnalysisOutcomeStatusEnum.pending) {
-          return false;
-        }
-        break;
-      case HistoryOutcomeFilter.all:
-        break;
-    }
-
-    final minimum = historyFilters.minConfidence;
-    if (minimum != null && _averageConfidence(analysis) < minimum) {
-      return false;
-    }
-
-    return true;
-  }
-
-  int _compareVisibleHistory(Analysis left, Analysis right) {
-    int result;
-
-    switch (historyFilters.sort) {
-      case HistorySort.newest:
-        result = right.createdAt.compareTo(left.createdAt);
-        break;
-      case HistorySort.oldest:
-        result = left.createdAt.compareTo(right.createdAt);
-        break;
-      case HistorySort.confidenceHighest:
-        result = _averageConfidence(right).compareTo(_averageConfidence(left));
-        break;
-    }
-
-    if (result != 0) {
-      return result;
-    }
-
-    return right.id.compareTo(left.id);
-  }
-
-  double _averageConfidence(Analysis analysis) {
-    final minimum = analysis.confidenceMin;
-    final maximum = analysis.confidenceMax;
-
-    if (minimum != null && maximum != null) {
-      return (minimum + maximum) / 2;
-    }
-
-    return (minimum ?? maximum ?? -1).toDouble();
-  }
-
   String _historyPreferencesKey(int userId) {
     return 'history_preferences_v1_$userId';
   }
@@ -1096,6 +1157,35 @@ class AnalysisProvider extends ChangeNotifier {
   // DETAIL
   // ===========================================================================
 
+  Future<AlertStatus?> getAnalysisAlerts(int id) async {
+    if (_authProvider.status != AuthStatus.authenticated) return null;
+    final epoch = _sessionEpoch;
+
+    try {
+      final response = await _client.analyses.getAnalysisAlerts(id: id);
+      return _isSessionCurrent(epoch) ? response.data : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<AlertStatus?> setAnalysisAlerts(
+    int id, {
+    required bool enabled,
+  }) async {
+    if (_authProvider.status != AuthStatus.authenticated) return null;
+    final epoch = _sessionEpoch;
+
+    try {
+      final response = enabled
+          ? await _client.analyses.armAnalysisAlerts(id: id)
+          : await _client.analyses.cancelAnalysisAlerts(id: id);
+      return _isSessionCurrent(epoch) ? response.data : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<Analysis?> getAnalysis(int id, {bool silent = false}) async {
     if (_authProvider.status != AuthStatus.authenticated) {
       return null;
@@ -1145,7 +1235,7 @@ class AnalysisProvider extends ChangeNotifier {
         _savingNoteIds.contains(analysis.id) ||
         note.length > 5000) {
       if (note.length > 5000) {
-        errorMessage = 'Catatan maksimal 5.000 karakter.';
+        errorMessage = AppMessages.l10n.errNoteTooLong5000;
         notifyListeners();
       }
       return null;
@@ -1172,7 +1262,7 @@ class AnalysisProvider extends ChangeNotifier {
       }
 
       final normalized = saved.note.trim();
-      final updated = analysis.rebuild(
+      final updated = _toBuildableAnalysis(analysis).rebuild(
         (builder) => builder
           ..userNote = normalized.isEmpty ? null : saved.note
           ..userNoteUpdatedAt = normalized.isEmpty ? null : saved.updatedAt
@@ -1190,6 +1280,30 @@ class AnalysisProvider extends ChangeNotifier {
         _savingNoteIds.remove(analysis.id);
         notifyListeners();
       }
+    }
+  }
+
+  // ===========================================================================
+  // FUNDAMENTAL SNAPSHOT
+  // ===========================================================================
+
+  Future<RefreshFundamentalsResponse?> refreshFundamentals(
+    int analysisId,
+  ) async {
+    if (_authProvider.status != AuthStatus.authenticated) return null;
+
+    final epoch = _sessionEpoch;
+    try {
+      final response = await _client.analyses.refreshFundamentals(
+        id: analysisId,
+      );
+      return _isSessionCurrent(epoch) ? response.data : null;
+    } catch (error) {
+      if (_isSessionCurrent(epoch)) {
+        errorMessage = _friendlyError(error);
+        notifyListeners();
+      }
+      return null;
     }
   }
 
@@ -1406,46 +1520,89 @@ class AnalysisProvider extends ChangeNotifier {
       }
 
       if (error.response?.statusCode == 401) {
-        return 'Sesi login sudah berakhir. Silakan login kembali.';
+        return AppMessages.l10n.errSessionExpiredRelogin;
       }
 
       if (error.response?.statusCode == 429) {
-        return 'Batas kuota analisis tercapai. Coba lagi nanti.';
+        return AppMessages.l10n.errQuotaReached;
       }
 
       if (error.type == DioExceptionType.receiveTimeout ||
           error.type == DioExceptionType.sendTimeout ||
           error.type == DioExceptionType.connectionTimeout) {
-        return 'AI butuh waktu lebih lama dari biasanya untuk '
-            'menganalisis. Silakan coba lagi.';
+        return AppMessages.l10n.errAiTimeout;
       }
 
       if (error.type == DioExceptionType.connectionError) {
-        return 'Tidak bisa terhubung ke server. '
-            'Periksa koneksi internet kamu.';
+        return AppMessages.l10n.errNoConnection;
       }
 
       if (error.type == DioExceptionType.cancel) {
-        return 'Permintaan dibatalkan.';
+        return AppMessages.l10n.errRequestCancelled;
       }
     }
 
-    return 'Analisis gagal. Silakan coba lagi.';
+    return AppMessages.l10n.errAnalysisFailed;
+  }
+
+  AnalysisQuotaLimit _parseQuotaLimit(DioException error) {
+    final body = error.response?.data;
+    final quotaData = body is Map ? body['quota'] : null;
+    final quota = quotaData is Map ? quotaData : const <Object?, Object?>{};
+    final scopeValue = quota['scope'];
+    final scope =
+        scopeValue == 'hour' ||
+            scopeValue == 'day' ||
+            scopeValue == 'concurrent'
+        ? scopeValue as String
+        : 'unknown';
+    final retryValue = error.response?.headers.value('retry-after');
+    final retrySeconds = int.tryParse(retryValue ?? '');
+
+    return AnalysisQuotaLimit(
+      scope: scope,
+      limit: _asInt(quota['limit']),
+      used: _asInt(quota['used']),
+      retryAfter: retrySeconds == null || retrySeconds < 0
+          ? null
+          : Duration(seconds: retrySeconds),
+    );
+  }
+
+  int? _asInt(Object? value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse('$value');
+  }
+
+  /// `Analysis` adalah interface non-instantiable pada generated client, karena
+  /// `CreateAnalysisResult` mewarisinya lewat `allOf`. Hanya `$Analysis` yang
+  /// punya `rebuild`, jadi implementasi lain (mis. hasil `POST /analyses`)
+  /// dinormalisasi dulu lewat serializer bersama.
+  $Analysis _toBuildableAnalysis(Analysis analysis) {
+    if (analysis is $Analysis) {
+      return analysis;
+    }
+
+    return standardSerializers.deserializeWith(
+      $Analysis.serializer,
+      standardSerializers.serializeWith(Analysis.serializer, analysis),
+    )!;
   }
 
   String _friendlyNoteError(Object error) {
     if (error is DioException) {
       if (error.response?.statusCode == 401) {
-        return 'Sesi login sudah berakhir. Silakan login kembali.';
+        return AppMessages.l10n.errSessionExpiredRelogin;
       }
       if (error.type == DioExceptionType.connectionError ||
           error.type == DioExceptionType.connectionTimeout ||
           error.type == DioExceptionType.receiveTimeout ||
           error.type == DioExceptionType.sendTimeout) {
-        return 'Catatan belum tersimpan. Periksa koneksi lalu coba lagi.';
+        return AppMessages.l10n.errNoteNotSaved;
       }
     }
-    return 'Catatan belum dapat disimpan. Silakan coba lagi.';
+    return AppMessages.l10n.errNoteSaveFailed;
   }
 
   // ===========================================================================

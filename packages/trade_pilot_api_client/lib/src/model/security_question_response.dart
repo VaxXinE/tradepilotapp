@@ -11,10 +11,12 @@ part 'security_question_response.g.dart';
 /// SecurityQuestionResponse
 ///
 /// Properties:
-/// * [securityQuestion] 
-/// * [email] 
+/// * [securityQuestion]
+/// * [email]
 @BuiltValue()
-abstract class SecurityQuestionResponse implements Built<SecurityQuestionResponse, SecurityQuestionResponseBuilder> {
+abstract class SecurityQuestionResponse
+    implements
+        Built<SecurityQuestionResponse, SecurityQuestionResponseBuilder> {
   @BuiltValueField(wireName: r'securityQuestion')
   String get securityQuestion;
 
@@ -23,18 +25,25 @@ abstract class SecurityQuestionResponse implements Built<SecurityQuestionRespons
 
   SecurityQuestionResponse._();
 
-  factory SecurityQuestionResponse([void updates(SecurityQuestionResponseBuilder b)]) = _$SecurityQuestionResponse;
+  factory SecurityQuestionResponse(
+          [void updates(SecurityQuestionResponseBuilder b)]) =
+      _$SecurityQuestionResponse;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(SecurityQuestionResponseBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<SecurityQuestionResponse> get serializer => _$SecurityQuestionResponseSerializer();
+  static Serializer<SecurityQuestionResponse> get serializer =>
+      _$SecurityQuestionResponseSerializer();
 }
 
-class _$SecurityQuestionResponseSerializer implements PrimitiveSerializer<SecurityQuestionResponse> {
+class _$SecurityQuestionResponseSerializer
+    implements PrimitiveSerializer<SecurityQuestionResponse> {
   @override
-  final Iterable<Type> types = const [SecurityQuestionResponse, _$SecurityQuestionResponse];
+  final Iterable<Type> types = const [
+    SecurityQuestionResponse,
+    _$SecurityQuestionResponse
+  ];
 
   @override
   final String wireName = r'SecurityQuestionResponse';
@@ -62,7 +71,9 @@ class _$SecurityQuestionResponseSerializer implements PrimitiveSerializer<Securi
     SecurityQuestionResponse object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -119,4 +130,3 @@ class _$SecurityQuestionResponseSerializer implements PrimitiveSerializer<Securi
     return result.build();
   }
 }
-

@@ -80,7 +80,7 @@ class _InstrumentPickerSheetState extends State<InstrumentPickerSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
@@ -129,7 +129,10 @@ class _InstrumentPickerSheetState extends State<InstrumentPickerSheet> {
                         ),
 
                         child: Text(
-                          entry.key,
+                          MarketProvider.instrumentCategoryLabel(
+                            context.l10n,
+                            entry.key,
+                          ),
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),

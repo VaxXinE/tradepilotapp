@@ -11,10 +11,13 @@ part 'personal_analytics_top_instruments_inner.g.dart';
 /// PersonalAnalyticsTopInstrumentsInner
 ///
 /// Properties:
-/// * [instrument] 
-/// * [count] 
+/// * [instrument]
+/// * [count]
 @BuiltValue()
-abstract class PersonalAnalyticsTopInstrumentsInner implements Built<PersonalAnalyticsTopInstrumentsInner, PersonalAnalyticsTopInstrumentsInnerBuilder> {
+abstract class PersonalAnalyticsTopInstrumentsInner
+    implements
+        Built<PersonalAnalyticsTopInstrumentsInner,
+            PersonalAnalyticsTopInstrumentsInnerBuilder> {
   @BuiltValueField(wireName: r'instrument')
   String get instrument;
 
@@ -23,18 +26,25 @@ abstract class PersonalAnalyticsTopInstrumentsInner implements Built<PersonalAna
 
   PersonalAnalyticsTopInstrumentsInner._();
 
-  factory PersonalAnalyticsTopInstrumentsInner([void updates(PersonalAnalyticsTopInstrumentsInnerBuilder b)]) = _$PersonalAnalyticsTopInstrumentsInner;
+  factory PersonalAnalyticsTopInstrumentsInner(
+          [void updates(PersonalAnalyticsTopInstrumentsInnerBuilder b)]) =
+      _$PersonalAnalyticsTopInstrumentsInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(PersonalAnalyticsTopInstrumentsInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<PersonalAnalyticsTopInstrumentsInner> get serializer => _$PersonalAnalyticsTopInstrumentsInnerSerializer();
+  static Serializer<PersonalAnalyticsTopInstrumentsInner> get serializer =>
+      _$PersonalAnalyticsTopInstrumentsInnerSerializer();
 }
 
-class _$PersonalAnalyticsTopInstrumentsInnerSerializer implements PrimitiveSerializer<PersonalAnalyticsTopInstrumentsInner> {
+class _$PersonalAnalyticsTopInstrumentsInnerSerializer
+    implements PrimitiveSerializer<PersonalAnalyticsTopInstrumentsInner> {
   @override
-  final Iterable<Type> types = const [PersonalAnalyticsTopInstrumentsInner, _$PersonalAnalyticsTopInstrumentsInner];
+  final Iterable<Type> types = const [
+    PersonalAnalyticsTopInstrumentsInner,
+    _$PersonalAnalyticsTopInstrumentsInner
+  ];
 
   @override
   final String wireName = r'PersonalAnalyticsTopInstrumentsInner';
@@ -62,7 +72,9 @@ class _$PersonalAnalyticsTopInstrumentsInnerSerializer implements PrimitiveSeria
     PersonalAnalyticsTopInstrumentsInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -119,4 +131,3 @@ class _$PersonalAnalyticsTopInstrumentsInnerSerializer implements PrimitiveSeria
     return result.build();
   }
 }
-

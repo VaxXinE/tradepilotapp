@@ -12,17 +12,18 @@ part 'user_price_alert.g.dart';
 /// UserPriceAlert
 ///
 /// Properties:
-/// * [id] 
-/// * [instrument] 
+/// * [id]
+/// * [instrument]
 /// * [targetPrice] - Target price as a string, preserving the precision the user typed.
-/// * [triggerDirection] 
-/// * [note] 
-/// * [status] 
-/// * [triggeredAt] 
-/// * [triggeredPrice] 
-/// * [createdAt] 
+/// * [triggerDirection]
+/// * [note]
+/// * [status]
+/// * [triggeredAt]
+/// * [triggeredPrice]
+/// * [createdAt]
 @BuiltValue()
-abstract class UserPriceAlert implements Built<UserPriceAlert, UserPriceAlertBuilder> {
+abstract class UserPriceAlert
+    implements Built<UserPriceAlert, UserPriceAlertBuilder> {
   @BuiltValueField(wireName: r'id')
   int get id;
 
@@ -55,16 +56,19 @@ abstract class UserPriceAlert implements Built<UserPriceAlert, UserPriceAlertBui
 
   UserPriceAlert._();
 
-  factory UserPriceAlert([void updates(UserPriceAlertBuilder b)]) = _$UserPriceAlert;
+  factory UserPriceAlert([void updates(UserPriceAlertBuilder b)]) =
+      _$UserPriceAlert;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(UserPriceAlertBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<UserPriceAlert> get serializer => _$UserPriceAlertSerializer();
+  static Serializer<UserPriceAlert> get serializer =>
+      _$UserPriceAlertSerializer();
 }
 
-class _$UserPriceAlertSerializer implements PrimitiveSerializer<UserPriceAlert> {
+class _$UserPriceAlertSerializer
+    implements PrimitiveSerializer<UserPriceAlert> {
   @override
   final Iterable<Type> types = const [UserPriceAlert, _$UserPriceAlert];
 
@@ -135,7 +139,9 @@ class _$UserPriceAlertSerializer implements PrimitiveSerializer<UserPriceAlert> 
     UserPriceAlert object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -246,34 +252,42 @@ class _$UserPriceAlertSerializer implements PrimitiveSerializer<UserPriceAlert> 
 }
 
 class UserPriceAlertTriggerDirectionEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'above')
-  static const UserPriceAlertTriggerDirectionEnum above = _$userPriceAlertTriggerDirectionEnum_above;
+  static const UserPriceAlertTriggerDirectionEnum above =
+      _$userPriceAlertTriggerDirectionEnum_above;
   @BuiltValueEnumConst(wireName: r'below')
-  static const UserPriceAlertTriggerDirectionEnum below = _$userPriceAlertTriggerDirectionEnum_below;
+  static const UserPriceAlertTriggerDirectionEnum below =
+      _$userPriceAlertTriggerDirectionEnum_below;
 
-  static Serializer<UserPriceAlertTriggerDirectionEnum> get serializer => _$userPriceAlertTriggerDirectionEnumSerializer;
+  static Serializer<UserPriceAlertTriggerDirectionEnum> get serializer =>
+      _$userPriceAlertTriggerDirectionEnumSerializer;
 
-  const UserPriceAlertTriggerDirectionEnum._(String name): super(name);
+  const UserPriceAlertTriggerDirectionEnum._(String name) : super(name);
 
-  static BuiltSet<UserPriceAlertTriggerDirectionEnum> get values => _$userPriceAlertTriggerDirectionEnumValues;
-  static UserPriceAlertTriggerDirectionEnum valueOf(String name) => _$userPriceAlertTriggerDirectionEnumValueOf(name);
+  static BuiltSet<UserPriceAlertTriggerDirectionEnum> get values =>
+      _$userPriceAlertTriggerDirectionEnumValues;
+  static UserPriceAlertTriggerDirectionEnum valueOf(String name) =>
+      _$userPriceAlertTriggerDirectionEnumValueOf(name);
 }
 
 class UserPriceAlertStatusEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'active')
-  static const UserPriceAlertStatusEnum active = _$userPriceAlertStatusEnum_active;
+  static const UserPriceAlertStatusEnum active =
+      _$userPriceAlertStatusEnum_active;
   @BuiltValueEnumConst(wireName: r'triggered')
-  static const UserPriceAlertStatusEnum triggered = _$userPriceAlertStatusEnum_triggered;
+  static const UserPriceAlertStatusEnum triggered =
+      _$userPriceAlertStatusEnum_triggered;
   @BuiltValueEnumConst(wireName: r'cancelled')
-  static const UserPriceAlertStatusEnum cancelled = _$userPriceAlertStatusEnum_cancelled;
+  static const UserPriceAlertStatusEnum cancelled =
+      _$userPriceAlertStatusEnum_cancelled;
 
-  static Serializer<UserPriceAlertStatusEnum> get serializer => _$userPriceAlertStatusEnumSerializer;
+  static Serializer<UserPriceAlertStatusEnum> get serializer =>
+      _$userPriceAlertStatusEnumSerializer;
 
-  const UserPriceAlertStatusEnum._(String name): super(name);
+  const UserPriceAlertStatusEnum._(String name) : super(name);
 
-  static BuiltSet<UserPriceAlertStatusEnum> get values => _$userPriceAlertStatusEnumValues;
-  static UserPriceAlertStatusEnum valueOf(String name) => _$userPriceAlertStatusEnumValueOf(name);
+  static BuiltSet<UserPriceAlertStatusEnum> get values =>
+      _$userPriceAlertStatusEnumValues;
+  static UserPriceAlertStatusEnum valueOf(String name) =>
+      _$userPriceAlertStatusEnumValueOf(name);
 }
-

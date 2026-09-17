@@ -14,10 +14,11 @@ part 'fundamental_context.g.dart';
 /// Snapshot of fundamental inputs the AI saw at analysis time.
 ///
 /// Properties:
-/// * [newsItems] 
-/// * [calendarEvents] 
+/// * [newsItems]
+/// * [calendarEvents]
 @BuiltValue()
-abstract class FundamentalContext implements Built<FundamentalContext, FundamentalContextBuilder> {
+abstract class FundamentalContext
+    implements Built<FundamentalContext, FundamentalContextBuilder> {
   @BuiltValueField(wireName: r'newsItems')
   BuiltList<FundamentalNewsItem> get newsItems;
 
@@ -26,16 +27,19 @@ abstract class FundamentalContext implements Built<FundamentalContext, Fundament
 
   FundamentalContext._();
 
-  factory FundamentalContext([void updates(FundamentalContextBuilder b)]) = _$FundamentalContext;
+  factory FundamentalContext([void updates(FundamentalContextBuilder b)]) =
+      _$FundamentalContext;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(FundamentalContextBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<FundamentalContext> get serializer => _$FundamentalContextSerializer();
+  static Serializer<FundamentalContext> get serializer =>
+      _$FundamentalContextSerializer();
 }
 
-class _$FundamentalContextSerializer implements PrimitiveSerializer<FundamentalContext> {
+class _$FundamentalContextSerializer
+    implements PrimitiveSerializer<FundamentalContext> {
   @override
   final Iterable<Type> types = const [FundamentalContext, _$FundamentalContext];
 
@@ -55,7 +59,8 @@ class _$FundamentalContextSerializer implements PrimitiveSerializer<FundamentalC
     yield r'calendarEvents';
     yield serializers.serialize(
       object.calendarEvents,
-      specifiedType: const FullType(BuiltList, [FullType(FundamentalCalendarEvent)]),
+      specifiedType:
+          const FullType(BuiltList, [FullType(FundamentalCalendarEvent)]),
     );
   }
 
@@ -65,7 +70,9 @@ class _$FundamentalContextSerializer implements PrimitiveSerializer<FundamentalC
     FundamentalContext object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -83,14 +90,16 @@ class _$FundamentalContextSerializer implements PrimitiveSerializer<FundamentalC
         case r'newsItems':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltList, [FullType(FundamentalNewsItem)]),
+            specifiedType:
+                const FullType(BuiltList, [FullType(FundamentalNewsItem)]),
           ) as BuiltList<FundamentalNewsItem>;
           result.newsItems.replace(valueDes);
           break;
         case r'calendarEvents':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltList, [FullType(FundamentalCalendarEvent)]),
+            specifiedType:
+                const FullType(BuiltList, [FullType(FundamentalCalendarEvent)]),
           ) as BuiltList<FundamentalCalendarEvent>;
           result.calendarEvents.replace(valueDes);
           break;
@@ -122,4 +131,3 @@ class _$FundamentalContextSerializer implements PrimitiveSerializer<FundamentalC
     return result.build();
   }
 }
-

@@ -2,8 +2,156 @@
   "@@locale": "id",
   "appTitle": "Trade Pilot",
   "dashboard": "Beranda",
+  "dashboardDescription": "Ringkasan market, watchlist, dan analisis terbaru",
   "analysis": "Analisis",
+  "analysisNotFound": "Analisis tidak ditemukan",
+  "analysisCreateFailed": "Analisis baru gagal dibuat.",
+  "analysisFeedbackTitle": "Feedback analisis",
+  "analysisFeedbackQuestion": "Bagaimana hasil analisis ini?",
+  "feedbackCorrect": "Benar",
+  "feedbackWrong": "Salah",
+  "feedbackUnknown": "Belum tahu",
+  "feedbackNoteOptional": "Catatan feedback (opsional)",
+  "send": "Kirim",
+  "feedbackThanks": "Terima kasih atas feedback kamu!",
+  "feedbackSendFailed": "Gagal mengirim feedback.",
+  "noteSaved": "Catatan tersimpan.",
+  "noteDeleted": "Catatan dihapus.",
+  "noteSaveFailed": "Catatan gagal disimpan.",
+  "tradingPlanTitle": "Suggested Levels",
+  "tradingPlanDisclaimer": "Gunakan level berikut sebagai struktur risiko, bukan jaminan harga akan bergerak sesuai skenario.",
+  "marketEvidence": "Bukti pasar",
+  "marketEvidenceDescription": "Snapshot market dan konteks fundamental.",
+  "supportingData": "Konteks fundamental",
+  "fundamentalEvidenceSummary": "{news} berita · {events} event ekonomi",
+  "@fundamentalEvidenceSummary": {
+    "placeholders": {
+      "news": {"type": "int"},
+      "events": {"type": "int"}
+    }
+  },
+  "notesAndJournal": "Catatan & jurnal",
+  "notesAndJournalDescription": "Gunakan jurnal untuk keputusan dan hasil trade; gunakan catatan pribadi untuk pengingat khusus analisis ini.",
+  "learnAnalysisBasics": "Pelajari dasar analisis",
+  "learnBiasConfidence": "Bias, keyakinan, dan masa berlaku",
+  "learnTechnicalFundamental": "Bukti teknikal dan fundamental",
+  "technicalDetails": "Indikator teknikal",
+  "technicalDetailsDescription": "Ringkasan sinyal live dan indikator mentah.",
+  "providedContext": "Konteks yang kamu berikan",
+  "analysisInvalidationTitle": "Analisis ini batal jika",
+  "mainScenario": "Skenario A — Utama",
+  "alternativeScenario": "Skenario B — Alternatif",
+  "waitScenario": "Skenario C — Tunggu / Tanpa Posisi",
+  "scenariosTitle": "Skenario",
+  "waitScenarioBody": "Jika konfirmasi belum kuat atau kondisi pembatal mendekat, menunggu setup yang lebih bersih adalah pilihan paling konservatif.",
+  "technicalDrivers": "Penggerak Teknikal",
+  "fundamentalDrivers": "Penggerak Fundamental",
+  "proAnalysisDetailsTitle": "Kenapa analisis ini?",
+  "proAnalysisDetailsDescription": "Buka untuk melihat faktor di balik kesimpulan AI.",
+  "analysisHelpfulQuestion": "Apakah analisis ini membantu?",
+  "helpful": "Membantu",
+  "notHelpful": "Kurang Membantu",
+  "analysisSafetyDisclaimer": "Trade Pilot adalah alat bantu analisis. Selalu batasi risiko dan hindari membuka posisi hanya berdasarkan satu indikator.",
+  "journalCreateForTrade": "Catat trade ini",
+  "journalEntryForTrade": "Catatan trade saya",
+  "journalReflectionHint": "Simpan keputusan dan hasil trade untuk refleksi.",
+  "priceLevelAlerts": "Alert harga",
+  "priceLevelAlertsDescription": "Dapatkan notifikasi saat harga menyentuh level Entry, Stop Loss, atau Take Profit dari AI.",
+  "priceLevelAlertsOn": "Alert: AKTIF · {count} level dipantau",
+  "@priceLevelAlertsOn": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "priceLevelAlertsOff": "Alert: NONAKTIF",
+  "changeTimeframe": "Ganti Timeframe",
+  "changeTimeframeDescription": "Instrumen sama, timeframe berbeda — buat analisis baru tanpa keluar dari halaman ini.",
+  "analyzeThisTimeframe": "Analisis timeframe ini",
+  "analysisUsesFreeQuota": "Sumber: kuota analisis gratis",
+  "analysisUsesOneCredit": "Sumber: 1 credit (kuota gratis habis)",
+  "analysisUsageUnavailable": "Sumber pemakaian akan dipastikan sebelum permintaan diproses",
+  "selectedAnalysisMarket": "Pasar yang dianalisis",
+  "changeSelection": "Ubah",
+  "priceChart": "Grafik Harga",
+  "openFullChart": "Lihat chart lengkap di TradingView",
+  "fundamentalContext": "Konteks Fundamental",
+  "refreshFundamentals": "Refresh fundamental",
+  "fundamentalContextDescription": "Berita dan event ekonomi yang dilihat AI saat membuat analisis ini.",
+  "liveTechnicalIndicators": "Indikator Teknikal Live",
+  "liveTechnicalDisclaimer": "Data terbaru; dapat berbeda dari snapshot saat analisis dibuat.",
+  "lastBar": "Bar terakhir",
+  "twentyBars": "20 bar",
+  "signalSummary": "Ringkasan sinyal",
+  "technicalDataPoints": "Data {timeframe} · {count} candle",
+  "@technicalDataPoints": {
+    "placeholders": {
+      "timeframe": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "beginnerBullish": "Cenderung Naik",
+  "beginnerBearish": "Cenderung Turun",
+  "beginnerWait": "Tunggu Dulu",
+  "biasMeaning": "Bias {bias} berarti AI melihat kecenderungan market yang {direction}.",
+  "@biasMeaning": {
+    "placeholders": {
+      "bias": {
+        "type": "String"
+      },
+      "direction": {
+        "type": "String"
+      }
+    }
+  },
+  "directionUp": "lebih condong naik",
+  "directionDown": "lebih condong turun",
+  "directionNeutral": "belum mempunyai arah dominan",
+  "beginnerBuyAction": "Struktur analisis lebih mendukung skenario Buy, tetapi entry tetap harus menunggu area dan kondisi yang dijelaskan di rencana trading.",
+  "beginnerSellAction": "Struktur analisis lebih mendukung skenario Sell, tetapi entry tetap harus mengikuti area dan batas risiko yang sudah ditentukan.",
+  "beginnerWaitAction": "AI belum melihat entry yang cukup kuat. Untuk pemula, menunggu konfirmasi adalah keputusan yang valid.",
+  "analysisSnapshotTitle": "Konteks Saat Analisis Dibuat",
+  "analysisSnapshotDescription": "Bagian ini adalah snapshot data yang AI gunakan saat membuat analisis.",
+  "buy": "Buy",
+  "sell": "Sell",
+  "opportunity": "Peluang",
+  "executionInsight": "Bagaimana trader biasanya merespons",
+  "executionInsightDescription": "Gambaran cara trader biasanya menyikapi tiap skenario, tanpa level Entry, Stop Loss, atau Take Profit spesifik.",
+  "executionScenarioALabel": "Jika Skenario A berlanjut",
+  "executionScenarioABullish": "Trader biasanya mencari peluang Buy di support terdekat, lalu keluar jika harga break ke bawah area tersebut.",
+  "executionScenarioABearish": "Trader biasanya mencari peluang Sell di resistance terdekat, lalu keluar jika harga break ke atas area tersebut.",
+  "executionScenarioANeutral": "Karena bias netral, banyak trader memilih menunggu sampai ada break yang jelas dari range saat ini.",
+  "executionScenarioBLabel": "Jika Skenario B yang terjadi",
+  "executionScenarioBBody": "Jika asumsi utama salah dan skenario alternatif yang berjalan, biasanya trader mengevaluasi ulang tesis dari awal — bukan langsung membalik posisi.",
+  "executionScenarioCLabel": "Jika lebih baik menunggu",
+  "executionScenarioCBody": "Tunggu sampai kondisi pembatal di atas tidak lagi berisiko, atau sampai muncul konfluensi sinyal yang lebih kuat.",
+  "riskHighLabel": "High Risk",
+  "riskLowLabel": "Low Risk",
+  "riskModerateLabel": "Medium Risk",
+  "riskHighProGuidance": "Volatilitas tinggi. Batasi eksposur dan gunakan level invalidasi sebagai batas risiko.",
+  "riskHighBeginnerGuidance": "Pergerakan dapat lebih agresif. Hindari ukuran posisi besar dan jangan mengabaikan Stop Loss.",
+  "riskLowGuidance": "Kondisi terlihat lebih stabil, tetapi risiko tetap ada. Tetap gunakan batas kerugian.",
+  "riskModerateGuidance": "Ada peluang sekaligus ketidakpastian. Tunggu setup yang jelas dan gunakan ukuran posisi yang terukur.",
+  "reanalyze": "Analisis ulang",
+  "useForNewAnalysis": "Gunakan untuk analisis baru",
+  "basicFilters": "Filter dasar",
+  "saveBasicFilter": "Simpan filter dasar",
+  "basicFilterExplanation": "Menyimpan pencarian, mode, instrumen, timeframe, dan rentang tanggal. Status evaluasi belum didukung oleh preset backend.",
   "history": "Riwayat",
+  "historyPageTitle": "Riwayat Analisis",
+  "historyTotalAnalyses": "{count} analisis tersimpan",
+  "@historyTotalAnalyses": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "profile": "Profil",
   "account": "Akun",
   "profileInformation": "Informasi Profil",
@@ -13,6 +161,12 @@
   "english": "English",
   "indonesian": "Bahasa Indonesia",
   "darkTheme": "Tema gelap",
+  "appearance": "Tema Tampilan",
+  "lightMode": "Terang",
+  "darkMode": "Gelap",
+  "roleUser": "Pengguna",
+  "roleAdmin": "Admin",
+  "roleSuperAdmin": "Super Admin",
   "darkThemeEnabled": "Aktif • nyaman saat cahaya redup",
   "darkThemeDisabled": "Nonaktif • menggunakan tampilan terang",
   "analysisMode": "Mode analisis",
@@ -21,36 +175,345 @@
   "security": "Keamanan",
   "changePassword": "Ganti Password",
   "securityQuestion": "Pertanyaan Keamanan",
+  "changeSecurityQuestion": "Ubah Pertanyaan Keamanan",
+  "newSecurityAnswer": "Jawaban keamanan baru",
+  "securityQuestionUpdated": "Pertanyaan keamanan berhasil diubah.",
   "notAvailable": "Tidak tersedia",
   "legalAndHelp": "Legal & Bantuan",
   "privacyPolicy": "Kebijakan Privasi",
-  "termsOfService": "Ketentuan Layanan",
+  "appFooterDisclaimer": "TradePilot adalah alat pendukung keputusan, bukan saran keuangan atau layanan trading.",
+  "sponsoredBy": "Disponsori oleh",
+  "newsDataVia": "Data berita via newsmaker.id",
+  "marketNews": "Berita pasar",
+  "pauseTicker": "Jeda ticker",
+  "resumeTicker": "Lanjutkan ticker",
+  "hideTicker": "Sembunyikan ticker",
+  "showTicker": "Tampilkan ticker",
+  "termsOfService": "Syarat Layanan",
   "support": "Bantuan",
   "deleteAccount": "Hapus Akun",
   "linkOpenFailed": "Tautan tidak dapat dibuka.",
   "insightsAndJournal": "Insight & Jurnal",
   "tradeJournal": "Jurnal Trading",
+  "journalLoadFailed": "Jurnal belum dapat dimuat. Coba lagi.",
+  "journalSaveFailed": "Entri jurnal gagal disimpan.",
+  "journalDeleteTitle": "Hapus entri jurnal?",
+  "journalDeleteWarning": "Tindakan ini tidak dapat dibatalkan.",
+  "journalDeleteFailed": "Entri jurnal gagal dihapus.",
+  "journalSessionChanged": "Sesi berubah. Buka kembali halaman ini.",
+  "add": "Tambah",
+  "noJournalEntries": "Belum ada entri jurnal.",
+  "journalOutcomeFilter": "Filter outcome",
+  "open": "Terbuka",
+  "breakeven": "Impas",
+  "skippedTrade": "Tidak diambil",
+  "journalPrivateLimit": "Maksimum 100 entri terbaru dari server. Data ini bersifat pribadi.",
+  "edit": "Edit",
+  "addJournal": "Tambah jurnal",
+  "editJournal": "Edit jurnal",
+  "instrumentRequired": "Instrumen wajib diisi.",
+  "side": "Sisi",
+  "buyJournalSide": "Buy (catatan transaksi)",
+  "sellJournalSide": "Sell (catatan transaksi)",
+  "retrospectiveStatus": "Status retrospektif",
+  "tradeTime": "Waktu transaksi",
+  "moodOptional": "Kondisi diri (opsional)",
+  "reflectionOptional": "Refleksi (opsional)",
+  "enterValidNumber": "Masukkan angka yang valid.",
+  "entries": "Entri",
+  "wins": "Menang",
+  "losses": "Kalah",
+  "averageProfitLoss": "Rata-rata P/L",
+  "quantity": "Jumlah",
   "tradeJournalDescription": "Catatan dan refleksi trading pribadi",
   "analytics": "Analitik",
+  "publicAiPerformance": "Kinerja AI Publik",
+  "performanceMethodology": "Metodologi",
+  "performanceDescription": "Rekam jejak anonim seluruh analisis AI Trade Pilot. Ini bukan statistik akun pribadi.",
+  "performanceDays": "{count} hari",
+  "@performanceDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "performanceInsufficient": "Data belum cukup untuk ditampilkan secara bertanggung jawab. Butuh {need} hasil; saat ini {have}.",
+  "@performanceInsufficient": {
+    "placeholders": {
+      "need": {
+        "type": "int"
+      },
+      "have": {
+        "type": "int"
+      }
+    }
+  },
+  "performanceSampleProgress": "{have} dari {need} sampel terkumpul",
+  "@performanceSampleProgress": {
+    "placeholders": {
+      "have": {"type": "int"},
+      "need": {"type": "int"}
+    }
+  },
+  "otherInstruments": "Instrumen Lainnya",
+  "performanceByInstrument": "Per instrumen",
+  "performanceBySession": "Per sesi pasar",
+  "performanceByCondition": "Per kondisi pasar",
+  "performanceByVolatility": "Per volatilitas",
+  "performanceNewsActivity": "Aktivitas berita",
+  "performanceMethodologyTitle": "Metodologi kinerja",
+  "performanceMethodWhatTitle": "Apa yang dihitung",
+  "performanceMethodWhatBody": "Hanya analisis yang hasilnya sudah terselesaikan. Data pengguna dianonimkan dan digabung.",
+  "performanceMethodRatesTitle": "Win rate dan hit rate",
+  "performanceMethodRatesBody": "Win rate membandingkan menang dengan kalah pada trade yang terpicu. Hit rate juga memasukkan analisis kedaluwarsa.",
+  "performanceMethodSampleTitle": "Batas sampel",
+  "performanceMethodSampleBody": "Segmen dengan sampel kecil disembunyikan agar tidak menyesatkan atau membocorkan aktivitas kelompok kecil.",
+  "performanceMethodExcludedTitle": "Yang tidak termasuk",
+  "performanceMethodExcludedBody": "Angka tidak memperhitungkan ukuran posisi, spread, slippage, biaya, pajak, atau keputusan eksekusi pengguna.",
+  "performancePastDisclaimer": "Kinerja masa lalu tidak menjamin hasil berikutnya.",
+  "performanceDeclining": "Kinerja terbaru menurun",
+  "performanceWatch": "Kinerja terbaru perlu dipantau",
+  "performanceStable": "Kinerja terbaru stabil",
+  "performanceRecentBaseline": "{days} hari terbaru: {recent} · baseline: {baseline}.",
+  "@performanceRecentBaseline": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "recent": {
+        "type": "String"
+      },
+      "baseline": {
+        "type": "String"
+      }
+    }
+  },
+  "performanceSummary": "Ringkasan {days} hari",
+  "@performanceSummary": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "winRate": "Win rate",
+  "hitRate": "Hit rate",
+  "performanceTotals": "{wins} menang · {losses} kalah · {expired} kedaluwarsa · {total} sampel",
+  "@performanceTotals": {
+    "placeholders": {
+      "wins": {
+        "type": "int"
+      },
+      "losses": {
+        "type": "int"
+      },
+      "expired": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "sinceDate": "Sejak {date}",
+  "@sinceDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "performanceSegmentInsufficient": "Data belum cukup: {have}/{need} sampel.",
+  "@performanceSegmentInsufficient": {
+    "placeholders": {
+      "have": {
+        "type": "int"
+      },
+      "need": {
+        "type": "int"
+      }
+    }
+  },
+  "performanceBucketTotals": "{wins} menang · {losses} kalah · {expired} kedaluwarsa",
+  "@performanceBucketTotals": {
+    "placeholders": {
+      "wins": {
+        "type": "int"
+      },
+      "losses": {
+        "type": "int"
+      },
+      "expired": {
+        "type": "int"
+      }
+    }
+  },
+  "performanceLoadFailed": "Data kinerja belum dapat dimuat.",
+  "offMainSession": "Di luar sesi utama",
+  "uptrend": "Tren naik",
+  "downtrend": "Tren turun",
+  "activeNewsWeek": "Minggu aktif berita",
+  "quietWeek": "Minggu tenang",
+  "rangingMarket": "Ranging",
+  "volatileMarket": "Volatil",
+  "choppyMarket": "Choppy",
   "analyticsDescription": "Pola aktivitas dan hasil evaluasi",
   "dailySummary": "Ringkasan Harian",
   "traderMirror": "Cermin Trader",
   "traderMirrorDescription": "Refleksi kebiasaan berbasis data",
+  "traderMindset": "Mindset Trader",
+  "traderMindsetDescription": "Pelajaran singkat untuk keputusan disiplin",
+  "guide": "Pusat Panduan",
+  "guideNavLabel": "Panduan",
+  "back": "Kembali",
+  "guideDescription": "Panduan fitur, analisis, risiko, dan disiplin trading",
+  "mentalChecklistPreference": "Checklist mental pra-analisis",
+  "mentalChecklistPreferenceHint": "Tampilkan empat pengingat disiplin sebelum membuat analisis",
+  "mentalChecklistTitle": "Cek mental sebelum trade",
+  "mentalChecklistRisk": "Gw tau persis berapa loss kalau trade ini gagal",
+  "mentalChecklistPlan": "Gw punya entry, stop-loss, dan target — tertulis, bukan di kepala doang",
+  "mentalChecklistChase": "Gw nggak ngejar pergerakan yang sudah jalan (bukan FOMO)",
+  "mentalChecklistCalm": "Gw nggak trade buat balas dendam loss sebelumnya",
+  "mentalChecklistHint": "Centang keempatnya sebelum klik Analisis. Cuma reminder, bukan blocker — tapi yang nggak dicentang biasanya jadi awal loss.",
+  "safeWait": "Tahan Diri (Wait)",
+  "safeWaitHint": "Pahami risikonya dan menepi sejenak. Disiplin yang bagus.",
+  "safeWaitRecorded": "Keputusan menunggu berhasil dicatat.",
+  "safeWaitFailed": "Keputusan menunggu tidak dapat disimpan. Coba lagi.",
+  "coolingOffBreathingTitle": "Tarik napas dulu",
+  "coolingOffBreathingBody": "Kamu baru loss {loss}%. Ikuti pola napas ini sebelum memilih. Setup-nya tidak ke mana-mana.",
+  "@coolingOffBreathingBody": {
+    "placeholders": {
+      "loss": {
+        "type": "String"
+      }
+    }
+  },
+  "coolingOffBreathingBodyGeneric": "Ikuti pola napas ini sebelum memilih. Setup-nya tidak ke mana-mana.",
+  "coolingOffBreathingInhale": "Tarik napas",
+  "coolingOffBreathingHold": "Tahan",
+  "coolingOffBreathingExhale": "Buang napas",
+  "coolingOffBreathingWait": "Tunggu dulu",
+  "coolingOffBreathingContinue": "Lanjut saja",
+  "xpAwarded": "+{xp} XP untuk {activity}",
+  "@xpAwarded": {
+    "placeholders": {
+      "xp": {
+        "type": "int"
+      },
+      "activity": {
+        "type": "String"
+      }
+    }
+  },
+  "checklistActivity": "menyelesaikan checklist pra-analisis",
+  "guideComplete": "Tandai selesai",
+  "guideReading": "Baca materi sampai tombol selesai aktif.",
+  "guideProgressFailed": "Progres panduan tidak dapat disimpan.",
+  "openFullExplanation": "Buka penjelasan lengkap",
+  "learnAdaptivePosition": "Pelajari Rekomendasi Ukuran Posisi",
+  "sponsoredBySolidPrime": "Disponsori oleh SOLID PRIME",
+  "sponsorDisclosure": "Tautan sponsor tidak memengaruhi independensi analisis dan bukan rekomendasi untuk membuka akun atau bertransaksi.",
+  "openSponsorWebsite": "Buka situs sponsor",
+  "liveAnalysisTitle": "Live Analisa",
+  "liveAnalysisSponsorSubtitle": "Setiap hari kerja pukul 09.00 WIB di TikTok @solid.prime",
+  "progressionTitle": "Progression",
+  "progressionSubtitle": "Rekam jejak pribadi untuk persiapan, refleksi, dan disiplin.",
+  "progressionLoading": "Memuat data kedisiplinan...",
+  "progressionLoadFailed": "Gagal memuat data kedisiplinan.",
+  "progressionOverview": "Ringkasan",
+  "progressionAchievements": "Pencapaian",
+  "progressionHistory": "Riwayat XP",
+  "progressionCurrentStreak": "Streak aktif",
+  "progressionLongestStreak": "Streak terpanjang",
+  "progressionLevel": "Level {level}",
+  "@progressionLevel": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "progressionMastery": "Mastery {level}",
+  "@progressionMastery": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "progressionRank": "Rank: {rank}",
+  "@progressionRank": {
+    "placeholders": {
+      "rank": {
+        "type": "String"
+      }
+    }
+  },
+  "progressionXpToNext": "{xp} XP menuju level berikutnya",
+  "@progressionXpToNext": {
+    "placeholders": {
+      "xp": {
+        "type": "int"
+      }
+    }
+  },
+  "progressionUnlocked": "Terbuka {date}",
+  "@progressionUnlocked": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "progressionLocked": "Terkunci",
+  "progressionNoAchievements": "Selesaikan aktivitas untuk membuka pencapaian.",
+  "progressionNoHistory": "Belum ada aktivitas. Mulai bangun rutinitas kedisiplinanmu.",
+  "progressionPrivate": "Progress ini privat. XP menghargai proses, bukan profit, win rate, atau besar modal.",
+  "progressionActivity": "+{xp} XP karena {reason}",
+  "@progressionActivity": {
+    "placeholders": {
+      "xp": {
+        "type": "int"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "mindsetDisclaimer": "Materi edukasi saja. Bukan nasihat finansial atau psikologis.",
   "signOut": "Keluar",
   "signOutConfirmation": "Yakin ingin keluar dari akun ini?",
   "cancel": "Batal",
-  "welcomeBack": "Selamat datang kembali",
-  "loginDescription": "Masuk untuk melanjutkan analisis pasar.",
+  "welcomeBack": "Selamat Datang",
+  "loginDescription": "Masuk untuk melanjutkan analisis",
+  "usernameEmail": "Username / Email",
+  "usernameEmailHint": "Username atau email kamu",
   "email": "Email",
   "invalidEmail": "Masukkan alamat email yang valid",
   "password": "Password",
   "passwordRequired": "Password wajib diisi",
-  "rememberMe": "Ingat saya",
+  "rememberMe": "Selalu Ingat Saya",
   "forgotPassword": "Lupa password?",
-  "signIn": "Masuk",
+  "signIn": "Masuk ke Dashboard",
   "or": "atau",
+  "continueWithGoogle": "Lanjutkan dengan Google",
+  "continueWithApple": "Lanjutkan dengan Apple",
+  "googleDeleteReauthDescription": "Untuk melindungi akunmu, verifikasi identitas dengan Google sebelum penghapusan.",
+  "federatedDeleteReauthDescription": "Untuk melindungi akunmu, verifikasi dengan metode masuk yang terhubung ke akun ini sebelum penghapusan.",
+  "verifyGoogleAndDelete": "Verifikasi dengan Google dan hapus",
+  "verifyAppleAndDelete": "Verifikasi dengan Apple dan hapus",
+  "errGoogleTokenInvalid": "Google tidak dapat memverifikasi proses masuk ini. Pilih akun yang sama lalu coba lagi.",
+  "errGoogleAccountConflict": "Email ini terhubung ke metode masuk lain. Masuklah dengan metode tersebut terlebih dahulu.",
+  "errGoogleUnavailable": "Google Sign-In sedang tidak tersedia. Silakan coba lagi nanti.",
+  "errGoogleConfiguration": "Google Sign-In belum dikonfigurasi untuk build aplikasi ini. Hubungi tim dukungan.",
+  "errGoogleSignInFailed": "Gagal masuk dengan Google. Silakan coba lagi.",
+  "errAppleTokenInvalid": "Apple tidak dapat memverifikasi proses masuk ini. Silakan coba lagi.",
+  "errAppleAccountConflict": "Email ini terhubung ke metode masuk lain. Masuklah dengan metode tersebut terlebih dahulu.",
+  "errAppleUnavailable": "Sign in with Apple belum tersedia. Silakan coba lagi nanti.",
+  "errAppleSignInFailed": "Gagal masuk dengan Apple. Silakan coba lagi.",
   "noAccount": "Belum punya akun? ",
-  "register": "Daftar",
+  "register": "Daftar gratis",
   "createAccount": "Buat Akun",
   "fullName": "Nama Lengkap",
   "nameRequired": "Nama wajib diisi",
@@ -65,9 +528,141 @@
   "remove": "Hapus",
   "delete": "Hapus",
   "notifications": "Notifikasi",
+  "markAllRead": "Baca semua",
+  "realtimeActive": "Realtime terhubung",
+  "realtimeConnecting": "Menghubungkan realtime…",
+  "notificationInbox": "Kotak Masuk",
+  "notificationSettingsTab": "Pengaturan",
+  "notificationUnreadCount": "{count} belum dibaca",
+  "@notificationUnreadCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationAnalysisUnavailable": "Analisis tidak tersedia atau kamu tidak memiliki akses.",
+  "mobilePush": "Push Mobile",
+  "pushUpdatingDevice": "Memperbarui pengaturan perangkat…",
+  "pushDeviceRegistered": "Perangkat terdaftar untuk push.",
+  "pushDeviceRegisteredLastReceived": "Perangkat terdaftar untuk push. Terakhir diterima {date}.",
+  "@pushDeviceRegisteredLastReceived": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "pushPermissionDenied": "Izin ditolak. Aktifkan kembali melalui pengaturan perangkat.",
+  "pushReceiveWhenInactive": "Terima push saat aplikasi tidak aktif.",
+  "sendTestPush": "Kirim notifikasi tes",
+  "pushTestConfirmed": "Notifikasi tes diterima di perangkat ini. FCM menerima {count} pesan dari server.",
+  "@pushTestConfirmed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationPreferences": "Preferensi Notifikasi",
+  "notificationPreferencesDescription": "Pilih jenis pemberitahuan yang ingin kamu terima.",
+  "notificationPreferencesLoadFailed": "Preferensi notifikasi belum dapat dimuat.",
+  "notificationExpiryTitle": "Analisis kedaluwarsa",
+  "notificationExpiryDescription": "Peringatan ketika masa berlaku analisis hampir selesai.",
+  "notificationBroadcastTitle": "Pengumuman",
+  "notificationBroadcastDescription": "Informasi dan broadcast penting dari Trade Pilot.",
+  "notificationDailyTitle": "Ringkasan harian",
+  "notificationDailyDescription": "Ringkasan aktivitas dan market harian.",
+  "notificationNewsTitle": "Berita market",
+  "notificationNewsDescription": "Berita penting yang relevan dengan market.",
+  "notificationCalendarTitle": "Kalender ekonomi",
+  "notificationCalendarDescription": "Pengingat event ekonomi berdampak tinggi.",
+  "notificationPriceTitle": "Pergerakan harga",
+  "notificationPriceDescription": "Anomali dan perubahan harga yang signifikan.",
+  "notificationSignalTitle": "Perubahan sinyal",
+  "notificationSignalDescription": "Ketika bias AI berubah secara bermakna.",
+  "notificationWeeklyTitle": "Rekap mingguan",
+  "notificationWeeklyDescription": "Ringkasan aktivitas trading setiap minggu.",
+  "notificationGuardrails": "Guardrail keputusan",
+  "notificationRevengeTitle": "Peringatan revenge trading",
+  "notificationRevengeDescription": "Peringatan lunak setelah kerugian terbaru.",
+  "notificationOvertradingTitle": "Peringatan overtrading",
+  "notificationOvertradingDescription": "Peringatan saat jumlah analisis terlalu rapat.",
+  "notificationHighRiskTitle": "Peringatan risiko tinggi",
+  "notificationHighRiskDescription": "Peringatan event high-impact dalam 30 menit.",
+  "notificationCoolingOffTitle": "Cooling-off 30 menit",
+  "notificationCoolingOffDescription": "Jeda opsional setelah kerugian signifikan.",
+  "notificationSessionReminders": "Pengingat Sesi Market",
+  "quietHours": "Waktu tenang",
+  "quietHoursDescription": "Tahan notifikasi non-darurat selama jam istirahat.",
+  "quietHoursStart": "Mulai",
+  "quietHoursEnd": "Selesai",
+  "notificationTimezone": "Zona waktu",
+  "quietHoursSecurityNotice": "Notifikasi keamanan tetap dapat dikirim selama waktu tenang.",
+  "notificationAutoPaused": "Sebagian notifikasi ‘{category}’ otomatis dijeda karena lama tidak dibuka.",
+  "@notificationAutoPaused": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "noNotifications": "Belum ada notifikasi",
   "selectInstrument": "Pilih Instrumen",
+  "instrumentCategoryCommoditiesIndices": "Komoditas & Indeks",
+  "instrumentCategoryForex": "Valas",
+  "instrumentCategoryCrypto": "Kripto",
   "timeframe": "Timeframe",
   "additionalNotes": "Catatan Tambahan",
+  "decisionGuardrails": "Guardrail keputusan",
+  "guardrailHint": "Ini peringatan lunak. Jeda dan evaluasi ulang sebelum lanjut.",
+  "guardrailRevenge": "Kerugian terjadi {minutes} menit lalu. Hindari revenge trading.",
+  "@guardrailRevenge": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "guardrailOvertrading": "Kamu membuat {count} analisis; batas saat ini {limit}.",
+  "@guardrailOvertrading": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
+  "guardrailHighRisk": "{event} diperkirakan berlangsung sekitar {minutes} menit lagi.",
+  "@guardrailHighRisk": {
+    "placeholders": {
+      "event": {
+        "type": "String"
+      },
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "guardrailUnusualHour": "Jam trading ini ({hour}:00 UTC) tidak biasa dalam riwayat kamu.",
+  "@guardrailUnusualHour": {
+    "placeholders": {
+      "hour": {
+        "type": "String"
+      }
+    }
+  },
+  "guardrailCoolingOff": "Masa cooling-off tersisa sekitar {minutes} menit.",
+  "@guardrailCoolingOff": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "guardrailGeneric": "Pola risiko terdeteksi.",
   "getAiAnalysis": "Dapatkan Analisis AI",
   "marketOverview": "Ringkasan Pasar",
   "marketSession": "Sesi Pasar",
@@ -82,18 +677,65 @@
   "low": "Rendah",
   "valid": "Berlaku",
   "expired": "Kedaluwarsa",
+  "analysisWindowActiveUntil": "Jendela analisis aktif hingga {date}",
+  "@analysisWindowActiveUntil": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "analysisWindowExpiredAt": "Jendela analisis berakhir pada {date}",
+  "@analysisWindowExpiredAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "analysisCreatedAt": "Dibuat {date}",
+  "@analysisCreatedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "historySummary": "Ringkasan riwayat",
+  "historyListTab": "Riwayat",
+  "timeframePerformance": "Per timeframe",
+  "allTime": "Semua waktu",
+  "daysShort": "{count}h",
+  "@daysShort": {"placeholders": {"count": {"type": "int"}}},
   "partialSummary": "Ringkasan sementara",
   "visible": "Terlihat",
   "evaluated": "Dievaluasi",
   "averageConfidence": "Keyakinan rata-rata",
-  "positiveEvaluatedSummary": "{rate}% outcome positif dari analisis yang sudah dievaluasi.",
-  "@positiveEvaluatedSummary": {"placeholders": {"rate": {"type": "int"}}},
+  "positiveEvaluatedSummary": "Target tercapai pada {rate}% analisis yang sudah dievaluasi.",
+  "@positiveEvaluatedSummary": {
+    "placeholders": {
+      "rate": {
+        "type": "int"
+      }
+    }
+  },
   "hasJournalNote": "Memiliki catatan jurnal",
   "confidenceValue": "Keyakinan {value}",
-  "@confidenceValue": {"placeholders": {"value": {"type": "String"}}},
+  "@confidenceValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "riskValue": "Risiko {value}",
-  "@riskValue": {"placeholders": {"value": {"type": "String"}}},
+  "@riskValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "strongBullish": "Bullish kuat",
   "strongBearish": "Bearish kuat",
   "biasUnavailable": "Bias belum tersedia",
@@ -109,18 +751,30 @@
   "analysisCannotBeEvaluated": "Analisis tidak dapat dievaluasi",
   "notYetEvaluated": "Belum dievaluasi",
   "myPriceAlerts": "Price Alert Saya",
+  "priceAlertsSubtitle": "Alert harga yang sudah kamu pasang",
   "trader": "Trader",
   "latestAnalyses": "Analisis Terbaru",
   "viewAll": "Lihat semua",
   "decisionDisclaimer": "Trade Pilot membantu kamu memahami kondisi pasar, tetapi semua keputusan dan pengelolaan risiko tetap menjadi tanggung jawabmu.",
   "wantMarketAnalysis": "Ingin analisis pasar?",
+  "getStarted": "Mulai menggunakan Trade Pilot",
+  "onboardingSteps": "Pilih pasar, periksa konteks live, lalu buat analisis pertama. Hasil adalah alat bantu keputusan—bukan instruksi trading.",
+  "chooseMarketAndStartAnalysis": "Pilih pasar dan mulai analisis",
+  "gotIt": "Mengerti",
+  "liveMarkets": "Pasar Live",
   "analysisPreparation": "Tinjau harga, sesi pasar, grafik, indikator, dan kalender ekonomi sebelum meminta analisis AI.",
   "startAnalysis": "Mulai Analisis",
   "marketWatchlist": "Watchlist Pasar",
   "manageWatchlist": "Kelola watchlist",
   "watchlistDescription": "Pantau pasar favoritmu tanpa membuka halaman lain.",
   "pricesUpdatedAt": "Harga diperbarui pukul {time}",
-  "@pricesUpdatedAt": {"placeholders": {"time": {"type": "String"}}},
+  "@pricesUpdatedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "livePriceUnavailable": "Harga live tidak tersedia",
   "createPriceAlert": "Buat price alert",
   "openAnalysis": "Buka analisis",
@@ -128,32 +782,82 @@
   "addSymbol": "Tambah simbol",
   "totalAnalyses": "Total Analisis",
   "beginnerMode": "Mode Pemula",
+  "proMode": "Mode Pro",
   "aiConfidence": "Keyakinan AI",
   "unlimitedAnalysisQuota": "Kuota analisis tanpa batas",
   "analysisQuota": "Kuota Analisis",
+  "analysisQuotaLoadFailed": "Kuota analisis belum dapat dimuat.",
   "perHour": "Per jam",
   "perDay": "Per hari",
   "noAnalyses": "Belum ada analisis",
   "createFirstAnalysis": "Buat analisis pertamamu",
   "priceAlertCreated": "Price alert untuk {instrument} berhasil dibuat.",
-  "@priceAlertCreated": {"placeholders": {"instrument": {"type": "String"}}},
+  "@priceAlertCreated": {
+    "placeholders": {
+      "instrument": {
+        "type": "String"
+      }
+    }
+  },
   "instrumentAddedToWatchlist": "{instrument} ditambahkan ke watchlist.",
-  "@instrumentAddedToWatchlist": {"placeholders": {"instrument": {"type": "String"}}},
+  "@instrumentAddedToWatchlist": {
+    "placeholders": {
+      "instrument": {
+        "type": "String"
+      }
+    }
+  },
   "instrumentAlreadyInWatchlist": "{instrument} sudah ada di watchlist.",
-  "@instrumentAlreadyInWatchlist": {"placeholders": {"instrument": {"type": "String"}}},
+  "@instrumentAlreadyInWatchlist": {
+    "placeholders": {
+      "instrument": {
+        "type": "String"
+      }
+    }
+  },
   "removeFromWatchlist": "Hapus dari watchlist?",
   "removeInstrumentConfirmation": "Hapus {instrument} dari watchlist?",
-  "@removeInstrumentConfirmation": {"placeholders": {"instrument": {"type": "String"}}},
+  "@removeInstrumentConfirmation": {
+    "placeholders": {
+      "instrument": {
+        "type": "String"
+      }
+    }
+  },
   "instrumentRemovedFromWatchlist": "{instrument} dihapus dari watchlist.",
-  "@instrumentRemovedFromWatchlist": {"placeholders": {"instrument": {"type": "String"}}},
+  "@instrumentRemovedFromWatchlist": {
+    "placeholders": {
+      "instrument": {
+        "type": "String"
+      }
+    }
+  },
   "removeInstrumentFailed": "Gagal menghapus {instrument}.",
-  "@removeInstrumentFailed": {"placeholders": {"instrument": {"type": "String"}}},
+  "@removeInstrumentFailed": {
+    "placeholders": {
+      "instrument": {
+        "type": "String"
+      }
+    }
+  },
   "selectMarketsForDashboard": "Pilih pasar yang ingin kamu pantau di Beranda.",
   "watchlistUpdateFailed": "Gagal memperbarui watchlist.",
   "watchlistUpdated": "Watchlist diperbarui untuk {instrument}.",
-  "@watchlistUpdated": {"placeholders": {"instrument": {"type": "String"}}},
+  "@watchlistUpdated": {
+    "placeholders": {
+      "instrument": {
+        "type": "String"
+      }
+    }
+  },
   "alertNeedsLivePrice": "Price alert memerlukan harga live. Harga live tidak tersedia untuk instrumen ini.",
   "aiAnalysis": "Analisis AI",
+  "analyzeTitle": "Analisis Baru",
+  "otherInstrument": "Instrumen lain…",
+  "quotaHour": "Sisa per jam",
+  "quotaDay": "Sisa per hari",
+  "quotaHourShort": "/jam",
+  "quotaDayShort": "/hari",
   "selectMarketDescription": "Pilih pasar yang ingin kamu pahami.",
   "tapToChangeInstrument": "Ketuk untuk mengganti instrumen",
   "timeframeDescription": "Timeframe menentukan sudut pandang analisis pasar.",
@@ -163,7 +867,13 @@
   "additionalNotesHint": "Contoh: Saya belum memiliki posisi dan ingin menunggu entry yang lebih aman...",
   "analyzingMarket": "Menganalisis pasar...",
   "analysesRemainingToday": "Sisa {count} analisis hari ini",
-  "@analysesRemainingToday": {"placeholders": {"count": {"type": "int"}}},
+  "@analysesRemainingToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "aiAnalysisDisclaimer": "Analisis AI adalah alat bantu pengambilan keputusan, bukan jaminan profit. Selalu pertimbangkan risiko sebelum membuka posisi.",
   "understandMarketBeforeEntry": "Pahami pasar sebelum masuk",
   "beginnerAnalysisIntro": "Trade Pilot membantu menjelaskan harga, momentum, sesi pasar, dan peristiwa penting dengan bahasa yang lebih sederhana.",
@@ -178,13 +888,37 @@
   "sessionOverlap": "Sesi tumpang tindih • likuiditas biasanya lebih tinggi",
   "marketSessionActive": "Sesi pasar aktif",
   "sessionOpensIn": "{session} dibuka dalam {duration}",
-  "@sessionOpensIn": {"placeholders": {"session": {"type": "String"}, "duration": {"type": "String"}}},
+  "@sessionOpensIn": {
+    "placeholders": {
+      "session": {
+        "type": "String"
+      },
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
   "sessionClosesIn": "{session} ditutup dalam {duration}",
-  "@sessionClosesIn": {"placeholders": {"session": {"type": "String"}, "duration": {"type": "String"}}},
+  "@sessionClosesIn": {
+    "placeholders": {
+      "session": {
+        "type": "String"
+      },
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
   "highImpactEventSoon": "Peristiwa berdampak tinggi akan segera berlangsung",
   "highImpactRisk": "Harga dapat bergerak cepat dan spread dapat melebar.",
   "eventStartsInMinutes": " • sekitar {minutes} menit lagi",
-  "@eventStartsInMinutes": {"placeholders": {"minutes": {"type": "int"}}},
+  "@eventStartsInMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "cryptoMarket247": "Pasar Kripto 24/7",
   "marketClosed": "Pasar tutup",
   "activeUppercase": "AKTIF",
@@ -197,7 +931,19 @@
   "lowUppercase": "RENDAH",
   "sessionOverlapActivity": "Sesi yang tumpang tindih biasanya memiliki aktivitas pasar lebih tinggi.",
   "sessionTransition": "{session} {action} dalam {duration}",
-  "@sessionTransition": {"placeholders": {"session": {"type": "String"}, "action": {"type": "String"}, "duration": {"type": "String"}}},
+  "@sessionTransition": {
+    "placeholders": {
+      "session": {
+        "type": "String"
+      },
+      "action": {
+        "type": "String"
+      },
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
   "opens": "dibuka",
   "closes": "ditutup",
   "indicatorEducationDisclaimer": "Kami menyederhanakan indikator agar lebih mudah dipahami. Ini bukan sinyal atau rekomendasi trading.",
@@ -220,23 +966,59 @@
   "waitingForUpdate": "Menunggu pembaruan...",
   "updatedJustNow": "Baru saja diperbarui",
   "updatedSecondsAgo": "Diperbarui {seconds} detik lalu",
-  "@updatedSecondsAgo": {"placeholders": {"seconds": {"type": "int"}}},
+  "@updatedSecondsAgo": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "updatedAt": "Diperbarui pukul {time}",
-  "@updatedAt": {"placeholders": {"time": {"type": "String"}}},
+  "@updatedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "chartDataUnavailable": "Data grafik tidak tersedia.",
   "bullishBias": "Bias bullish",
   "bearishBias": "Bias bearish",
   "historicalLevelsDisclaimer": "Level grafik adalah referensi historis, bukan rekomendasi transaksi.",
   "candlestickHelp": "Candlestick: hijau = harga naik, merah = harga turun.",
   "movementRisk": "Risiko pergerakan: {risk}. Support dan resistance adalah level referensi dari data yang terlihat.",
-  "@movementRisk": {"placeholders": {"risk": {"type": "String"}}},
+  "@movementRisk": {
+    "placeholders": {
+      "risk": {
+        "type": "String"
+      }
+    }
+  },
   "currentPrice": "Harga saat ini {price}",
-  "@currentPrice": {"placeholders": {"price": {"type": "String"}}},
+  "@currentPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "addedOn": "Ditambahkan: {date}",
-  "@addedOn": {"placeholders": {"date": {"type": "String"}}},
+  "@addedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "noPreviousAnalysis": "Belum ada analisis sebelumnya",
   "lastAnalysis": "Analisis terakhir: {date}",
-  "@lastAnalysis": {"placeholders": {"date": {"type": "String"}}},
+  "@lastAnalysis": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "tradePilotLogo": "Logo Trade Pilot",
   "aiTradingAssistant": "Analisis trading bertenaga AI",
   "permanentAction": "Tindakan ini bersifat permanen",
@@ -252,27 +1034,41 @@
   "nameTooLong": "Nama terlalu panjang",
   "emailChangeUnsupported": "Perubahan email belum didukung.",
   "profileUpdated": "Profil berhasil diperbarui.",
+  "changePhoto": "Ganti foto",
+  "avatarRequirements": "Gunakan gambar JPG, PNG, WebP, atau GIF maksimal 5 MB.",
+  "avatarUploadFailed": "Foto profil gagal diunggah.",
   "passwordChanged": "Password berhasil diubah.",
   "newPassword": "Password Baru",
   "confirmNewPassword": "Konfirmasi Password Baru",
   "currentPasswordRequired": "Password saat ini wajib diisi",
   "passwordMinimumCharacters": "Password minimal 8 karakter",
   "passwordConfirmationMismatch": "Konfirmasi password tidak cocok",
-  "emailHint": "nama@email.com",
+  "emailHint": "kamu@email.com",
   "verifying": "Memverifikasi...",
   "signInWithBiometrics": "Masuk dengan sidik jari / wajah",
   "biometricReason": "Verifikasi identitasmu untuk masuk ke Trade Pilot",
   "biometricUnavailable": "Biometrik tidak tersedia. Gunakan email dan password.",
   "startTradingJourney": "Mulai perjalanan tradingmu",
-  "registerDescription": "Buat akun dan sesuaikan analisis dengan pengalamanmu.",
+  "registerDescription": "Daftar gratis dan mulai analisis",
+  "registerValueInsight": "Insight pasar, bukan sinyal buta",
+  "registerValueFast": "Analisis pertama di bawah 30 detik",
+  "registerValueRisk": "Tahu persis kapan kamu salah",
   "minimumEightCharacters": "Minimal 8 karakter",
   "firstPetQuestion": "Apa nama hewan peliharaan pertamamu?",
   "answer": "Jawaban",
   "answerRequired": "Jawaban wajib diisi",
+  "registerConsent": "Dengan mendaftar, kamu menyetujui:",
+  "andLabel": "dan",
   "passwordResetSuccess": "Password berhasil diubah. Silakan masuk.",
   "forgotPasswordTitle": "Lupa Password",
   "stepOfThree": "Langkah {step} dari 3",
-  "@stepOfThree": {"placeholders": {"step": {"type": "int"}}},
+  "@stepOfThree": {
+    "placeholders": {
+      "step": {
+        "type": "int"
+      }
+    }
+  },
   "findYourAccount": "Temukan akunmu",
   "findAccountDescription": "Masukkan email akun untuk memulai pemulihan password.",
   "continueLabel": "Lanjutkan",
@@ -292,11 +1088,29 @@
   "modeBeginner": "Mode: Pemula",
   "modePro": "Mode: Pro",
   "outcomeLabel": "Outcome: {outcome}",
-  "@outcomeLabel": {"placeholders": {"outcome": {"type": "String"}}},
+  "@outcomeLabel": {
+    "placeholders": {
+      "outcome": {
+        "type": "String"
+      }
+    }
+  },
   "confidenceAtLeast": "Keyakinan ≥ {confidence}%",
-  "@confidenceAtLeast": {"placeholders": {"confidence": {"type": "int"}}},
+  "@confidenceAtLeast": {
+    "placeholders": {
+      "confidence": {
+        "type": "int"
+      }
+    }
+  },
   "resultCount": "{count} hasil",
-  "@resultCount": {"placeholders": {"count": {"type": "int"}}},
+  "@resultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "reset": "Atur ulang",
   "negative": "Negatif",
   "all": "Semua",
@@ -321,9 +1135,21 @@
   "noteMaximumCharacters": "Catatan maksimal 200 karakter.",
   "priceAlertCreateFailed": "Gagal membuat price alert.",
   "priceAlertTitle": "Price Alert {instrument}",
-  "@priceAlertTitle": {"placeholders": {"instrument": {"type": "String"}}},
+  "@priceAlertTitle": {
+    "placeholders": {
+      "instrument": {
+        "type": "String"
+      }
+    }
+  },
   "currentMarketPrice": "Harga pasar saat ini {price}",
-  "@currentMarketPrice": {"placeholders": {"price": {"type": "String"}}},
+  "@currentMarketPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "notifyWhenPrice": "Beri tahu saya ketika harga...",
   "risesAbove": "Naik di atas",
   "fallsBelow": "Turun di bawah",
@@ -338,14 +1164,444 @@
   "noPriceAlerts": "Belum ada price alert. Buat alert untuk menerima pemberitahuan saat harga mencapai level tertentu.",
   "triggered": "Terpicu",
   "cancelled": "Dibatalkan",
+  "monitored": "Dipantau",
   "active": "Aktif",
   "deleteAlert": "Hapus alert",
   "actual": "Aktual",
   "previous": "Sebelumnya",
   "goldEventExplanation": "Mengapa penting: data USD sering memengaruhi Emas dan dapat meningkatkan volatilitas XAU/USD.",
   "currencyEventExplanation": "Mengapa penting: peristiwa {currency} berkaitan langsung dengan {instrument} dan dapat meningkatkan volatilitas.",
-  "@currencyEventExplanation": {"placeholders": {"currency": {"type": "String"}, "instrument": {"type": "String"}}},
+  "@currencyEventExplanation": {
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      },
+      "instrument": {
+        "type": "String"
+      }
+    }
+  },
   "genericEventExplanation": "Mengapa penting: peristiwa ini dapat memengaruhi sentimen dan volatilitas {instrument}.",
-  "@genericEventExplanation": {"placeholders": {"instrument": {"type": "String"}}},
-  "searchInstrumentOrNote": "Cari instrumen atau catatan"
+  "@genericEventExplanation": {
+    "placeholders": {
+      "instrument": {
+        "type": "String"
+      }
+    }
+  },
+  "searchInstrumentOrNote": "Cari instrumen atau catatan",
+  "savedFilters": "Filter tersimpan",
+  "saveCurrentFilter": "Simpan filter saat ini",
+  "presetName": "Nama filter",
+  "noSavedFilters": "Belum ada filter tersimpan.",
+  "filterPresetSaved": "Filter berhasil disimpan.",
+  "filterPresetFailed": "Filter tersimpan tidak dapat diperbarui.",
+  "recentMarkets": "Terakhir dianalisis",
+  "favoriteMarkets": "Market favorit",
+  "outcomeSummary": "Ringkasan outcome 30 hari",
+  "allHistorySummary": "Ringkasan seluruh analisis",
+  "targetReached": "Target tercapai",
+  "riskLimitTouched": "Batas risiko tersentuh",
+  "periodEnded": "Periode berakhir",
+  "cannotBeEvaluated": "Tidak dapat dievaluasi",
+  "outcomeSummaryLoadFailed": "Ringkasan outcome belum dapat dimuat.",
+  "targetHitRate": "Target tercapai",
+  "stopHitRate": "Batas risiko tersentuh",
+  "resolvedSample": "{count} analisis terselesaikan",
+  "@resolvedSample": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "appLocked": "Trade Pilot terkunci",
+  "appLockedDescription": "Sesimu masih aktif. Verifikasi identitasmu untuk melanjutkan.",
+  "unlock": "Buka Kunci",
+  "biometricUnlockReason": "Verifikasi identitasmu untuk membuka Trade Pilot",
+  "unlockFailed": "Identitasmu tidak bisa diverifikasi. Coba lagi atau keluar.",
+  "biometricLock": "Kunci biometrik",
+  "biometricLockOn": "Minta sidik jari atau wajah setiap app dibuka",
+  "biometricLockOff": "Langsung terbuka ke dashboard",
+  "biometricLockUnavailable": "Belum ada sidik jari atau face unlock di perangkat ini.",
+  "riskMapTitle": "Peta Risiko Timeframe",
+  "riskMapDescription": "Bandingkan risiko teknikal di berbagai timeframe sebelum membuat analisis.",
+  "riskMapLoading": "Memindai timeframe...",
+  "riskMapError": "Gagal memuat peta risiko.",
+  "riskMapOverallWait": "Secara keseluruhan: tunggu",
+  "riskMapOverallCompare": "Bandingkan pilihan timeframe",
+  "riskMapRelativeNote": "Peta ini menunjukkan risiko relatif, bukan jaminan profit.",
+  "riskLow": "Risiko rendah",
+  "riskModerate": "Risiko sedang",
+  "riskHigh": "Risiko tinggi",
+  "riskUnavailable": "Tidak tersedia",
+  "riskEligible": "Layak",
+  "riskCaution": "Hati-hati",
+  "riskWait": "Tunggu",
+  "riskSelected": "Terpilih",
+  "useTimeframe": "Gunakan {timeframe}",
+  "@useTimeframe": {
+    "placeholders": {
+      "timeframe": {
+        "type": "String"
+      }
+    }
+  },
+  "standardRulesTitle": "TP Standard Trading Rules",
+  "standardRulesDescription": "Aturan broker-neutral yang menjadi dasar estimasi Trade Pilot.",
+  "standardRulesLoading": "Memuat aturan trading standar...",
+  "standardRulesError": "Aturan trading standar sedang tidak tersedia.",
+  "ruleVersion": "Versi",
+  "fixedConversionRate": "Kurs konversi tetap",
+  "contractSize": "Ukuran kontrak",
+  "tradingSession": "Sesi trading",
+  "initialMargin": "Margin awal",
+  "facilityFee": "Facility fee",
+  "rollover": "Rollover",
+  "spread": "Spread",
+  "hecticSpread": "Spread saat pasar hectic",
+  "minimumMovement": "Pergerakan minimum",
+  "limitStopRange": "Rentang limit/stop",
+  "priceSource": "Sumber / panduan harga",
+  "settlement": "Penyelesaian",
+  "allowedLotRange": "Posisi terbuka yang diizinkan",
+  "minimumDeposit": "Deposit minimum",
+  "marginControls": "Kontrol margin",
+  "profitLossFormula": "Formula P/L",
+  "sourceDocument": "Dokumen sumber",
+  "topUpCredit": "Top Up Credit",
+  "analysisQuotaHourTitle": "Batas per jam tercapai",
+  "analysisQuotaHourMessage": "Kuota analisis per jam kamu sudah habis. Coba lagi setelah waktu tunggu berakhir.",
+  "analysisQuotaDayTitle": "Batas harian tercapai",
+  "analysisQuotaDayMessage": "Kuota gratis harian kamu sudah habis. Gunakan credit atau coba lagi besok.",
+  "analysisQuotaConcurrentTitle": "Analisis masih diproses",
+  "analysisQuotaConcurrentMessage": "Tunggu analisis sebelumnya selesai sebelum membuat analisis baru.",
+  "analysisQuotaUnknownTitle": "Analisis belum dapat dibuat",
+  "analysisQuotaUnknownMessage": "Batas analisis sedang berlaku. Silakan coba lagi nanti.",
+  "analysisQuotaUsage": "Terpakai {used} dari {limit}",
+  "@analysisQuotaUsage": {
+    "placeholders": {
+      "used": {
+        "type": "int"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "analysisRetryAfter": "Coba lagi dalam {duration}",
+  "@analysisRetryAfter": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "analysisSeconds": "{count} detik",
+  "@analysisSeconds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "analysisMinutes": "{count} menit",
+  "@analysisMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "analysisQuotaBalances": "Per jam: {hourly} • Harian: {daily} • Credit: {credits}",
+  "@analysisQuotaBalances": {
+    "placeholders": {
+      "hourly": {
+        "type": "int"
+      },
+      "daily": {
+        "type": "int"
+      },
+      "credits": {
+        "type": "int"
+      }
+    }
+  },
+  "analysisCreditConsumed": "1 credit dipakai. Sisa saldo: {balance} credit.",
+  "@analysisCreditConsumed": {
+    "placeholders": {
+      "balance": {
+        "type": "int"
+      }
+    }
+  },
+  "analysisCreditConsumedUnknownBalance": "1 credit dipakai. Saldo sedang diperbarui.",
+  "creditBalance": "Saldo credit",
+  "creditBalanceFailed": "Saldo gagal dimuat.",
+  "topUpScanQris": "Pindai QRIS ini lewat aplikasi bank atau e-wallet kamu, lalu kirim permintaan di bawah.",
+  "topUpQrisUnavailable": "Kode QRIS gagal dimuat.",
+  "topUpRatePerCredit": "{amount} per credit",
+  "topUpAmountLabel": "Nominal (Rupiah)",
+  "topUpAmountHint": "mis. 50000",
+  "topUpChooseAmount": "Pilih nominal top-up",
+  "topUpContinuePayment": "Lanjut ke pembayaran",
+  "topUpPayment": "Detail pembayaran",
+  "topUpChangeAmount": "Ganti nominal",
+  "topUpPaymentSummary": "Bayar {amount} untuk menerima {credits} credit",
+  "@topUpPaymentSummary": {
+    "placeholders": {
+      "amount": {"type": "String"},
+      "credits": {"type": "int"}
+    }
+  },
+  "topUpCreditsPreview": "Kamu akan menerima {credits} credit",
+  "topUpAmountRequired": "Masukkan nominal yang kamu bayar.",
+  "topUpAmountTooSmall": "Top-up minimal {amount}.",
+  "topUpReferenceLabel": "Referensi pembayaran (opsional)",
+  "topUpReferenceHint": "mis. nama pengirim atau nomor referensi transfer",
+  "topUpProofLabel": "Bukti pembayaran (wajib)",
+  "topUpAddProof": "Lampirkan bukti",
+  "topUpChangeProof": "Ganti bukti",
+  "topUpProofAttached": "Bukti terlampir",
+  "topUpSubmit": "Kirim permintaan top-up",
+  "topUpSubmitted": "Permintaan top-up terkirim.",
+  "topUpApprovedInstantly": "Top-up disetujui. {credits} credit sudah ditambahkan ke saldo kamu.",
+  "@topUpApprovedInstantly": {"placeholders": {"credits": {"type": "int"}}},
+  "topUpProofRequiredHint": "Wajib — upload bukti transfer sebelum mengirim.",
+  "topUpProofNoticeTitle": "Bukti Transfer Wajib Diupload",
+  "topUpProofNoticeBody": "Sebelum mengirim, upload bukti transfer di halaman ini. Permintaan tanpa bukti tidak dapat dikirim.",
+  "topUpProofNoticeAcknowledge": "Oke, mengerti",
+  "topUpWhatsAppSupport": "Ada kendala? Hubungi CS via WhatsApp",
+  "topUpWhatsAppMessage": "Halo, saya butuh bantuan terkait top up kredit TradePilot.id",
+  "topUpProofFailed": "Bukti pembayaran gagal diunggah. Permintaan tidak dikirim.",
+  "topUpConfigFailed": "Konfigurasi top-up gagal dimuat.",
+  "topUpHistory": "Riwayat top-up",
+  "topUpHistoryEmpty": "Kamu belum pernah mengajukan top-up.",
+  "topUpLoadMore": "Muat lebih banyak",
+  "topUpApproved": "Disetujui",
+  "topUpRejected": "Ditolak",
+  "topUpCreditsGranted": "{credits} credit ditambahkan",
+  "topUpReviewNote": "Catatan admin: {note}",
+  "topUpRequestedCredits": "{credits} credit",
+  "errSessionExpiredRelogin": "Sesi login sudah berakhir. Silakan login kembali.",
+  "errSessionExpired": "Sesi login sudah berakhir.",
+  "errSignInAgain": "Silakan login kembali.",
+  "errNoConnection": "Tidak bisa terhubung ke server. Periksa koneksi internet kamu.",
+  "errServerUnreachable": "Tidak dapat terhubung ke server.",
+  "errGeneric": "Terjadi kesalahan. Silakan coba lagi.",
+  "errServerProblem": "Server sedang bermasalah. Coba lagi sebentar lagi.",
+  "errConnectionTimeout": "Koneksi timeout. Silakan coba lagi.",
+  "errRequestCancelled": "Permintaan dibatalkan.",
+  "errInstrumentRequired": "Instrumen tidak boleh kosong.",
+  "errInstrumentUnsupported": "Instrumen tidak didukung.",
+  "errTimeframeUnsupported": "Timeframe tidak didukung.",
+  "errInvalidServerResponse": "Respons server tidak valid.",
+  "errInvalidProfileResponse": "Respons profil dari server tidak valid.",
+  "errDisplayNameLength": "Nama harus terdiri dari 2–{max} karakter.",
+  "errCurrentPasswordWrong": "Password saat ini tidak sesuai.",
+  "errPasswordTooWeak": "Password belum memenuhi persyaratan keamanan.",
+  "errProfileInvalid": "Data profil belum valid. Periksa kembali isian kamu.",
+  "errChangePasswordFailed": "Gagal mengubah password. Silakan coba lagi.",
+  "errUpdateProfileFailed": "Gagal memperbarui profil. Silakan coba lagi.",
+  "errTooManyAttempts": "Terlalu banyak percobaan. Tunggu sebentar lalu coba lagi.",
+  "errDeleteAccountFailed": "Gagal menghapus akun. Silakan coba lagi.",
+  "errSecurityAnswerWrong": "Jawaban keamanan tidak sesuai.",
+  "errCredentialsWrong": "Email atau password tidak sesuai.",
+  "errQuotaReached": "Batas kuota analisis tercapai. Coba lagi nanti.",
+  "errAiTimeout": "AI butuh waktu lebih lama dari biasanya untuk menganalisis. Silakan coba lagi.",
+  "errAnalysisFailed": "Analisis gagal. Silakan coba lagi.",
+  "errAnalysisSlowSync": "Koneksi ke AI lama meresponsnya. Analisis mungkin tetap berhasil dibuat — data akan disinkronkan otomatis.",
+  "errDateRangeInvalid": "Tanggal awal tidak boleh melewati tanggal akhir.",
+  "errNoteTooLong5000": "Catatan maksimal 5.000 karakter.",
+  "errNoteNotSaved": "Catatan belum tersimpan. Periksa koneksi lalu coba lagi.",
+  "errNoteSaveFailed": "Catatan belum dapat disimpan. Silakan coba lagi.",
+  "errBalanceLoadFailed": "Saldo credit gagal dimuat.",
+  "errTopupConfigLoadFailed": "Konfigurasi top-up gagal dimuat.",
+  "errTopupHistoryLoadFailed": "Riwayat top-up gagal dimuat. Tarik untuk mencoba lagi.",
+  "errTopupSubmitFailed": "Permintaan top-up gagal dikirim.",
+  "errTopupAmountPositive": "Nominal top-up harus lebih besar dari 0.",
+  "errTopupProofRequired": "Upload bukti transfer sebelum mengirim.",
+  "errLivePricesFailed": "Gagal memuat harga live.",
+  "errMarketDataPartial": "Sebagian data pasar belum tersedia.",
+  "errTechnicalDataFailed": "Gagal memuat data teknikal.",
+  "errPriceAlertsLoadFailed": "Gagal memuat price alert.",
+  "errPriceAlertCreateFailed": "Gagal membuat price alert.",
+  "errPriceAlertDeleteFailed": "Gagal menghapus price alert.",
+  "errTargetPricePositive": "Target harga harus lebih besar dari 0.",
+  "errNoteTooLong200": "Catatan maksimal 200 karakter.",
+  "errWatchlistLoadFailed": "Gagal memuat watchlist.",
+  "errWatchlistUpdateFailed": "Gagal memperbarui watchlist.",
+  "errNotificationsLoadFailed": "Notifikasi belum dapat dimuat. Tarik untuk mencoba lagi.",
+  "errNotificationPrefsLoadFailed": "Gagal memuat preferensi notifikasi.",
+  "errNotificationPrefsSaveFailed": "Gagal menyimpan preferensi notifikasi.",
+  "errMarketSessionReminderSaveFailed": "Gagal menyimpan pengingat sesi market.",
+  "errQuietHoursSaveFailed": "Gagal menyimpan waktu tenang notifikasi.",
+  "errPushPermissionSystem": "Izin notifikasi belum diberikan di pengaturan sistem.",
+  "errPushEnableFailed": "Push notification belum dapat diaktifkan.",
+  "errPushPrefsSaveFailed": "Preferensi mobile push belum dapat disimpan.",
+  "errPushTokenUnavailable": "Token push belum tersedia pada perangkat ini.",
+  "errPushRegisterFailed": "Server belum dapat mendaftarkan perangkat push.",
+  "errPushTokenSyncFailed": "Token push belum dapat disinkronkan.",
+  "errPushEnableFirst": "Aktifkan Push Mobile sebelum mengirim notifikasi tes.",
+  "errPushTestNoDevice": "Server belum menemukan perangkat terdaftar, atau endpoint tes belum di-deploy.",
+  "errPushTestRateLimited": "Terlalu banyak permintaan notifikasi tes. Tunggu sebentar lalu coba lagi.",
+  "errPushTestNotReceived": "Server menerima permintaan tes, tetapi perangkat ini tidak menerima pesan FCM dalam 15 detik. Credential Firebase dan konfigurasi project di backend perlu diperiksa.",
+  "errPushTestFailed": "Permintaan notifikasi tes gagal. Periksa koneksi lalu coba lagi.",
+  "errPushTestRejected": "FCM menolak semua pesan tes. Periksa token perangkat dan konfigurasi Firebase di backend.",
+  "errPushTestNotConfigured": "Layanan push notification belum dikonfigurasi di backend.",
+  "appErrInstrumentUnsupported": "Instrumen ini belum mendukung Rekomendasi Ukuran Posisi.",
+  "appErrNoStandardPlan": "Standard Plan atau TP Standard Trading Rules tidak tersedia.",
+  "appErrFundsPositive": "Dana trading tersedia harus lebih dari 0.",
+  "appErrMaxLossPositive": "Batas rugi maksimum harus lebih dari 0.",
+  "appErrMaxLossExceedsFunds": "Batas rugi maksimum tidak boleh melebihi dana tersedia.",
+  "appErrExposureNegative": "Eksposur berjalan tidak boleh negatif.",
+  "appErrTpRulesInvalid": "TP Standard Trading Rules tidak cocok atau tidak valid.",
+  "appErrLevelsInvalid": "Level Entry dan Stop Loss Standard Plan tidak valid.",
+  "appErrSnapshotConflict": "Snapshot teknikal berkonflik dengan arah pasar.",
+  "appErrBelowMinimumLot": "Dana atau batas rugi belum cukup untuk lot minimum tier ini.",
+  "mindsetPacingTitle": "Jeda evaluasi",
+  "mindsetPacingBody": "Beberapa analisis dibuat dalam waktu berdekatan. Pertimbangkan memberi waktu untuk mengevaluasi analisis sebelumnya.",
+  "mindsetConcentrationTitle": "Fokus instrumen",
+  "mindsetConcentrationBody": "{count} dari {total} analisis yang sedang dihitung berfokus pada {instrument}.",
+  "mindsetPendingTitle": "Analisis masih menunggu",
+  "mindsetPendingBody": "{count} analisis yang sedang dihitung belum selesai dievaluasi. Gunakan hasil berikutnya sebagai bahan refleksi, bukan kepastian.",
+  "mindsetJournalTitle": "Konsistensi catatan",
+  "mindsetJournalBody": "Catatan pribadi masih jarang digunakan. Menulis alasan awal dapat membantu refleksi setelah evaluasi tersedia.",
+  "localTraderSentiment": "Sentimen trader lokal",
+  "journalSentimentGated": "Data disembunyikan sampai minimal {entries} entri dari {traders} trader tersedia.",
+  "journalSentimentSample": "{entries} entri · {days} hari",
+  "journalSentimentDisclaimer": "Agregat anonim jurnal komunitas, bukan sinyal trading.",
+  "personalNote": "Catatan Pribadi",
+  "addNote": "Tambah catatan",
+  "notePrivateHint": "Tersimpan privat di akunmu dan tidak dikirim ke AI.",
+  "noteHint": "Tulis alasan, observasi, atau pelajaranmu…",
+  "deleteNote": "Hapus catatan",
+  "noNoteYet": "Belum ada catatan untuk analisis ini.",
+  "newsLinkFailed": "Tautan berita tidak dapat dibuka.",
+  "newsLoadFailed": "Berita belum dapat dimuat.",
+  "newsEmpty": "Belum ada berita terbaru.",
+  "newsDisclaimer": "Berita bersifat informasi dan bukan rekomendasi investasi.",
+  "newsSourceFallback": "Sumber berita",
+  "latestNews": "Berita Terkini",
+  "refresh": "Segarkan",
+  "scrollForMore": "Geser untuk melihat lainnya",
+  "publicAiPerformanceSubtitle": "Rekam jejak anonim seluruh analisis Trade Pilot",
+  "analyticsLoadFailed": "Analytics belum dapat dimuat. Coba lagi.",
+  "sessionChangedReopen": "Sesi berubah. Buka kembali halaman ini.",
+  "analyticsDisclaimer": "Statistik ini menjelaskan kebiasaan analisis, bukan hasil profit trading.",
+  "analyticsActivitySummary": "Ringkasan aktivitas",
+  "analyticsWeeklyActivity": "Aktivitas mingguan",
+  "metricAllAnalyses": "Semua analisis",
+  "metricThisMonth": "Bulan ini",
+  "metricThisWeek": "Minggu ini",
+  "metricFeedbackGiven": "Feedback diberikan",
+  "metricDominantMode": "Mode dominan",
+  "metricOutcomeAccuracy": "Akurasi outcome",
+  "instrumentRanking": "Peringkat instrumen",
+  "countAnalyses": "{count} analisis",
+  "loadedResults": "Hasil yang sedang dimuat",
+  "analyticsPartialScope": "Hanya menghitung {loaded} dari {total} analisis. Muat lebih banyak di History untuk memperluas ringkasan.",
+  "analyticsFullScope": "Menghitung semua {loaded} analisis yang tersedia di perangkat saat ini.",
+  "metricEvaluated": "Dievaluasi",
+  "metricPending": "Menunggu",
+  "metricPositiveOutcomes": "Outcome positif",
+  "metricNegativeOutcomes": "Outcome negatif",
+  "metricHasNote": "Punya catatan",
+  "metricAverageConfidence": "Rata-rata keyakinan",
+  "metricTopTimeframe": "Timeframe teratas",
+  "metricTopInstrument": "Instrumen teratas",
+  "traderMirrorLoadFailed": "Trader Mirror belum dapat dimuat.",
+  "traderMirrorDisclaimer": "Cermin kebiasaan ini bersifat retrospektif dan tidak memberikan instruksi trading.",
+  "traderMirrorNoHighlights": "Belum cukup data untuk membuat sorotan.",
+  "traderMirrorCoverage": "Cakupan {days} hari · {resolved} evaluasi selesai",
+  "traderMirrorSessions": "Sesi pasar",
+  "traderMirrorInstruments": "Konsentrasi instrumen",
+  "traderMirrorTiming": "Waktu analisis",
+  "traderMirrorPostLoss": "Pola setelah outcome negatif",
+  "traderMirrorEvaluationDiscipline": "Disiplin evaluasi",
+  "traderMirrorProcessReflection": "Refleksi proses",
+  "traderMirrorSamples": "{count} sampel",
+  "@traderMirrorSamples": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "traderMirrorBasedOn": "Berdasarkan {count} analisis yang sedang dimuat di perangkat.",
+  "traderMirrorNeedMore": "Butuh sedikitnya 3 analisis untuk refleksi yang cukup hati-hati.",
+  "traderMirrorGated": "Perlu {need} data; tersedia {have}.",
+  "traderMirrorUngated": "Data cukup untuk menampilkan rincian.",
+  "traderMirrorNeedMoreGeneric": "lebih banyak",
+  "dailySummaryLoadFailed": "Ringkasan harian belum dapat dimuat.",
+  "dailySummarySaveFailed": "Pengaturan ringkasan gagal disimpan.",
+  "dailySummaryEmpty": "Belum ada ringkasan untuk hari ini.",
+  "dailySummaryTimezone": "Zona waktu: {timezone}",
+  "dailySummaryDeliveryTime": "Waktu pengiriman",
+  "dailySummaryFullDigest": "Ringkasan lengkap",
+  "dailySummaryQuotaOnly": "Hanya kuota",
+  "dailySummaryPreferredSide": "Sisi pilihan: {side}",
+  "@dailySummaryPreferredSide": {
+    "placeholders": {
+      "side": {
+        "type": "String"
+      }
+    }
+  },
+  "guideSearchHint": "Cari panduan...",
+  "guideQuickStart": "Mulai cepat",
+  "guideQuickStartHint": "Tiga panduan untuk memahami alur utama.",
+  "guideSubtitle": "Pengetahuan, fitur, dan mindset.",
+  "guideNoResults": "Artikel tidak ditemukan.",
+  "marketChartUnavailable": "Chart market belum tersedia.",
+  "journalCheckFailed": "Jurnal belum dapat diperiksa.",
+  "alertStatusLoadFailed": "Status alert belum dapat dimuat.",
+  "alertNeedsNotificationPermission": "Aktifkan izin notifikasi agar alert harga dapat digunakan.",
+  "alertEnableFailed": "Alert gagal diaktifkan. Pastikan notifikasi aktif dan instrumen memiliki feed harga live.",
+  "alertDisableFailed": "Alert gagal dinonaktifkan. Coba lagi sebentar.",
+  "fundamentalDriftNone": "Fundamental terbaru masih mendukung seluruh sumber awal.",
+  "fundamentalDriftSome": "{missing} dari {total} sumber awal tidak lagi ada di window terbaru.",
+  "outcomePendingLabel": "Menunggu hasil",
+  "outcomePendingBody": "Market masih berjalan dan sistem sedang mengevaluasi apakah level TP atau SL tersentuh.",
+  "outcomeTp1Label": "TP1 Tercapai",
+  "outcomeTp1Body": "Harga sudah mencapai target profit pertama dari skenario analysis.",
+  "outcomeTp2Label": "TP2 Tercapai",
+  "outcomeTp2Body": "Harga sudah mencapai target profit kedua dari skenario analysis.",
+  "outcomeSlLabel": "Stop Loss Tersentuh",
+  "outcomeSlBody": "Harga mencapai batas risiko terlebih dahulu. Ini contoh kenapa Stop Loss penting dalam setiap setup.",
+  "outcomeExpiredLabel": "Kedaluwarsa",
+  "outcomeExpiredBody": "Masa berlaku analysis selesai tanpa target utama terkonfirmasi.",
+  "outcomeInvalidatedLabel": "Analisis Tidak Valid",
+  "outcomeInvalidatedBody": "Setup tidak lagi memenuhi struktur analysis awal.",
+  "outcomeUnknownLabel": "Status belum tersedia",
+  "outcomeUnknownBody": "Outcome belum dapat dievaluasi.",
+  "whyNotHigherConfidence": "Kenapa keyakinan tidak lebih tinggi?",
+  "citedSources": "Sumber yang dirujuk",
+  "awaitConfirmationNotice": "Tunggu konfirmasi — AI belum merekomendasikan Buy atau Sell saat ini.",
+  "instrumentRulesUnavailable": "Aturan instrumen tidak tersedia.",
+  "tradingRulesLoadFailed": "Aturan trading belum dapat dimuat.",
+  "tradingRulesUnavailable": "Aturan trading tidak tersedia.",
+  "positionSizeRecommendation": "Rekomendasi Ukuran Posisi",
+  "adaptivePlanIntro": "Ubah Standard Plan menjadi ukuran posisi sesuai dana dan batas rugi.",
+  "adaptivePlanDisclaimer": "Kalkulator ini tidak mengubah level AI dan tidak mengirim order. Isi dana bebas yang sudah dikurangi margin posisi lain.",
+  "availableTradingFunds": "Dana trading tersedia",
+  "maxLossLimit": "Batas rugi maksimum",
+  "buildPositionPlan": "Buat rencana posisi",
+  "copyPositionPlan": "Salin rencana",
+  "positionPlanCopied": "Rencana posisi disalin.",
+  "positionPlanCopyFailed": "Rencana posisi gagal disalin.",
+  "positionDirection": "Arah",
+  "riskStyle": "Gaya risiko",
+  "riskStyleConservative": "Konservatif",
+  "riskStyleBalanced": "Seimbang",
+  "riskStyleAggressive": "Agresif",
+  "totalLots": "Total lot",
+  "marginRequired": "Margin dibutuhkan",
+  "estimatedCycleLoss": "Estimasi rugi siklus",
+  "adaptiveCopyManualContext": "Gunakan sebagai konteks perencanaan manual, bukan instruksi eksekusi.",
+  "notRecommended": "Tidak direkomendasikan",
+  "adaptivePlanFootnote": "Day trading only. Estimasi tidak memasukkan spread, slippage, fee, VAT, rollover, atau auto-liquidation broker.",
+  "lossToSl": "Rugi ke SL",
+  "entryZone": "Zona Entry",
+  "primaryScenario": "Skenario Utama"
 }

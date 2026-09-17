@@ -11,11 +11,14 @@ part 'recent_instruments_instruments_inner.g.dart';
 /// RecentInstrumentsInstrumentsInner
 ///
 /// Properties:
-/// * [instrument] 
-/// * [lastAnalyzedAt] 
-/// * [mode] 
+/// * [instrument]
+/// * [lastAnalyzedAt]
+/// * [mode]
 @BuiltValue()
-abstract class RecentInstrumentsInstrumentsInner implements Built<RecentInstrumentsInstrumentsInner, RecentInstrumentsInstrumentsInnerBuilder> {
+abstract class RecentInstrumentsInstrumentsInner
+    implements
+        Built<RecentInstrumentsInstrumentsInner,
+            RecentInstrumentsInstrumentsInnerBuilder> {
   @BuiltValueField(wireName: r'instrument')
   String get instrument;
 
@@ -27,18 +30,25 @@ abstract class RecentInstrumentsInstrumentsInner implements Built<RecentInstrume
 
   RecentInstrumentsInstrumentsInner._();
 
-  factory RecentInstrumentsInstrumentsInner([void updates(RecentInstrumentsInstrumentsInnerBuilder b)]) = _$RecentInstrumentsInstrumentsInner;
+  factory RecentInstrumentsInstrumentsInner(
+          [void updates(RecentInstrumentsInstrumentsInnerBuilder b)]) =
+      _$RecentInstrumentsInstrumentsInner;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(RecentInstrumentsInstrumentsInnerBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<RecentInstrumentsInstrumentsInner> get serializer => _$RecentInstrumentsInstrumentsInnerSerializer();
+  static Serializer<RecentInstrumentsInstrumentsInner> get serializer =>
+      _$RecentInstrumentsInstrumentsInnerSerializer();
 }
 
-class _$RecentInstrumentsInstrumentsInnerSerializer implements PrimitiveSerializer<RecentInstrumentsInstrumentsInner> {
+class _$RecentInstrumentsInstrumentsInnerSerializer
+    implements PrimitiveSerializer<RecentInstrumentsInstrumentsInner> {
   @override
-  final Iterable<Type> types = const [RecentInstrumentsInstrumentsInner, _$RecentInstrumentsInstrumentsInner];
+  final Iterable<Type> types = const [
+    RecentInstrumentsInstrumentsInner,
+    _$RecentInstrumentsInstrumentsInner
+  ];
 
   @override
   final String wireName = r'RecentInstrumentsInstrumentsInner';
@@ -71,7 +81,9 @@ class _$RecentInstrumentsInstrumentsInnerSerializer implements PrimitiveSerializ
     RecentInstrumentsInstrumentsInner object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -135,4 +147,3 @@ class _$RecentInstrumentsInstrumentsInnerSerializer implements PrimitiveSerializ
     return result.build();
   }
 }
-

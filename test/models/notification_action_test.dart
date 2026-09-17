@@ -6,7 +6,7 @@ void main() {
     'notification action parser allowlists targets and validates analysis ID',
     () {
       final analysis = NotificationAction.fromData({
-        'actionType': 'analysis',
+        'actionType': 'open_analysis',
         'actionId': '42',
         'notificationId': '7',
       });
@@ -14,6 +14,13 @@ void main() {
       expect(analysis?.type, NotificationActionType.analysis);
       expect(analysis?.actionId, 42);
       expect(analysis?.notificationId, 7);
+      expect(
+        NotificationAction.fromData({
+          'actionType': 'openAnalysis',
+          'actionId': '42',
+        })?.type,
+        NotificationActionType.analysis,
+      );
       expect(
         NotificationAction.fromData({
           'actionType': 'analysis',

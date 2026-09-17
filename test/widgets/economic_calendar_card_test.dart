@@ -18,6 +18,8 @@ void main() {
     expect(find.text('High Impact'), findsOneWidget);
     expect(find.text('Forecast: 5.25%'), findsOneWidget);
     expect(find.text('Actual: 5.50%'), findsOneWidget);
+    expect(find.byKey(const ValueKey('currency-flag-us')), findsOneWidget);
+    expect(find.text('US'), findsOneWidget);
     expect(find.textContaining('affects Gold'), findsOneWidget);
   });
 
@@ -38,6 +40,40 @@ void main() {
     );
 
     expect(find.text('Medium Impact'), findsOneWidget);
+  });
+
+  testWidgets('keeps the calendar compact and scrolls additional events', (
+    tester,
+  ) async {
+    final events = List.generate(
+      6,
+      (index) => EconomicCalendarEvent(
+        time: '19:00',
+        currency: 'USD',
+        impact: 'high',
+        event: 'Economic Event ${index + 1}',
+        previous: '5.00%',
+        forecast: '5.25%',
+        actual: '5.50%',
+        date: '2026-08-21T12:00:00Z',
+        epochMs: DateTime.utc(2026, 8, 21, 12).millisecondsSinceEpoch,
+        whyTraderCare: '',
+      ),
+    );
+
+    await tester.pumpWidget(
+      _app(EconomicCalendarCard(instrument: 'XAU/USD', events: events)),
+    );
+
+    final list = find.byKey(const Key('economic-calendar-event-list'));
+    expect(tester.getSize(list).height, 430);
+    expect(find.text('Economic Event 1'), findsOneWidget);
+    expect(find.text('Swipe to see more'), findsOneWidget);
+
+    await tester.drag(list, const Offset(0, -700));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Economic Event 6'), findsOneWidget);
   });
 }
 

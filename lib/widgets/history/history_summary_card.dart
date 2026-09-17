@@ -4,19 +4,14 @@ import '../../core/history/history_statistics.dart';
 import '../../l10n/l10n.dart';
 
 class HistorySummaryCard extends StatelessWidget {
-  const HistorySummaryCard({
-    super.key,
-    required this.statistics,
-    required this.isPartial,
-  });
+  const HistorySummaryCard({super.key, required this.statistics});
 
   final HistoryStatistics statistics;
-  final bool isPartial;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final evaluated = statistics.successCount + statistics.failedCount;
+    final evaluated = statistics.targetHitCount + statistics.riskLimitHitCount;
 
     return Card(
       child: Padding(
@@ -25,9 +20,7 @@ class HistorySummaryCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              isPartial
-                  ? context.l10n.partialSummary
-                  : context.l10n.historySummary,
+              context.l10n.allHistorySummary,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w900,
               ),
@@ -35,16 +28,18 @@ class HistorySummaryCard extends StatelessWidget {
             const SizedBox(height: 11),
             LayoutBuilder(
               builder: (context, constraints) {
-                final width = (constraints.maxWidth - 16) / 3;
+                final textScale = MediaQuery.textScalerOf(context).scale(1);
+                final columns = textScale > 1.3
+                    ? 1
+                    : constraints.maxWidth < 330
+                    ? 2
+                    : 3;
+                final width =
+                    (constraints.maxWidth - (columns - 1) * 8) / columns;
                 return Wrap(
                   spacing: 8,
                   runSpacing: 10,
                   children: [
-                    _Metric(
-                      width: width,
-                      label: context.l10n.visible,
-                      value: '${statistics.total}',
-                    ),
                     _Metric(
                       width: width,
                       label: context.l10n.evaluated,
@@ -57,15 +52,23 @@ class HistorySummaryCard extends StatelessWidget {
                     ),
                     _Metric(
                       width: width,
-                      label: context.l10n.positive,
-                      value: '${statistics.successCount}',
+                      label: context.l10n.targetReached,
+                      value: '${statistics.targetHitCount}',
                     ),
                     _Metric(
                       width: width,
-                      label: context.l10n.averageConfidence,
-                      value: statistics.total == 0
-                          ? '—'
-                          : '${statistics.averageConfidence.round()}%',
+                      label: context.l10n.riskLimitTouched,
+                      value: '${statistics.riskLimitHitCount}',
+                    ),
+                    _Metric(
+                      width: width,
+                      label: context.l10n.periodEnded,
+                      value: '${statistics.expiredCount}',
+                    ),
+                    _Metric(
+                      width: width,
+                      label: context.l10n.cannotBeEvaluated,
+                      value: '${statistics.invalidatedCount}',
                     ),
                   ],
                 );
@@ -75,7 +78,7 @@ class HistorySummaryCard extends StatelessWidget {
               const SizedBox(height: 10),
               Text(
                 context.l10n.positiveEvaluatedSummary(
-                  statistics.successRate.round(),
+                  statistics.targetHitRate.round(),
                 ),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,

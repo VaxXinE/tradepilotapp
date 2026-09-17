@@ -6,9 +6,11 @@ import 'package:provider/provider.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart' as api;
 
 import '../../core/theme/app_colors.dart';
+import '../../l10n/l10n.dart';
 import '../../models/notification_action.dart';
 import '../../providers/analysis_provider.dart';
 import '../../providers/notifications_provider.dart';
+import '../../services/native_push_service.dart';
 import '../../widgets/error_banner.dart';
 import '../analysis/analysis_detail_screen.dart';
 import '../home/tabs/history_tab.dart';
@@ -21,6 +23,8 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
+  bool _showSettings = false;
+
   @override
   void initState() {
     super.initState();
@@ -113,11 +117,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
     if (analysis == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Analisis tidak tersedia atau kamu tidak memiliki akses.',
-          ),
-        ),
+        SnackBar(content: Text(context.l10n.notificationAnalysisUnavailable)),
       );
 
       return;
@@ -140,16 +140,17 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         : AppColors.lightMutedForeground;
 
     final provider = context.watch<NotificationsProvider>();
+    final nativePush = context.watch<NativePushService?>();
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Notifikasi'),
+        title: Text(context.l10n.notifications),
         actions: [
-          if (provider.unreadCount > 0)
+          if (!_showSettings && provider.unreadCount > 0)
             TextButton(
               onPressed: () {
                 unawaited(provider.markAllRead());
               },
-              child: const Text('Baca semua'),
+              child: Text(context.l10n.markAllRead),
             ),
         ],
       ),
@@ -159,83 +160,118 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
           children: [
-            Row(
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: provider.isRealtimeConnected ? Colors.green : muted,
-                  ),
+            SegmentedButton<bool>(
+              segments: [
+                ButtonSegment(
+                  value: false,
+                  icon: const Icon(Icons.inbox_outlined),
+                  label: Text(context.l10n.notificationInbox),
                 ),
-                const SizedBox(width: 7),
-                Text(
-                  provider.isRealtimeConnected
-                      ? 'Realtime aktif'
-                      : 'Menghubungkan realtime...',
-                  style: TextStyle(color: muted, fontSize: 10.5),
+                ButtonSegment(
+                  value: true,
+                  icon: const Icon(Icons.tune_rounded),
+                  label: Text(context.l10n.notificationSettingsTab),
                 ),
               ],
+              selected: {_showSettings},
+              onSelectionChanged: (selection) {
+                setState(() => _showSettings = selection.first);
+              },
             ),
-
             const SizedBox(height: 14),
 
-            _PreferencesCard(provider: provider),
-
-            const SizedBox(height: 20),
-
-            Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    'Kotak Masuk',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+            if (_showSettings) ...[
+              if (nativePush != null) ...[
+                _NativePushCard(service: nativePush),
+                const SizedBox(height: 12),
+              ],
+              _PreferencesCard(provider: provider),
+            ] else ...[
+              Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: provider.isRealtimeConnected
+                          ? (isDark
+                                ? AppColors.bullishDark
+                                : AppColors.bullishLight)
+                          : muted,
+                    ),
                   ),
-                ),
-                if (provider.unreadCount > 0)
+                  const SizedBox(width: 7),
                   Text(
-                    '${provider.unreadCount} belum dibaca',
+                    provider.isRealtimeConnected
+                        ? context.l10n.realtimeActive
+                        : context.l10n.realtimeConnecting,
                     style: TextStyle(color: muted, fontSize: 10.5),
                   ),
-              ],
-            ),
-
-            const SizedBox(height: 10),
-
-            ErrorBanner(message: provider.loadError),
-
-            if (provider.isLoading && provider.items.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 50),
-                child: Center(child: CircularProgressIndicator()),
-              )
-            else if (provider.items.isEmpty)
-              _EmptyState(muted: muted)
-            else
-              Card(
-                clipBehavior: Clip.antiAlias,
-                child: Column(
-                  children: [
-                    for (
-                      var index = 0;
-                      index < provider.items.length;
-                      index++
-                    ) ...[
-                      _NotificationTile(
-                        notification: provider.items[index],
-                        onTap: () {
-                          unawaited(
-                            _handleNotificationTap(provider.items[index]),
-                          );
-                        },
-                      ),
-                      if (index != provider.items.length - 1)
-                        const Divider(height: 1),
-                    ],
-                  ],
-                ),
+                ],
               ),
+
+              const SizedBox(height: 14),
+
+              const SizedBox(height: 14),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      context.l10n.notificationInbox,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  if (provider.unreadCount > 0)
+                    Text(
+                      context.l10n.notificationUnreadCount(
+                        provider.unreadCount,
+                      ),
+                      style: TextStyle(color: muted, fontSize: 10.5),
+                    ),
+                ],
+              ),
+
+              const SizedBox(height: 10),
+
+              ErrorBanner(message: provider.loadError),
+
+              if (provider.isLoading && provider.items.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 50),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (provider.items.isEmpty)
+                _EmptyState(muted: muted)
+              else
+                Card(
+                  clipBehavior: Clip.antiAlias,
+                  child: Column(
+                    children: [
+                      for (
+                        var index = 0;
+                        index < provider.items.length;
+                        index++
+                      ) ...[
+                        _NotificationTile(
+                          notification: provider.items[index],
+                          onTap: () {
+                            unawaited(
+                              _handleNotificationTap(provider.items[index]),
+                            );
+                          },
+                        ),
+                        if (index != provider.items.length - 1)
+                          const Divider(height: 1),
+                      ],
+                    ],
+                  ),
+                ),
+            ],
           ],
         ),
       ),
@@ -247,6 +283,82 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 // PREFERENCES
 // =============================================================================
 
+class _NativePushCard extends StatelessWidget {
+  const _NativePushCard({required this.service});
+
+  final NativePushService service;
+
+  Future<void> _sendTest(BuildContext context) async {
+    final accepted = await service.sendTestPush();
+    if (!context.mounted) return;
+
+    final message = accepted == null
+        ? service.errorMessage ?? context.l10n.errPushTestFailed
+        : context.l10n.pushTestConfirmed(accepted);
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final lastReceived = service.lastMessageReceivedAt;
+    final subtitle = service.isBusy
+        ? l10n.pushUpdatingDevice
+        : service.isRegistered
+        ? lastReceived == null
+              ? l10n.pushDeviceRegistered
+              : l10n.pushDeviceRegisteredLastReceived(
+                  DateFormat('d MMM, HH:mm').format(lastReceived),
+                )
+        : service.isPermissionDenied
+        ? l10n.pushPermissionDenied
+        : service.errorMessage ?? l10n.pushReceiveWhenInactive;
+
+    return Card(
+      child: Column(
+        children: [
+          SwitchListTile(
+            secondary: const Icon(Icons.phone_android_rounded),
+            title: Text(
+              l10n.mobilePush,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+            ),
+            subtitle: Text(subtitle, style: const TextStyle(fontSize: 11)),
+            value: service.isEnabled,
+            onChanged: service.isBusy
+                ? null
+                : (enabled) =>
+                      unawaited(enabled ? service.enable() : service.disable()),
+          ),
+          if (service.isEnabled && service.isRegistered) ...[
+            const Divider(height: 1),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+              child: SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: service.isBusy
+                      ? null
+                      : () => unawaited(_sendTest(context)),
+                  icon: service.isBusy
+                      ? const SizedBox.square(
+                          dimension: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.send_to_mobile_rounded),
+                  label: Text(l10n.sendTestPush),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 class _PreferencesCard extends StatelessWidget {
   const _PreferencesCard({required this.provider});
 
@@ -254,6 +366,7 @@ class _PreferencesCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final prefs = provider.preferences;
 
     final muted = Theme.of(context).colorScheme.onSurfaceVariant;
@@ -273,13 +386,13 @@ class _PreferencesCard extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              const Text('Preferensi notifikasi belum dapat dimuat.'),
+              Text(l10n.notificationPreferencesLoadFailed),
               const SizedBox(height: 8),
               TextButton(
                 onPressed: () {
                   unawaited(provider.loadPreferences());
                 },
-                child: const Text('Coba lagi'),
+                child: Text(l10n.tryAgain),
               ),
             ],
           ),
@@ -290,12 +403,12 @@ class _PreferencesCard extends StatelessWidget {
     return Card(
       child: ExpansionTile(
         leading: const Icon(Icons.notifications_active_outlined),
-        title: const Text(
-          'Preferensi Notifikasi',
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+        title: Text(
+          l10n.notificationPreferences,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
         ),
         subtitle: Text(
-          'Pilih jenis pemberitahuan yang ingin kamu terima.',
+          l10n.notificationPreferencesDescription,
           style: TextStyle(color: muted, fontSize: 11),
         ),
         childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 14),
@@ -310,9 +423,13 @@ class _PreferencesCard extends StatelessWidget {
                     },
             ),
 
+          _QuietHoursSettings(provider: provider, prefs: prefs),
+
+          const Divider(),
+
           _PreferenceSwitch(
-            title: 'Analisis kedaluwarsa',
-            subtitle: 'Peringatan ketika masa berlaku analisis hampir selesai.',
+            title: l10n.notificationExpiryTitle,
+            subtitle: l10n.notificationExpiryDescription,
             value: prefs.pushExpiry,
             enabled: !provider.isSavingPreferences,
             onChanged: (value) {
@@ -326,8 +443,8 @@ class _PreferencesCard extends StatelessWidget {
           ),
 
           _PreferenceSwitch(
-            title: 'Pengumuman',
-            subtitle: 'Informasi dan broadcast penting dari Trade Pilot.',
+            title: l10n.notificationBroadcastTitle,
+            subtitle: l10n.notificationBroadcastDescription,
             value: prefs.pushBroadcast,
             enabled: !provider.isSavingPreferences,
             onChanged: (value) {
@@ -341,8 +458,8 @@ class _PreferencesCard extends StatelessWidget {
           ),
 
           _PreferenceSwitch(
-            title: 'Ringkasan harian',
-            subtitle: 'Ringkasan aktivitas dan market harian.',
+            title: l10n.notificationDailyTitle,
+            subtitle: l10n.notificationDailyDescription,
             value: prefs.pushDailySummary,
             enabled: !provider.isSavingPreferences,
             onChanged: (value) {
@@ -356,8 +473,8 @@ class _PreferencesCard extends StatelessWidget {
           ),
 
           _PreferenceSwitch(
-            title: 'Berita market',
-            subtitle: 'Berita penting yang relevan dengan market.',
+            title: l10n.notificationNewsTitle,
+            subtitle: l10n.notificationNewsDescription,
             value: prefs.pushMarketNews,
             enabled: !provider.isSavingPreferences,
             onChanged: (value) {
@@ -371,8 +488,8 @@ class _PreferencesCard extends StatelessWidget {
           ),
 
           _PreferenceSwitch(
-            title: 'Kalender ekonomi',
-            subtitle: 'Pengingat event ekonomi berdampak tinggi.',
+            title: l10n.notificationCalendarTitle,
+            subtitle: l10n.notificationCalendarDescription,
             value: prefs.pushCalendarEvents,
             enabled: !provider.isSavingPreferences,
             onChanged: (value) {
@@ -386,8 +503,8 @@ class _PreferencesCard extends StatelessWidget {
           ),
 
           _PreferenceSwitch(
-            title: 'Pergerakan harga',
-            subtitle: 'Anomali dan perubahan harga yang signifikan.',
+            title: l10n.notificationPriceTitle,
+            subtitle: l10n.notificationPriceDescription,
             value: prefs.pushPriceAnomaly,
             enabled: !provider.isSavingPreferences,
             onChanged: (value) {
@@ -401,8 +518,8 @@ class _PreferencesCard extends StatelessWidget {
           ),
 
           _PreferenceSwitch(
-            title: 'Perubahan sinyal',
-            subtitle: 'Ketika bias AI berubah secara bermakna.',
+            title: l10n.notificationSignalTitle,
+            subtitle: l10n.notificationSignalDescription,
             value: prefs.pushSignalFlip,
             enabled: !provider.isSavingPreferences,
             onChanged: (value) {
@@ -416,8 +533,8 @@ class _PreferencesCard extends StatelessWidget {
           ),
 
           _PreferenceSwitch(
-            title: 'Rekap mingguan',
-            subtitle: 'Ringkasan aktivitas trading setiap minggu.',
+            title: l10n.notificationWeeklyTitle,
+            subtitle: l10n.notificationWeeklyDescription,
             value: prefs.pushWeeklyRecap,
             enabled: !provider.isSavingPreferences,
             onChanged: (value) {
@@ -431,14 +548,80 @@ class _PreferencesCard extends StatelessWidget {
           ),
 
           const Divider(),
-
-          const Align(
+          Align(
             alignment: Alignment.centerLeft,
             child: Padding(
-              padding: EdgeInsets.fromLTRB(8, 8, 8, 4),
+              padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
               child: Text(
-                'Pengingat Sesi Market',
-                style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800),
+                l10n.notificationGuardrails,
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
+          _PreferenceSwitch(
+            title: l10n.notificationRevengeTitle,
+            subtitle: l10n.notificationRevengeDescription,
+            value: prefs.guardrailRevenge,
+            enabled: !provider.isSavingPreferences,
+            onChanged: (value) => unawaited(
+              provider.updatePreference(
+                key: NotificationPreferenceKey.guardrailRevenge,
+                enabled: value,
+              ),
+            ),
+          ),
+          _PreferenceSwitch(
+            title: l10n.notificationOvertradingTitle,
+            subtitle: l10n.notificationOvertradingDescription,
+            value: prefs.guardrailOvertrading,
+            enabled: !provider.isSavingPreferences,
+            onChanged: (value) => unawaited(
+              provider.updatePreference(
+                key: NotificationPreferenceKey.guardrailOvertrading,
+                enabled: value,
+              ),
+            ),
+          ),
+          _PreferenceSwitch(
+            title: l10n.notificationHighRiskTitle,
+            subtitle: l10n.notificationHighRiskDescription,
+            value: prefs.guardrailHighRisk,
+            enabled: !provider.isSavingPreferences,
+            onChanged: (value) => unawaited(
+              provider.updatePreference(
+                key: NotificationPreferenceKey.guardrailHighRisk,
+                enabled: value,
+              ),
+            ),
+          ),
+          _PreferenceSwitch(
+            title: l10n.notificationCoolingOffTitle,
+            subtitle: l10n.notificationCoolingOffDescription,
+            value: prefs.coolingOffEnabled,
+            enabled: !provider.isSavingPreferences,
+            onChanged: (value) => unawaited(
+              provider.updatePreference(
+                key: NotificationPreferenceKey.coolingOff,
+                enabled: value,
+              ),
+            ),
+          ),
+
+          const Divider(),
+
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
+              child: Text(
+                l10n.notificationSessionReminders,
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
           ),
@@ -498,6 +681,139 @@ class _PreferencesCard extends StatelessWidget {
             ),
         ],
       ),
+    );
+  }
+}
+
+class _QuietHoursSettings extends StatelessWidget {
+  const _QuietHoursSettings({required this.provider, required this.prefs});
+
+  static const _timezones = <String>[
+    'Asia/Jakarta',
+    'Asia/Makassar',
+    'Asia/Jayapura',
+    'Asia/Singapore',
+    'Asia/Kuala_Lumpur',
+    'Asia/Bangkok',
+    'Asia/Tokyo',
+    'Europe/London',
+    'America/New_York',
+    'UTC',
+  ];
+
+  final NotificationsProvider provider;
+  final api.PushPrefs prefs;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final enabled = !provider.isSavingPreferences;
+    final zones = {prefs.notificationTimezone, ..._timezones}.toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _PreferenceSwitch(
+          title: l10n.quietHours,
+          subtitle: l10n.quietHoursDescription,
+          value: prefs.quietHoursEnabled,
+          enabled: enabled,
+          onChanged: (value) =>
+              unawaited(provider.updateQuietHours(enabled: value)),
+        ),
+        if (prefs.quietHoursEnabled) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _HourDropdown(
+                    label: l10n.quietHoursStart,
+                    value: prefs.quietHoursStart,
+                    enabled: enabled,
+                    onChanged: (value) =>
+                        unawaited(provider.updateQuietHours(start: value)),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _HourDropdown(
+                    label: l10n.quietHoursEnd,
+                    value: prefs.quietHoursEnd,
+                    enabled: enabled,
+                    onChanged: (value) =>
+                        unawaited(provider.updateQuietHours(end: value)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: DropdownButtonFormField<String>(
+              initialValue: prefs.notificationTimezone,
+              decoration: InputDecoration(
+                labelText: l10n.notificationTimezone,
+                prefixIcon: const Icon(Icons.public_rounded, size: 19),
+              ),
+              items: zones
+                  .map(
+                    (zone) => DropdownMenuItem(value: zone, child: Text(zone)),
+                  )
+                  .toList(),
+              onChanged: enabled
+                  ? (value) {
+                      if (value != null) {
+                        unawaited(provider.updateQuietHours(timezone: value));
+                      }
+                    }
+                  : null,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 7, 12, 4),
+            child: Text(
+              l10n.quietHoursSecurityNotice,
+              style: const TextStyle(fontSize: 10.5),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _HourDropdown extends StatelessWidget {
+  const _HourDropdown({
+    required this.label,
+    required this.value,
+    required this.enabled,
+    required this.onChanged,
+  });
+
+  final String label;
+  final String value;
+  final bool enabled;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final hour = int.tryParse(value.split(':').first) ?? 0;
+    final normalized = '${hour.toString().padLeft(2, '0')}:00';
+
+    return DropdownButtonFormField<String>(
+      initialValue: normalized,
+      decoration: InputDecoration(labelText: label),
+      items: List.generate(24, (index) {
+        final value = '${index.toString().padLeft(2, '0')}:00';
+        return DropdownMenuItem(value: value, child: Text(value));
+      }),
+      onChanged: enabled
+          ? (value) {
+              if (value != null) onChanged(value);
+            }
+          : null,
     );
   }
 }
@@ -589,7 +905,7 @@ class _AutoPauseBanner extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Sebagian notifikasi "$category" otomatis dijeda karena lama tidak dibuka.',
+              context.l10n.notificationAutoPaused(category),
               style: const TextStyle(fontSize: 11),
             ),
           ),
@@ -683,7 +999,9 @@ class _NotificationTile extends StatelessWidget {
   static Color _colorFor(BuildContext context, api.NotificationTypeEnum type) {
     switch (type.name) {
       case 'warning':
-        return Colors.orange;
+        return Theme.of(context).brightness == Brightness.dark
+            ? AppColors.neutralDark
+            : AppColors.neutralLight;
 
       case 'error':
         return Theme.of(context).colorScheme.error;
@@ -710,7 +1028,7 @@ class _EmptyState extends StatelessWidget {
             Icon(Icons.notifications_none_rounded, size: 40, color: muted),
             const SizedBox(height: 10),
             Text(
-              'Belum ada notifikasi',
+              context.l10n.noNotifications,
               style: TextStyle(color: muted, fontWeight: FontWeight.w700),
             ),
           ],

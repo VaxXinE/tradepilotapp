@@ -12,15 +12,15 @@ part 'broadcast.g.dart';
 /// Broadcast
 ///
 /// Properties:
-/// * [id] 
-/// * [senderId] 
-/// * [senderName] 
-/// * [title] 
-/// * [message] 
-/// * [audienceType] 
-/// * [audienceValue] 
-/// * [recipientCount] 
-/// * [createdAt] 
+/// * [id]
+/// * [senderId]
+/// * [senderName]
+/// * [title]
+/// * [message]
+/// * [audienceType]
+/// * [audienceValue]
+/// * [recipientCount]
+/// * [createdAt]
 @BuiltValue()
 abstract class Broadcast implements Built<Broadcast, BroadcastBuilder> {
   @BuiltValueField(wireName: r'id')
@@ -133,7 +133,9 @@ class _$BroadcastSerializer implements PrimitiveSerializer<Broadcast> {
     Broadcast object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -244,19 +246,21 @@ class _$BroadcastSerializer implements PrimitiveSerializer<Broadcast> {
 }
 
 class BroadcastAudienceTypeEnum extends EnumClass {
-
   @BuiltValueEnumConst(wireName: r'all')
   static const BroadcastAudienceTypeEnum all = _$broadcastAudienceTypeEnum_all;
   @BuiltValueEnumConst(wireName: r'role')
-  static const BroadcastAudienceTypeEnum role = _$broadcastAudienceTypeEnum_role;
+  static const BroadcastAudienceTypeEnum role =
+      _$broadcastAudienceTypeEnum_role;
   @BuiltValueEnumConst(wireName: r'tag')
   static const BroadcastAudienceTypeEnum tag = _$broadcastAudienceTypeEnum_tag;
 
-  static Serializer<BroadcastAudienceTypeEnum> get serializer => _$broadcastAudienceTypeEnumSerializer;
+  static Serializer<BroadcastAudienceTypeEnum> get serializer =>
+      _$broadcastAudienceTypeEnumSerializer;
 
-  const BroadcastAudienceTypeEnum._(String name): super(name);
+  const BroadcastAudienceTypeEnum._(String name) : super(name);
 
-  static BuiltSet<BroadcastAudienceTypeEnum> get values => _$broadcastAudienceTypeEnumValues;
-  static BroadcastAudienceTypeEnum valueOf(String name) => _$broadcastAudienceTypeEnumValueOf(name);
+  static BuiltSet<BroadcastAudienceTypeEnum> get values =>
+      _$broadcastAudienceTypeEnumValues;
+  static BroadcastAudienceTypeEnum valueOf(String name) =>
+      _$broadcastAudienceTypeEnumValueOf(name);
 }
-

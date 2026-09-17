@@ -1,29 +1,59 @@
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 import 'package:trade_pilot_api_client/trade_pilot_client.dart';
 
 import '../core/api/api_config.dart';
 import '../core/storage/token_storage.dart';
+import '../services/telemetry_service.dart';
+import '../l10n/app_messages.dart';
 
 enum AuthStatus { unknown, authenticated, unauthenticated }
+
+enum _ReauthProvider { google, apple }
+
+typedef GoogleIdTokenProvider =
+    Future<String> Function({required bool forceAccountPicker});
+typedef AppleCredentialData = ({
+  String identityToken,
+  String authorizationCode,
+  String nonce,
+  String? givenName,
+  String? familyName,
+});
+typedef AppleCredentialProvider = Future<AppleCredentialData> Function();
 
 /// State management untuk sesi login, setara dengan `AuthContext.tsx`
 /// pada app Expo di repo Trade-Pilot (`artifacts/mobile`).
 class AuthProvider extends ChangeNotifier {
-  static const _firstPetSecurityQuestion =
-      'Nama hewan peliharaan pertama kamu?';
-
-  AuthProvider() {
+  AuthProvider({
+    GoogleIdTokenProvider? googleIdTokenProvider,
+    AppleCredentialProvider? appleCredentialProvider,
+  }) : _googleIdTokenProvider = googleIdTokenProvider ?? _requestGoogleIdToken,
+       _appleCredentialProvider =
+           appleCredentialProvider ?? _requestAppleCredential {
     _client = TradePilotClient(
       baseUrl: ApiConfig.baseUrl,
       getToken: () async => _token,
     );
+    _client.dio.interceptors.add(
+      InterceptorsWrapper(onError: _handleUnauthorized),
+    );
+    telemetry = TelemetryService(_client);
     _restoreSession();
   }
 
   final _storage = TokenStorage();
+  final GoogleIdTokenProvider _googleIdTokenProvider;
+  final AppleCredentialProvider _appleCredentialProvider;
   late final TradePilotClient _client;
+  late final TelemetryService telemetry;
 
   TradePilotClient get client => _client;
 
@@ -35,15 +65,114 @@ class AuthProvider extends ChangeNotifier {
   bool isUpdatingProfile = false;
   bool isChangingPassword = false;
   bool isDeletingAccount = false;
+  bool _usedGoogleSignIn = false;
   String? profileError;
 
   static const int maxDisplayNameLength = 100;
+  static const _googleServerClientId =
+      '929958103345-cbf424vgelrer7nkrr81l4iptsikuc1u.apps.googleusercontent.com';
+  static Future<void>? _googleInitialization;
 
   int _sessionEpoch = 0;
   int _profileRequestId = 0;
   int _passwordRequestId = 0;
 
+  // ===========================================================================
+  // FORCED LOGOUT ON EXPIRED SESSION
+  // ===========================================================================
+
+  /// Endpoints where a 401 means "the credentials you just typed are wrong",
+  /// not "your session died".
+  ///
+  /// Login/register/forgot-password answer 401 for a bad email, password, or
+  /// security answer — the user is not logged in yet, so there is no session to
+  /// end. `/auth/password`, `/auth/security-question` and `/auth/account` all
+  /// re-challenge for the *current* password and answer 401 when it is wrong;
+  /// ejecting the user there would be a bug, not a safety measure.
+  ///
+  /// Everything else — `/auth/me`, `/auth/profile`, `/analyses/*`,
+  /// `/notifications/*`, and the rest — can only answer 401 because the bearer
+  /// token is no longer valid.
+  static const Set<String> _credentialChallengePaths = {
+    '/auth/login',
+    '/auth/register',
+    '/auth/logout',
+    '/auth/google/native',
+    '/auth/apple/native',
+    '/auth/reauth/google',
+    '/auth/reauth/apple',
+    '/auth/password',
+    '/auth/account',
+    '/auth/security-question',
+    '/auth/forgot-password/question',
+    '/auth/forgot-password/verify',
+    '/auth/forgot-password/reset',
+  };
+
+  void _handleUnauthorized(
+    DioException error,
+    ErrorInterceptorHandler handler,
+  ) {
+    if (error.response?.statusCode == 401 &&
+        _endsSession(error.requestOptions.path)) {
+      unawaited(forceLogout());
+    }
+
+    // Always let the error continue: callers still need to render their own
+    // message for this request. This interceptor only closes the session.
+    handler.next(error);
+  }
+
+  bool _endsSession(String requestPath) {
+    // `path` is normally relative ("/auth/me"), but tolerate a full URL too.
+    final path = Uri.parse(requestPath).path;
+    return !_credentialChallengePaths.any(path.endsWith);
+  }
+
+  /// Closes the local session after the server rejected our token.
+  ///
+  /// No `/auth/logout` call here — the token the server would need to
+  /// authenticate that request is exactly the one it just refused.
+  @visibleForTesting
+  Future<void> forceLogout() async {
+    // Concurrent 401s (a dashboard fires several requests at once) all land
+    // here. Status flips before the first await, so the rest bail out.
+    if (status != AuthStatus.authenticated) return;
+
+    _sessionEpoch++;
+    _profileRequestId++;
+    _passwordRequestId++;
+    isBusy = false;
+    isUpdatingProfile = false;
+    isChangingPassword = false;
+    isDeletingAccount = false;
+    profileError = null;
+    errorMessage = null;
+    _token = null;
+    user = null;
+    _usedGoogleSignIn = false;
+    isLocked = false;
+    status = AuthStatus.unauthenticated;
+
+    try {
+      await _storage.clear();
+    } catch (_) {
+      // Session is already closed in memory; a storage failure must not keep
+      // the user on a screen backed by a dead token.
+    }
+
+    notifyListeners();
+  }
+
   Future<void> _restoreSession() async {
+    // Drop any plaintext password a pre-1.0.2 build left behind, before doing
+    // anything that could fail and skip it.
+    try {
+      await _storage.purgeLegacyCredentials();
+    } catch (_) {
+      // Retried on the next launch.
+    }
+
     final token = await _storage.readToken();
     if (token == null) {
       status = AuthStatus.unauthenticated;
@@ -55,12 +184,42 @@ class AuthProvider extends ChangeNotifier {
       final response = await _client.auth.getMe();
       user = response.data;
       status = AuthStatus.authenticated;
+      isLocked = await _storage.readBiometricLockEnabled();
     } catch (_) {
       // Token kadaluarsa/invalid — bersihkan sesi lokal.
       await _storage.clear();
       _token = null;
       status = AuthStatus.unauthenticated;
     }
+    notifyListeners();
+  }
+
+  // ===========================================================================
+  // BIOMETRIC APP LOCK
+  // ===========================================================================
+
+  /// Whether a restored session is waiting behind a biometric prompt.
+  ///
+  /// This is intentionally *not* an [AuthStatus] value. The session really is
+  /// authenticated — the token is valid and requests would succeed — so every
+  /// `status != authenticated` guard in the app keeps its current meaning. The
+  /// lock is a presentation gate, and only [SplashScreen] reads it.
+  ///
+  /// It exists because the token outlives the app process: without it, anyone
+  /// holding an unlocked phone opens Trade Pilot straight into the owner's
+  /// positions and history.
+  bool isLocked = false;
+
+  Future<bool> get biometricLockEnabled => _storage.readBiometricLockEnabled();
+
+  Future<void> setBiometricLockEnabled(bool enabled) async {
+    await _storage.setBiometricLockEnabled(enabled);
+    notifyListeners();
+  }
+
+  void unlockSession() {
+    if (!isLocked) return;
+    isLocked = false;
     notifyListeners();
   }
 
@@ -77,11 +236,143 @@ class AuthProvider extends ChangeNotifier {
     });
   }
 
+  Future<bool> loginWithGoogle() async {
+    isBusy = true;
+    errorMessage = null;
+    notifyListeners();
+    try {
+      final idToken = await _googleIdTokenProvider(forceAccountPicker: false);
+      final response = await _client.auth.loginWithGoogleNative(
+        googleNativeLoginBody: GoogleNativeLoginBody(
+          (builder) => builder.idToken = idToken,
+        ),
+      );
+      await _applyAuthResponse(response.data);
+      _usedGoogleSignIn = true;
+      return true;
+    } catch (error) {
+      if (!_isGoogleCancellation(error)) {
+        if (kDebugMode && error is GoogleSignInException) {
+          debugPrint(
+            'Google Sign-In failed: ${error.code.name} — '
+            '${error.description ?? 'no description'}',
+          );
+        }
+        errorMessage = _googleFriendlyError(error);
+      }
+      return false;
+    } finally {
+      isBusy = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> loginWithApple() async {
+    isBusy = true;
+    errorMessage = null;
+    notifyListeners();
+    try {
+      final credential = await _appleCredentialProvider();
+      final response = await _client.auth.loginWithAppleNative(
+        appleNativeLoginBody: AppleNativeLoginBody((builder) {
+          builder
+            ..identityToken = credential.identityToken
+            ..authorizationCode = credential.authorizationCode
+            ..nonce = credential.nonce;
+          final givenName = _appleNamePart(credential.givenName);
+          final familyName = _appleNamePart(credential.familyName);
+          if (givenName != null) builder.givenName = givenName;
+          if (familyName != null) builder.familyName = familyName;
+        }),
+      );
+      await _applyAuthResponse(response.data);
+      return true;
+    } catch (error) {
+      if (!_isAppleCancellation(error)) {
+        errorMessage = _appleFriendlyError(error);
+      }
+      return false;
+    } finally {
+      isBusy = false;
+      notifyListeners();
+    }
+  }
+
+  static Future<String> _requestGoogleIdToken({
+    required bool forceAccountPicker,
+  }) async {
+    final signIn = GoogleSignIn.instance;
+    await (_googleInitialization ??= signIn.initialize(
+      serverClientId: _googleServerClientId,
+    ));
+    if (!signIn.supportsAuthenticate()) {
+      throw UnsupportedError('Google Sign-In is unavailable.');
+    }
+    if (forceAccountPicker) await signIn.signOut();
+    final account = await signIn.authenticate();
+    final idToken = account.authentication.idToken;
+    if (idToken == null || idToken.isEmpty) {
+      throw StateError('Google did not return an ID token.');
+    }
+    return idToken;
+  }
+
+  /// Panjang maksimum `givenName`/`familyName` pada `AppleNativeLoginBody`.
+  ///
+  /// Skema backend memakai `.strict()`, sehingga nama yang melampaui batas
+  /// membuat seluruh permintaan login ditolak `400` — bukan sekadar namanya
+  /// yang diabaikan. Nama hanya dipakai sebagai kandidat display name saat
+  /// akun baru dibuat, jadi memotongnya jauh lebih baik daripada menggagalkan
+  /// proses masuk yang sebenarnya sah.
+  static const _maxAppleNameLength = 100;
+
+  static String? _appleNamePart(String? value) {
+    final trimmed = value?.trim();
+    if (trimmed == null || trimmed.isEmpty) return null;
+    return trimmed.length <= _maxAppleNameLength
+        ? trimmed
+        : trimmed.substring(0, _maxAppleNameLength).trim();
+  }
+
+  static Future<AppleCredentialData> _requestAppleCredential() async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) {
+      throw UnsupportedError('Sign in with Apple is only enabled on iOS.');
+    }
+    if (!await SignInWithApple.isAvailable()) {
+      throw const SignInWithAppleNotSupportedException(
+        message: 'Sign in with Apple is unavailable on this device.',
+      );
+    }
+
+    final rawNonce = generateNonce();
+    final nonceHash = sha256.convert(utf8.encode(rawNonce)).toString();
+    final credential = await SignInWithApple.getAppleIDCredential(
+      scopes: const [
+        AppleIDAuthorizationScopes.email,
+        AppleIDAuthorizationScopes.fullName,
+      ],
+      nonce: nonceHash,
+    );
+    final identityToken = credential.identityToken;
+    if (identityToken == null || identityToken.isEmpty) {
+      throw StateError('Apple did not return an identity token.');
+    }
+
+    return (
+      identityToken: identityToken,
+      authorizationCode: credential.authorizationCode,
+      nonce: rawNonce,
+      givenName: credential.givenName,
+      familyName: credential.familyName,
+    );
+  }
+
   Future<bool> register({
     required String email,
     required String password,
     required String displayName,
     required String securityAnswer,
+    required String securityQuestion,
     required RegisterBodySelectedModeEnum mode,
   }) {
     return _run(() async {
@@ -91,7 +382,7 @@ class AuthProvider extends ChangeNotifier {
             ..email = email.trim().toLowerCase()
             ..password = password
             ..displayName = displayName
-            ..securityQuestion = _firstPetSecurityQuestion
+            ..securityQuestion = securityQuestion
             ..securityAnswer = securityAnswer
             ..selectedMode = mode,
         ),
@@ -102,10 +393,11 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> _applyAuthResponse(AuthResponse? data) async {
     if (data == null || data.token == null) {
-      throw Exception('Respons server tidak valid.');
+      throw Exception(AppMessages.l10n.errInvalidServerResponse);
     }
     _token = data.token;
     user = data.user;
+    isLocked = false;
     _sessionEpoch++;
     _profileRequestId++;
     _passwordRequestId++;
@@ -139,6 +431,8 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> logout() async {
+    final token = _token;
+
     _sessionEpoch++;
     _profileRequestId++;
     _passwordRequestId++;
@@ -146,25 +440,44 @@ class AuthProvider extends ChangeNotifier {
     isChangingPassword = false;
     isDeletingAccount = false;
     profileError = null;
-
-    try {
-      await _client.auth.logout();
-    } catch (_) {
-      // tetap logout lokal walau request gagal (mis. tidak ada koneksi)
-    }
-    await _storage.clear();
+    errorMessage = null;
     _token = null;
     user = null;
+    final usedGoogleSignIn = _usedGoogleSignIn;
+    _usedGoogleSignIn = false;
+    isLocked = false;
     status = AuthStatus.unauthenticated;
     notifyListeners();
+
+    try {
+      await _storage.clear();
+    } catch (_) {
+      // Sesi sudah ditutup di memori; kegagalan storage tidak boleh membukanya.
+    }
+
+    if (token != null && token.isNotEmpty) {
+      try {
+        await _client.auth.logout(headers: {'Authorization': 'Bearer $token'});
+      } catch (_) {
+        // Tetap logout lokal walau request server gagal.
+      }
+    }
+    if (usedGoogleSignIn) {
+      try {
+        await GoogleSignIn.instance.signOut();
+      } catch (_) {
+        // Sesi TradePilot sudah berakhir; logout Google hanya best effort.
+      }
+    }
   }
 
   Future<bool> updateDisplayName(String value) async {
     final displayName = value.trim();
 
     if (displayName.length < 2 || displayName.length > maxDisplayNameLength) {
-      profileError =
-          'Nama harus terdiri dari 2–$maxDisplayNameLength karakter.';
+      profileError = AppMessages.l10n.errDisplayNameLength(
+        maxDisplayNameLength,
+      );
       notifyListeners();
       return false;
     }
@@ -200,6 +513,45 @@ class AuthProvider extends ChangeNotifier {
     );
   }
 
+  Future<bool> updateTheme(bool dark) {
+    return _updateProfile(
+      UpdateProfileBody(
+        (builder) => builder.themePreference = dark
+            ? UpdateProfileBodyThemePreferenceEnum.dark
+            : UpdateProfileBodyThemePreferenceEnum.light,
+      ),
+    );
+  }
+
+  Future<bool> completeOnboarding() {
+    return _updateProfile(
+      UpdateProfileBody((builder) => builder.onboardingCompleted = true),
+    );
+  }
+
+  Future<bool> updateAvatarPath(String? objectPath) async {
+    if (objectPath != null) {
+      return _updateProfile(
+        UpdateProfileBody((builder) => builder.avatarUrl = objectPath),
+      );
+    }
+    if (status != AuthStatus.authenticated || isUpdatingProfile) return false;
+    isUpdatingProfile = true;
+    profileError = null;
+    notifyListeners();
+    try {
+      await _client.dio.patch<void>('/auth/profile', data: {'avatarUrl': null});
+      await refreshMe();
+      return true;
+    } catch (error) {
+      profileError = _profileFriendlyError(error);
+      return false;
+    } finally {
+      isUpdatingProfile = false;
+      notifyListeners();
+    }
+  }
+
   Future<bool> _updateProfile(UpdateProfileBody body) async {
     final currentUser = user;
     if (status != AuthStatus.authenticated ||
@@ -228,7 +580,7 @@ class AuthProvider extends ChangeNotifier {
 
       final updated = response.data;
       if (updated == null) {
-        profileError = 'Respons profil dari server tidak valid.';
+        profileError = AppMessages.l10n.errInvalidProfileResponse;
         return false;
       }
 
@@ -292,11 +644,94 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> deleteAccount(String currentPassword) async {
+  Future<bool> changeSecurityQuestion({
+    required String currentPassword,
+    required String securityQuestion,
+    required String securityAnswer,
+  }) async {
     final currentUser = user;
     if (status != AuthStatus.authenticated ||
         currentUser == null ||
-        currentPassword.isEmpty ||
+        isChangingPassword) {
+      return false;
+    }
+
+    isChangingPassword = true;
+    profileError = null;
+    notifyListeners();
+    try {
+      await _client.auth.changeSecurityQuestion(
+        changeSecurityQuestionBody: ChangeSecurityQuestionBody(
+          (builder) => builder
+            ..currentPassword = currentPassword
+            ..securityQuestion = securityQuestion
+            ..securityAnswer = securityAnswer,
+        ),
+      );
+      await refreshMe();
+      return true;
+    } catch (error) {
+      profileError = _profileFriendlyError(error, passwordOperation: true);
+      return false;
+    } finally {
+      isChangingPassword = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> deleteAccount(String currentPassword) async {
+    if (currentPassword.isEmpty) return false;
+    return _deleteAccount(
+      () async => DeleteAccountBody(
+        (builder) => builder.currentPassword = currentPassword,
+      ),
+    );
+  }
+
+  Future<bool> deleteGoogleAccount() async {
+    if (user?.hasPassword != false) return false;
+    return _deleteAccount(() async {
+      final idToken = await _googleIdTokenProvider(forceAccountPicker: true);
+      final reauth = await _client.auth.reauthenticateWithGoogle(
+        googleReauthBody: GoogleReauthBody(
+          (builder) => builder.idToken = idToken,
+        ),
+      );
+      final reauthToken = reauth.data?.reauthToken;
+      if (reauthToken == null || reauthToken.isEmpty) {
+        throw StateError('Backend did not return a reauthentication token.');
+      }
+      return DeleteAccountBody((builder) => builder.reauthToken = reauthToken);
+    }, reauthProvider: _ReauthProvider.google);
+  }
+
+  Future<bool> deleteAppleAccount() async {
+    if (user?.hasPassword != false) return false;
+    return _deleteAccount(() async {
+      final credential = await _appleCredentialProvider();
+      final reauth = await _client.auth.reauthenticateWithApple(
+        appleReauthBody: AppleReauthBody(
+          (builder) => builder
+            ..identityToken = credential.identityToken
+            ..authorizationCode = credential.authorizationCode
+            ..nonce = credential.nonce,
+        ),
+      );
+      final reauthToken = reauth.data?.reauthToken;
+      if (reauthToken == null || reauthToken.isEmpty) {
+        throw StateError('Backend did not return a reauthentication token.');
+      }
+      return DeleteAccountBody((builder) => builder.reauthToken = reauthToken);
+    }, reauthProvider: _ReauthProvider.apple);
+  }
+
+  Future<bool> _deleteAccount(
+    Future<DeleteAccountBody> Function() buildProof, {
+    _ReauthProvider? reauthProvider,
+  }) async {
+    final currentUser = user;
+    if (status != AuthStatus.authenticated ||
+        currentUser == null ||
         isDeletingAccount) {
       return false;
     }
@@ -308,10 +743,8 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _client.dio.delete<void>(
-        '/auth/account',
-        data: {'currentPassword': currentPassword},
-      );
+      final body = await buildProof();
+      await _client.auth.deleteAccount(deleteAccountBody: body);
 
       if (!_isCurrentProfileSession(epoch, userId)) return false;
 
@@ -321,6 +754,8 @@ class AuthProvider extends ChangeNotifier {
       isDeletingAccount = false;
       _token = null;
       user = null;
+      _usedGoogleSignIn = false;
+      isLocked = false;
       status = AuthStatus.unauthenticated;
       try {
         await _storage.clear();
@@ -331,7 +766,18 @@ class AuthProvider extends ChangeNotifier {
       return true;
     } catch (error) {
       if (_isCurrentProfileSession(epoch, userId)) {
-        profileError = _deleteAccountFriendlyError(error);
+        final cancelled = switch (reauthProvider) {
+          _ReauthProvider.google => _isGoogleCancellation(error),
+          _ReauthProvider.apple => _isAppleCancellation(error),
+          null => false,
+        };
+        if (!cancelled) {
+          profileError = switch (reauthProvider) {
+            _ReauthProvider.google => _googleFriendlyError(error),
+            _ReauthProvider.apple => _appleFriendlyError(error),
+            null => _deleteAccountFriendlyError(error),
+          };
+        }
       }
       return false;
     } finally {
@@ -352,40 +798,99 @@ class AuthProvider extends ChangeNotifier {
     if (error is DioException) {
       if (error.response?.statusCode == 401) {
         return passwordOperation
-            ? 'Password saat ini tidak sesuai.'
-            : 'Sesi login berakhir. Silakan masuk kembali.';
+            ? AppMessages.l10n.errCurrentPasswordWrong
+            : AppMessages.l10n.errSessionExpiredRelogin;
       }
       if (error.response?.statusCode == 400 ||
           error.response?.statusCode == 422) {
         return passwordOperation
-            ? 'Password belum memenuhi persyaratan keamanan.'
-            : 'Data profil belum valid. Periksa kembali isian kamu.';
+            ? AppMessages.l10n.errPasswordTooWeak
+            : AppMessages.l10n.errProfileInvalid;
       }
       if (error.type == DioExceptionType.connectionError ||
           error.type == DioExceptionType.connectionTimeout) {
-        return 'Tidak bisa terhubung ke server. Periksa koneksi internet kamu.';
+        return AppMessages.l10n.errNoConnection;
       }
     }
 
     return passwordOperation
-        ? 'Gagal mengubah password. Silakan coba lagi.'
-        : 'Gagal memperbarui profil. Silakan coba lagi.';
+        ? AppMessages.l10n.errChangePasswordFailed
+        : AppMessages.l10n.errUpdateProfileFailed;
   }
 
   String _deleteAccountFriendlyError(Object error) {
     if (error is DioException) {
       if (error.response?.statusCode == 401) {
-        return 'Password saat ini tidak sesuai.';
+        return AppMessages.l10n.errCurrentPasswordWrong;
       }
       if (error.response?.statusCode == 429) {
-        return 'Terlalu banyak percobaan. Tunggu sebentar lalu coba lagi.';
+        return AppMessages.l10n.errTooManyAttempts;
       }
       if (error.type == DioExceptionType.connectionError ||
           error.type == DioExceptionType.connectionTimeout) {
-        return 'Tidak bisa terhubung ke server. Periksa koneksi internet kamu.';
+        return AppMessages.l10n.errNoConnection;
       }
     }
-    return 'Gagal menghapus akun. Silakan coba lagi.';
+    return AppMessages.l10n.errDeleteAccountFailed;
+  }
+
+  bool _isGoogleCancellation(Object error) =>
+      error is GoogleSignInException &&
+      error.code == GoogleSignInExceptionCode.canceled;
+
+  bool _isAppleCancellation(Object error) =>
+      error is SignInWithAppleAuthorizationException &&
+      error.code == AuthorizationErrorCode.canceled;
+
+  String _googleFriendlyError(Object error) {
+    if (error is GoogleSignInException &&
+        (error.code == GoogleSignInExceptionCode.clientConfigurationError ||
+            error.code ==
+                GoogleSignInExceptionCode.providerConfigurationError)) {
+      return AppMessages.l10n.errGoogleConfiguration;
+    }
+    if (error is DioException) {
+      switch (error.response?.statusCode) {
+        case 401:
+          return AppMessages.l10n.errGoogleTokenInvalid;
+        case 409:
+          return AppMessages.l10n.errGoogleAccountConflict;
+        case 429:
+          return AppMessages.l10n.errTooManyAttempts;
+        case 503:
+          return AppMessages.l10n.errGoogleUnavailable;
+      }
+      if (error.type == DioExceptionType.connectionError ||
+          error.type == DioExceptionType.connectionTimeout) {
+        return AppMessages.l10n.errNoConnection;
+      }
+    }
+    return AppMessages.l10n.errGoogleSignInFailed;
+  }
+
+  String _appleFriendlyError(Object error) {
+    if (error is DioException) {
+      switch (error.response?.statusCode) {
+        case 401:
+          return AppMessages.l10n.errAppleTokenInvalid;
+        case 409:
+          return AppMessages.l10n.errAppleAccountConflict;
+        case 429:
+          return AppMessages.l10n.errTooManyAttempts;
+        case 404:
+        case 501:
+        case 503:
+          return AppMessages.l10n.errAppleUnavailable;
+      }
+      if (error.type == DioExceptionType.connectionError ||
+          error.type == DioExceptionType.connectionTimeout) {
+        return AppMessages.l10n.errNoConnection;
+      }
+    }
+    if (error is SignInWithAppleNotSupportedException) {
+      return AppMessages.l10n.errAppleUnavailable;
+    }
+    return AppMessages.l10n.errAppleSignInFailed;
   }
 
   /// Step 1 lupa password: ambil pertanyaan keamanan berdasar email.
@@ -471,13 +976,18 @@ class AuthProvider extends ChangeNotifier {
     if (e is DioException) {
       if (e.type == DioExceptionType.connectionError ||
           e.type == DioExceptionType.connectionTimeout) {
-        return 'Tidak bisa terhubung ke server. Periksa koneksi internet kamu.';
+        return AppMessages.l10n.errNoConnection;
       }
       if (e.response?.statusCode == 401) {
-        return 'Email atau password tidak sesuai.';
+        if (Uri.parse(
+          e.requestOptions.path,
+        ).path.endsWith('/auth/forgot-password/verify')) {
+          return AppMessages.l10n.errSecurityAnswerWrong;
+        }
+        return AppMessages.l10n.errCredentialsWrong;
       }
       if (e.response?.statusCode == 429) {
-        return 'Terlalu banyak percobaan. Tunggu sebentar lalu coba lagi.';
+        return AppMessages.l10n.errTooManyAttempts;
       }
       final responseData = e.response?.data;
       final responseMessage = responseData is Map<String, dynamic>
@@ -488,8 +998,8 @@ class AuthProvider extends ChangeNotifier {
           responseMessage.isNotEmpty) {
         return responseMessage;
       }
-      return 'Terjadi kesalahan. Silakan coba lagi.';
+      return AppMessages.l10n.errGeneric;
     }
-    return 'Terjadi kesalahan. Silakan coba lagi.';
+    return AppMessages.l10n.errGeneric;
   }
 }

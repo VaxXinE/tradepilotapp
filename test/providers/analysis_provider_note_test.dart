@@ -99,10 +99,12 @@ User _user(int id) => User(
     ..role = UserRoleEnum.user
     ..selectedMode = UserSelectedModeEnum.beginner
     ..themePreference = UserThemePreferenceEnum.dark
-    ..onboardingCompleted = true,
+    ..createdAt = DateTime.utc(2026)
+    ..onboardingCompleted = true
+    ..hasPassword = true,
 );
 
-Analysis _analysis() => Analysis(
+Analysis _analysis() => $Analysis(
   (builder) => builder
     ..id = 7
     ..userId = 1

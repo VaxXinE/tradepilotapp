@@ -13,24 +13,28 @@ part 'recent_instruments.g.dart';
 /// RecentInstruments
 ///
 /// Properties:
-/// * [instruments] 
+/// * [instruments]
 @BuiltValue()
-abstract class RecentInstruments implements Built<RecentInstruments, RecentInstrumentsBuilder> {
+abstract class RecentInstruments
+    implements Built<RecentInstruments, RecentInstrumentsBuilder> {
   @BuiltValueField(wireName: r'instruments')
   BuiltList<RecentInstrumentsInstrumentsInner> get instruments;
 
   RecentInstruments._();
 
-  factory RecentInstruments([void updates(RecentInstrumentsBuilder b)]) = _$RecentInstruments;
+  factory RecentInstruments([void updates(RecentInstrumentsBuilder b)]) =
+      _$RecentInstruments;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(RecentInstrumentsBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<RecentInstruments> get serializer => _$RecentInstrumentsSerializer();
+  static Serializer<RecentInstruments> get serializer =>
+      _$RecentInstrumentsSerializer();
 }
 
-class _$RecentInstrumentsSerializer implements PrimitiveSerializer<RecentInstruments> {
+class _$RecentInstrumentsSerializer
+    implements PrimitiveSerializer<RecentInstruments> {
   @override
   final Iterable<Type> types = const [RecentInstruments, _$RecentInstruments];
 
@@ -45,7 +49,8 @@ class _$RecentInstrumentsSerializer implements PrimitiveSerializer<RecentInstrum
     yield r'instruments';
     yield serializers.serialize(
       object.instruments,
-      specifiedType: const FullType(BuiltList, [FullType(RecentInstrumentsInstrumentsInner)]),
+      specifiedType: const FullType(
+          BuiltList, [FullType(RecentInstrumentsInstrumentsInner)]),
     );
   }
 
@@ -55,7 +60,9 @@ class _$RecentInstrumentsSerializer implements PrimitiveSerializer<RecentInstrum
     RecentInstruments object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -73,7 +80,8 @@ class _$RecentInstrumentsSerializer implements PrimitiveSerializer<RecentInstrum
         case r'instruments':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(BuiltList, [FullType(RecentInstrumentsInstrumentsInner)]),
+            specifiedType: const FullType(
+                BuiltList, [FullType(RecentInstrumentsInstrumentsInner)]),
           ) as BuiltList<RecentInstrumentsInstrumentsInner>;
           result.instruments.replace(valueDes);
           break;
@@ -105,4 +113,3 @@ class _$RecentInstrumentsSerializer implements PrimitiveSerializer<RecentInstrum
     return result.build();
   }
 }
-

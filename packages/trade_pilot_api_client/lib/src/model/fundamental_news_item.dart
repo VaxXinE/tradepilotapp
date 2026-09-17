@@ -11,14 +11,15 @@ part 'fundamental_news_item.g.dart';
 /// A single news headline included in the fundamental snapshot persisted on an analysis row. Captured from Newsmaker.id and Yahoo Finance RSS at analysis time.
 ///
 /// Properties:
-/// * [id] 
-/// * [title] 
-/// * [summary] 
+/// * [id]
+/// * [title]
+/// * [summary]
 /// * [source_] - Human-readable source label, e.g. 'Newsmaker.id' or 'Yahoo Finance'.
-/// * [url] 
-/// * [publishedAt] 
+/// * [url]
+/// * [publishedAt]
 @BuiltValue()
-abstract class FundamentalNewsItem implements Built<FundamentalNewsItem, FundamentalNewsItemBuilder> {
+abstract class FundamentalNewsItem
+    implements Built<FundamentalNewsItem, FundamentalNewsItemBuilder> {
   @BuiltValueField(wireName: r'id')
   String get id;
 
@@ -33,25 +34,31 @@ abstract class FundamentalNewsItem implements Built<FundamentalNewsItem, Fundame
   String get source_;
 
   @BuiltValueField(wireName: r'url')
-  String get url;
+  String? get url;
 
   @BuiltValueField(wireName: r'publishedAt')
   DateTime get publishedAt;
 
   FundamentalNewsItem._();
 
-  factory FundamentalNewsItem([void updates(FundamentalNewsItemBuilder b)]) = _$FundamentalNewsItem;
+  factory FundamentalNewsItem([void updates(FundamentalNewsItemBuilder b)]) =
+      _$FundamentalNewsItem;
 
   @BuiltValueHook(initializeBuilder: true)
   static void _defaults(FundamentalNewsItemBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<FundamentalNewsItem> get serializer => _$FundamentalNewsItemSerializer();
+  static Serializer<FundamentalNewsItem> get serializer =>
+      _$FundamentalNewsItemSerializer();
 }
 
-class _$FundamentalNewsItemSerializer implements PrimitiveSerializer<FundamentalNewsItem> {
+class _$FundamentalNewsItemSerializer
+    implements PrimitiveSerializer<FundamentalNewsItem> {
   @override
-  final Iterable<Type> types = const [FundamentalNewsItem, _$FundamentalNewsItem];
+  final Iterable<Type> types = const [
+    FundamentalNewsItem,
+    _$FundamentalNewsItem
+  ];
 
   @override
   final String wireName = r'FundamentalNewsItem';
@@ -81,11 +88,13 @@ class _$FundamentalNewsItemSerializer implements PrimitiveSerializer<Fundamental
       object.source_,
       specifiedType: const FullType(String),
     );
-    yield r'url';
-    yield serializers.serialize(
-      object.url,
-      specifiedType: const FullType(String),
-    );
+    if (object.url != null) {
+      yield r'url';
+      yield serializers.serialize(
+        object.url,
+        specifiedType: const FullType.nullable(String),
+      );
+    }
     yield r'publishedAt';
     yield serializers.serialize(
       object.publishedAt,
@@ -99,7 +108,9 @@ class _$FundamentalNewsItemSerializer implements PrimitiveSerializer<Fundamental
     FundamentalNewsItem object, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    return _serializeProperties(serializers, object, specifiedType: specifiedType).toList();
+    return _serializeProperties(serializers, object,
+            specifiedType: specifiedType)
+        .toList();
   }
 
   void _deserializeProperties(
@@ -145,8 +156,9 @@ class _$FundamentalNewsItemSerializer implements PrimitiveSerializer<Fundamental
         case r'url':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(String),
-          ) as String;
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
           result.url = valueDes;
           break;
         case r'publishedAt':
@@ -184,4 +196,3 @@ class _$FundamentalNewsItemSerializer implements PrimitiveSerializer<Fundamental
     return result.build();
   }
 }
-

@@ -18,9 +18,9 @@ class _$PerformanceOverall extends PerformanceOverall {
   @override
   final int total;
   @override
-  final num winRate;
+  final num? winRate;
   @override
-  final num hitRate;
+  final num? hitRate;
 
   factory _$PerformanceOverall(
           [void Function(PerformanceOverallBuilder)? updates]) =>
@@ -32,8 +32,8 @@ class _$PerformanceOverall extends PerformanceOverall {
       required this.losses,
       required this.expired,
       required this.total,
-      required this.winRate,
-      required this.hitRate})
+      this.winRate,
+      this.hitRate})
       : super._();
   @override
   PerformanceOverall rebuild(
@@ -162,10 +162,8 @@ class PerformanceOverallBuilder
               expired, r'PerformanceOverall', 'expired'),
           total: BuiltValueNullFieldError.checkNotNull(
               total, r'PerformanceOverall', 'total'),
-          winRate: BuiltValueNullFieldError.checkNotNull(
-              winRate, r'PerformanceOverall', 'winRate'),
-          hitRate: BuiltValueNullFieldError.checkNotNull(
-              hitRate, r'PerformanceOverall', 'hitRate'),
+          winRate: winRate,
+          hitRate: hitRate,
         );
     replace(_$result);
     return _$result;

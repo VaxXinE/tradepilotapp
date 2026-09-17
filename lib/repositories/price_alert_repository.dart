@@ -1,5 +1,6 @@
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 import 'package:trade_pilot_api_client/trade_pilot_client.dart';
+import '../l10n/app_messages.dart';
 
 class PriceAlertRepository {
   const PriceAlertRepository(this._client);
@@ -23,7 +24,7 @@ class PriceAlertRepository {
       throw ArgumentError.value(
         targetPrice,
         'targetPrice',
-        'Target harga harus lebih besar dari 0.',
+        AppMessages.l10n.errTargetPricePositive,
       );
     }
 
@@ -33,7 +34,7 @@ class PriceAlertRepository {
       throw ArgumentError.value(
         trimmedNote,
         'note',
-        'Catatan maksimal 200 karakter.',
+        AppMessages.l10n.errNoteTooLong200,
       );
     }
 
@@ -66,7 +67,7 @@ class PriceAlertRepository {
       throw ArgumentError.value(
         instrument,
         'instrument',
-        'Instrumen tidak boleh kosong.',
+        AppMessages.l10n.errInstrumentRequired,
       );
     }
 

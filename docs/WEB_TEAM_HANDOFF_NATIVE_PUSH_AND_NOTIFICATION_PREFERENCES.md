@@ -1,46 +1,124 @@
-# Handoff Tim Web — Native Push (P2-B3) + Preference Contract (P2-B4.1)
+# Handoff Native Push (FCM) + Preference Contract
 
-> **DIARSIPKAN:** aplikasi mobile saat ini tidak memakai Firebase/FCM atau
-> native push. Jangan implementasikan bagian native push dari dokumen ini
-> sampai fitur tersebut diputuskan aktif kembali. Notification inbox backend
-> tetap digunakan.
+> **KEPUTUSAN 7 September 2026: AKTIFKAN KEMBALI FCM.** Backend native push
+> sudah live dan integrasi Flutter sudah dipasang. Validasi terakhir tetap
+> membutuhkan perangkat fisik serta kredensial APNs milik pemilik akun.
 
-Dokumen ini dibuat dari audit read-only repo `aisgbizdev/Trade-Pilot` branch
-`prod` pada commit `16d9eb6` dan implementasi Flutter saat ini.
+Dokumen awal dibuat dari audit repo web dan implementasi Flutter. Status di
+bagian awal ini sudah diperbarui sesuai kondisi backend dan mobile terkini.
 
-## Status nyata
+## Status terkini
 
-Flutter sudah memakai Firebase project berikut:
+Target konfigurasi yang benar:
 
 ```text
 Project ID: trade-pilot-newsmaker23
-Android:    com.tradepilot.app
-iOS:        com.tradepilot.app
+Android:    id.tradepilot.app
+iOS:        id.tradepilot.app
 ```
 
-Mobile sudah memiliki:
+Konfigurasi Firebase lama memakai `com.tradepilot.app`. Jangan mengambil ulang
+`google-services.json`, `GoogleService-Info.plist`, atau
+`firebase_options.dart` lama dari riwayat Git karena ketiganya terikat ke ID
+aplikasi yang salah.
 
-- Firebase initialization dan background handler;
-- permission UI `Mobile Push`;
-- register/refresh/unregister FCM token;
-- foreground local notification;
-- open handling untuk foreground, background, dan terminated;
-- allowlist action serta ownership check melalui API analysis;
-- unregister sebelum logout;
-- konfigurasi Android/iOS dan build yang lulus.
+Backend sudah memiliki:
 
-Mobile memanggil endpoint authenticated berikut:
+- authenticated `POST /api/native-push/register`;
+- authenticated `DELETE /api/native-push/unregister`;
+- registry device dan sender FCM;
+- preference `nativePushEnabled` serta field notification generasi baru.
+
+Mobile sekarang memakai method typed untuk kedua endpoint tersebut dan sudah
+memiliki Firebase initialization, permission OS, token lifecycle, foreground
+notification, handler tap yang di-allowlist, ownership check untuk analisis,
+serta unregister sebelum logout.
+
+## Tutorial pemilik akun: siapkan Firebase dan APNs
+
+### 1. Verifikasi identifier produksi
+
+Jalankan dari root project Flutter:
+
+```bash
+rg 'applicationId|PRODUCT_BUNDLE_IDENTIFIER' \
+  android/app/build.gradle.kts ios/Runner.xcodeproj/project.pbxproj
+```
+
+Android dan target Runner iOS harus menunjukkan `id.tradepilot.app`.
+
+### 2. Daftarkan aplikasi Android dan iOS di Firebase
+
+1. Buka Firebase Console → project `trade-pilot-newsmaker23` → Project
+   settings → General.
+2. Tambahkan Android app dengan package name **`id.tradepilot.app`**.
+3. Unduh `google-services.json`, lalu simpan tepat di
+   `android/app/google-services.json`.
+4. Tambahkan Apple app dengan bundle ID **`id.tradepilot.app`**.
+5. Unduh `GoogleService-Info.plist`, lalu simpan tepat di
+   `ios/Runner/GoogleService-Info.plist`.
+
+Jangan mengubah package/bundle ID aplikasi agar cocok dengan konfigurasi lama.
+Konfigurasi Firebase harus mengikuti identifier aplikasi yang sudah dirilis.
+
+### 3. Jalankan FlutterFire CLI
+
+```bash
+npm install -g firebase-tools
+firebase login
+dart pub global activate flutterfire_cli
+flutterfire configure
+```
+
+Saat diminta:
+
+- pilih project `trade-pilot-newsmaker23`;
+- pilih platform Android dan iOS saja;
+- cocokkan keduanya dengan app `id.tradepilot.app` yang baru dibuat;
+- izinkan CLI membuat `lib/firebase_options.dart`.
+
+Setelah selesai, pastikan tiga file berikut ada:
 
 ```text
-POST   /api/native-push/register
-DELETE /api/native-push/unregister
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+lib/firebase_options.dart
 ```
 
-Endpoint tersebut belum tersedia pada branch `prod`. Sampai backend bagian B3
-di bawah dideploy, toggle Mobile Push akan gagal secara aman dan menampilkan
-bahwa server belum dapat mendaftarkan perangkat.
+### 4. Aktifkan APNs untuk iOS
 
-## Temuan branch `prod`
+1. Buka Apple Developer → Certificates, Identifiers & Profiles → Identifiers.
+2. Pilih App ID `id.tradepilot.app`, lalu aktifkan capability Push
+   Notifications.
+3. Buka Keys → tombol `+`, buat key dengan capability Apple Push
+   Notifications service (APNs), lalu unduh file `.p8`.
+4. Catat **Key ID** dan **Team ID**. File `.p8` hanya dapat diunduh sekali.
+5. Buka Firebase Console → Project settings → Cloud Messaging → Apple app
+   configuration → APNs Authentication Key.
+6. Upload `.p8`, lalu isi Key ID dan Team ID.
+7. Di Xcode target Runner → Signing & Capabilities, tambahkan **Push
+   Notifications** dan **Background Modes → Remote notifications**.
+
+Jangan pernah memasukkan `.p8`, service-account JSON, private key, atau token
+FCM lengkap ke Git, Flutter assets, screenshot, log, maupun chat. Simpan `.p8`
+di password manager/secret manager organisasi.
+
+### 5. Validasi implementasi Flutter
+
+Setelah langkah 1-4 selesai, uji pada perangkat fisik Android dan iPhone:
+
+- login lalu aktifkan `Mobile Push` pada halaman Notifikasi;
+- pastikan backend menerima satu registrasi token untuk user tersebut;
+- kirim notifikasi saat app foreground, background, dan terminated;
+- tap notifikasi analisis dan pastikan hanya analisis milik user yang terbuka;
+- logout dan pastikan token perangkat dihapus dari registry backend.
+
+## Catatan historis implementasi backend
+
+Bagian B3/B4.1 di bawah dipertahankan sebagai referensi desain. Endpoint dan
+contract-nya sekarang sudah live; jangan mengimplementasikannya ulang.
+
+### Temuan baseline lama
 
 Jangan membuat ulang fitur yang sudah ada:
 
@@ -353,7 +431,7 @@ eksplisit dan verifikasi environment target.
 
 ---
 
-# Prompt Codex untuk Tim Web
+# Prompt historis untuk Tim Web — jangan jalankan ulang
 
 ```text
 Kamu bekerja pada repo aisgbizdev/Trade-Pilot, branch kerja berbasis prod.

@@ -37,27 +37,15 @@ void main() {
     );
     expect(
       bullishBodies.map((widget) => widget.color),
-      everyElement(AppColors.bullishLight),
+      everyElement(AppColors.takeProfit),
     );
     expect(
       bearishBodies.map((widget) => widget.color),
-      everyElement(AppColors.bearishLight),
+      everyElement(AppColors.stopLoss),
     );
     expect(find.textContaining('Candlesticks: green'), findsOneWidget);
-    expect(
-      find.byWidgetPredicate(
-        (widget) =>
-            widget is Text && widget.data?.startsWith('Support ') == true,
-      ),
-      findsOneWidget,
-    );
-    expect(
-      find.byWidgetPredicate(
-        (widget) =>
-            widget is Text && widget.data?.startsWith('Resistance ') == true,
-      ),
-      findsOneWidget,
-    );
+    expect(find.text('Support'), findsOneWidget);
+    expect(find.text('Resistance'), findsOneWidget);
   });
 
   testWidgets('shows loading state', (tester) async {
