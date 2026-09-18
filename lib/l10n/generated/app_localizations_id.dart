@@ -2530,6 +2530,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Kuota analisis per jam kamu sudah habis. Coba lagi setelah waktu tunggu berakhir.';
 
   @override
+  String get analysisTopUpInfo =>
+      'Ingin lanjut analisis? Lihat pilihan yang tersedia';
+
+  @override
   String get analysisQuotaDayTitle => 'Batas harian tercapai';
 
   @override

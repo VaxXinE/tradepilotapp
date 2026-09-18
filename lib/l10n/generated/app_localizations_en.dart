@@ -2539,6 +2539,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your hourly analysis quota is used up. Try again after the wait period ends.';
 
   @override
+  String get analysisTopUpInfo =>
+      'Want to continue your analysis? See your options';
+
+  @override
   String get analysisQuotaDayTitle => 'Daily limit reached';
 
   @override

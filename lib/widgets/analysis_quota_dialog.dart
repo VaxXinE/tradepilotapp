@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../l10n/l10n.dart';
 import '../providers/analysis_provider.dart';
@@ -59,6 +60,27 @@ Future<void> showAnalysisQuotaDialog(
               ),
             ),
           ],
+          const SizedBox(height: 12),
+          TextButton(
+            onPressed: () async {
+              try {
+                if (await launchUrl(
+                  Uri.parse('https://tradepilot.id/topup'),
+                  mode: LaunchMode.externalApplication,
+                )) {
+                  return;
+                }
+              } catch (_) {
+                // Tampilkan pesan gagal yang sama seperti tautan lain di aplikasi.
+              }
+              if (dialogContext.mounted) {
+                ScaffoldMessenger.of(
+                  dialogContext,
+                ).showSnackBar(SnackBar(content: Text(l10n.linkOpenFailed)));
+              }
+            },
+            child: Text(l10n.analysisTopUpInfo),
+          ),
         ],
       ),
       actions: [

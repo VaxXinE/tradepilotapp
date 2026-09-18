@@ -4604,6 +4604,12 @@ abstract class AppLocalizations {
   /// **'Your hourly analysis quota is used up. Try again after the wait period ends.'**
   String get analysisQuotaHourMessage;
 
+  /// No description provided for @analysisTopUpInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Want to continue your analysis? See your options'**
+  String get analysisTopUpInfo;
+
   /// No description provided for @analysisQuotaDayTitle.
   ///
   /// In en, this message translates to:

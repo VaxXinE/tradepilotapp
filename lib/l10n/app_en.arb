@@ -1299,6 +1299,7 @@
   "topUpCredit": "Top Up Credit",
   "analysisQuotaHourTitle": "Hourly limit reached",
   "analysisQuotaHourMessage": "Your hourly analysis quota is used up. Try again after the wait period ends.",
+  "analysisTopUpInfo": "Want to continue your analysis? See your options",
   "analysisQuotaDayTitle": "Daily limit reached",
   "analysisQuotaDayMessage": "Your daily analysis quota is used up. Try again tomorrow.",
   "analysisQuotaConcurrentTitle": "Analysis still in progress",
