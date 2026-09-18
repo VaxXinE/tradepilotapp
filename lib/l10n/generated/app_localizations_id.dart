@@ -2534,7 +2534,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get analysisQuotaDayMessage =>
-      'Kuota gratis harian kamu sudah habis. Gunakan credit atau coba lagi besok.';
+      'Kuota analisis harian kamu sudah habis. Coba lagi besok.';
 
   @override
   String get analysisQuotaConcurrentTitle => 'Analisis masih diproses';

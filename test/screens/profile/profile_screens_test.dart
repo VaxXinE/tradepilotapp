@@ -78,7 +78,7 @@ void main() {
     expect(find.text('Light'), findsOneWidget);
     expect(find.text('Dark'), findsOneWidget);
     expect(find.textContaining('Current: Beginner'), findsOneWidget);
-    expect(find.text('Top Up Credit'), findsOneWidget);
+    expect(find.text('Top Up Credit'), findsNothing);
     expect(find.text('Change Password'), findsOneWidget);
     expect(find.text('Privacy Policy'), findsOneWidget);
     expect(find.text('Terms of Service'), findsOneWidget);

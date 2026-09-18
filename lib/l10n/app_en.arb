@@ -1300,7 +1300,7 @@
   "analysisQuotaHourTitle": "Hourly limit reached",
   "analysisQuotaHourMessage": "Your hourly analysis quota is used up. Try again after the wait period ends.",
   "analysisQuotaDayTitle": "Daily limit reached",
-  "analysisQuotaDayMessage": "Your free daily quota is used up. Use a credit or try again tomorrow.",
+  "analysisQuotaDayMessage": "Your daily analysis quota is used up. Try again tomorrow.",
   "analysisQuotaConcurrentTitle": "Analysis still in progress",
   "analysisQuotaConcurrentMessage": "Wait for the previous analysis to finish before creating another one.",
   "analysisQuotaUnknownTitle": "Analysis could not be created",

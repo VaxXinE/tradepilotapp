@@ -1273,7 +1273,7 @@
   "analysisQuotaHourTitle": "Batas per jam tercapai",
   "analysisQuotaHourMessage": "Kuota analisis per jam kamu sudah habis. Coba lagi setelah waktu tunggu berakhir.",
   "analysisQuotaDayTitle": "Batas harian tercapai",
-  "analysisQuotaDayMessage": "Kuota gratis harian kamu sudah habis. Gunakan credit atau coba lagi besok.",
+  "analysisQuotaDayMessage": "Kuota analisis harian kamu sudah habis. Coba lagi besok.",
   "analysisQuotaConcurrentTitle": "Analisis masih diproses",
   "analysisQuotaConcurrentMessage": "Tunggu analisis sebelumnya selesai sebelum membuat analisis baru.",
   "analysisQuotaUnknownTitle": "Analisis belum dapat dibuat",

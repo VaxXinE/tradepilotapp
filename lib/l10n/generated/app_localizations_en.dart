@@ -2543,7 +2543,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get analysisQuotaDayMessage =>
-      'Your free daily quota is used up. Use a credit or try again tomorrow.';
+      'Your daily analysis quota is used up. Try again tomorrow.';
 
   @override
   String get analysisQuotaConcurrentTitle => 'Analysis still in progress';

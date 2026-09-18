@@ -14,7 +14,6 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme_controller.dart';
 import '../../../l10n/l10n.dart';
 import '../../../providers/auth_provider.dart';
-import '../../../providers/credit_provider.dart';
 import '../../../providers/progression_provider.dart';
 import '../../../services/native_push_service.dart';
 import '../../../widgets/progression/progression_emblem.dart';
@@ -25,7 +24,6 @@ import '../../profile/change_security_question_screen.dart';
 import '../../profile/delete_account_screen.dart';
 import '../../profile/edit_profile_screen.dart';
 import '../../price_alert/price_alert_list_screen.dart';
-import '../../topup/topup_screen.dart';
 import '../../analytics/analytics_screen.dart';
 import '../../daily_summary/daily_summary_screen.dart';
 import '../../journal/trade_journal_screen.dart';
@@ -227,7 +225,6 @@ class ProfileTab extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const _TopUpMenuItem(),
                     ],
                   ),
                   _Section(
@@ -835,60 +832,6 @@ class _BiometricLockTileState extends State<_BiometricLockTile> {
       onChanged: _isSaving ? null : _toggle,
       title: Text(l10n.biometricLock),
       subtitle: Text(enabled ? l10n.biometricLockOn : l10n.biometricLockOff),
-    );
-  }
-}
-
-/// Entri `Top Up Credit` beserta badge saldo.
-///
-/// Saldo di-watch terpisah supaya kegagalan `GET /topups/balance` hanya
-/// menghilangkan badge-nya — menu Profile yang lain tidak ikut rusak.
-class _TopUpMenuItem extends StatelessWidget {
-  const _TopUpMenuItem();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final credit = context.watch<CreditProvider>();
-    final theme = Theme.of(context);
-
-    return ListTile(
-      leading: const Icon(Icons.account_balance_wallet_outlined),
-      title: Text(l10n.topUpCredit),
-      subtitle: Text(l10n.creditBalance),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (credit.hasBalance)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                '${credit.balance}',
-                style: TextStyle(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
-                ),
-              ),
-            ),
-          const Icon(Icons.chevron_right_rounded),
-        ],
-      ),
-      onTap: () async {
-        await Navigator.of(
-          context,
-        ).push(MaterialPageRoute(builder: (_) => const TopUpScreen()));
-
-        // Saldo bisa berubah setelah approval atau pemakaian credit, jadi
-        // segarkan begitu kembali ke Profile.
-        if (context.mounted) {
-          await credit.loadBalance(silent: true);
-        }
-      },
     );
   }
 }

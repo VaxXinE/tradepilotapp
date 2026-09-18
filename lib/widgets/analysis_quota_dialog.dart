@@ -14,8 +14,7 @@ String analysisUsageLabel(BuildContext context, AnalysisQuota? quota) {
   return context.l10n.analysisUsageUnavailable;
 }
 
-/// Returns `true` only when the daily-limit CTA asks to open Top Up Credit.
-Future<bool> showAnalysisQuotaDialog(
+Future<void> showAnalysisQuotaDialog(
   BuildContext context,
   AnalysisQuotaLimit limit,
 ) async {
@@ -33,49 +32,41 @@ Future<bool> showAnalysisQuotaDialog(
   final quotaLimit = limit.limit;
   final retryAfter = limit.retryAfter;
 
-  return await showDialog<bool>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: Text(title),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(message),
-              if (used != null && quotaLimit != null && quotaLimit > 0) ...[
-                const SizedBox(height: 16),
-                LinearProgressIndicator(
-                  value: (used / quotaLimit).clamp(0, 1).toDouble(),
-                ),
-                const SizedBox(height: 6),
-                Text(l10n.analysisQuotaUsage(used, quotaLimit)),
-              ],
-              if (retryAfter != null) ...[
-                const SizedBox(height: 12),
-                Text(
-                  l10n.analysisRetryAfter(
-                    retryAfter.inSeconds < 60
-                        ? l10n.analysisSeconds(retryAfter.inSeconds)
-                        : l10n.analysisMinutes(
-                            (retryAfter.inSeconds / 60).ceil(),
-                          ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: Text(l10n.close),
+  await showDialog<void>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: Text(title),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(message),
+          if (used != null && quotaLimit != null && quotaLimit > 0) ...[
+            const SizedBox(height: 16),
+            LinearProgressIndicator(
+              value: (used / quotaLimit).clamp(0, 1).toDouble(),
             ),
-            if (limit.scope == 'day')
-              FilledButton(
-                onPressed: () => Navigator.pop(dialogContext, true),
-                child: Text(l10n.topUpCredit),
-              ),
+            const SizedBox(height: 6),
+            Text(l10n.analysisQuotaUsage(used, quotaLimit)),
           ],
+          if (retryAfter != null) ...[
+            const SizedBox(height: 12),
+            Text(
+              l10n.analysisRetryAfter(
+                retryAfter.inSeconds < 60
+                    ? l10n.analysisSeconds(retryAfter.inSeconds)
+                    : l10n.analysisMinutes((retryAfter.inSeconds / 60).ceil()),
+              ),
+            ),
+          ],
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(dialogContext),
+          child: Text(l10n.close),
         ),
-      ) ??
-      false;
+      ],
+    ),
+  );
 }

@@ -4613,7 +4613,7 @@ abstract class AppLocalizations {
   /// No description provided for @analysisQuotaDayMessage.
   ///
   /// In en, this message translates to:
-  /// **'Your free daily quota is used up. Use a credit or try again tomorrow.'**
+  /// **'Your daily analysis quota is used up. Try again tomorrow.'**
   String get analysisQuotaDayMessage;
 
   /// No description provided for @analysisQuotaConcurrentTitle.

@@ -24,7 +24,6 @@ import '../../widgets/error_banner.dart';
 import '../../widgets/risk/risk_tools_section.dart';
 import '../journal/trade_journal_screen.dart';
 import '../mindset/mindset_screen.dart';
-import '../topup/topup_screen.dart';
 
 const _analysisTimeframes = ['1m', '5m', '15m', '30m', '1h', '4h', '1D', '1W'];
 
@@ -313,13 +312,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
     if (created == null) {
       final limit = analysisProvider.quotaLimit;
       if (limit != null) {
-        final openTopUp = await showAnalysisQuotaDialog(context, limit);
-        if (openTopUp && mounted) {
-          await Navigator.of(
-            context,
-          ).push(MaterialPageRoute(builder: (_) => const TopUpScreen()));
-          if (mounted) unawaited(analysisProvider.loadQuota());
-        }
+        await showAnalysisQuotaDialog(context, limit);
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
