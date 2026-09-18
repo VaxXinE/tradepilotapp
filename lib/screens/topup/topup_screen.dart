@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
@@ -8,8 +10,10 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/storage/signed_upload.dart';
 import '../../l10n/l10n.dart';
+import '../../models/store_credit_product.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/credit_provider.dart';
+import '../../services/store_billing_service.dart';
 import '../../widgets/error_banner.dart';
 
 /// Halaman Top Up Credit.
@@ -17,10 +21,13 @@ import '../../widgets/error_banner.dart';
 /// Pengguna membayar lewat QRIS dan wajib mengunggah bukti transfer. Backend
 /// saat ini meng-approve permintaan secara langsung dan memperbarui saldo.
 class TopUpScreen extends StatefulWidget {
-  const TopUpScreen({super.key, this.imagePicker});
+  const TopUpScreen({super.key, this.imagePicker, this.useStoreBilling});
 
   /// Disuntikkan pada test; produksi memakai [ImagePicker] biasa.
   final ImagePicker? imagePicker;
+
+  /// Override khusus test; produksi memilih store billing di Android/iOS.
+  final bool? useStoreBilling;
 
   @override
   State<TopUpScreen> createState() => _TopUpScreenState();
@@ -264,17 +271,25 @@ class _TopUpScreenState extends State<TopUpScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final credit = context.watch<CreditProvider>();
+    final store = context.watch<StoreBillingService?>();
     final theme = Theme.of(context);
+    final usesStoreBilling =
+        widget.useStoreBilling ??
+        (!kIsWeb &&
+            (defaultTargetPlatform == TargetPlatform.android ||
+                defaultTargetPlatform == TargetPlatform.iOS));
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.topUpCredit)),
-      floatingActionButton: FloatingActionButton(
-        tooltip: l10n.topUpWhatsAppSupport,
-        backgroundColor: const Color(0xFF25D366),
-        foregroundColor: Colors.white,
-        onPressed: () => _openWhatsApp(context),
-        child: const Icon(Icons.chat_rounded),
-      ),
+      floatingActionButton: usesStoreBilling
+          ? null
+          : FloatingActionButton(
+              tooltip: l10n.topUpWhatsAppSupport,
+              backgroundColor: const Color(0xFF25D366),
+              foregroundColor: Colors.white,
+              onPressed: () => _openWhatsApp(context),
+              child: const Icon(Icons.chat_rounded),
+            ),
       body: RefreshIndicator(
         onRefresh: credit.refreshAll,
         child: ListView(
@@ -289,19 +304,23 @@ class _TopUpScreenState extends State<TopUpScreen> {
                   children: [
                     _BalanceCard(credit: credit),
                     const SizedBox(height: 16),
-                    if (_paymentStep)
+                    if (usesStoreBilling)
+                      _StorePurchasePanel(store: store)
+                    else if (_paymentStep)
                       _buildPaymentStep(context, credit, theme)
                     else
                       _buildAmountStep(context, credit, theme),
-                    const SizedBox(height: 24),
-                    Text(
-                      l10n.topUpHistory,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
+                    if (!usesStoreBilling) ...[
+                      const SizedBox(height: 24),
+                      Text(
+                        l10n.topUpHistory,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    _HistorySection(credit: credit),
+                      const SizedBox(height: 8),
+                      _HistorySection(credit: credit),
+                    ],
                   ],
                 ),
               ),
@@ -482,6 +501,101 @@ class _TopUpScreenState extends State<TopUpScreen> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _StorePurchasePanel extends StatelessWidget {
+  const _StorePurchasePanel({required this.store});
+
+  final StoreBillingService? store;
+
+  @override
+  Widget build(BuildContext context) {
+    final billing = store;
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+
+    if (billing == null) {
+      return ErrorBanner(message: l10n.storePurchaseUnavailable);
+    }
+
+    if (billing.isLoading) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(32),
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      );
+    }
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(l10n.storePurchaseTitle, style: theme.textTheme.titleMedium),
+            const SizedBox(height: 6),
+            Text(
+              l10n.storePurchaseDescription,
+              style: theme.textTheme.bodySmall,
+            ),
+            if (billing.isPurchasing) ...[
+              const SizedBox(height: 16),
+              const LinearProgressIndicator(),
+              const SizedBox(height: 8),
+              Text(l10n.storePurchasePending),
+            ],
+            if (billing.error != null) ...[
+              const SizedBox(height: 12),
+              ErrorBanner(message: l10n.storePurchaseUnavailable),
+            ],
+            const SizedBox(height: 12),
+            if (!billing.isAvailable || billing.products.isEmpty)
+              OutlinedButton(
+                onPressed: billing.isLoading ? null : billing.initialize,
+                child: Text(l10n.storePurchaseRetry),
+              )
+            else
+              for (final product in billing.products)
+                _StoreProductTile(
+                  product: product,
+                  busy: billing.isPurchasing,
+                  onBuy: () => billing.purchase(product),
+                ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StoreProductTile extends StatelessWidget {
+  const _StoreProductTile({
+    required this.product,
+    required this.busy,
+    required this.onBuy,
+  });
+
+  final ProductDetails product;
+  final bool busy;
+  final VoidCallback onBuy;
+
+  @override
+  Widget build(BuildContext context) {
+    final credits = creditsForStoreProduct(product.id);
+    if (credits == null) return const SizedBox.shrink();
+
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.toll_outlined),
+      title: Text(context.l10n.topUpCreditsPreview(credits)),
+      subtitle: Text(product.price),
+      trailing: FilledButton(
+        onPressed: busy ? null : onBuy,
+        child: Text(context.l10n.storePurchaseBuy),
+      ),
     );
   }
 }

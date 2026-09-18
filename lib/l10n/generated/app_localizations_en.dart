@@ -2532,6 +2532,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get topUpCredit => 'Top Up Credit';
 
   @override
+  String get storePurchaseTitle => 'Choose a credit package';
+
+  @override
+  String get storePurchaseDescription =>
+      'Payment is securely processed by the App Store or Google Play. Credits are added only after server verification.';
+
+  @override
+  String get storePurchaseBuy => 'Buy';
+
+  @override
+  String get storePurchaseUnavailable =>
+      'Store purchases are temporarily unavailable.';
+
+  @override
+  String get storePurchasePending => 'Waiting for payment confirmation…';
+
+  @override
+  String get storePurchaseRetry => 'Reload products';
+
+  @override
   String get analysisQuotaHourTitle => 'Hourly limit reached';
 
   @override

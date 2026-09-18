@@ -4592,6 +4592,42 @@ abstract class AppLocalizations {
   /// **'Top Up Credit'**
   String get topUpCredit;
 
+  /// No description provided for @storePurchaseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a credit package'**
+  String get storePurchaseTitle;
+
+  /// No description provided for @storePurchaseDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment is securely processed by the App Store or Google Play. Credits are added only after server verification.'**
+  String get storePurchaseDescription;
+
+  /// No description provided for @storePurchaseBuy.
+  ///
+  /// In en, this message translates to:
+  /// **'Buy'**
+  String get storePurchaseBuy;
+
+  /// No description provided for @storePurchaseUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Store purchases are temporarily unavailable.'**
+  String get storePurchaseUnavailable;
+
+  /// No description provided for @storePurchasePending.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for payment confirmation…'**
+  String get storePurchasePending;
+
+  /// No description provided for @storePurchaseRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload products'**
+  String get storePurchaseRetry;
+
   /// No description provided for @analysisQuotaHourTitle.
   ///
   /// In en, this message translates to:

@@ -28,6 +28,7 @@ import 'providers/progression_provider.dart';
 import 'providers/watchlist_provider.dart';
 import 'repositories/market_repository.dart';
 import 'repositories/price_alert_repository.dart';
+import 'repositories/store_purchase_repository.dart';
 import 'repositories/topup_repository.dart';
 import 'repositories/watchlist_repository.dart';
 import 'screens/analysis/analysis_detail_screen.dart';
@@ -37,6 +38,7 @@ import 'screens/notifications/notifications_screen.dart';
 import 'screens/price_alert/price_alert_list_screen.dart';
 import 'screens/splash_screen.dart';
 import 'services/native_push_service.dart';
+import 'services/store_billing_service.dart';
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -148,6 +150,28 @@ class TradePilotApp extends StatelessWidget {
             return previous ??
                 CreditProvider(auth, TopupRepository(auth.client));
           },
+        ),
+        ChangeNotifierProxyProvider2<
+          AuthProvider,
+          CreditProvider,
+          StoreBillingService
+        >(
+          lazy: false,
+          create: (context) {
+            final auth = context.read<AuthProvider>();
+            return StoreBillingService(
+              auth,
+              context.read<CreditProvider>(),
+              StorePurchaseRepository(auth.client.dio),
+            );
+          },
+          update: (context, auth, credit, previous) =>
+              previous ??
+              StoreBillingService(
+                auth,
+                credit,
+                StorePurchaseRepository(auth.client.dio),
+              ),
         ),
 
         // =====================================================================

@@ -36,6 +36,7 @@ dependencies:
   # access, so it is the required stepping stone. Move to 11 only in a later
   # release, once 10.x has field adoption.
   flutter_secure_storage: ^10.3.1
+  in_app_purchase: ^3.3.0
   in_app_update: ^4.2.5
   local_auth: ^3.0.2
   shared_preferences: ^2.3.3

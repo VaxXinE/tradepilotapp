@@ -66,6 +66,16 @@ void main() {
     harness.dispose();
   });
 
+  testWidgets('hides QRIS purchases in store builds', (tester) async {
+    final harness = await _pump(tester, useStoreBilling: true);
+
+    expect(find.text('Amount (Rupiah)'), findsNothing);
+    expect(find.text('Top-up history'), findsNothing);
+    expect(find.byType(FloatingActionButton), findsNothing);
+
+    harness.dispose();
+  });
+
   testWidgets('previews the credits an amount buys', (tester) async {
     final harness = await _pump(tester);
 
@@ -339,6 +349,7 @@ class _Harness {
 Future<_Harness> _pump(
   WidgetTester tester, {
   ImagePicker? picker,
+  bool useStoreBilling = false,
   List<Map<String, dynamic>>? historyRows,
   bool failHistory = false,
   int? totalOverride,
@@ -383,7 +394,10 @@ Future<_Harness> _pump(
           GlobalCupertinoLocalizations.delegate,
         ],
         supportedLocales: AppLocalizations.supportedLocales,
-        home: TopUpScreen(imagePicker: picker),
+        home: TopUpScreen(
+          imagePicker: picker,
+          useStoreBilling: useStoreBilling,
+        ),
       ),
     ),
   );

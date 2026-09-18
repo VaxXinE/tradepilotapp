@@ -2523,6 +2523,26 @@ class AppLocalizationsId extends AppLocalizations {
   String get topUpCredit => 'Top Up Credit';
 
   @override
+  String get storePurchaseTitle => 'Pilih paket kredit';
+
+  @override
+  String get storePurchaseDescription =>
+      'Pembayaran diproses dengan aman oleh App Store atau Google Play. Kredit hanya ditambahkan setelah verifikasi server.';
+
+  @override
+  String get storePurchaseBuy => 'Beli';
+
+  @override
+  String get storePurchaseUnavailable =>
+      'Pembelian melalui store sedang tidak tersedia.';
+
+  @override
+  String get storePurchasePending => 'Menunggu konfirmasi pembayaran…';
+
+  @override
+  String get storePurchaseRetry => 'Muat ulang produk';
+
+  @override
   String get analysisQuotaHourTitle => 'Batas per jam tercapai';
 
   @override
