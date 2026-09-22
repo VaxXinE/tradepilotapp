@@ -181,6 +181,30 @@ void main() {
     expect(thinBanner.recentHitRate, isNull);
   });
 
+  test('analysis timeframe switch serializes its backend eligibility hint', () {
+    final body = CreateAnalysisBody(
+      (builder) => builder
+        ..instrument = 'XAU/USD'
+        ..timeframe = CreateAnalysisBodyTimeframeEnum.n4h
+        ..mode = CreateAnalysisBodyModeEnum.beginner
+        ..isTimeframeSwitch = true,
+    );
+
+    final json =
+        standardSerializers.serializeWith(CreateAnalysisBody.serializer, body)!
+            as Map<String, Object?>;
+
+    expect(json['isTimeframeSwitch'], isTrue);
+
+    final freshAnalysisJson =
+        standardSerializers.serializeWith(
+              CreateAnalysisBody.serializer,
+              body.rebuild((builder) => builder.isTimeframeSwitch = null),
+            )!
+            as Map<String, Object?>;
+    expect(freshAnalysisJson, isNot(contains('isTimeframeSwitch')));
+  });
+
   test('credit and top-up contracts match the latest API schema', () {
     final quota = standardSerializers.deserializeWith(
       AnalysisQuota.serializer,

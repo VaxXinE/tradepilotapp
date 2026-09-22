@@ -3410,13 +3410,13 @@ class AppLocalizationsId extends AppLocalizations {
   String get riskStyle => 'Gaya risiko';
 
   @override
-  String get riskStyleConservative => 'Konservatif';
+  String get riskStyleConservative => 'Conservative';
 
   @override
-  String get riskStyleBalanced => 'Seimbang';
+  String get riskStyleBalanced => 'Balanced';
 
   @override
-  String get riskStyleAggressive => 'Agresif';
+  String get riskStyleAggressive => 'Aggressive';
 
   @override
   String get totalLots => 'Total lot';

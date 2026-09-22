@@ -184,6 +184,7 @@ class _FakeAnalysisProvider extends AnalysisProvider {
     required CreateAnalysisBodyTimeframeEnum timeframe,
     required CreateAnalysisBodyModeEnum mode,
     String? userInputContext,
+    bool isTimeframeSwitch = false,
   }) async {
     requested.add(instrument);
     return _analysis(instrument);

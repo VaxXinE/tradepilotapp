@@ -434,6 +434,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(provider.requestedTimeframes, [CreateAnalysisBodyTimeframeEnum.n1d]);
+    expect(provider.requestedTimeframeSwitches, [isTrue]);
     expect(created?.timeframe, '1D');
   });
 
@@ -628,6 +629,7 @@ class _FakeAnalysisProvider extends AnalysisProvider {
   final Analysis analysis;
   final AlertStatus? alertStatus;
   final List<CreateAnalysisBodyTimeframeEnum> requestedTimeframes = [];
+  final List<bool> requestedTimeframeSwitches = [];
 
   @override
   Future<Analysis?> getAnalysis(int id, {bool silent = false}) async =>
@@ -642,8 +644,10 @@ class _FakeAnalysisProvider extends AnalysisProvider {
     required CreateAnalysisBodyTimeframeEnum timeframe,
     required CreateAnalysisBodyModeEnum mode,
     String? userInputContext,
+    bool isTimeframeSwitch = false,
   }) async {
     requestedTimeframes.add(timeframe);
+    requestedTimeframeSwitches.add(isTimeframeSwitch);
     final value = switch (timeframe) {
       CreateAnalysisBodyTimeframeEnum.n1m => '1m',
       CreateAnalysisBodyTimeframeEnum.n5m => '5m',

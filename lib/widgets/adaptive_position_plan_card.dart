@@ -188,18 +188,18 @@ class _AdaptivePositionPlanCardState extends State<AdaptivePositionPlanCard> {
         ),
         const SizedBox(height: 6),
         SegmentedButton<AdaptiveRiskStyle>(
-          segments: const [
+          segments: [
             ButtonSegment(
               value: AdaptiveRiskStyle.conservative,
-              label: Text('Konservatif'),
+              label: Text(context.l10n.riskStyleConservative),
             ),
             ButtonSegment(
               value: AdaptiveRiskStyle.balanced,
-              label: Text('Seimbang'),
+              label: Text(context.l10n.riskStyleBalanced),
             ),
             ButtonSegment(
               value: AdaptiveRiskStyle.aggressive,
-              label: Text('Agresif'),
+              label: Text(context.l10n.riskStyleAggressive),
             ),
           ],
           selected: {_style},
