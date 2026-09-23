@@ -182,6 +182,7 @@ export 'package:trade_pilot_api_client/src/model/timeframe_risk_map.dart';
 export 'package:trade_pilot_api_client/src/model/timeframe_risk_map_overall.dart';
 export 'package:trade_pilot_api_client/src/model/timeframe_risk_metrics.dart';
 export 'package:trade_pilot_api_client/src/model/topup_config.dart';
+export 'package:trade_pilot_api_client/src/model/topup_package_option.dart';
 export 'package:trade_pilot_api_client/src/model/topup_request.dart';
 export 'package:trade_pilot_api_client/src/model/topup_request_list.dart';
 export 'package:trade_pilot_api_client/src/model/topup_request_status.dart';

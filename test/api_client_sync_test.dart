@@ -232,13 +232,36 @@ void main() {
     );
   });
 
+  test('timeframe switch serializes its backend eligibility hint', () {
+    final body = CreateAnalysisBody(
+      (builder) => builder
+        ..instrument = 'XAU/USD'
+        ..timeframe = CreateAnalysisBodyTimeframeEnum.n4h
+        ..mode = CreateAnalysisBodyModeEnum.beginner
+        ..isTimeframeSwitch = true,
+    );
+    final json =
+        standardSerializers.serializeWith(CreateAnalysisBody.serializer, body)!
+            as Map<String, Object?>;
+    expect(json['isTimeframeSwitch'], isTrue);
+
+    final freshJson =
+        standardSerializers.serializeWith(
+              CreateAnalysisBody.serializer,
+              body.rebuild((builder) => builder.isTimeframeSwitch = null),
+            )!
+            as Map<String, Object?>;
+    expect(freshJson, isNot(contains('isTimeframeSwitch')));
+  });
+
   test('top-up endpoints round-trip through the generated TopupsApi', () async {
     final client = TradePilotClient(baseUrl: 'https://example.com/api');
     final adapter = _TopupsAdapter();
     client.dio.httpClientAdapter = adapter;
 
     final config = await client.topups.getTopupConfig();
-    expect(config.data?.rupiahPerCredit, 5000);
+    expect(config.data?.packages, hasLength(4));
+    expect(config.data?.packages.last.credits, 320);
     expect(config.data?.qrisImageUrl, 'https://cdn.example.com/qris.png');
 
     final balance = await client.topups.getCreditBalance();
@@ -247,13 +270,13 @@ void main() {
     final created = await client.topups.createTopupRequest(
       createTopupRequestBody: CreateTopupRequestBody(
         (builder) => builder
-          ..amountRupiah = 50000
+          ..amountRupiah = 20000
           ..paymentReferenceNote = 'BCA 1234'
           ..proofObjectPath = 'topups/proof-1.jpg',
       ),
     );
     expect(created.data?.status, TopupRequestStatus.pending);
-    expect(created.data?.creditsRequested, 10);
+    expect(created.data?.creditsRequested, 70);
 
     // History goes through the serializer registry, so a missing
     // ListBuilder<TopupRequest> factory would only fail here.
@@ -262,7 +285,7 @@ void main() {
     expect(history.data?.requests, hasLength(2));
     expect(history.data?.requests.first.reviewNote, isNull);
     expect(history.data?.requests.last.status, TopupRequestStatus.approved);
-    expect(history.data?.requests.last.creditsGranted, 10);
+    expect(history.data?.requests.last.creditsGranted, 150);
 
     expect(
       adapter.requests.map((options) => '${options.method} ${options.path}'),
@@ -277,7 +300,7 @@ void main() {
     final createBody = Map<String, dynamic>.from(
       adapter.requests[2].data as Map,
     );
-    expect(createBody['amountRupiah'], 50000);
+    expect(createBody['amountRupiah'], 20000);
     expect(createBody['proofObjectPath'], 'topups/proof-1.jpg');
 
     final historyQuery = adapter.requests.last.queryParameters;
@@ -324,9 +347,9 @@ void main() {
 const _pendingTopup = {
   'id': 7,
   'userId': 1,
-  'amountRupiah': 50000,
-  'creditsRequested': 10,
-  'conversionRateSnapshot': 5000,
+  'amountRupiah': 20000,
+  'creditsRequested': 70,
+  'conversionRateSnapshot': 286,
   'paymentReferenceNote': 'BCA 1234',
   'proofObjectPath': 'topups/proof-1.jpg',
   'status': 'pending',
@@ -340,16 +363,16 @@ const _pendingTopup = {
 const _approvedTopup = {
   'id': 6,
   'userId': 1,
-  'amountRupiah': 50000,
-  'creditsRequested': 10,
-  'conversionRateSnapshot': 5000,
+  'amountRupiah': 40000,
+  'creditsRequested': 150,
+  'conversionRateSnapshot': 267,
   'paymentReferenceNote': null,
   'proofObjectPath': null,
   'status': 'approved',
   'reviewedByUserId': 2,
   'reviewedAt': '2026-09-07T10:00:00.000Z',
   'reviewNote': 'Verified',
-  'creditsGranted': 10,
+  'creditsGranted': 150,
   'createdAt': '2026-09-07T09:00:00.000Z',
 };
 
@@ -366,7 +389,12 @@ class _TopupsAdapter implements HttpClientAdapter {
 
     final body = switch (options.path) {
       '/topups/config' => {
-        'rupiahPerCredit': 5000,
+        'packages': [
+          {'amountRupiah': 5000, 'credits': 15},
+          {'amountRupiah': 20000, 'credits': 70},
+          {'amountRupiah': 40000, 'credits': 150},
+          {'amountRupiah': 80000, 'credits': 320},
+        ],
         'qrisImageUrl': 'https://cdn.example.com/qris.png',
       },
       '/topups/balance' => {'balance': 10},

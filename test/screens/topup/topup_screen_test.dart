@@ -45,12 +45,15 @@ void main() {
         .setMockMethodCallHandler(storageChannel, null);
   });
 
-  testWidgets('shows balance, QRIS rate and top-up history', (tester) async {
+  testWidgets('shows balance, fixed packages and top-up history', (
+    tester,
+  ) async {
     final harness = await _pump(tester);
 
     expect(find.text('Credit balance'), findsOneWidget);
     expect(find.text('10'), findsOneWidget);
-    expect(find.textContaining('Rp5.000 per credit'), findsOneWidget);
+    expect(find.text('15 credits'), findsOneWidget);
+    expect(find.text('320 credits'), findsOneWidget);
     expect(find.text('Top-up history'), findsOneWidget);
 
     // Status of every row, plus the admin review note.
@@ -69,19 +72,19 @@ void main() {
   testWidgets('hides QRIS purchases in store builds', (tester) async {
     final harness = await _pump(tester, useStoreBilling: true);
 
-    expect(find.text('Amount (Rupiah)'), findsNothing);
+    expect(find.byKey(const ValueKey('topup-package-5000')), findsNothing);
     expect(find.text('Top-up history'), findsNothing);
     expect(find.byType(FloatingActionButton), findsNothing);
 
     harness.dispose();
   });
 
-  testWidgets('previews the credits an amount buys', (tester) async {
+  testWidgets('selects a fixed package from backend config', (tester) async {
     final harness = await _pump(tester);
 
-    await _type(tester, _amountField, '50000');
+    await _selectPackage(tester, 20000);
 
-    expect(find.text('You will receive 10 credit'), findsOneWidget);
+    expect(find.text('70 credits'), findsOneWidget);
 
     harness.dispose();
   });
@@ -89,7 +92,7 @@ void main() {
   testWidgets('requires proof before submitting', (tester) async {
     final harness = await _pump(tester);
 
-    await _type(tester, _amountField, '50000');
+    await _selectPackage(tester, 20000);
     await _openPaymentStep(tester);
 
     final qris = tester.widget<Image>(
@@ -119,7 +122,7 @@ void main() {
   testWidgets('sends the object path, never the signed URL', (tester) async {
     final harness = await _pump(tester, picker: _FakePicker());
 
-    await _type(tester, _amountField, '50000');
+    await _selectPackage(tester, 20000);
     await _openPaymentStep(tester);
 
     await _tap(tester, 'Attach proof');
@@ -128,7 +131,7 @@ void main() {
     await _tap(tester, 'Submit top-up request');
 
     expect(
-      find.text('Top-up approved. 10 credit has been added to your balance.'),
+      find.text('Top-up approved. 70 credit has been added to your balance.'),
       findsOneWidget,
     );
 
@@ -137,6 +140,7 @@ void main() {
     );
     final body = Map<String, dynamic>.from(post.data as Map);
 
+    expect(body['amountRupiah'], 20000);
     expect(body['proofObjectPath'], 'topups/proof.jpg');
     expect(jsonEncode(body), isNot(contains('X-Goog-Signature')));
     expect(jsonEncode(body), isNot(contains('storage.googleapis.com')));
@@ -154,7 +158,7 @@ void main() {
     final harness = await _pump(tester, picker: _FakePicker());
     harness.adapter.failUpload = true;
 
-    await _type(tester, _amountField, '50000');
+    await _selectPackage(tester, 20000);
     await _openPaymentStep(tester);
 
     await _tap(tester, 'Attach proof');
@@ -184,7 +188,7 @@ void main() {
       picker: _FakePicker(bytes: Uint8List(5 * 1024 * 1024 + 1)),
     );
 
-    await _type(tester, _amountField, '50000');
+    await _selectPackage(tester, 20000);
     await _openPaymentStep(tester);
 
     await _tap(tester, 'Attach proof');
@@ -208,7 +212,7 @@ void main() {
       picker: _FakePicker(name: 'statement.pdf', mimeType: 'application/pdf'),
     );
 
-    await _type(tester, _amountField, '50000');
+    await _selectPackage(tester, 20000);
     await _openPaymentStep(tester);
 
     await _tap(tester, 'Attach proof');
@@ -228,7 +232,7 @@ void main() {
   testWidgets('double tap on submit only posts once', (tester) async {
     final harness = await _pump(tester, picker: _FakePicker());
 
-    await _type(tester, _amountField, '50000');
+    await _selectPackage(tester, 20000);
     await _openPaymentStep(tester);
     await _tap(tester, 'Attach proof');
 
@@ -247,15 +251,11 @@ void main() {
     harness.dispose();
   });
 
-  testWidgets('validates the amount against the backend rate', (tester) async {
+  testWidgets('requires selecting a backend package', (tester) async {
     final harness = await _pump(tester);
 
     await _tap(tester, 'Continue to payment');
-    expect(find.text('Enter the amount you paid.'), findsOneWidget);
-
-    await _type(tester, _amountField, '1000');
-    await _tap(tester, 'Continue to payment');
-    expect(find.textContaining('Minimum top-up is Rp5.000'), findsOneWidget);
+    expect(find.text('Choose a top-up package first.'), findsOneWidget);
 
     expect(
       harness.adapter.requests.where((options) => options.path == '/topups'),
@@ -327,14 +327,13 @@ Future<void> _openPaymentStep(WidgetTester tester) async {
   await _tap(tester, 'Got it');
 }
 
-Future<void> _type(WidgetTester tester, Finder field, String text) async {
-  await tester.ensureVisible(field);
+Future<void> _selectPackage(WidgetTester tester, int amount) async {
+  final package = find.byKey(ValueKey('topup-package-$amount'));
+  await tester.ensureVisible(package);
   await tester.pumpAndSettle();
-  await tester.enterText(field, text);
-  await tester.pump();
+  await tester.tap(package);
+  await tester.pumpAndSettle();
 }
-
-final _amountField = find.widgetWithText(TextField, 'Amount (Rupiah)');
 
 class _Harness {
   _Harness(this.adapter, this.credit, this.auth);
@@ -499,7 +498,12 @@ class _TopupAdapter implements HttpClientAdapter {
     switch (options.path) {
       case '/topups/config':
         return _json({
-          'rupiahPerCredit': 5000,
+          'packages': [
+            {'amountRupiah': 5000, 'credits': 15},
+            {'amountRupiah': 20000, 'credits': 70},
+            {'amountRupiah': 40000, 'credits': 150},
+            {'amountRupiah': 80000, 'credits': 320},
+          ],
           'qrisImageUrl': 'https://cdn.example.com/qris.png',
         }, 200);
 
@@ -514,8 +518,13 @@ class _TopupAdapter implements HttpClientAdapter {
 
       case '/topups':
         final body = Map<String, dynamic>.from(options.data as Map);
+        const credits = {5000: 15, 20000: 70, 40000: 150, 80000: 320};
         return _json({
-          ..._row(id: 99, status: 'approved', creditsGranted: 10),
+          ..._row(
+            id: 99,
+            status: 'approved',
+            creditsGranted: credits[body['amountRupiah']]!,
+          ),
           'amountRupiah': body['amountRupiah'],
           'paymentReferenceNote': body['paymentReferenceNote'],
           'proofObjectPath': body['proofObjectPath'],

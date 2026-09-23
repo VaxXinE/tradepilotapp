@@ -4787,19 +4787,19 @@ abstract class AppLocalizations {
   /// No description provided for @topUpPaymentSummary.
   ///
   /// In en, this message translates to:
-  /// **'Pay {amount} to receive {credits} credit'**
+  /// **'Pay {amount} to receive {credits} credits'**
   String topUpPaymentSummary(String amount, int credits);
 
   /// No description provided for @topUpCreditsPreview.
   ///
   /// In en, this message translates to:
-  /// **'You will receive {credits} credit'**
+  /// **'{credits} credits'**
   String topUpCreditsPreview(int credits);
 
   /// No description provided for @topUpAmountRequired.
   ///
   /// In en, this message translates to:
-  /// **'Enter the amount you paid.'**
+  /// **'Choose a top-up package first.'**
   String get topUpAmountRequired;
 
   /// No description provided for @topUpAmountTooSmall.
@@ -4961,7 +4961,7 @@ abstract class AppLocalizations {
   /// No description provided for @errSessionExpiredRelogin.
   ///
   /// In en, this message translates to:
-  /// **'Your session has ended. Please sign in again.'**
+  /// **'Your session ended or your account signed in on another device. Please sign in again.'**
   String get errSessionExpiredRelogin;
 
   /// No description provided for @errSessionExpired.

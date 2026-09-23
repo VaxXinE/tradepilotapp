@@ -2647,11 +2647,11 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String topUpCreditsPreview(int credits) {
-    return 'Kamu akan menerima $credits credit';
+    return '$credits credit';
   }
 
   @override
-  String get topUpAmountRequired => 'Masukkan nominal yang kamu bayar.';
+  String get topUpAmountRequired => 'Pilih paket top-up terlebih dahulu.';
 
   @override
   String topUpAmountTooSmall(String amount) {
@@ -2748,7 +2748,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get errSessionExpiredRelogin =>
-      'Sesi login sudah berakhir. Silakan login kembali.';
+      'Sesi berakhir atau akun masuk di perangkat lain. Silakan login kembali.';
 
   @override
   String get errSessionExpired => 'Sesi login sudah berakhir.';
@@ -3426,13 +3426,13 @@ class AppLocalizationsId extends AppLocalizations {
   String get riskStyle => 'Gaya risiko';
 
   @override
-  String get riskStyleConservative => 'Konservatif';
+  String get riskStyleConservative => 'Conservative';
 
   @override
-  String get riskStyleBalanced => 'Seimbang';
+  String get riskStyleBalanced => 'Balanced';
 
   @override
-  String get riskStyleAggressive => 'Agresif';
+  String get riskStyleAggressive => 'Aggressive';
 
   @override
   String get totalLots => 'Total lot';

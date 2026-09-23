@@ -31,7 +31,8 @@ void main() {
     await provider.refreshAll();
 
     expect(provider.balance, 10);
-    expect(provider.config?.rupiahPerCredit, 5000);
+    expect(provider.config?.packages, hasLength(4));
+    expect(provider.config?.packages.first.credits, 15);
     expect(provider.config?.qrisImageUrl, 'https://cdn.example.com/qris.png');
     expect(provider.history, hasLength(20));
     expect(provider.history.first.id, 25);
@@ -99,7 +100,7 @@ void main() {
     final before = provider.history.length;
 
     final created = await provider.submitTopup(
-      amountRupiah: 50000,
+      amountRupiah: 20000,
       paymentReferenceNote: '  BCA 1234  ',
       proofObjectPath: 'topups/proof-1.jpg',
     );
@@ -116,7 +117,7 @@ void main() {
     expect(posts, hasLength(1));
 
     final body = Map<String, dynamic>.from(posts.single.data as Map);
-    expect(body['amountRupiah'], 50000);
+    expect(body['amountRupiah'], 20000);
     expect(body['paymentReferenceNote'], 'BCA 1234');
     expect(body['proofObjectPath'], 'topups/proof-1.jpg');
   });
@@ -126,11 +127,11 @@ void main() {
 
     final results = await Future.wait([
       provider.submitTopup(
-        amountRupiah: 50000,
+        amountRupiah: 20000,
         proofObjectPath: 'topups/proof-1.jpg',
       ),
       provider.submitTopup(
-        amountRupiah: 50000,
+        amountRupiah: 20000,
         proofObjectPath: 'topups/proof-1.jpg',
       ),
     ]);
@@ -171,7 +172,7 @@ void main() {
     );
 
     expect(created, isNull);
-    expect(provider.submitError, 'Nominal minimal Rp10.000.');
+    expect(provider.submitError, 'Nominal tidak valid.');
     expect(provider.isSubmitting, isFalse);
   });
 
@@ -233,7 +234,7 @@ void main() {
     await provider.refreshAll();
 
     expect(provider.balanceError, isNotNull);
-    expect(provider.config?.rupiahPerCredit, 5000);
+    expect(provider.config?.packages, hasLength(4));
     expect(provider.configError, isNull);
     expect(provider.history, hasLength(20));
     expect(provider.historyError, isNull);
@@ -272,14 +273,15 @@ void main() {
     expect(provider.historyError, isNull);
   });
 
-  test('credits preview follows the backend rate', () async {
+  test('credits preview follows the fixed backend packages', () async {
     final (provider, _, _) = await _provider();
 
-    expect(provider.creditsFor(50000), isNull);
+    expect(provider.creditsFor(20000), isNull);
 
     await provider.loadConfig();
 
-    expect(provider.creditsFor(50000), 10);
+    expect(provider.creditsFor(20000), 70);
+    expect(provider.creditsFor(50000), isNull);
     expect(provider.creditsFor(0), isNull);
   });
 }
@@ -374,7 +376,12 @@ class _TopupsAdapter implements HttpClientAdapter {
     switch (options.path) {
       case '/topups/config':
         return _json({
-          'rupiahPerCredit': 5000,
+          'packages': [
+            {'amountRupiah': 5000, 'credits': 15},
+            {'amountRupiah': 20000, 'credits': 70},
+            {'amountRupiah': 40000, 'credits': 150},
+            {'amountRupiah': 80000, 'credits': 320},
+          ],
           'qrisImageUrl': 'https://cdn.example.com/qris.png',
         }, 200);
 
@@ -385,8 +392,10 @@ class _TopupsAdapter implements HttpClientAdapter {
         final body = Map<String, dynamic>.from(options.data as Map);
         final amount = body['amountRupiah'] as int;
 
-        if (amount < 10000) {
-          return _json({'error': 'Nominal minimal Rp10.000.'}, 400);
+        const packages = {5000: 15, 20000: 70, 40000: 150, 80000: 320};
+        final credits = packages[amount];
+        if (credits == null) {
+          return _json({'error': 'Nominal tidak valid.'}, 400);
         }
 
         return _json({
@@ -397,7 +406,7 @@ class _TopupsAdapter implements HttpClientAdapter {
           'reviewedByUserId': null,
           'reviewedAt': DateTime.utc(2026, 9, 9).toIso8601String(),
           'reviewNote': null,
-          'creditsGranted': amount ~/ 5000,
+          'creditsGranted': credits,
           'paymentReferenceNote': body['paymentReferenceNote'],
           'proofObjectPath': body['proofObjectPath'],
           'createdAt': DateTime.utc(2026, 9, 9).toIso8601String(),

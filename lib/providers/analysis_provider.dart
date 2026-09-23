@@ -545,6 +545,7 @@ class AnalysisProvider extends ChangeNotifier {
     required CreateAnalysisBodyTimeframeEnum timeframe,
     required CreateAnalysisBodyModeEnum mode,
     String? userInputContext,
+    bool isTimeframeSwitch = false,
   }) async {
     if (_authProvider.status != AuthStatus.authenticated) {
       errorMessage = AppMessages.l10n.errSessionExpiredRelogin;
@@ -583,7 +584,8 @@ class AnalysisProvider extends ChangeNotifier {
             ..instrument = instrument
             ..timeframe = timeframe
             ..mode = mode
-            ..userInputContext = userInputContext,
+            ..userInputContext = userInputContext
+            ..isTimeframeSwitch = isTimeframeSwitch ? true : null,
         ),
       );
 

@@ -155,7 +155,7 @@ class NativePushService extends ChangeNotifier {
         return false;
       }
       if (!await _setEnabledPreference(true)) return false;
-      return syncToken();
+      return await syncToken();
     } catch (_) {
       errorMessage = AppMessages.l10n.errPushEnableFailed;
       return false;

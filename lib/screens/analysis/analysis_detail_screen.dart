@@ -307,6 +307,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
           ? CreateAnalysisBodyModeEnum.pro
           : CreateAnalysisBodyModeEnum.beginner,
       userInputContext: analysis.userInputContext,
+      isTimeframeSwitch: timeframe != null,
     );
     if (!mounted) return;
     setState(() => _reanalyzing = false);

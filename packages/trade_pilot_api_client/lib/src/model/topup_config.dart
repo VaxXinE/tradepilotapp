@@ -3,20 +3,22 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:built_collection/built_collection.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
+import 'package:trade_pilot_api_client/src/model/topup_package_option.dart';
 
 part 'topup_config.g.dart';
 
 /// TopupConfig
 ///
 /// Properties:
-/// * [rupiahPerCredit]
+/// * [packages] - Fixed packages accepted by POST /topups.
 /// * [qrisImageUrl]
 @BuiltValue()
 abstract class TopupConfig implements Built<TopupConfig, TopupConfigBuilder> {
-  @BuiltValueField(wireName: r'rupiahPerCredit')
-  int get rupiahPerCredit;
+  @BuiltValueField(wireName: r'packages')
+  BuiltList<TopupPackageOption> get packages;
 
   @BuiltValueField(wireName: r'qrisImageUrl')
   String get qrisImageUrl;
@@ -44,10 +46,10 @@ class _$TopupConfigSerializer implements PrimitiveSerializer<TopupConfig> {
     TopupConfig object, {
     FullType specifiedType = FullType.unspecified,
   }) sync* {
-    yield r'rupiahPerCredit';
+    yield r'packages';
     yield serializers.serialize(
-      object.rupiahPerCredit,
-      specifiedType: const FullType(int),
+      object.packages,
+      specifiedType: const FullType(BuiltList, [FullType(TopupPackageOption)]),
     );
     yield r'qrisImageUrl';
     yield serializers.serialize(
@@ -79,12 +81,14 @@ class _$TopupConfigSerializer implements PrimitiveSerializer<TopupConfig> {
       final key = serializedList[i] as String;
       final value = serializedList[i + 1];
       switch (key) {
-        case r'rupiahPerCredit':
+        case r'packages':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(int),
-          ) as int;
-          result.rupiahPerCredit = valueDes;
+            specifiedType: const FullType(BuiltList, [
+              FullType(TopupPackageOption),
+            ]),
+          ) as BuiltList<TopupPackageOption>;
+          result.packages.replace(valueDes);
           break;
         case r'qrisImageUrl':
           final valueDes = serializers.deserialize(

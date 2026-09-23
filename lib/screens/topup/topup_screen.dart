@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:intl/intl.dart';
@@ -18,8 +17,8 @@ import '../../widgets/error_banner.dart';
 
 /// Halaman Top Up Credit.
 ///
-/// Pengguna membayar lewat QRIS dan wajib mengunggah bukti transfer. Backend
-/// saat ini meng-approve permintaan secara langsung dan memperbarui saldo.
+/// Android/iOS memakai pembelian store. QRIS hanya menjadi fallback untuk
+/// platform non-store dan tetap mewajibkan bukti transfer.
 class TopUpScreen extends StatefulWidget {
   const TopUpScreen({super.key, this.imagePicker, this.useStoreBilling});
 
@@ -34,13 +33,11 @@ class TopUpScreen extends StatefulWidget {
 }
 
 class _TopUpScreenState extends State<TopUpScreen> {
-  // Nominal preset mengikuti mobile web (PRESET_AMOUNTS pada pages/topup.tsx).
-  static const _presetAmounts = [5000, 10000, 15000, 20000];
   static const _whatsAppSupportNumber = '6282310384866';
 
-  final _amountController = TextEditingController();
   final _referenceController = TextEditingController();
 
+  TopupPackageOption? _selectedPackage;
   _PickedProof? _proof;
   bool _paymentStep = false;
   bool _uploadingProof = false;
@@ -58,29 +55,19 @@ class _TopUpScreenState extends State<TopUpScreen> {
 
   @override
   void dispose() {
-    _amountController.dispose();
     _referenceController.dispose();
     super.dispose();
   }
 
-  int? get _amount {
-    final digits = _amountController.text.replaceAll(RegExp(r'[^0-9]'), '');
-
-    return digits.isEmpty ? null : int.tryParse(digits);
-  }
+  int? get _amount => _selectedPackage?.amountRupiah;
 
   bool get _isBusy =>
       _uploadingProof || context.read<CreditProvider>().isSubmitting;
 
   Future<void> _continueToPayment() async {
     final amount = _amount;
-    final rate = context.read<CreditProvider>().config?.rupiahPerCredit;
-    if (amount == null || amount <= 0) {
+    if (amount == null) {
       _showMessage(context.l10n.topUpAmountRequired);
-      return;
-    }
-    if (rate != null && amount < rate) {
-      _showMessage(context.l10n.topUpAmountTooSmall(_rupiah(rate)));
       return;
     }
     FocusScope.of(context).unfocus();
@@ -182,16 +169,9 @@ class _TopUpScreenState extends State<TopUpScreen> {
 
     final amount = _amount;
 
-    if (amount == null || amount <= 0) {
+    if (amount == null) {
       setState(() => _proofError = null);
       _showMessage(l10n.topUpAmountRequired);
-      return;
-    }
-
-    final rate = credit.config?.rupiahPerCredit;
-
-    if (rate != null && amount < rate) {
-      _showMessage(l10n.topUpAmountTooSmall(_rupiah(rate)));
       return;
     }
 
@@ -243,10 +223,10 @@ class _TopUpScreenState extends State<TopUpScreen> {
 
     if (!mounted || created == null) return;
 
-    _amountController.clear();
     _referenceController.clear();
 
     setState(() {
+      _selectedPackage = null;
       _proof = null;
       _proofError = null;
       _paymentStep = false;
@@ -338,7 +318,7 @@ class _TopUpScreenState extends State<TopUpScreen> {
   ) {
     final l10n = context.l10n;
     final amount = _amount;
-    final credits = amount == null ? null : credit.creditsFor(amount);
+    final config = credit.config;
 
     return Card(
       child: Padding(
@@ -348,63 +328,53 @@ class _TopUpScreenState extends State<TopUpScreen> {
           children: [
             Text(l10n.topUpChooseAmount, style: theme.textTheme.titleMedium),
             const SizedBox(height: 12),
-            GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              childAspectRatio: 2.7,
-              mainAxisSpacing: 8,
-              crossAxisSpacing: 8,
-              children: [
-                for (final preset in _presetAmounts)
-                  OutlinedButton(
-                    onPressed: () {
-                      _amountController.text = '$preset';
-                      setState(() {});
-                    },
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: amount == preset
-                          ? theme.colorScheme.primary.withValues(alpha: .10)
-                          : null,
-                      side: BorderSide(
-                        color: amount == preset
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.outline,
+            if (credit.isLoadingConfig && config == null)
+              const Center(child: CircularProgressIndicator())
+            else if (config == null) ...[
+              ErrorBanner(
+                message: credit.configError ?? l10n.topUpConfigFailed,
+              ),
+              OutlinedButton(
+                onPressed: credit.loadConfig,
+                child: Text(l10n.tryAgain),
+              ),
+            ] else
+              GridView.count(
+                crossAxisCount: 2,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                childAspectRatio: 2.2,
+                mainAxisSpacing: 8,
+                crossAxisSpacing: 8,
+                children: [
+                  for (final package in config.packages)
+                    OutlinedButton(
+                      key: ValueKey('topup-package-${package.amountRupiah}'),
+                      onPressed: () =>
+                          setState(() => _selectedPackage = package),
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: amount == package.amountRupiah
+                            ? theme.colorScheme.primary.withValues(alpha: .10)
+                            : null,
+                        side: BorderSide(
+                          color: amount == package.amountRupiah
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.outline,
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(_rupiah(package.amountRupiah)),
+                          Text(
+                            l10n.topUpCreditsPreview(package.credits),
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        ],
                       ),
                     ),
-                    child: Text(_rupiah(preset)),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _amountController,
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: InputDecoration(
-                labelText: l10n.topUpAmountLabel,
-                hintText: l10n.topUpAmountHint,
-                prefixText: 'Rp ',
+                ],
               ),
-              onChanged: (_) => setState(() {}),
-            ),
-            if (credits != null && credits > 0) ...[
-              const SizedBox(height: 8),
-              Text(
-                l10n.topUpCreditsPreview(credits),
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.primary,
-                ),
-              ),
-            ],
-            if (credit.config case final config?) ...[
-              const SizedBox(height: 4),
-              Text(
-                l10n.topUpRatePerCredit(_rupiah(config.rupiahPerCredit)),
-                style: theme.textTheme.bodySmall,
-              ),
-            ],
             const SizedBox(height: 16),
             FilledButton(
               onPressed: _continueToPayment,
@@ -733,13 +703,6 @@ class _QrisCard extends StatelessWidget {
               key: const ValueKey('topup-qris-image'),
               height: 220,
               fit: BoxFit.contain,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            l10n.topUpRatePerCredit(_rupiah(config.rupiahPerCredit)),
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
             ),
           ),
         ],

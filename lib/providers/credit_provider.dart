@@ -79,17 +79,14 @@ class CreditProvider extends ChangeNotifier {
 
   bool get hasMoreHistory => _history.length < _historyTotal;
 
-  /// Jumlah credit untuk sebuah nominal Rupiah, mengikuti rate backend.
-  ///
-  /// `null` selama konfigurasi belum dimuat, supaya UI tidak menebak rate.
+  /// Jumlah credit untuk paket dengan nominal yang sama persis.
   int? creditsFor(int amountRupiah) {
-    final rate = _config?.rupiahPerCredit;
-
-    if (rate == null || rate <= 0 || amountRupiah <= 0) {
-      return null;
+    final packages = _config?.packages;
+    if (packages == null) return null;
+    for (final package in packages) {
+      if (package.amountRupiah == amountRupiah) return package.credits;
     }
-
-    return amountRupiah ~/ rate;
+    return null;
   }
 
   int? get _currentUserId {

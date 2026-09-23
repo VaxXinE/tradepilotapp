@@ -1387,14 +1387,14 @@
   "topUpContinuePayment": "Continue to payment",
   "topUpPayment": "Payment details",
   "topUpChangeAmount": "Change amount",
-  "topUpPaymentSummary": "Pay {amount} to receive {credits} credit",
+  "topUpPaymentSummary": "Pay {amount} to receive {credits} credits",
   "@topUpPaymentSummary": {
     "placeholders": {
       "amount": {"type": "String"},
       "credits": {"type": "int"}
     }
   },
-  "topUpCreditsPreview": "You will receive {credits} credit",
+  "topUpCreditsPreview": "{credits} credits",
   "@topUpCreditsPreview": {
     "placeholders": {
       "credits": {
@@ -1402,7 +1402,7 @@
       }
     }
   },
-  "topUpAmountRequired": "Enter the amount you paid.",
+  "topUpAmountRequired": "Choose a top-up package first.",
   "topUpAmountTooSmall": "Minimum top-up is {amount}.",
   "@topUpAmountTooSmall": {
     "placeholders": {
@@ -1458,7 +1458,7 @@
       }
     }
   },
-  "errSessionExpiredRelogin": "Your session has ended. Please sign in again.",
+  "errSessionExpiredRelogin": "Your session ended or your account signed in on another device. Please sign in again.",
   "errSessionExpired": "Your session has ended.",
   "errSignInAgain": "Please sign in again.",
   "errNoConnection": "Could not reach the server. Check your internet connection.",

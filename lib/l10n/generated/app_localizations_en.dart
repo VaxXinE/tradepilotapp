@@ -2651,16 +2651,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String topUpPaymentSummary(String amount, int credits) {
-    return 'Pay $amount to receive $credits credit';
+    return 'Pay $amount to receive $credits credits';
   }
 
   @override
   String topUpCreditsPreview(int credits) {
-    return 'You will receive $credits credit';
+    return '$credits credits';
   }
 
   @override
-  String get topUpAmountRequired => 'Enter the amount you paid.';
+  String get topUpAmountRequired => 'Choose a top-up package first.';
 
   @override
   String topUpAmountTooSmall(String amount) {
@@ -2757,7 +2757,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errSessionExpiredRelogin =>
-      'Your session has ended. Please sign in again.';
+      'Your session ended or your account signed in on another device. Please sign in again.';
 
   @override
   String get errSessionExpired => 'Your session has ended.';
