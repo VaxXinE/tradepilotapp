@@ -173,6 +173,13 @@ class AppTheme {
         ),
       ),
       dividerTheme: DividerThemeData(color: border, thickness: 1),
+      // Chevron expand/collapse selalu beraksen, bukan abu-abu netral —
+      // sinyal visual konsisten se-app bahwa baris ini bisa diketuk untuk
+      // dibuka, bukan cuma teks statis.
+      expansionTileTheme: ExpansionTileThemeData(
+        iconColor: accent,
+        collapsedIconColor: accent.withValues(alpha: 0.75),
+      ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: Colors.transparent,

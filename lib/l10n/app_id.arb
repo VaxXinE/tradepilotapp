@@ -48,10 +48,12 @@
   "fundamentalDrivers": "Penggerak Fundamental",
   "proAnalysisDetailsTitle": "Kenapa analisis ini?",
   "proAnalysisDetailsDescription": "Buka untuk melihat faktor di balik kesimpulan AI.",
+  "analysisRationaleContext": "Alasan & konteks AI",
   "analysisHelpfulQuestion": "Apakah analisis ini membantu?",
   "helpful": "Membantu",
   "notHelpful": "Kurang Membantu",
-  "analysisSafetyDisclaimer": "Trade Pilot adalah alat bantu analisis. Selalu batasi risiko dan hindari membuka posisi hanya berdasarkan satu indikator.",
+  "analysisSafetyDisclaimerTitle": "Bukan rekomendasi investasi. Trading mengandung risiko.",
+  "analysisSafetyDisclaimer": "Trade Pilot adalah alat pendukung keputusan, bukan saran keuangan atau jaminan profit. Selalu kelola risiko dan jangan membuka posisi hanya berdasarkan satu indikator.",
   "journalCreateForTrade": "Catat trade ini",
   "journalEntryForTrade": "Catatan trade saya",
   "journalReflectionHint": "Simpan keputusan dan hasil trade untuk refleksi.",
@@ -67,8 +69,7 @@
   },
   "priceLevelAlertsOff": "Alert: NONAKTIF",
   "changeTimeframe": "Ganti Timeframe",
-  "changeTimeframeDescription": "Instrumen sama, timeframe berbeda — buat analisis baru tanpa keluar dari halaman ini.",
-  "analyzeThisTimeframe": "Analisis timeframe ini",
+  "changeTimeframeDescription": "Instrumen sama, timeframe berbeda — ketuk untuk buat analisis baru tanpa keluar dari halaman ini.",
   "analysisUsesFreeQuota": "Sumber: kuota analisis gratis",
   "analysisUsesOneCredit": "Sumber: 1 credit (kuota gratis habis)",
   "analysisUsageUnavailable": "Sumber pemakaian akan dipastikan sebelum permintaan diproses",
@@ -119,6 +120,7 @@
   "analysisSnapshotDescription": "Bagian ini adalah snapshot data yang AI gunakan saat membuat analisis.",
   "buy": "Buy",
   "sell": "Sell",
+  "chartScenarioBoth": "Keduanya",
   "opportunity": "Peluang",
   "executionInsight": "Bagaimana trader biasanya merespons",
   "executionInsightDescription": "Gambaran cara trader biasanya menyikapi tiap skenario, tanpa level Entry, Stop Loss, atau Take Profit spesifik.",
@@ -185,6 +187,26 @@
   "sponsoredBy": "Disponsori oleh",
   "newsDataVia": "Data berita via newsmaker.id",
   "marketNews": "Berita pasar",
+  "recentNews": "Berita Terkini",
+  "publishedJustNow": "Baru saja",
+  "publishedMinutesAgo": "{count} menit lalu",
+  "@publishedMinutesAgo": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "publishedHoursAgo": "{count} jam lalu",
+  "@publishedHoursAgo": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "publishedDaysAgo": "{count} hari lalu",
+  "@publishedDaysAgo": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "pauseTicker": "Jeda ticker",
   "resumeTicker": "Lanjutkan ticker",
   "hideTicker": "Sembunyikan ticker",
@@ -497,8 +519,21 @@
   "forgotPassword": "Lupa password?",
   "signIn": "Masuk ke Dashboard",
   "or": "atau",
+  "orSignInWithEmail": "atau masuk dengan email",
+  "secureSignIn": "Login aman",
   "continueWithGoogle": "Lanjutkan dengan Google",
   "continueWithApple": "Lanjutkan dengan Apple",
+  "continueWithFacebook": "Lanjutkan dengan Facebook",
+  "continueWithTikTok": "Lanjutkan dengan TikTok",
+  "socialSignInUnavailable": "Login dengan {provider} sedang tidak tersedia. Coba metode lain.",
+  "@socialSignInUnavailable": {
+    "placeholders": { "provider": { "type": "String" } }
+  },
+  "socialSignInFailed": "Tidak dapat melanjutkan dengan {provider}. Silakan coba lagi.",
+  "@socialSignInFailed": {
+    "placeholders": { "provider": { "type": "String" } }
+  },
+  "socialEmailAlreadyRegistered": "Email ini sudah terdaftar. Masuklah dengan metode yang sudah terhubung.",
   "googleDeleteReauthDescription": "Untuk melindungi akunmu, verifikasi identitas dengan Google sebelum penghapusan.",
   "federatedDeleteReauthDescription": "Untuk melindungi akunmu, verifikasi dengan metode masuk yang terhubung ke akun ini sebelum penghapusan.",
   "verifyGoogleAndDelete": "Verifikasi dengan Google dan hapus",
@@ -612,6 +647,9 @@
   "instrumentCategoryCommoditiesIndices": "Komoditas & Indeks",
   "instrumentCategoryForex": "Valas",
   "instrumentCategoryCrypto": "Kripto",
+  "assetTypeGold": "Emas",
+  "assetTypeOil": "Minyak",
+  "assetTypeIndex": "Indeks",
   "timeframe": "Timeframe",
   "additionalNotes": "Catatan Tambahan",
   "decisionGuardrails": "Guardrail keputusan",
@@ -787,7 +825,6 @@
   "unlimitedAnalysisQuota": "Kuota analisis tanpa batas",
   "analysisQuota": "Kuota Analisis",
   "analysisQuotaLoadFailed": "Kuota analisis belum dapat dimuat.",
-  "perHour": "Per jam",
   "perDay": "Per hari",
   "noAnalyses": "Belum ada analisis",
   "createFirstAnalysis": "Buat analisis pertamamu",
@@ -854,9 +891,7 @@
   "aiAnalysis": "Analisis AI",
   "analyzeTitle": "Analisis Baru",
   "otherInstrument": "Instrumen lain…",
-  "quotaHour": "Sisa per jam",
   "quotaDay": "Sisa per hari",
-  "quotaHourShort": "/jam",
   "quotaDayShort": "/hari",
   "selectMarketDescription": "Pilih pasar yang ingin kamu pahami.",
   "tapToChangeInstrument": "Ketuk untuk mengganti instrumen",
@@ -1051,7 +1086,7 @@
   "startTradingJourney": "Mulai perjalanan tradingmu",
   "registerDescription": "Daftar gratis dan mulai analisis",
   "registerValueInsight": "Insight pasar, bukan sinyal buta",
-  "registerValueFast": "Analisis pertama di bawah 30 detik",
+  "registerValueFast": "Mulai analisis pertama dalam beberapa langkah",
   "registerValueRisk": "Tahu persis kapan kamu salah",
   "minimumEightCharacters": "Minimal 8 karakter",
   "firstPetQuestion": "Apa nama hewan peliharaan pertamamu?",
@@ -1168,6 +1203,7 @@
   "active": "Aktif",
   "deleteAlert": "Hapus alert",
   "actual": "Aktual",
+  "forecast": "Perkiraan",
   "previous": "Sebelumnya",
   "goldEventExplanation": "Mengapa penting: data USD sering memengaruhi Emas dan dapat meningkatkan volatilitas XAU/USD.",
   "currencyEventExplanation": "Mengapa penting: peristiwa {currency} berkaitan langsung dengan {instrument} dan dapat meningkatkan volatilitas.",
@@ -1270,8 +1306,6 @@
   "profitLossFormula": "Formula P/L",
   "sourceDocument": "Dokumen sumber",
   "topUpCredit": "Top Up Credit",
-  "analysisQuotaHourTitle": "Batas per jam tercapai",
-  "analysisQuotaHourMessage": "Kuota analisis per jam kamu sudah habis. Coba lagi setelah waktu tunggu berakhir.",
   "analysisTopUpInfo": "Ingin lanjut analisis? Lihat pilihan yang tersedia",
   "analysisQuotaDayTitle": "Batas harian tercapai",
   "analysisQuotaDayMessage": "Kuota analisis harian kamu sudah habis. Coba lagi besok.",
@@ -1314,7 +1348,6 @@
       }
     }
   },
-  "analysisQuotaBalances": "Per jam: {hourly} • Harian: {daily} • Credit: {credits}",
   "@analysisQuotaBalances": {
     "placeholders": {
       "hourly": {
@@ -1384,7 +1417,7 @@
   "topUpCreditsGranted": "{credits} credit ditambahkan",
   "topUpReviewNote": "Catatan admin: {note}",
   "topUpRequestedCredits": "{credits} credit",
-  "errSessionExpiredRelogin": "Sesi login sudah berakhir. Silakan login kembali.",
+  "errSessionExpiredRelogin": "Sesi berakhir atau akun masuk di perangkat lain. Silakan login kembali.",
   "errSessionExpired": "Sesi login sudah berakhir.",
   "errSignInAgain": "Silakan login kembali.",
   "errNoConnection": "Tidak bisa terhubung ke server. Periksa koneksi internet kamu.",
@@ -1587,6 +1620,7 @@
   "adaptivePlanDisclaimer": "Kalkulator ini tidak mengubah level AI dan tidak mengirim order. Isi dana bebas yang sudah dikurangi margin posisi lain.",
   "availableTradingFunds": "Dana trading tersedia",
   "maxLossLimit": "Batas rugi maksimum",
+  "accountTier": "Tier akun",
   "buildPositionPlan": "Buat rencana posisi",
   "copyPositionPlan": "Salin rencana",
   "positionPlanCopied": "Rencana posisi disalin.",
@@ -1604,5 +1638,27 @@
   "adaptivePlanFootnote": "Day trading only. Estimasi tidak memasukkan spread, slippage, fee, VAT, rollover, atau auto-liquidation broker.",
   "lossToSl": "Rugi ke SL",
   "entryZone": "Zona Entry",
-  "primaryScenario": "Skenario Utama"
+  "primaryScenario": "Skenario Utama",
+  "analyzeAction": "Analisis",
+  "setAlertAction": "Pasang Alert",
+  "currentPriceLabel": "Harga saat ini",
+  "trackMarketsTradingView": "Pantau semua market di TradingView",
+  "marketSessionsAboutTitle": "Tentang sesi market",
+  "marketSessionsAboutBody": "Bagian ini menunjukkan sesi market global yang sedang buka. Ini berguna sebagai konteks untuk Emas, forex, dan instrumen non-kripto lainnya.",
+  "marketSessionsOverlapBody": "Ketika dua sesi beririsan, aktivitas dan likuiditas biasanya lebih tinggi.",
+  "typicalSessionHours": "Jam sesi umum",
+  "shownInJakarta": "Ditampilkan dalam Asia/Jakarta",
+  "marketSessionContextDisclaimer": "Ini adalah konteks market, bukan sinyal trading atau pemicu order otomatis.",
+  "analyzeFooterDisclaimer": "TradePilot adalah alat bantu pengambilan keputusan, bukan broker, layanan trading, atau penasihat keuangan pribadi. Keputusan dan risiko tetap menjadi tanggung jawabmu.",
+  "searchOrEnterInstrumentCode": "Cari atau masukkan kode",
+  "directionalBias": "BIAS ARAH",
+  "forTimeframe": "Untuk timeframe {timeframe}",
+  "@forTimeframe": {"placeholders": {"timeframe": {"type": "String"}}},
+  "strongBearishBias": "Bias bearish kuat",
+  "neutralWait": "Netral / Tunggu",
+  "strongBullishBias": "Bias bullish kuat",
+  "biasNotInstruction": "Kecenderungan hasil analisis — bukan instruksi beli/jual",
+  "learn": "Pelajari",
+  "relevantForHours": "Masih relevan sekitar {hours} jam lagi",
+  "@relevantForHours": {"placeholders": {"hours": {"type": "int"}}}
 }

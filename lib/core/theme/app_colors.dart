@@ -108,6 +108,12 @@ class AppColors {
   static const bearishDark = Color(0xFFF87171);
   static const neutralDark = Color(0xFFFBBF24);
 
+  // ---- Warning/notice accent (amber), dipakai berulang di footer dan
+  // chip kuota — disatukan di sini supaya tidak ada hex ad-hoc yang
+  // menyimpang diam-diam dari token pusat.
+  static const warningLight = Color(0xFFB45309);
+  static const warningDark = Color(0xFFFCD34D);
+
   // ---- Chart levels (Tailwind amber/red/emerald 500 on the web) ----
   static const entry = Color(0xFFF59E0B);
   static const stopLoss = Color(0xFFEF4444);

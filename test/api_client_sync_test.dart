@@ -181,28 +181,19 @@ void main() {
     expect(thinBanner.recentHitRate, isNull);
   });
 
-  test('analysis timeframe switch serializes its backend eligibility hint', () {
+  test('analysis requests omit the retired timeframe-switch hint', () {
     final body = CreateAnalysisBody(
       (builder) => builder
         ..instrument = 'XAU/USD'
         ..timeframe = CreateAnalysisBodyTimeframeEnum.n4h
-        ..mode = CreateAnalysisBodyModeEnum.beginner
-        ..isTimeframeSwitch = true,
+        ..mode = CreateAnalysisBodyModeEnum.beginner,
     );
 
     final json =
         standardSerializers.serializeWith(CreateAnalysisBody.serializer, body)!
             as Map<String, Object?>;
 
-    expect(json['isTimeframeSwitch'], isTrue);
-
-    final freshAnalysisJson =
-        standardSerializers.serializeWith(
-              CreateAnalysisBody.serializer,
-              body.rebuild((builder) => builder.isTimeframeSwitch = null),
-            )!
-            as Map<String, Object?>;
-    expect(freshAnalysisJson, isNot(contains('isTimeframeSwitch')));
+    expect(json, isNot(contains('isTimeframeSwitch')));
   });
 
   test('credit and top-up contracts match the latest API schema', () {
@@ -210,7 +201,6 @@ void main() {
       AnalysisQuota.serializer,
       {
         'unlimited': false,
-        'hourly': {'limit': 5, 'used': 5, 'remaining': 0},
         'daily': {'limit': 20, 'used': 20, 'remaining': 0},
         'credits': {'balance': 10},
       },

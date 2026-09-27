@@ -5,6 +5,7 @@ import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 import '../../providers/auth_provider.dart';
 import '../analysis/analysis_detail_screen.dart';
 import '../../l10n/l10n.dart';
+import '../../widgets/product_state_view.dart';
 import '../../widgets/responsive_page.dart';
 
 class DailySummaryScreen extends StatefulWidget {
@@ -112,21 +113,25 @@ class _DailySummaryScreenState extends State<DailySummaryScreen> {
         onRefresh: _load,
         child: _loading && data == null
             ? ListView(
-                children: const [
-                  SizedBox(height: 240),
-                  Center(child: CircularProgressIndicator()),
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: responsivePagePadding(context),
+                children: [
+                  ProductStateView(
+                    kind: ProductStateKind.loading,
+                    title: context.l10n.dailySummary,
+                  ),
                 ],
               )
             : _error != null && data == null
             ? ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: responsivePagePadding(context),
                 children: [
-                  const SizedBox(height: 180),
-                  Center(child: Text(_error!)),
-                  Center(
-                    child: TextButton(
-                      onPressed: _load,
-                      child: Text(context.l10n.tryAgain),
-                    ),
+                  ProductStateView(
+                    kind: ProductStateKind.error,
+                    title: _error!,
+                    actionLabel: context.l10n.tryAgain,
+                    onAction: _load,
                   ),
                 ],
               )
@@ -262,15 +267,10 @@ class _DailySummaryScreenState extends State<DailySummaryScreen> {
                       ),
                     ),
                   ] else
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 56),
-                      child: Column(
-                        children: [
-                          const Icon(Icons.today_outlined, size: 48),
-                          const SizedBox(height: 12),
-                          Text(context.l10n.dailySummaryEmpty),
-                        ],
-                      ),
+                    ProductStateView(
+                      kind: ProductStateKind.empty,
+                      title: context.l10n.dailySummaryEmpty,
+                      icon: Icons.today_outlined,
                     ),
                 ],
               ),

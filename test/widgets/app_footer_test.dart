@@ -17,9 +17,7 @@ void main() {
     await tester.pumpWidget(
       localizedTestApp(
         theme: AppTheme.dark,
-        home: const Scaffold(
-          body: SingleChildScrollView(child: AppFooter()),
-        ),
+        home: const Scaffold(body: SingleChildScrollView(child: AppFooter())),
       ),
     );
 
@@ -36,6 +34,19 @@ void main() {
     expect(find.text('Terms of Service'), findsOneWidget);
     expect(find.text('Support'), findsOneWidget);
     expect(find.text('Delete Account'), findsOneWidget);
+    for (final label in [
+      'Privacy Policy',
+      'Terms of Service',
+      'Support',
+      'Delete Account',
+    ]) {
+      final target = find.ancestor(
+        of: find.text(label),
+        matching: find.byType(InkWell),
+      );
+      expect(tester.getSize(target).height, greaterThanOrEqualTo(44));
+      expect(tester.getSize(target).width, greaterThanOrEqualTo(44));
+    }
   });
 
   testWidgets('footer stays readable at a larger text scale', (tester) async {
@@ -49,9 +60,7 @@ void main() {
         data: const MediaQueryData(textScaler: TextScaler.linear(1.3)),
         child: localizedTestApp(
           theme: AppTheme.light,
-          home: const Scaffold(
-            body: SingleChildScrollView(child: AppFooter()),
-          ),
+          home: const Scaffold(body: SingleChildScrollView(child: AppFooter())),
         ),
       ),
     );

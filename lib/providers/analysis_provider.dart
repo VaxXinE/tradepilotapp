@@ -74,6 +74,8 @@ class AnalysisProvider extends ChangeNotifier {
 
   String? errorMessage;
 
+  String? summaryError;
+
   String? historyError;
 
   List<Analysis> history = [];
@@ -350,6 +352,8 @@ class AnalysisProvider extends ChangeNotifier {
 
     errorMessage = null;
 
+    summaryError = null;
+
     historyError = null;
   }
 
@@ -433,6 +437,8 @@ class AnalysisProvider extends ChangeNotifier {
     _summaryRequestInFlight = true;
 
     if (!silent) {
+      summaryError = null;
+
       isLoadingSummary = true;
 
       notifyListeners();
@@ -446,9 +452,11 @@ class AnalysisProvider extends ChangeNotifier {
       }
 
       summary = response.data;
+
+      summaryError = null;
     } catch (error) {
       if (_isSessionCurrent(epoch) && !silent) {
-        errorMessage = _friendlyError(error);
+        summaryError = _friendlyError(error);
       }
     } finally {
       if (requestId == _summaryRequestId) {
@@ -545,7 +553,6 @@ class AnalysisProvider extends ChangeNotifier {
     required CreateAnalysisBodyTimeframeEnum timeframe,
     required CreateAnalysisBodyModeEnum mode,
     String? userInputContext,
-    bool isTimeframeSwitch = false,
   }) async {
     if (_authProvider.status != AuthStatus.authenticated) {
       errorMessage = AppMessages.l10n.errSessionExpiredRelogin;
@@ -584,8 +591,7 @@ class AnalysisProvider extends ChangeNotifier {
             ..instrument = instrument
             ..timeframe = timeframe
             ..mode = mode
-            ..userInputContext = userInputContext
-            ..isTimeframeSwitch = isTimeframeSwitch ? true : null,
+            ..userInputContext = userInputContext,
         ),
       );
 

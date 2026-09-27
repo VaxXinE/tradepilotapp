@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../core/api/api_config.dart';
+import '../core/theme/app_colors.dart';
 import '../l10n/l10n.dart';
 import '../models/market_models.dart';
 import '../providers/auth_provider.dart';
@@ -78,22 +79,30 @@ class TradePilotAppHeader extends StatelessWidget {
                   key: const Key('app-header-back'),
                   tooltip: backLabel,
                   onPressed: onBack,
-                  visualDensity: VisualDensity.compact,
+                  constraints: const BoxConstraints.tightFor(
+                    width: 44,
+                    height: 44,
+                  ),
                   icon: const Icon(Icons.chevron_left_rounded, size: 24),
                 ),
               InkWell(
                 key: const Key('app-header-brand'),
                 onTap: onOpenHome,
                 borderRadius: BorderRadius.circular(8),
-                child: Semantics(
-                  label: logoLabel,
-                  image: true,
-                  child: Image.asset(
-                    'assets/images/trade_pilot_app_icon.png',
-                    width: 30,
-                    height: 30,
-                    fit: BoxFit.contain,
-                    excludeFromSemantics: true,
+                child: SizedBox.square(
+                  dimension: 44,
+                  child: Center(
+                    child: Semantics(
+                      label: logoLabel,
+                      image: true,
+                      child: Image.asset(
+                        'assets/images/trade_pilot_app_icon.png',
+                        width: 30,
+                        height: 30,
+                        fit: BoxFit.contain,
+                        excludeFromSemantics: true,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -127,13 +136,16 @@ class TradePilotAppHeader extends StatelessWidget {
               IconButton(
                 tooltip: themeLabel,
                 onPressed: onToggleTheme,
-                visualDensity: VisualDensity.compact,
+                constraints: const BoxConstraints.tightFor(
+                  width: 44,
+                  height: 44,
+                ),
                 icon: Icon(
                   isDarkMode
                       ? Icons.light_mode_rounded
                       : Icons.dark_mode_rounded,
                   size: 19,
-                  color: isDarkMode ? const Color(0xFFFAB505) : null,
+                  color: isDarkMode ? AppColors.darkAccent : null,
                 ),
               ),
               // Urutan mengikuti header web: bahasa, tema, avatar, lonceng.
@@ -144,17 +156,25 @@ class TradePilotAppHeader extends StatelessWidget {
                   key: const Key('app-header-profile'),
                   onTap: onOpenProfile,
                   customBorder: const CircleBorder(),
-                  child: _ProfileAvatar(
-                    displayName: displayName,
-                    avatarUrl: avatarUrl,
-                    isActive: profileActive,
+                  child: SizedBox.square(
+                    dimension: 44,
+                    child: Center(
+                      child: _ProfileAvatar(
+                        displayName: displayName,
+                        avatarUrl: avatarUrl,
+                        isActive: profileActive,
+                      ),
+                    ),
                   ),
                 ),
               ),
               IconButton(
                 tooltip: notificationsLabel,
                 onPressed: onOpenNotifications,
-                visualDensity: VisualDensity.compact,
+                constraints: const BoxConstraints.tightFor(
+                  width: 44,
+                  height: 44,
+                ),
                 icon: Badge(
                   isLabelVisible: unreadCount > 0,
                   label: Text(unreadCount > 9 ? '9+' : '$unreadCount'),
@@ -175,6 +195,13 @@ class TradePilotAppHeader extends StatelessWidget {
 /// Konten digandakan dan digeser terus-menerus seperti animasi marquee web.
 /// Ketika sistem meminta pengurangan animasi, ticker berhenti bergerak dan
 /// tetap dapat digeser manual.
+///
+/// Palet di dalam ticker (latar `0xFF020617` dan aksen-aksennya) sengaja
+/// dikunci gelap di kedua tema aplikasi, bukan mengikuti `isDark`: ini
+/// meniru tampilan ticker bursa sungguhan (mis. Bloomberg) yang selalu
+/// gelap terlepas dari tema situs webnya, dan menjaga kontras teks/angka
+/// yang sudah divalidasi di atas latar tersebut tanpa perlu pasangan
+/// varian light.
 class LiveMarketTicker extends StatefulWidget {
   const LiveMarketTicker({super.key, required this.quotes, this.newsLimit = 3});
 
@@ -532,10 +559,14 @@ class _TickerItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Ticker selalu bergaya gelap di kedua tema (lihat catatan pada
+    // LiveMarketTicker), jadi warna naik/turun dikunci ke varian dark yang
+    // sudah terbukti kontras di atas latar `0xFF020617`, bukan varian
+    // light yang dipakai widget lain saat `isDark` false.
     final changeColor = quote.isUp
-        ? const Color(0xFF34D399)
+        ? AppColors.bullishDark
         : quote.isDown
-        ? const Color(0xFFF87171)
+        ? AppColors.bearishDark
         : const Color(0xFF94A3B8);
     final decimals = quote.price.abs() < 10 ? 4 : 2;
 

@@ -50,10 +50,12 @@
   "fundamentalDrivers": "Fundamental drivers",
   "proAnalysisDetailsTitle": "Why this analysis?",
   "proAnalysisDetailsDescription": "Open to see the factors behind the AI conclusion.",
+  "analysisRationaleContext": "AI rationale & context",
   "analysisHelpfulQuestion": "Was this analysis helpful?",
   "helpful": "Helpful",
   "notHelpful": "Not helpful",
-  "analysisSafetyDisclaimer": "Trade Pilot is an analysis aid. Always limit risk and avoid opening a position based on a single indicator.",
+  "analysisSafetyDisclaimerTitle": "Not investment advice. Trading involves risk.",
+  "analysisSafetyDisclaimer": "Trade Pilot is a decision-support tool, not financial advice or a guarantee of profit. Always manage your risk and avoid opening a position based on a single indicator.",
   "journalCreateForTrade": "Journal this trade",
   "journalEntryForTrade": "My trade journal",
   "journalReflectionHint": "Save your decision and trade result for reflection.",
@@ -69,8 +71,7 @@
   },
   "priceLevelAlertsOff": "Alerts: OFF",
   "changeTimeframe": "Change timeframe",
-  "changeTimeframeDescription": "Same instrument, different timeframe — create a new analysis without leaving this page.",
-  "analyzeThisTimeframe": "Analyze this timeframe",
+  "changeTimeframeDescription": "Same instrument, different timeframe — tap to create a new analysis without leaving this page.",
   "analysisUsesFreeQuota": "Source: free analysis quota",
   "analysisUsesOneCredit": "Source: 1 credit (free quota used up)",
   "analysisUsageUnavailable": "Source will be confirmed before the request is processed",
@@ -121,6 +122,7 @@
   "analysisSnapshotDescription": "This is a snapshot of the data used by the AI when creating the analysis.",
   "buy": "Buy",
   "sell": "Sell",
+  "chartScenarioBoth": "Both",
   "opportunity": "Opportunity",
   "executionInsight": "How traders may respond",
   "executionInsightDescription": "How traders may approach each scenario without specific Entry, Stop Loss, or Take Profit levels.",
@@ -187,6 +189,26 @@
   "sponsoredBy": "Sponsored by",
   "newsDataVia": "News data via newsmaker.id",
   "marketNews": "Market news",
+  "recentNews": "Recent News",
+  "publishedJustNow": "Just now",
+  "publishedMinutesAgo": "{count} minutes ago",
+  "@publishedMinutesAgo": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "publishedHoursAgo": "{count} hours ago",
+  "@publishedHoursAgo": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "publishedDaysAgo": "{count} days ago",
+  "@publishedDaysAgo": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "pauseTicker": "Pause ticker",
   "resumeTicker": "Resume ticker",
   "hideTicker": "Hide ticker",
@@ -523,8 +545,21 @@
   "forgotPassword": "Forgot password?",
   "signIn": "Sign In to Dashboard",
   "or": "or",
+  "orSignInWithEmail": "or sign in with email",
+  "secureSignIn": "Secure sign-in",
   "continueWithGoogle": "Continue with Google",
   "continueWithApple": "Continue with Apple",
+  "continueWithFacebook": "Continue with Facebook",
+  "continueWithTikTok": "Continue with TikTok",
+  "socialSignInUnavailable": "{provider} sign-in is currently unavailable. Please try another method.",
+  "@socialSignInUnavailable": {
+    "placeholders": { "provider": { "type": "String" } }
+  },
+  "socialSignInFailed": "Could not continue with {provider}. Please try again.",
+  "@socialSignInFailed": {
+    "placeholders": { "provider": { "type": "String" } }
+  },
+  "socialEmailAlreadyRegistered": "This email is already registered. Sign in using the method already linked to it.",
   "googleDeleteReauthDescription": "To protect your account, verify your identity with Google before deletion.",
   "federatedDeleteReauthDescription": "To protect your account, verify with the sign-in method linked to this account before deletion.",
   "verifyGoogleAndDelete": "Verify with Google and delete",
@@ -548,7 +583,7 @@
   "startTradingJourney": "Start your trading journey",
   "registerDescription": "Join for free and start your analysis",
   "registerValueInsight": "Market insight, not blind signals",
-  "registerValueFast": "First analysis in under 30 seconds",
+  "registerValueFast": "Start your first analysis in a few steps",
   "registerValueRisk": "Know exactly when you're wrong",
   "fullName": "Full Name",
   "nameRequired": "Name is required",
@@ -701,7 +736,6 @@
   "unlimitedAnalysisQuota": "Unlimited analysis quota",
   "analysisQuota": "Analysis Quota",
   "analysisQuotaLoadFailed": "The analysis quota could not be loaded.",
-  "perHour": "Per hour",
   "perDay": "Per day",
   "noAnalyses": "No analyses yet",
   "createFirstAnalysis": "Create your first analysis",
@@ -771,14 +805,15 @@
   "aiAnalysis": "AI Analysis",
   "analyzeTitle": "New Analysis",
   "otherInstrument": "Other instrument…",
-  "quotaHour": "Hourly remaining",
   "quotaDay": "Daily remaining",
-  "quotaHourShort": "/hr",
   "quotaDayShort": "/day",
   "selectInstrument": "Select Instrument",
   "instrumentCategoryCommoditiesIndices": "Commodities & Indices",
   "instrumentCategoryForex": "Forex",
   "instrumentCategoryCrypto": "Crypto",
+  "assetTypeGold": "Gold",
+  "assetTypeOil": "Oil",
+  "assetTypeIndex": "Index",
   "selectMarketDescription": "Select the market you want to understand.",
   "tapToChangeInstrument": "Tap to change the instrument",
   "timeframe": "Timeframe",
@@ -1169,6 +1204,7 @@
   "active": "Active",
   "deleteAlert": "Delete alert",
   "actual": "Actual",
+  "forecast": "Forecast",
   "previous": "Previous",
   "goldEventExplanation": "Why it matters: USD data often affects Gold and may increase XAU/USD volatility.",
   "currencyEventExplanation": "Why it matters: {currency} events directly relate to {instrument} and may increase volatility.",
@@ -1297,8 +1333,6 @@
   "profitLossFormula": "P/L formula",
   "sourceDocument": "Source document",
   "topUpCredit": "Top Up Credit",
-  "analysisQuotaHourTitle": "Hourly limit reached",
-  "analysisQuotaHourMessage": "Your hourly analysis quota is used up. Try again after the wait period ends.",
   "analysisTopUpInfo": "Want to continue your analysis? See your options",
   "analysisQuotaDayTitle": "Daily limit reached",
   "analysisQuotaDayMessage": "Your daily analysis quota is used up. Try again tomorrow.",
@@ -1341,7 +1375,6 @@
       }
     }
   },
-  "analysisQuotaBalances": "Hourly: {hourly} • Daily: {daily} • Credits: {credits}",
   "@analysisQuotaBalances": {
     "placeholders": {
       "hourly": {
@@ -1453,7 +1486,7 @@
       }
     }
   },
-  "errSessionExpiredRelogin": "Your session has ended. Please sign in again.",
+  "errSessionExpiredRelogin": "Your session ended or your account signed in on another device. Please sign in again.",
   "errSessionExpired": "Your session has ended.",
   "errSignInAgain": "Please sign in again.",
   "errNoConnection": "Could not reach the server. Check your internet connection.",
@@ -1771,6 +1804,7 @@
   "adaptivePlanDisclaimer": "This calculator does not change AI levels and does not send orders. Enter free funds after deducting margin used by other positions.",
   "availableTradingFunds": "Available trading funds",
   "maxLossLimit": "Maximum loss limit",
+  "accountTier": "Account tier",
   "buildPositionPlan": "Build position plan",
   "copyPositionPlan": "Copy plan",
   "positionPlanCopied": "Position plan copied.",
@@ -1788,5 +1822,27 @@
   "adaptivePlanFootnote": "Day trading only. Estimates exclude spread, slippage, fees, VAT, rollover, and broker auto-liquidation.",
   "lossToSl": "Loss to SL",
   "entryZone": "Entry zone",
-  "primaryScenario": "Primary scenario"
+  "primaryScenario": "Primary scenario",
+  "analyzeAction": "Analyze",
+  "setAlertAction": "Set Alert",
+  "currentPriceLabel": "Current price",
+  "trackMarketsTradingView": "Track all markets on TradingView",
+  "marketSessionsAboutTitle": "About market sessions",
+  "marketSessionsAboutBody": "This shows which global market sessions are currently open. It is useful context for Gold, forex, and other non-crypto instruments.",
+  "marketSessionsOverlapBody": "When two sessions overlap, activity and liquidity are often higher.",
+  "typicalSessionHours": "Typical session hours",
+  "shownInJakarta": "Shown in Asia/Jakarta",
+  "marketSessionContextDisclaimer": "This is market context, not a trading signal or an automatic order trigger.",
+  "analyzeFooterDisclaimer": "TradePilot is a decision-support tool, not a broker, trading service, or personal financial advice. Decisions and risks remain yours.",
+  "searchOrEnterInstrumentCode": "Search or enter a code",
+  "directionalBias": "DIRECTIONAL BIAS",
+  "forTimeframe": "For the {timeframe} timeframe",
+  "@forTimeframe": {"placeholders": {"timeframe": {"type": "String"}}},
+  "strongBearishBias": "Strong bearish bias",
+  "neutralWait": "Neutral / Wait",
+  "strongBullishBias": "Strong bullish bias",
+  "biasNotInstruction": "Tendency from the analysis — not a buy/sell instruction",
+  "learn": "Learn",
+  "relevantForHours": "Relevant for about {hours} hours more",
+  "@relevantForHours": {"placeholders": {"hours": {"type": "int"}}}
 }

@@ -71,19 +71,6 @@ class ProfileTab extends StatelessWidget {
     }
   }
 
-  Future<void> _toggleMode(BuildContext context, bool enabled) async {
-    final auth = context.read<AuthProvider>();
-    final success = await auth.updateSelectedMode(
-      enabled ? UserSelectedModeEnum.pro : UserSelectedModeEnum.beginner,
-    );
-
-    if (!success && context.mounted && auth.profileError != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(auth.profileError!)));
-    }
-  }
-
   Future<void> _toggleTheme(BuildContext context, bool enabled) async {
     await context.read<ThemeController>().setDarkMode(enabled);
     if (!context.mounted) return;
@@ -181,8 +168,6 @@ class ProfileTab extends StatelessWidget {
     final user = auth.user;
 
     if (user == null) return const SizedBox.shrink();
-    final isPro = user.selectedMode == UserSelectedModeEnum.pro;
-
     return Scaffold(
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -279,20 +264,6 @@ class ProfileTab extends StatelessWidget {
                             ),
                           ],
                         ),
-                      ),
-                      const Divider(height: 1),
-                      SwitchListTile(
-                        secondary: const Icon(Icons.tune_rounded),
-                        title: Text(l10n.analysisMode),
-                        subtitle: Text(
-                          isPro
-                              ? l10n.proModeDescription
-                              : l10n.beginnerModeDescription,
-                        ),
-                        value: isPro,
-                        onChanged: auth.isUpdatingProfile
-                            ? null
-                            : (value) => _toggleMode(context, value),
                       ),
                       const Divider(height: 1),
                       SwitchListTile(

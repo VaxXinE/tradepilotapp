@@ -8,6 +8,7 @@ import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
 import '../../l10n/l10n.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/product_state_view.dart';
 import '../analysis/analysis_detail_screen.dart';
 
 class TradeJournalScreen extends StatefulWidget {
@@ -253,34 +254,41 @@ class _TradeJournalScreenState extends State<TradeJournalScreen> {
         onRefresh: _load,
         child: _loading && _entries.isEmpty
             ? ListView(
-                children: const [
-                  SizedBox(height: 240),
-                  Center(child: CircularProgressIndicator()),
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: [
+                  ProductStateView(
+                    kind: ProductStateKind.loading,
+                    title: context.l10n.tradeJournal,
+                    message: context.l10n.tradeJournalDescription,
+                  ),
                 ],
               )
             : _error != null && _entries.isEmpty
             ? ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: [
-                  const SizedBox(height: 180),
-                  Center(child: Text(_error!)),
-                  Center(
-                    child: TextButton(
-                      onPressed: _load,
-                      child: Text(context.l10n.tryAgain),
-                    ),
+                  ProductStateView(
+                    kind: ProductStateKind.error,
+                    title: _error!,
+                    actionLabel: context.l10n.tryAgain,
+                    onAction: _load,
                   ),
                 ],
               )
             : _entries.isEmpty
             ? ListView(
-                padding: const EdgeInsets.all(24),
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: [
-                  const SizedBox(height: 140),
-                  const Icon(Icons.menu_book_outlined, size: 52),
-                  const SizedBox(height: 12),
-                  Text(
-                    context.l10n.noJournalEntries,
-                    textAlign: TextAlign.center,
+                  ProductStateView(
+                    kind: ProductStateKind.empty,
+                    title: context.l10n.noJournalEntries,
+                    message: context.l10n.tradeJournalDescription,
+                    icon: Icons.menu_book_outlined,
+                    actionLabel: context.l10n.addJournal,
+                    onAction: _openForm,
                   ),
                 ],
               )

@@ -33,7 +33,7 @@ import 'package:trade_pilot_api_client/src/model/analysis_note_response.dart';
 import 'package:trade_pilot_api_client/src/model/analysis_outcomes_summary.dart';
 import 'package:trade_pilot_api_client/src/model/analysis_quota.dart';
 import 'package:trade_pilot_api_client/src/model/analysis_quota_credits.dart';
-import 'package:trade_pilot_api_client/src/model/analysis_quota_hourly.dart';
+import 'package:trade_pilot_api_client/src/model/analysis_quota_daily.dart';
 import 'package:trade_pilot_api_client/src/model/analytics_event_body.dart';
 import 'package:trade_pilot_api_client/src/model/analytics_token_stats.dart';
 import 'package:trade_pilot_api_client/src/model/analytics_token_stats_by_instrument_inner.dart';
@@ -213,7 +213,7 @@ part 'serializers.g.dart';
   AnalysisOutcomesSummary,
   AnalysisQuota,
   AnalysisQuotaCredits,
-  AnalysisQuotaHourly,
+  AnalysisQuotaDaily,
   AnalyticsEventBody,
   AnalyticsTokenStats,
   AnalyticsTokenStatsByInstrumentInner,

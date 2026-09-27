@@ -13,7 +13,7 @@ void main() {
   test('defaults to English, matching the default app locale', () {
     expect(
       AppMessages.l10n.errSessionExpiredRelogin,
-      'Your session has ended. Please sign in again.',
+      'Your session ended or your account signed in on another device. Please sign in again.',
     );
   });
 
@@ -21,13 +21,13 @@ void main() {
     AppMessages.update(AppLocalizationsId());
     expect(
       AppMessages.l10n.errSessionExpiredRelogin,
-      'Sesi login sudah berakhir. Silakan login kembali.',
+      'Sesi berakhir atau akun masuk di perangkat lain. Silakan login kembali.',
     );
 
     AppMessages.update(AppLocalizationsEn());
     expect(
       AppMessages.l10n.errSessionExpiredRelogin,
-      'Your session has ended. Please sign in again.',
+      'Your session ended or your account signed in on another device. Please sign in again.',
     );
   });
 

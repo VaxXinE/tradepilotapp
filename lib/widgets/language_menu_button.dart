@@ -16,8 +16,8 @@ class LanguageMenuButton extends StatelessWidget {
       onPressed: () => context.read<LocaleController>().setLanguage(next),
       icon: _FlagIcon(languageCode: current),
       style: IconButton.styleFrom(
-        minimumSize: const Size.square(36),
-        maximumSize: const Size.square(36),
+        minimumSize: const Size.square(44),
+        maximumSize: const Size.square(44),
         padding: const EdgeInsets.all(8),
         backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
         side: BorderSide(color: Theme.of(context).colorScheme.outline),

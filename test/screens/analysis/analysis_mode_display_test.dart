@@ -17,23 +17,18 @@ import 'package:tradepilotapp/screens/analysis/analysis_detail_screen.dart';
 import '../../helpers/localized_test_app.dart';
 
 void main() {
-  testWidgets('analysis detail clearly separates beginner and pro modes', (
-    tester,
-  ) async {
+  testWidgets('analysis detail hides legacy mode labels', (tester) async {
     await _pumpDetail(tester, _analysis(AnalysisModeEnum.beginner));
 
-    expect(find.text('Beginner Mode'), findsOneWidget);
-    expect(find.text('Leaning Bearish'), findsOneWidget);
+    expect(find.text('Beginner Mode'), findsNothing);
+    expect(find.text('Bearish bias'), findsOneWidget);
 
-    // Technical detail now sits behind a collapsed section, so open it before
-    // asserting on the indicators inside.
+    // Technical detail follows the expanded reading order from the web.
     await _reveal(
       tester,
-      find.byKey(const ValueKey('analysis-technical-details')),
+      find.byKey(const ValueKey('analysis-technical-indicators')),
       find.byType(Scrollable).first,
     );
-    await tester.tap(find.byKey(const ValueKey('analysis-technical-details')));
-    await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('signal-scale-bar')), findsNWidgets(5));
     final segments = find.descendant(
       of: find.byKey(const ValueKey('signal-scale-bar')),
@@ -45,11 +40,9 @@ void main() {
     }
     expect(
       find.byKey(const ValueKey('indicator-signal-RSI (14)')),
-      findsNothing,
+      findsOneWidget,
     );
-    await tester.ensureVisible(find.text('Oscillator — 1h'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Oscillator — 1h'));
+    await tester.ensureVisible(find.text('Oscillator · 1h'));
     await tester.pumpAndSettle();
     final buyDot = tester.widget<Container>(
       find.byKey(const ValueKey('indicator-signal-RSI (14)')),
@@ -62,11 +55,7 @@ void main() {
       (sellDot.decoration! as BoxDecoration).color,
       AppColors.bearishLight,
     );
-    await tester.tap(find.text('Oscillator — 1h'));
-    await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Moving Averages'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Moving Averages'));
     await tester.pumpAndSettle();
     expect(
       find.byKey(const ValueKey('indicator-signal-EMA (9)')),
@@ -80,8 +69,8 @@ void main() {
 
     await _pumpDetail(tester, _analysis(AnalysisModeEnum.pro));
 
-    expect(find.text('Pro Mode'), findsOneWidget);
-    expect(find.text('Bearish'), findsOneWidget);
+    expect(find.text('Pro Mode'), findsNothing);
+    expect(find.text('Bearish bias'), findsOneWidget);
     expect(find.text('What does it mean?'), findsNothing);
   });
 
@@ -122,7 +111,11 @@ void main() {
 
     await _pumpDetail(
       tester,
-      _analysis(AnalysisModeEnum.pro, marketCondition: 'trending_up'),
+      _analysis(
+        AnalysisModeEnum.pro,
+        marketCondition: 'trending_up',
+        tradePlan: _tradePlan(),
+      ),
       onNewAnalysis: () {},
       textScaler: const TextScaler.linear(2),
     );
@@ -131,6 +124,12 @@ void main() {
     expect(find.text('XAU/USD'), findsWidgets);
     await _reveal(tester, find.text('Uptrend'), find.byType(Scrollable).first);
     expect(find.text('Uptrend'), findsOneWidget);
+    await _reveal(
+      tester,
+      find.text('Suggested Levels'),
+      find.byType(Scrollable).first,
+    );
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('the price chart is available without expanding anything', (
@@ -168,6 +167,7 @@ void main() {
           tradePlan: _tradePlan(),
           failureConditions: 'Invalidation details',
           mainScenario: 'Primary scenario details',
+          fundamentalContext: _fundamentalContext(),
         ),
       );
       final scrollable = find.byType(Scrollable).first;
@@ -186,7 +186,7 @@ void main() {
 
       await _reveal(
         tester,
-        find.byKey(const ValueKey('analysis-market-evidence')),
+        find.byKey(const ValueKey('analysis-fundamental-context')),
         scrollable,
       );
       final fundamentalOffset = tester
@@ -196,7 +196,7 @@ void main() {
 
       await _reveal(
         tester,
-        find.byKey(const ValueKey('analysis-technical-details')),
+        find.byKey(const ValueKey('analysis-technical-indicators')),
         scrollable,
       );
       final technicalOffset = tester
@@ -216,6 +216,35 @@ void main() {
       expect(toolsOffset, greaterThan(technicalOffset));
     },
   );
+
+  testWidgets('fundamental tabs reveal the selected snapshot data', (
+    tester,
+  ) async {
+    await _pumpDetail(
+      tester,
+      _analysis(
+        AnalysisModeEnum.beginner,
+        fundamentalContext: _fundamentalContext(),
+      ),
+    );
+    final scrollable = find.byType(Scrollable).first;
+    final newsButton = find.byKey(const ValueKey('fundamental-news'));
+    await _reveal(tester, newsButton, scrollable);
+
+    expect(find.text('Test headline'), findsNothing);
+    await tester.tap(newsButton);
+    await tester.pumpAndSettle();
+    expect(find.text('Test headline'), findsOneWidget);
+
+    final calendarButton = find.byKey(const ValueKey('fundamental-calendar'));
+    await tester.tap(calendarButton);
+    await tester.pumpAndSettle();
+    expect(find.text('Test headline'), findsNothing);
+    expect(
+      find.text('There are no relevant upcoming economic events.'),
+      findsOneWidget,
+    );
+  });
 
   testWidgets('invalidation, opportunity, and risk are collapsed by default', (
     tester,
@@ -248,11 +277,7 @@ void main() {
     await _pumpDetail(tester, _analysis(AnalysisModeEnum.beginner));
 
     final insight = find.byKey(const ValueKey('analysis-execution-insight'));
-    await tester.scrollUntilVisible(
-      insight,
-      500,
-      scrollable: find.byType(Scrollable).first,
-    );
+    await _reveal(tester, insight, find.byType(Scrollable).first);
     expect(find.text('If Scenario A continues'), findsNothing);
 
     await tester.tap(insight);
@@ -329,7 +354,9 @@ void main() {
     expect(find.text('Market context details'), findsOneWidget);
   });
 
-  testWidgets('confidence reason is collapsed by default', (tester) async {
+  testWidgets('confidence reason is visible in the directional bias card', (
+    tester,
+  ) async {
     await _pumpDetail(
       tester,
       _analysis(
@@ -341,13 +368,8 @@ void main() {
     final reason = find.byKey(const ValueKey('analysis-confidence-reason'));
     final header = find.byKey(const ValueKey('analysis-result-header'));
     expect(find.descendant(of: header, matching: reason), findsOneWidget);
-    expect(find.text('Confidence reason details'), findsNothing);
-    expect(find.text('Cited sources'), findsNothing);
-
-    await tester.tap(reason);
-    await tester.pumpAndSettle();
-
     expect(find.text('Confidence reason details'), findsOneWidget);
+    expect(find.text('Cited sources'), findsNothing);
   });
 
   testWidgets('active alert levels are collapsed until requested', (
@@ -412,36 +434,46 @@ void main() {
     expect(find.textContaining('Entry sesuai rencana'), findsOneWidget);
   });
 
-  testWidgets('timeframe switch requires explicit analysis confirmation', (
-    tester,
-  ) async {
-    Analysis? created;
-    final provider = await _pumpDetail(
-      tester,
-      _analysis(AnalysisModeEnum.beginner),
-      onAnalysisCreated: (value) => created = value,
-    );
+  testWidgets(
+    'timeframe switch auto-triggers a new analysis after a short debounce, '
+    'collapsing rapid taps to the last selection',
+    (tester) async {
+      Analysis? created;
+      final provider = await _pumpDetail(
+        tester,
+        _analysis(AnalysisModeEnum.beginner),
+        onAnalysisCreated: (value) => created = value,
+      );
 
-    await tester.tap(find.byKey(const Key('timeframe-option-4h')));
-    await tester.tap(find.byKey(const Key('timeframe-option-1D')));
-    await tester.pump();
-    expect(provider.requestedTimeframes, isEmpty);
-    expect(find.text('Analyze this timeframe'), findsOneWidget);
+      // Menyamai web: tap timeframe lain langsung memicu, tanpa tombol
+      // konfirmasi terpisah. Dua tap cepat berturutan (4h lalu 1D) hanya
+      // boleh memicu satu request — untuk pilihan terakhir (1D) — bukan dua.
+      await tester.tap(find.byKey(const Key('timeframe-option-4h')));
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('timeframe-option-1D')));
+      await tester.pump();
+      expect(provider.requestedTimeframes, isEmpty);
 
-    await tester.tap(
-      find.byKey(const Key('analyze-selected-timeframe-button')),
-    );
-    await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 700));
+      await tester.pumpAndSettle();
 
-    expect(provider.requestedTimeframes, [CreateAnalysisBodyTimeframeEnum.n1d]);
-    expect(provider.requestedTimeframeSwitches, [isTrue]);
-    expect(created?.timeframe, '1D');
-  });
+      expect(provider.requestedTimeframes, [
+        CreateAnalysisBodyTimeframeEnum.n1d,
+      ]);
+      expect(created?.timeframe, '1D');
+    },
+  );
 
   testWidgets('timeframe buttons keep a single width across selection', (
     tester,
   ) async {
-    await _pumpDetail(tester, _analysis(AnalysisModeEnum.beginner));
+    // Callback tanpa navigasi supaya pohon widget yang sama tetap dites
+    // setelah debounce ganti timeframe menembak di akhir test ini.
+    await _pumpDetail(
+      tester,
+      _analysis(AnalysisModeEnum.beginner),
+      onAnalysisCreated: (_) {},
+    );
 
     double widthOf(String timeframe) =>
         tester.getSize(find.byKey(Key('timeframe-option-$timeframe'))).width;
@@ -461,6 +493,11 @@ void main() {
     for (final tf in timeframes) {
       expect(widthOf(tf), widths.single);
     }
+
+    // Selesaikan debounce yang tertunda supaya tidak ada Timer bocor saat
+    // test ini berakhir.
+    await tester.pump(const Duration(milliseconds: 700));
+    await tester.pumpAndSettle();
   });
 
   testWidgets('new analysis button opens the analysis flow', (tester) async {
@@ -582,6 +619,7 @@ Analysis _analysis(
   String? whyReason,
   String? marketCondition,
   TradePlan? tradePlan,
+  FundamentalContext? fundamentalContext,
 }) => $Analysis(
   (builder) => builder
     ..id = id ?? (mode == AnalysisModeEnum.pro ? 2 : 1)
@@ -602,8 +640,23 @@ Analysis _analysis(
     ..whyReason = whyReason
     ..marketCondition = marketCondition
     ..tradePlan = tradePlan?.toBuilder()
+    ..fundamentalContext = fundamentalContext?.toBuilder()
     ..validUntil = DateTime.utc(2030)
     ..createdAt = DateTime.utc(2026),
+);
+
+FundamentalContext _fundamentalContext() => FundamentalContext(
+  (builder) => builder
+    ..newsItems.add(
+      FundamentalNewsItem(
+        (item) => item
+          ..id = 'news-1'
+          ..title = 'Test headline'
+          ..summary = 'Test summary'
+          ..source_ = 'Test Source'
+          ..publishedAt = DateTime.utc(2026),
+      ),
+    ),
 );
 
 TradePlan _tradePlan() => TradePlan(
@@ -629,7 +682,6 @@ class _FakeAnalysisProvider extends AnalysisProvider {
   final Analysis analysis;
   final AlertStatus? alertStatus;
   final List<CreateAnalysisBodyTimeframeEnum> requestedTimeframes = [];
-  final List<bool> requestedTimeframeSwitches = [];
 
   @override
   Future<Analysis?> getAnalysis(int id, {bool silent = false}) async =>
@@ -644,10 +696,8 @@ class _FakeAnalysisProvider extends AnalysisProvider {
     required CreateAnalysisBodyTimeframeEnum timeframe,
     required CreateAnalysisBodyModeEnum mode,
     String? userInputContext,
-    bool isTimeframeSwitch = false,
   }) async {
     requestedTimeframes.add(timeframe);
-    requestedTimeframeSwitches.add(isTimeframeSwitch);
     final value = switch (timeframe) {
       CreateAnalysisBodyTimeframeEnum.n1m => '1m',
       CreateAnalysisBodyTimeframeEnum.n5m => '5m',

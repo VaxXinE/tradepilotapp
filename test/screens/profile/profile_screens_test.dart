@@ -72,12 +72,12 @@ void main() {
     expect(find.text('User Profile'), findsOneWidget);
     expect(find.text('user@example.com'), findsOneWidget);
     expect(find.text('Profile Information'), findsOneWidget);
-    expect(find.text('Analysis mode'), findsOneWidget);
+    expect(find.text('Analysis mode'), findsNothing);
     expect(find.text('Appearance'), findsOneWidget);
     expect(find.byKey(const Key('profile-theme-segmented')), findsOneWidget);
     expect(find.text('Light'), findsOneWidget);
     expect(find.text('Dark'), findsOneWidget);
-    expect(find.textContaining('Current: Beginner'), findsOneWidget);
+    expect(find.textContaining('Current: Beginner'), findsNothing);
     expect(find.text('Top Up Credit'), findsNothing);
     expect(find.text('Change Password'), findsOneWidget);
     expect(find.text('Privacy Policy'), findsOneWidget);

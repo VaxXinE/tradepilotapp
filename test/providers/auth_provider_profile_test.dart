@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -183,6 +184,39 @@ void main() {
   });
 
   test(
+    'Facebook mobile OAuth uses PKCE and exchanges only the callback code',
+    () async {
+      String? startUrl;
+      final auth = AuthProvider(
+        mobileOAuthLauncher: ({required url, required callbackScheme}) async {
+          startUrl = url;
+          expect(callbackScheme, 'id.tradepilot.app');
+          return 'id.tradepilot.app://auth/callback?code=single-use-code';
+        },
+      );
+      final adapter = _GoogleAuthAdapter();
+      auth.client.dio.httpClientAdapter = adapter;
+      await pumpEventQueue();
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+
+      expect(await auth.loginWithFacebook(), isTrue);
+      final uri = Uri.parse(startUrl!);
+      expect(uri.path, '/api/auth/facebook/mobile/start');
+      expect(
+        uri.queryParameters['redirect_uri'],
+        'id.tradepilot.app://auth/callback',
+      );
+      expect(uri.queryParameters['code_challenge_method'], 'S256');
+      expect(uri.queryParameters['code_challenge'], hasLength(43));
+      expect(uri.queryParameters, isNot(contains('code_verifier')));
+      expect(adapter.mobileExchangeData?['code'], 'single-use-code');
+      expect(adapter.mobileExchangeData?['codeVerifier'], isNotEmpty);
+      expect(auth.status, AuthStatus.authenticated);
+    },
+  );
+
+  test(
     'Apple credential is exchanged with nonce for a TradePilot session',
     () async {
       final auth = AuthProvider(
@@ -319,6 +353,7 @@ class _GoogleAuthAdapter implements HttpClientAdapter {
   String? deleteReauthToken;
   Map<String, dynamic>? appleLoginData;
   Map<String, dynamic>? appleReauthData;
+  Map<String, dynamic>? mobileExchangeData;
 
   @override
   Future<ResponseBody> fetch(
@@ -336,6 +371,13 @@ class _GoogleAuthAdapter implements HttpClientAdapter {
     }
     if (options.path == '/auth/apple/native') {
       appleLoginData = data;
+      return _jsonResponse({
+        'token': 'tradepilot-session-token',
+        'user': _googleUserJson,
+      });
+    }
+    if (options.path == '/auth/mobile/exchange') {
+      mobileExchangeData = data;
       return _jsonResponse({
         'token': 'tradepilot-session-token',
         'user': _googleUserJson,

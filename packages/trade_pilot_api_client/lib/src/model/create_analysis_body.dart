@@ -16,7 +16,6 @@ part 'create_analysis_body.g.dart';
 /// * [timeframe]
 /// * [userInputContext]
 /// * [mode]
-/// * [isTimeframeSwitch] - Internal hint for the "Ganti Timeframe" quick-switch.
 @BuiltValue()
 abstract class CreateAnalysisBody
     implements Built<CreateAnalysisBody, CreateAnalysisBodyBuilder> {
@@ -33,9 +32,6 @@ abstract class CreateAnalysisBody
   @BuiltValueField(wireName: r'mode')
   CreateAnalysisBodyModeEnum get mode;
   // enum modeEnum {  beginner,  pro,  };
-
-  @BuiltValueField(wireName: r'isTimeframeSwitch')
-  bool? get isTimeframeSwitch;
 
   CreateAnalysisBody._();
 
@@ -85,13 +81,6 @@ class _$CreateAnalysisBodySerializer
       object.mode,
       specifiedType: const FullType(CreateAnalysisBodyModeEnum),
     );
-    if (object.isTimeframeSwitch != null) {
-      yield r'isTimeframeSwitch';
-      yield serializers.serialize(
-        object.isTimeframeSwitch,
-        specifiedType: const FullType(bool),
-      );
-    }
   }
 
   @override
@@ -145,14 +134,6 @@ class _$CreateAnalysisBodySerializer
             specifiedType: const FullType(CreateAnalysisBodyModeEnum),
           ) as CreateAnalysisBodyModeEnum;
           result.mode = valueDes;
-          break;
-        case r'isTimeframeSwitch':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType.nullable(bool),
-          ) as bool?;
-          if (valueDes == null) continue;
-          result.isTimeframeSwitch = valueDes;
           break;
         default:
           unhandled.add(key);

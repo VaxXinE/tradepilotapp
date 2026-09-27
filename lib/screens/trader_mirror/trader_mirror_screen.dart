@@ -6,6 +6,7 @@ import '../../core/mindset/mindset_engine.dart';
 import '../../providers/analysis_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../l10n/l10n.dart';
+import '../../widgets/product_state_view.dart';
 import '../../widgets/responsive_page.dart';
 
 class TraderMirrorScreen extends StatefulWidget {
@@ -65,21 +66,26 @@ class _TraderMirrorScreenState extends State<TraderMirrorScreen> {
         onRefresh: _load,
         child: _loading && data == null
             ? ListView(
-                children: const [
-                  SizedBox(height: 240),
-                  Center(child: CircularProgressIndicator()),
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: responsivePagePadding(context),
+                children: [
+                  ProductStateView(
+                    kind: ProductStateKind.loading,
+                    title: context.l10n.traderMirror,
+                    message: context.l10n.traderMirrorDescription,
+                  ),
                 ],
               )
             : _error != null && data == null
             ? ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: responsivePagePadding(context),
                 children: [
-                  const SizedBox(height: 180),
-                  Center(child: Text(_error!)),
-                  Center(
-                    child: TextButton(
-                      onPressed: _load,
-                      child: Text(context.l10n.tryAgain),
-                    ),
+                  ProductStateView(
+                    kind: ProductStateKind.error,
+                    title: _error!,
+                    actionLabel: context.l10n.tryAgain,
+                    onAction: _load,
                   ),
                 ],
               )

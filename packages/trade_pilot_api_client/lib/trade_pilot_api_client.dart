@@ -50,7 +50,7 @@ export 'package:trade_pilot_api_client/src/model/analysis_note_response.dart';
 export 'package:trade_pilot_api_client/src/model/analysis_outcomes_summary.dart';
 export 'package:trade_pilot_api_client/src/model/analysis_quota.dart';
 export 'package:trade_pilot_api_client/src/model/analysis_quota_credits.dart';
-export 'package:trade_pilot_api_client/src/model/analysis_quota_hourly.dart';
+export 'package:trade_pilot_api_client/src/model/analysis_quota_daily.dart';
 export 'package:trade_pilot_api_client/src/model/analytics_event_body.dart';
 export 'package:trade_pilot_api_client/src/model/analytics_token_stats.dart';
 export 'package:trade_pilot_api_client/src/model/analytics_token_stats_by_instrument_inner.dart';

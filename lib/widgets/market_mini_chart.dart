@@ -14,6 +14,7 @@ class MarketMiniChart extends StatelessWidget {
     this.currentPrice,
     this.error,
     this.isLoading = false,
+    this.showDetails = true,
   });
 
   final List<MarketCandle> candles;
@@ -21,6 +22,7 @@ class MarketMiniChart extends StatelessWidget {
   final double? currentPrice;
   final String? error;
   final bool isLoading;
+  final bool showDetails;
 
   static const int _maxVisibleCandles = 100;
 
@@ -55,8 +57,9 @@ class MarketMiniChart extends StatelessWidget {
     final support = visible.map((item) => item.low).reduce(math.min);
     final resistance = visible.map((item) => item.high).reduce(math.max);
     final latest = currentPrice ?? visible.last.close;
-    final bullish = technical?.bullish ?? latest >= visible.first.open;
-    final bearish = technical?.bearish ?? latest < visible.first.open;
+    // Dipakai hanya oleh baris "Trend: {bias}" yang dikomentari di bawah.
+    // final bullish = technical?.bullish ?? latest >= visible.first.open;
+    // final bearish = technical?.bearish ?? latest < visible.first.open;
     final rangePercent = latest == 0
         ? 0.0
         : ((resistance - support) / latest).abs() * 100;
@@ -66,32 +69,41 @@ class MarketMiniChart extends StatelessWidget {
         ? l10n.medium
         : l10n.low;
     final colors = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final resistanceColor = isDark
+        ? AppColors.bearishDark
+        : AppColors.bearishLight;
+    final supportColor = isDark
+        ? AppColors.bullishDark
+        : AppColors.bullishLight;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Text(
-              '${l10n.trend}: ${bullish
-                  ? l10n.bullishBias
-                  : bearish
-                  ? l10n.bearishBias
-                  : l10n.neutral}',
-              style: const TextStyle(fontWeight: FontWeight.w800),
-            ),
-            const Spacer(),
-            Tooltip(
-              message: l10n.historicalLevelsDisclaimer,
-              child: Icon(
-                Icons.help_outline_rounded,
-                size: 18,
-                color: colors.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
+        // Baris "Trend: {bias}" + ikon bantuan disembunyikan atas permintaan
+        // produk (duplikat dengan "Trend Bias" di _MarketOverviewCard).
+        // Row(
+        //   children: [
+        //     Text(
+        //       '${l10n.trend}: ${bullish
+        //           ? l10n.bullishBias
+        //           : bearish
+        //           ? l10n.bearishBias
+        //           : l10n.neutral}',
+        //       style: const TextStyle(fontWeight: FontWeight.w800),
+        //     ),
+        //     const Spacer(),
+        //     Tooltip(
+        //       message: l10n.historicalLevelsDisclaimer,
+        //       child: Icon(
+        //         Icons.help_outline_rounded,
+        //         size: 18,
+        //         color: colors.onSurfaceVariant,
+        //       ),
+        //     ),
+        //   ],
+        // ),
+        // const SizedBox(height: 10),
         SizedBox(
           height: 240,
           child: LayoutBuilder(
@@ -101,12 +113,14 @@ class MarketMiniChart extends StatelessWidget {
                 MarketChartLevel(
                   value: resistance,
                   label: 'Resistance',
-                  color: colors.onSurfaceVariant.withValues(alpha: 0.82),
+                  color: resistanceColor,
+                  dashed: true,
                 ),
                 MarketChartLevel(
                   value: support,
                   label: 'Support',
-                  color: colors.onSurfaceVariant.withValues(alpha: 0.62),
+                  color: supportColor,
+                  dashed: true,
                 ),
                 MarketChartLevel(
                   value: latest,
@@ -114,6 +128,7 @@ class MarketMiniChart extends StatelessWidget {
                   color: colors.primary,
                 ),
               ],
+              isLive: currentPrice != null,
               width: constraints.maxWidth,
               height: constraints.maxHeight,
             ),
@@ -123,16 +138,18 @@ class MarketMiniChart extends StatelessWidget {
           const SizedBox(height: 8),
           Text(error!, style: TextStyle(color: colors.error, fontSize: 12)),
         ],
-        const SizedBox(height: 10),
-        Text(
-          l10n.candlestickHelp,
-          style: TextStyle(color: colors.onSurfaceVariant, fontSize: 11),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          l10n.movementRisk(risk),
-          style: TextStyle(color: colors.onSurfaceVariant, fontSize: 11),
-        ),
+        if (showDetails) ...[
+          const SizedBox(height: 10),
+          Text(
+            l10n.candlestickHelp,
+            style: TextStyle(color: colors.onSurfaceVariant, fontSize: 11),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            l10n.movementRisk(risk),
+            style: TextStyle(color: colors.onSurfaceVariant, fontSize: 11),
+          ),
+        ],
       ],
     );
   }
@@ -160,6 +177,7 @@ class CandlestickPlot extends StatefulWidget {
     required this.width,
     required this.height,
     this.cutoffIndex,
+    this.isLive = false,
   });
 
   final List<MarketCandle> candles;
@@ -167,6 +185,10 @@ class CandlestickPlot extends StatefulWidget {
   final double width;
   final double height;
   final int? cutoffIndex;
+
+  /// Menandai label sumbu waktu terakhir dengan "(Live)" ketika chart ini
+  /// menampilkan harga live (bukan cuma histori candle).
+  final bool isLive;
 
   @override
   State<CandlestickPlot> createState() => _CandlestickPlotState();
@@ -317,7 +339,11 @@ class _CandlestickPlotState extends State<CandlestickPlot> {
                   candles[candles.length ~/ 2].date,
                   showTime: showTimeAxis,
                 ),
-                _AxisLabel(candles.last.date, showTime: showTimeAxis),
+                _AxisLabel(
+                  candles.last.date,
+                  showTime: showTimeAxis,
+                  isLive: widget.isLive,
+                ),
               ],
             ),
           ),
@@ -452,18 +478,35 @@ class _LevelBadge extends StatelessWidget {
 }
 
 class _AxisLabel extends StatelessWidget {
-  const _AxisLabel(this.date, {required this.showTime});
+  const _AxisLabel(this.date, {required this.showTime, this.isLive = false});
 
   final DateTime date;
   final bool showTime;
 
+  /// `true` cuma untuk label paling kanan ketika chart ini benar-benar
+  /// menampilkan harga live (bukan sekadar histori candle) — bukan
+  /// dekorasi, jadi tidak dipasang di semua label.
+  final bool isLive;
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = Theme.of(context).colorScheme;
+    final time = showTime
+        ? '${_pad2(date.hour)}:${_pad2(date.minute)}'
+        : '${_pad2(date.day)}/${_pad2(date.month)}';
+    if (isLive) {
+      return Text(
+        '$time (Live)',
+        style: TextStyle(
+          color: colors.primary,
+          fontSize: 9,
+          fontWeight: FontWeight.w800,
+        ),
+      );
+    }
     return Text(
-      showTime
-          ? '${_pad2(date.hour)}:${_pad2(date.minute)}'
-          : '${_pad2(date.day)}/${_pad2(date.month)}',
+      time,
       style: TextStyle(
         color: isDark ? AppColors.chartTextDark : AppColors.chartTextLight,
         fontSize: 9,

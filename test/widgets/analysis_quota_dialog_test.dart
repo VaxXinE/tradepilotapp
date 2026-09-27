@@ -5,9 +5,7 @@ import 'package:tradepilotapp/providers/analysis_provider.dart';
 import 'package:tradepilotapp/widgets/analysis_quota_dialog.dart';
 
 void main() {
-  testWidgets('renders hour, day, and concurrent quota actions', (
-    tester,
-  ) async {
+  testWidgets('renders daily and concurrent quota actions', (tester) async {
     final navigatorKey = GlobalKey<NavigatorState>();
     await tester.pumpWidget(
       MaterialApp(
@@ -19,7 +17,6 @@ void main() {
     );
 
     for (final testCase in [
-      ('hour', 'Hourly limit reached'),
       ('day', 'Daily limit reached'),
       ('concurrent', 'Analysis still in progress'),
     ]) {

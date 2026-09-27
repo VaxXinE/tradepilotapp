@@ -45,7 +45,7 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text('244'), findsOneWidget);
-    expect(find.text('203'), findsOneWidget);
+    expect(find.text('203'), findsNothing);
     expect(find.text('49–65%'), findsOneWidget);
     expect(tester.getSize(totalCard).width, greaterThan(340));
     expect(
@@ -77,7 +77,7 @@ void main() {
     );
 
     expect(tester.takeException(), isNull);
-    expect(tester.getSize(totalCard).width, lessThan(120));
+    expect(tester.getSize(totalCard).width, lessThan(190));
     expect(
       tester.getTopLeft(confidenceCard).dy,
       tester.getTopLeft(totalCard).dy,

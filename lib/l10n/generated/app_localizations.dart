@@ -362,6 +362,12 @@ abstract class AppLocalizations {
   /// **'Open to see the factors behind the AI conclusion.'**
   String get proAnalysisDetailsDescription;
 
+  /// No description provided for @analysisRationaleContext.
+  ///
+  /// In en, this message translates to:
+  /// **'AI rationale & context'**
+  String get analysisRationaleContext;
+
   /// No description provided for @analysisHelpfulQuestion.
   ///
   /// In en, this message translates to:
@@ -380,10 +386,16 @@ abstract class AppLocalizations {
   /// **'Not helpful'**
   String get notHelpful;
 
+  /// No description provided for @analysisSafetyDisclaimerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Not investment advice. Trading involves risk.'**
+  String get analysisSafetyDisclaimerTitle;
+
   /// No description provided for @analysisSafetyDisclaimer.
   ///
   /// In en, this message translates to:
-  /// **'Trade Pilot is an analysis aid. Always limit risk and avoid opening a position based on a single indicator.'**
+  /// **'Trade Pilot is a decision-support tool, not financial advice or a guarantee of profit. Always manage your risk and avoid opening a position based on a single indicator.'**
   String get analysisSafetyDisclaimer;
 
   /// No description provided for @journalCreateForTrade.
@@ -437,14 +449,8 @@ abstract class AppLocalizations {
   /// No description provided for @changeTimeframeDescription.
   ///
   /// In en, this message translates to:
-  /// **'Same instrument, different timeframe — create a new analysis without leaving this page.'**
+  /// **'Same instrument, different timeframe — tap to create a new analysis without leaving this page.'**
   String get changeTimeframeDescription;
-
-  /// No description provided for @analyzeThisTimeframe.
-  ///
-  /// In en, this message translates to:
-  /// **'Analyze this timeframe'**
-  String get analyzeThisTimeframe;
 
   /// No description provided for @analysisUsesFreeQuota.
   ///
@@ -625,6 +631,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sell'**
   String get sell;
+
+  /// No description provided for @chartScenarioBoth.
+  ///
+  /// In en, this message translates to:
+  /// **'Both'**
+  String get chartScenarioBoth;
 
   /// No description provided for @opportunity.
   ///
@@ -979,6 +991,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Market news'**
   String get marketNews;
+
+  /// No description provided for @recentNews.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent News'**
+  String get recentNews;
+
+  /// No description provided for @publishedJustNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get publishedJustNow;
+
+  /// No description provided for @publishedMinutesAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} minutes ago'**
+  String publishedMinutesAgo(int count);
+
+  /// No description provided for @publishedHoursAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} hours ago'**
+  String publishedHoursAgo(int count);
+
+  /// No description provided for @publishedDaysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days ago'**
+  String publishedDaysAgo(int count);
 
   /// No description provided for @pauseTicker.
   ///
@@ -2090,6 +2132,18 @@ abstract class AppLocalizations {
   /// **'or'**
   String get or;
 
+  /// No description provided for @orSignInWithEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'or sign in with email'**
+  String get orSignInWithEmail;
+
+  /// No description provided for @secureSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Secure sign-in'**
+  String get secureSignIn;
+
   /// No description provided for @continueWithGoogle.
   ///
   /// In en, this message translates to:
@@ -2101,6 +2155,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Continue with Apple'**
   String get continueWithApple;
+
+  /// No description provided for @continueWithFacebook.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Facebook'**
+  String get continueWithFacebook;
+
+  /// No description provided for @continueWithTikTok.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with TikTok'**
+  String get continueWithTikTok;
+
+  /// No description provided for @socialSignInUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'{provider} sign-in is currently unavailable. Please try another method.'**
+  String socialSignInUnavailable(String provider);
+
+  /// No description provided for @socialSignInFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not continue with {provider}. Please try again.'**
+  String socialSignInFailed(String provider);
+
+  /// No description provided for @socialEmailAlreadyRegistered.
+  ///
+  /// In en, this message translates to:
+  /// **'This email is already registered. Sign in using the method already linked to it.'**
+  String get socialEmailAlreadyRegistered;
 
   /// No description provided for @googleDeleteReauthDescription.
   ///
@@ -2243,7 +2327,7 @@ abstract class AppLocalizations {
   /// No description provided for @registerValueFast.
   ///
   /// In en, this message translates to:
-  /// **'First analysis in under 30 seconds'**
+  /// **'Start your first analysis in a few steps'**
   String get registerValueFast;
 
   /// No description provided for @registerValueRisk.
@@ -2906,12 +2990,6 @@ abstract class AppLocalizations {
   /// **'The analysis quota could not be loaded.'**
   String get analysisQuotaLoadFailed;
 
-  /// No description provided for @perHour.
-  ///
-  /// In en, this message translates to:
-  /// **'Per hour'**
-  String get perHour;
-
   /// No description provided for @perDay.
   ///
   /// In en, this message translates to:
@@ -3032,23 +3110,11 @@ abstract class AppLocalizations {
   /// **'Other instrument…'**
   String get otherInstrument;
 
-  /// No description provided for @quotaHour.
-  ///
-  /// In en, this message translates to:
-  /// **'Hourly remaining'**
-  String get quotaHour;
-
   /// No description provided for @quotaDay.
   ///
   /// In en, this message translates to:
   /// **'Daily remaining'**
   String get quotaDay;
-
-  /// No description provided for @quotaHourShort.
-  ///
-  /// In en, this message translates to:
-  /// **'/hr'**
-  String get quotaHourShort;
 
   /// No description provided for @quotaDayShort.
   ///
@@ -3079,6 +3145,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Crypto'**
   String get instrumentCategoryCrypto;
+
+  /// No description provided for @assetTypeGold.
+  ///
+  /// In en, this message translates to:
+  /// **'Gold'**
+  String get assetTypeGold;
+
+  /// No description provided for @assetTypeOil.
+  ///
+  /// In en, this message translates to:
+  /// **'Oil'**
+  String get assetTypeOil;
+
+  /// No description provided for @assetTypeIndex.
+  ///
+  /// In en, this message translates to:
+  /// **'Index'**
+  String get assetTypeIndex;
 
   /// No description provided for @selectMarketDescription.
   ///
@@ -4172,6 +4256,12 @@ abstract class AppLocalizations {
   /// **'Actual'**
   String get actual;
 
+  /// No description provided for @forecast.
+  ///
+  /// In en, this message translates to:
+  /// **'Forecast'**
+  String get forecast;
+
   /// No description provided for @previous.
   ///
   /// In en, this message translates to:
@@ -4592,18 +4682,6 @@ abstract class AppLocalizations {
   /// **'Top Up Credit'**
   String get topUpCredit;
 
-  /// No description provided for @analysisQuotaHourTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Hourly limit reached'**
-  String get analysisQuotaHourTitle;
-
-  /// No description provided for @analysisQuotaHourMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'Your hourly analysis quota is used up. Try again after the wait period ends.'**
-  String get analysisQuotaHourMessage;
-
   /// No description provided for @analysisTopUpInfo.
   ///
   /// In en, this message translates to:
@@ -4669,12 +4747,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} minutes'**
   String analysisMinutes(int count);
-
-  /// No description provided for @analysisQuotaBalances.
-  ///
-  /// In en, this message translates to:
-  /// **'Hourly: {hourly} • Daily: {daily} • Credits: {credits}'**
-  String analysisQuotaBalances(int hourly, int daily, int credits);
 
   /// No description provided for @analysisCreditConsumed.
   ///
@@ -4931,7 +5003,7 @@ abstract class AppLocalizations {
   /// No description provided for @errSessionExpiredRelogin.
   ///
   /// In en, this message translates to:
-  /// **'Your session has ended. Please sign in again.'**
+  /// **'Your session ended or your account signed in on another device. Please sign in again.'**
   String get errSessionExpiredRelogin;
 
   /// No description provided for @errSessionExpired.
@@ -6062,6 +6134,12 @@ abstract class AppLocalizations {
   /// **'Maximum loss limit'**
   String get maxLossLimit;
 
+  /// No description provided for @accountTier.
+  ///
+  /// In en, this message translates to:
+  /// **'Account tier'**
+  String get accountTier;
+
   /// No description provided for @buildPositionPlan.
   ///
   /// In en, this message translates to:
@@ -6169,6 +6247,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Primary scenario'**
   String get primaryScenario;
+
+  /// No description provided for @analyzeAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyze'**
+  String get analyzeAction;
+
+  /// No description provided for @setAlertAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Set Alert'**
+  String get setAlertAction;
+
+  /// No description provided for @currentPriceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Current price'**
+  String get currentPriceLabel;
+
+  /// No description provided for @trackMarketsTradingView.
+  ///
+  /// In en, this message translates to:
+  /// **'Track all markets on TradingView'**
+  String get trackMarketsTradingView;
+
+  /// No description provided for @marketSessionsAboutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'About market sessions'**
+  String get marketSessionsAboutTitle;
+
+  /// No description provided for @marketSessionsAboutBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This shows which global market sessions are currently open. It is useful context for Gold, forex, and other non-crypto instruments.'**
+  String get marketSessionsAboutBody;
+
+  /// No description provided for @marketSessionsOverlapBody.
+  ///
+  /// In en, this message translates to:
+  /// **'When two sessions overlap, activity and liquidity are often higher.'**
+  String get marketSessionsOverlapBody;
+
+  /// No description provided for @typicalSessionHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Typical session hours'**
+  String get typicalSessionHours;
+
+  /// No description provided for @shownInJakarta.
+  ///
+  /// In en, this message translates to:
+  /// **'Shown in Asia/Jakarta'**
+  String get shownInJakarta;
+
+  /// No description provided for @marketSessionContextDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'This is market context, not a trading signal or an automatic order trigger.'**
+  String get marketSessionContextDisclaimer;
+
+  /// No description provided for @analyzeFooterDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'TradePilot is a decision-support tool, not a broker, trading service, or personal financial advice. Decisions and risks remain yours.'**
+  String get analyzeFooterDisclaimer;
+
+  /// No description provided for @searchOrEnterInstrumentCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Search or enter a code'**
+  String get searchOrEnterInstrumentCode;
+
+  /// No description provided for @directionalBias.
+  ///
+  /// In en, this message translates to:
+  /// **'DIRECTIONAL BIAS'**
+  String get directionalBias;
+
+  /// No description provided for @forTimeframe.
+  ///
+  /// In en, this message translates to:
+  /// **'For the {timeframe} timeframe'**
+  String forTimeframe(String timeframe);
+
+  /// No description provided for @strongBearishBias.
+  ///
+  /// In en, this message translates to:
+  /// **'Strong bearish bias'**
+  String get strongBearishBias;
+
+  /// No description provided for @neutralWait.
+  ///
+  /// In en, this message translates to:
+  /// **'Neutral / Wait'**
+  String get neutralWait;
+
+  /// No description provided for @strongBullishBias.
+  ///
+  /// In en, this message translates to:
+  /// **'Strong bullish bias'**
+  String get strongBullishBias;
+
+  /// No description provided for @biasNotInstruction.
+  ///
+  /// In en, this message translates to:
+  /// **'Tendency from the analysis — not a buy/sell instruction'**
+  String get biasNotInstruction;
+
+  /// No description provided for @learn.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn'**
+  String get learn;
+
+  /// No description provided for @relevantForHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Relevant for about {hours} hours more'**
+  String relevantForHours(int hours);
 }
 
 class _AppLocalizationsDelegate

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../core/config/sponsor_config.dart';
+import '../core/theme/app_colors.dart';
 import '../l10n/l10n.dart';
 import '../screens/profile/delete_account_screen.dart';
 
@@ -60,7 +61,7 @@ class AppFooter extends StatelessWidget {
               fontSize: 10,
               height: 1.6,
               fontWeight: FontWeight.w600,
-              color: isDark ? const Color(0xFFFCD34D) : const Color(0xFFB45309),
+              color: isDark ? AppColors.warningDark : AppColors.warningLight,
             ),
           ),
           const SizedBox(height: 8),
@@ -104,21 +105,23 @@ class AppFooter extends StatelessWidget {
               children: [
                 Text(
                   context.l10n.sponsoredBy,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: muted.withValues(alpha: 0.7),
-                  ),
+                  style: TextStyle(fontSize: 11, color: muted),
                 ),
                 InkWell(
                   onTap: () => unawaited(_open(context, sponsorWebsiteUrl)),
-                  child: Text(
-                    'SOLID PRIME',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: isDark
-                          ? const Color(0xFFFCD34D)
-                          : const Color(0xFFB45309),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 44),
+                    child: Center(
+                      child: Text(
+                        'SOLID PRIME',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: isDark
+                              ? AppColors.warningDark
+                              : AppColors.warningLight,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -130,10 +133,7 @@ class AppFooter extends StatelessWidget {
             Text(
               context.l10n.newsDataVia,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 9,
-                color: muted.withValues(alpha: 0.5),
-              ),
+              style: TextStyle(fontSize: 11, color: muted),
             ),
           ],
         ],
@@ -152,13 +152,18 @@ class _FooterLink extends StatelessWidget {
   Widget build(BuildContext context) => InkWell(
     onTap: onTap,
     borderRadius: BorderRadius.circular(6),
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 11,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
         ),
       ),
     ),

@@ -23,23 +23,101 @@ import 'package:tradepilotapp/screens/home/tabs/analyze_tab.dart';
 import '../../helpers/localized_test_app.dart';
 
 void main() {
-  testWidgets('the analysis form collapses after an analysis', (tester) async {
+  testWidgets('analysis header stays on one row on mobile', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
     await _pumpAnalyzeTab(tester);
 
-    expect(find.text('XAU/USD · 1h'), findsOneWidget);
-    expect(find.byKey(const ValueKey('timeframe-1h')), findsOneWidget);
+    final title = find.text('New Analysis');
+    final progression = find.byKey(const Key('analyze-progression-chip'));
+    final quota = find.byKey(const Key('analyze-quota-chip'));
+    final session = find.byKey(const Key('analyze-market-session'));
+
+    expect(tester.getCenter(title).dy, tester.getCenter(progression).dy);
+    expect(tester.getCenter(progression).dy, tester.getCenter(quota).dy);
+    expect(
+      tester.getBottomLeft(progression).dy,
+      lessThan(tester.getTopLeft(session).dy),
+    );
+    expect(session, findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('market session pill opens the contextual popover', (
+    tester,
+  ) async {
+    await _pumpAnalyzeTab(tester);
+
+    await tester.tap(find.byKey(const Key('analyze-market-session')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('About market sessions'), findsOneWidget);
+    expect(find.text('Typical session hours'), findsOneWidget);
+    expect(find.text('05:00–14:00'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('other instrument opens the picker and applies a shortcut', (
+    tester,
+  ) async {
+    await _pumpAnalyzeTab(tester);
+
+    await tester.tap(find.byKey(const Key('custom-instrument-field')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Other instrument…'), findsWidgets);
+    expect(
+      find.byKey(const Key('other-instrument-search-field')),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const ValueKey('other-instrument-EUR/USD')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('EUR/USD'), findsWidgets);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the analysis form remains visible above the result', (
+    tester,
+  ) async {
+    final provider = await _pumpAnalyzeTab(tester);
+
+    expect(
+      find.byKey(const ValueKey('analyze-instrument-XAU/USD')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('timeframe-1h')), findsNothing);
+    expect(find.byKey(const Key('set-price-alert-button')), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.text('Timeframe:'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('1h'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.textContaining('TradePilot is a decision-support tool'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(
+      find.textContaining('TradePilot is a decision-support tool'),
+      findsOneWidget,
+    );
+    await _scrollToTop(tester);
 
     await _runAnalysis(tester);
 
+    expect(provider.requestedModes, [CreateAnalysisBodyModeEnum.pro]);
     expect(find.byType(AnalysisDetailScreen), findsOneWidget);
     expect(find.byKey(const Key('submit-analysis-button')), findsNothing);
 
     await _scrollToTop(tester);
-    expect(find.text('Select Instrument'), findsNothing);
-    expect(find.text('XAU/USD · 1h'), findsOneWidget);
+    expect(find.text('Select Instrument'), findsOneWidget);
     expect(
       find.byKey(const Key('change-analysis-selection-button')),
-      findsOneWidget,
+      findsNothing,
     );
     expect(find.byKey(const Key('new-analysis-button')), findsOneWidget);
   });
@@ -53,9 +131,9 @@ void main() {
     expect(provider.requested, ['XAU/USD']);
 
     await _scrollToTop(tester);
-    final change = find.byKey(const Key('change-analysis-selection-button'));
-    await tester.ensureVisible(change);
-    await tester.tap(change);
+    final newAnalysis = find.byKey(const Key('new-analysis-button'));
+    await tester.ensureVisible(newAnalysis);
+    await tester.tap(newAnalysis);
     await tester.pumpAndSettle();
     await tester.tap(find.text('BRENT'));
     await tester.pumpAndSettle();
@@ -99,12 +177,12 @@ Future<void> _scrollToTop(WidgetTester tester) async {
 
 Future<void> _runAnalysis(WidgetTester tester) async {
   await tester.scrollUntilVisible(
-    find.text('Get AI Analysis'),
+    find.text('Analyze'),
     300,
     scrollable: find.byType(Scrollable).first,
   );
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Get AI Analysis'));
+  await tester.tap(find.text('Analyze'));
   await tester.pumpAndSettle();
 }
 
@@ -126,6 +204,25 @@ Future<_FakeAnalysisProvider> _pumpAnalyzeTab(
     WatchlistRepository(auth.client),
   );
   final progressionProvider = ProgressionProvider(auth);
+  progressionProvider.summary = ProgressionSummary(
+    (builder) => builder
+      ..totalXp = 0
+      ..level = 1
+      ..masteryLevel = 0
+      ..rank = 'seedling'
+      ..currentLevelXp = 0
+      ..nextLevelXp = 100
+      ..currentStreak = 0
+      ..longestStreak = 0,
+  );
+  analysisProvider.quota = AnalysisQuota(
+    (builder) => builder
+      ..unlimited = false
+      ..daily.limit = 20
+      ..daily.used = 7
+      ..daily.remaining = 13
+      ..credits.balance = 0,
+  );
   final creditProvider = CreditProvider(auth, TopupRepository(auth.client));
   final checklist = MentalChecklistController(preferences);
 
@@ -177,6 +274,7 @@ class _FakeAnalysisProvider extends AnalysisProvider {
   _FakeAnalysisProvider(super.auth);
 
   final List<String> requested = [];
+  final List<CreateAnalysisBodyModeEnum> requestedModes = [];
 
   @override
   Future<Analysis?> createAnalysis({
@@ -184,9 +282,9 @@ class _FakeAnalysisProvider extends AnalysisProvider {
     required CreateAnalysisBodyTimeframeEnum timeframe,
     required CreateAnalysisBodyModeEnum mode,
     String? userInputContext,
-    bool isTimeframeSwitch = false,
   }) async {
     requested.add(instrument);
+    requestedModes.add(mode);
     return _analysis(instrument);
   }
 

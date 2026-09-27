@@ -150,6 +150,9 @@ class AppLocalizationsId extends AppLocalizations {
       'Buka untuk melihat faktor di balik kesimpulan AI.';
 
   @override
+  String get analysisRationaleContext => 'Alasan & konteks AI';
+
+  @override
   String get analysisHelpfulQuestion => 'Apakah analisis ini membantu?';
 
   @override
@@ -159,8 +162,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get notHelpful => 'Kurang Membantu';
 
   @override
+  String get analysisSafetyDisclaimerTitle =>
+      'Bukan rekomendasi investasi. Trading mengandung risiko.';
+
+  @override
   String get analysisSafetyDisclaimer =>
-      'Trade Pilot adalah alat bantu analisis. Selalu batasi risiko dan hindari membuka posisi hanya berdasarkan satu indikator.';
+      'Trade Pilot adalah alat pendukung keputusan, bukan saran keuangan atau jaminan profit. Selalu kelola risiko dan jangan membuka posisi hanya berdasarkan satu indikator.';
 
   @override
   String get journalCreateForTrade => 'Catat trade ini';
@@ -192,10 +199,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get changeTimeframeDescription =>
-      'Instrumen sama, timeframe berbeda — buat analisis baru tanpa keluar dari halaman ini.';
-
-  @override
-  String get analyzeThisTimeframe => 'Analisis timeframe ini';
+      'Instrumen sama, timeframe berbeda — ketuk untuk buat analisis baru tanpa keluar dari halaman ini.';
 
   @override
   String get analysisUsesFreeQuota => 'Sumber: kuota analisis gratis';
@@ -297,6 +301,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get sell => 'Sell';
+
+  @override
+  String get chartScenarioBoth => 'Keduanya';
 
   @override
   String get opportunity => 'Peluang';
@@ -489,6 +496,27 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get marketNews => 'Berita pasar';
+
+  @override
+  String get recentNews => 'Berita Terkini';
+
+  @override
+  String get publishedJustNow => 'Baru saja';
+
+  @override
+  String publishedMinutesAgo(int count) {
+    return '$count menit lalu';
+  }
+
+  @override
+  String publishedHoursAgo(int count) {
+    return '$count jam lalu';
+  }
+
+  @override
+  String publishedDaysAgo(int count) {
+    return '$count hari lalu';
+  }
 
   @override
   String get pauseTicker => 'Jeda ticker';
@@ -1108,10 +1136,36 @@ class AppLocalizationsId extends AppLocalizations {
   String get or => 'atau';
 
   @override
+  String get orSignInWithEmail => 'atau masuk dengan email';
+
+  @override
+  String get secureSignIn => 'Login aman';
+
+  @override
   String get continueWithGoogle => 'Lanjutkan dengan Google';
 
   @override
   String get continueWithApple => 'Lanjutkan dengan Apple';
+
+  @override
+  String get continueWithFacebook => 'Lanjutkan dengan Facebook';
+
+  @override
+  String get continueWithTikTok => 'Lanjutkan dengan TikTok';
+
+  @override
+  String socialSignInUnavailable(String provider) {
+    return 'Login dengan $provider sedang tidak tersedia. Coba metode lain.';
+  }
+
+  @override
+  String socialSignInFailed(String provider) {
+    return 'Tidak dapat melanjutkan dengan $provider. Silakan coba lagi.';
+  }
+
+  @override
+  String get socialEmailAlreadyRegistered =>
+      'Email ini sudah terdaftar. Masuklah dengan metode yang sudah terhubung.';
 
   @override
   String get googleDeleteReauthDescription =>
@@ -1196,7 +1250,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get registerValueInsight => 'Insight pasar, bukan sinyal buta';
 
   @override
-  String get registerValueFast => 'Analisis pertama di bawah 30 detik';
+  String get registerValueFast =>
+      'Mulai analisis pertama dalam beberapa langkah';
 
   @override
   String get registerValueRisk => 'Tahu persis kapan kamu salah';
@@ -1567,9 +1622,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get analysisQuotaLoadFailed => 'Kuota analisis belum dapat dimuat.';
 
   @override
-  String get perHour => 'Per jam';
-
-  @override
   String get perDay => 'Per hari';
 
   @override
@@ -1646,13 +1698,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get otherInstrument => 'Instrumen lain…';
 
   @override
-  String get quotaHour => 'Sisa per jam';
-
-  @override
   String get quotaDay => 'Sisa per hari';
-
-  @override
-  String get quotaHourShort => '/jam';
 
   @override
   String get quotaDayShort => '/hari';
@@ -1668,6 +1714,15 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get instrumentCategoryCrypto => 'Kripto';
+
+  @override
+  String get assetTypeGold => 'Emas';
+
+  @override
+  String get assetTypeOil => 'Minyak';
+
+  @override
+  String get assetTypeIndex => 'Indeks';
 
   @override
   String get selectMarketDescription => 'Pilih pasar yang ingin kamu pahami.';
@@ -2295,6 +2350,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get actual => 'Aktual';
 
   @override
+  String get forecast => 'Perkiraan';
+
+  @override
   String get previous => 'Sebelumnya';
 
   @override
@@ -2523,13 +2581,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get topUpCredit => 'Top Up Credit';
 
   @override
-  String get analysisQuotaHourTitle => 'Batas per jam tercapai';
-
-  @override
-  String get analysisQuotaHourMessage =>
-      'Kuota analisis per jam kamu sudah habis. Coba lagi setelah waktu tunggu berakhir.';
-
-  @override
   String get analysisTopUpInfo =>
       'Ingin lanjut analisis? Lihat pilihan yang tersedia';
 
@@ -2572,11 +2623,6 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String analysisMinutes(int count) {
     return '$count menit';
-  }
-
-  @override
-  String analysisQuotaBalances(int hourly, int daily, int credits) {
-    return 'Per jam: $hourly • Harian: $daily • Credit: $credits';
   }
 
   @override
@@ -2732,7 +2778,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get errSessionExpiredRelogin =>
-      'Sesi login sudah berakhir. Silakan login kembali.';
+      'Sesi berakhir atau akun masuk di perangkat lain. Silakan login kembali.';
 
   @override
   String get errSessionExpired => 'Sesi login sudah berakhir.';
@@ -3392,6 +3438,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get maxLossLimit => 'Batas rugi maksimum';
 
   @override
+  String get accountTier => 'Tier akun';
+
+  @override
   String get buildPositionPlan => 'Buat rencana posisi';
 
   @override
@@ -3446,4 +3495,73 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get primaryScenario => 'Skenario Utama';
+
+  @override
+  String get analyzeAction => 'Analisis';
+
+  @override
+  String get setAlertAction => 'Pasang Alert';
+
+  @override
+  String get currentPriceLabel => 'Harga saat ini';
+
+  @override
+  String get trackMarketsTradingView => 'Pantau semua market di TradingView';
+
+  @override
+  String get marketSessionsAboutTitle => 'Tentang sesi market';
+
+  @override
+  String get marketSessionsAboutBody =>
+      'Bagian ini menunjukkan sesi market global yang sedang buka. Ini berguna sebagai konteks untuk Emas, forex, dan instrumen non-kripto lainnya.';
+
+  @override
+  String get marketSessionsOverlapBody =>
+      'Ketika dua sesi beririsan, aktivitas dan likuiditas biasanya lebih tinggi.';
+
+  @override
+  String get typicalSessionHours => 'Jam sesi umum';
+
+  @override
+  String get shownInJakarta => 'Ditampilkan dalam Asia/Jakarta';
+
+  @override
+  String get marketSessionContextDisclaimer =>
+      'Ini adalah konteks market, bukan sinyal trading atau pemicu order otomatis.';
+
+  @override
+  String get analyzeFooterDisclaimer =>
+      'TradePilot adalah alat bantu pengambilan keputusan, bukan broker, layanan trading, atau penasihat keuangan pribadi. Keputusan dan risiko tetap menjadi tanggung jawabmu.';
+
+  @override
+  String get searchOrEnterInstrumentCode => 'Cari atau masukkan kode';
+
+  @override
+  String get directionalBias => 'BIAS ARAH';
+
+  @override
+  String forTimeframe(String timeframe) {
+    return 'Untuk timeframe $timeframe';
+  }
+
+  @override
+  String get strongBearishBias => 'Bias bearish kuat';
+
+  @override
+  String get neutralWait => 'Netral / Tunggu';
+
+  @override
+  String get strongBullishBias => 'Bias bullish kuat';
+
+  @override
+  String get biasNotInstruction =>
+      'Kecenderungan hasil analisis — bukan instruksi beli/jual';
+
+  @override
+  String get learn => 'Pelajari';
+
+  @override
+  String relevantForHours(int hours) {
+    return 'Masih relevan sekitar $hours jam lagi';
+  }
 }

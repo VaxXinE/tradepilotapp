@@ -7,8 +7,7 @@ import '../providers/analysis_provider.dart';
 
 String analysisUsageLabel(BuildContext context, AnalysisQuota? quota) {
   if (quota == null) return context.l10n.analysisUsageUnavailable;
-  if (quota.unlimited ||
-      (quota.hourly.remaining > 0 && quota.daily.remaining > 0)) {
+  if (quota.unlimited || quota.daily.remaining > 0) {
     return context.l10n.analysisUsesFreeQuota;
   }
   if (quota.credits.balance > 0) return context.l10n.analysisUsesOneCredit;
@@ -21,7 +20,6 @@ Future<void> showAnalysisQuotaDialog(
 ) async {
   final l10n = context.l10n;
   final (title, message) = switch (limit.scope) {
-    'hour' => (l10n.analysisQuotaHourTitle, l10n.analysisQuotaHourMessage),
     'day' => (l10n.analysisQuotaDayTitle, l10n.analysisQuotaDayMessage),
     'concurrent' => (
       l10n.analysisQuotaConcurrentTitle,

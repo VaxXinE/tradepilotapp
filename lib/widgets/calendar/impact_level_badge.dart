@@ -10,10 +10,14 @@ class ImpactLevelBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    // Merah -> emas -> hijau, dari yang paling mengganggu harga sampai yang
+    // paling tenang. Sebelumnya medium memakai `tertiary` (hijau bullish)
+    // dan low memakai `primary` (emas brand) — terbalik, sehingga low
+    // impact tampil lebih mencolok daripada medium.
     final (label, color) = switch (level) {
       EconomicImpactLevel.high => ('High Impact', colors.error),
-      EconomicImpactLevel.medium => ('Medium Impact', colors.tertiary),
-      EconomicImpactLevel.low => ('Low Impact', colors.primary),
+      EconomicImpactLevel.medium => ('Medium Impact', colors.primary),
+      EconomicImpactLevel.low => ('Low Impact', colors.tertiary),
     };
 
     return Container(

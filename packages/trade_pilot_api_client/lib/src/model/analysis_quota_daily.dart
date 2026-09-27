@@ -6,17 +6,17 @@
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
 
-part 'analysis_quota_hourly.g.dart';
+part 'analysis_quota_daily.g.dart';
 
-/// AnalysisQuotaHourly
+/// AnalysisQuotaDaily
 ///
 /// Properties:
 /// * [limit]
 /// * [used]
 /// * [remaining]
 @BuiltValue()
-abstract class AnalysisQuotaHourly
-    implements Built<AnalysisQuotaHourly, AnalysisQuotaHourlyBuilder> {
+abstract class AnalysisQuotaDaily
+    implements Built<AnalysisQuotaDaily, AnalysisQuotaDailyBuilder> {
   @BuiltValueField(wireName: r'limit')
   int get limit;
 
@@ -26,33 +26,30 @@ abstract class AnalysisQuotaHourly
   @BuiltValueField(wireName: r'remaining')
   int get remaining;
 
-  AnalysisQuotaHourly._();
+  AnalysisQuotaDaily._();
 
-  factory AnalysisQuotaHourly([void updates(AnalysisQuotaHourlyBuilder b)]) =
-      _$AnalysisQuotaHourly;
+  factory AnalysisQuotaDaily([void updates(AnalysisQuotaDailyBuilder b)]) =
+      _$AnalysisQuotaDaily;
 
   @BuiltValueHook(initializeBuilder: true)
-  static void _defaults(AnalysisQuotaHourlyBuilder b) => b;
+  static void _defaults(AnalysisQuotaDailyBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AnalysisQuotaHourly> get serializer =>
-      _$AnalysisQuotaHourlySerializer();
+  static Serializer<AnalysisQuotaDaily> get serializer =>
+      _$AnalysisQuotaDailySerializer();
 }
 
-class _$AnalysisQuotaHourlySerializer
-    implements PrimitiveSerializer<AnalysisQuotaHourly> {
+class _$AnalysisQuotaDailySerializer
+    implements PrimitiveSerializer<AnalysisQuotaDaily> {
   @override
-  final Iterable<Type> types = const [
-    AnalysisQuotaHourly,
-    _$AnalysisQuotaHourly
-  ];
+  final Iterable<Type> types = const [AnalysisQuotaDaily, _$AnalysisQuotaDaily];
 
   @override
-  final String wireName = r'AnalysisQuotaHourly';
+  final String wireName = r'AnalysisQuotaDaily';
 
   Iterable<Object?> _serializeProperties(
     Serializers serializers,
-    AnalysisQuotaHourly object, {
+    AnalysisQuotaDaily object, {
     FullType specifiedType = FullType.unspecified,
   }) sync* {
     yield r'limit';
@@ -75,7 +72,7 @@ class _$AnalysisQuotaHourlySerializer
   @override
   Object serialize(
     Serializers serializers,
-    AnalysisQuotaHourly object, {
+    AnalysisQuotaDaily object, {
     FullType specifiedType = FullType.unspecified,
   }) {
     return _serializeProperties(serializers, object,
@@ -88,7 +85,7 @@ class _$AnalysisQuotaHourlySerializer
     Object serialized, {
     FullType specifiedType = FullType.unspecified,
     required List<Object?> serializedList,
-    required AnalysisQuotaHourlyBuilder result,
+    required AnalysisQuotaDailyBuilder result,
     required List<Object?> unhandled,
   }) {
     for (var i = 0; i < serializedList.length; i += 2) {
@@ -125,12 +122,12 @@ class _$AnalysisQuotaHourlySerializer
   }
 
   @override
-  AnalysisQuotaHourly deserialize(
+  AnalysisQuotaDaily deserialize(
     Serializers serializers,
     Object serialized, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    final result = AnalysisQuotaHourlyBuilder();
+    final result = AnalysisQuotaDailyBuilder();
     final serializedList = (serialized as Iterable<Object?>).toList();
     final unhandled = <Object?>[];
     _deserializeProperties(

@@ -62,7 +62,7 @@ class EconomicEventTile extends StatelessWidget {
               if (event.actual.isNotEmpty)
                 _Metric(label: context.l10n.actual, value: event.actual),
               if (event.forecast.isNotEmpty)
-                _Metric(label: 'Forecast', value: event.forecast),
+                _Metric(label: context.l10n.forecast, value: event.forecast),
               if (event.previous.isNotEmpty)
                 _Metric(label: context.l10n.previous, value: event.previous),
             ],

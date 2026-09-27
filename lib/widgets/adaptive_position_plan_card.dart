@@ -38,6 +38,14 @@ class _AdaptivePositionPlanCardState extends State<AdaptivePositionPlanCard> {
   String _activeSide = 'buy';
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(_loadRule());
+    });
+  }
+
+  @override
   void dispose() {
     _margin.dispose();
     _loss.dispose();
@@ -106,7 +114,15 @@ class _AdaptivePositionPlanCardState extends State<AdaptivePositionPlanCard> {
     }
     return Card(
       clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+          width: 1.4,
+        ),
+      ),
       child: ExpansionTile(
+        initiallyExpanded: true,
         leading: const Icon(Icons.calculate_outlined),
         title: Text(
           context.l10n.positionSizeRecommendation,
@@ -148,65 +164,81 @@ class _AdaptivePositionPlanCardState extends State<AdaptivePositionPlanCard> {
       children: [
         _Notice(context.l10n.adaptivePlanDisclaimer),
         const SizedBox(height: 12),
-        Row(
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final margin = _MoneyField(
+              controller: _margin,
+              label: context.l10n.availableTradingFunds,
+            );
+            final loss = _MoneyField(
+              controller: _loss,
+              label: context.l10n.maxLossLimit,
+            );
+            final stack =
+                constraints.maxWidth < 330 ||
+                MediaQuery.textScalerOf(context).scale(1) > 1.3;
+            if (stack) {
+              return Column(
+                children: [margin, const SizedBox(height: 10), loss],
+              );
+            }
+            return Row(
+              children: [
+                Expanded(child: margin),
+                const SizedBox(width: 10),
+                Expanded(child: loss),
+              ],
+            );
+          },
+        ),
+        const SizedBox(height: 12),
+        Text(
+          context.l10n.accountTier,
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 6),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
           children: [
-            Expanded(
-              child: _MoneyField(
-                controller: _margin,
-                label: context.l10n.availableTradingFunds,
+            for (final tier in AdaptiveAccountTier.values)
+              ChoiceChip(
+                label: Text(_title(tier.name)),
+                selected: _tier == tier,
+                onSelected: (_) => setState(() {
+                  _tier = tier;
+                  _recommendation = null;
+                }),
               ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _MoneyField(
-                controller: _loss,
-                label: context.l10n.maxLossLimit,
-              ),
-            ),
           ],
         ),
         const SizedBox(height: 12),
-        const Text('Tier akun', style: TextStyle(fontWeight: FontWeight.w700)),
-        const SizedBox(height: 6),
-        SegmentedButton<AdaptiveAccountTier>(
-          segments: AdaptiveAccountTier.values
-              .map(
-                (tier) =>
-                    ButtonSegment(value: tier, label: Text(_title(tier.name))),
-              )
-              .toList(),
-          selected: {_tier},
-          onSelectionChanged: (value) => setState(() {
-            _tier = value.first;
-            _recommendation = null;
-          }),
-        ),
-        const SizedBox(height: 12),
-        const Text(
-          'Gaya risiko',
+        Text(
+          context.l10n.riskStyle,
           style: TextStyle(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 6),
-        SegmentedButton<AdaptiveRiskStyle>(
-          segments: [
-            ButtonSegment(
-              value: AdaptiveRiskStyle.conservative,
-              label: Text(context.l10n.riskStyleConservative),
-            ),
-            ButtonSegment(
-              value: AdaptiveRiskStyle.balanced,
-              label: Text(context.l10n.riskStyleBalanced),
-            ),
-            ButtonSegment(
-              value: AdaptiveRiskStyle.aggressive,
-              label: Text(context.l10n.riskStyleAggressive),
-            ),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final option in [
+              (
+                AdaptiveRiskStyle.conservative,
+                context.l10n.riskStyleConservative,
+              ),
+              (AdaptiveRiskStyle.balanced, context.l10n.riskStyleBalanced),
+              (AdaptiveRiskStyle.aggressive, context.l10n.riskStyleAggressive),
+            ])
+              ChoiceChip(
+                label: Text(option.$2),
+                selected: _style == option.$1,
+                onSelected: (_) => setState(() {
+                  _style = option.$1;
+                  _recommendation = null;
+                }),
+              ),
           ],
-          selected: {_style},
-          onSelectionChanged: (value) => setState(() {
-            _style = value.first;
-            _recommendation = null;
-          }),
         ),
         const SizedBox(height: 14),
         FilledButton.icon(
