@@ -67,7 +67,7 @@ void main() {
 
     expect(find.text('Unavailable'), findsWidgets);
     expect(find.text('Low risk'), findsOneWidget);
-    await tester.tap(find.text('Use 4h'));
+    await tester.tap(find.text('Use & Analyze 4h'));
     await tester.pump();
     expect(selected, '4h');
     expect(find.text('Selected'), findsOneWidget);
@@ -79,6 +79,48 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Contract size'), findsOneWidget);
     expect(find.text('Source disclosure'), findsOneWidget);
+  });
+
+  testWidgets('risk map sheet matches the mobile compare flow', (tester) async {
+    tester.view.physicalSize = const Size(320, 700);
+    tester.view.devicePixelRatio = 1;
+    tester.platformDispatcher.textScaleFactorTestValue = 1.5;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+    final auth = AuthProvider();
+    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+    auth.client.dio.httpClientAdapter = _RiskMapAdapter();
+
+    await tester.pumpWidget(
+      ChangeNotifierProvider.value(
+        value: auth,
+        child: localizedTestApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: RiskMapCard(
+                instrument: 'XAU/USD',
+                selectedTimeframe: '1h',
+                initiallyExpanded: true,
+                sheetMode: true,
+                onSelectTimeframe: (_) {},
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Timeframe Risk Map'), findsOneWidget);
+    expect(find.byTooltip('Close'), findsOneWidget);
+    expect(find.text('Overall: Wait'), findsOneWidget);
+    expect(find.text('Selected'), findsOneWidget);
+    expect(find.text('Use & Analyze 4h'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }
 
@@ -148,7 +190,7 @@ class _RiskMapAdapter implements HttpClientAdapter {
       'generatedAt': '2026-09-08T01:00:00.000Z',
       'timeframes': [
         {
-          'timeframe': '1h',
+          'timeframe': '15m',
           'status': 'insufficient',
           'riskScore': null,
           'riskCategory': 'unavailable',
@@ -157,6 +199,24 @@ class _RiskMapAdapter implements HttpClientAdapter {
           'dataQuality': 'limited',
           'confidence': 'low',
           'recommendation': 'wait',
+        },
+        {
+          'timeframe': '1h',
+          'status': 'available',
+          'riskScore': 37,
+          'riskCategory': 'moderate',
+          'reasonCodes': ['SIGNAL_CONFLICT'],
+          'metrics': {
+            'buySignals': 3,
+            'sellSignals': 3,
+            'neutralSignals': 2,
+            'rsi14': 50.0,
+            'change20Pct': 0.1,
+            'bollingerWidthPct': 1.5,
+          },
+          'dataQuality': 'good',
+          'confidence': 'medium',
+          'recommendation': 'caution',
         },
         {
           'timeframe': '4h',

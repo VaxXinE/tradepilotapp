@@ -74,7 +74,42 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tradingPlanDisclaimer =>
-      'Use these levels as a risk structure, not as a guarantee that price will follow the scenario.';
+      'Concrete entry / stop / target prices for both buy and sell scenarios — anchored to the price at analysis time.';
+
+  @override
+  String suggestedSide(String side) {
+    return 'Suggested side: $side';
+  }
+
+  @override
+  String get buyScenario => 'Buy Scenario';
+
+  @override
+  String get sellScenario => 'Sell Scenario';
+
+  @override
+  String get waitLabel => 'Wait';
+
+  @override
+  String get takeProfit1 => 'Take Profit 1';
+
+  @override
+  String get takeProfit2 => 'Take Profit 2';
+
+  @override
+  String get riskReward => 'Risk : Reward';
+
+  @override
+  String get rationale => 'Rationale';
+
+  @override
+  String get copyLevels => 'Copy levels';
+
+  @override
+  String get levelsCopied => 'Levels copied';
+
+  @override
+  String get levelsCopyFailed => 'Levels could not be copied.';
 
   @override
   String get marketEvidence => 'Market evidence';
@@ -288,6 +323,48 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get beginnerWaitAction =>
       'The AI does not see a strong enough entry yet. Waiting for confirmation is a valid decision for beginners.';
+
+  @override
+  String get marketContextSummaryTitle => 'MARKET CONTEXT SUMMARY';
+
+  @override
+  String get marketContextLeaningBullish => 'Leaning Bullish';
+
+  @override
+  String get marketContextLeaningBearish => 'Leaning Bearish';
+
+  @override
+  String get marketContextLeaningNeutral => 'Neutral / Mixed';
+
+  @override
+  String marketContextIndicatorSummaryBullish(
+    int bullish,
+    int total,
+    int bearish,
+    int neutral,
+  ) {
+    return '$bullish of $total indicators are leaning bullish, while $bearish lean bearish and $neutral are neutral. The data is currently tilted toward upside scenarios — confirm with price action before deciding.';
+  }
+
+  @override
+  String marketContextIndicatorSummaryBearish(
+    int bearish,
+    int total,
+    int bullish,
+    int neutral,
+  ) {
+    return '$bearish of $total indicators are leaning bearish, while $bullish lean bullish and $neutral are neutral. The data is currently tilted toward downside scenarios — confirm with price action before deciding.';
+  }
+
+  @override
+  String marketContextIndicatorSummaryNeutral(
+    int total,
+    int bullish,
+    int bearish,
+    int neutral,
+  ) {
+    return 'Of $total indicators, $bullish lean bullish, $bearish lean bearish, and $neutral are neutral. The evidence is mixed — wait for clearer price action before deciding.';
+  }
 
   @override
   String get analysisSnapshotTitle => 'Context When Analysis Was Created';
@@ -2489,8 +2566,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get riskMapTitle => 'Timeframe Risk Map';
 
   @override
+  String get riskMapButton => 'Compare Risk';
+
+  @override
   String get riskMapDescription =>
-      'Compare technical risk across timeframes before creating an analysis.';
+      'Compare technical risk across timeframes to find the best setup window.';
 
   @override
   String get riskMapLoading => 'Scanning timeframes...';
@@ -2499,7 +2579,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get riskMapError => 'Could not load the risk map.';
 
   @override
-  String get riskMapOverallWait => 'Overall: wait';
+  String get riskMapOverallWait => 'Overall: Wait';
 
   @override
   String get riskMapOverallCompare => 'Compare timeframe options';
@@ -2534,7 +2614,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String useTimeframe(String timeframe) {
-    return 'Use $timeframe';
+    return 'Use & Analyze $timeframe';
   }
 
   @override
@@ -3441,6 +3521,44 @@ class AppLocalizationsEn extends AppLocalizations {
   String get whyNotHigherConfidence => 'Why isn\'t confidence higher?';
 
   @override
+  String get seeFullReasoning => 'See full reasoning';
+
+  @override
+  String analysisBasis(String instrument, String timeframe) {
+    return 'Analysis basis: $instrument · $timeframe';
+  }
+
+  @override
+  String get technicalEvidence => 'Technical evidence';
+
+  @override
+  String get newsCalendarContext => 'News & calendar context';
+
+  @override
+  String get mainRisk => 'Main risk';
+
+  @override
+  String get reassessIf => 'Reassess if';
+
+  @override
+  String get copyText => 'Copy text';
+
+  @override
+  String get copyImage => 'Copy image';
+
+  @override
+  String get fullReasoningCopied => 'Full reasoning copied';
+
+  @override
+  String get fullReasoningCopyFailed => 'Full reasoning could not be copied.';
+
+  @override
+  String get reasoningImageCopied => 'Image copied';
+
+  @override
+  String get reasoningImageCopyFailed => 'Image could not be copied.';
+
+  @override
   String get citedSources => 'Cited sources';
 
   @override
@@ -3459,6 +3577,260 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get positionSizeRecommendation => 'Position Size Recommendation';
+
+  @override
+  String get adaptiveTradingPlan => 'Adaptive Trading Plan';
+
+  @override
+  String get adaptiveTradingPlanSubtitle =>
+      'Simulate entries, lot sizes, and risk from this analysis.';
+
+  @override
+  String get fixedAccountRulesProfile => 'FIXED ACCOUNT RULES PROFILE';
+
+  @override
+  String get tradingCapital => 'Trading capital';
+
+  @override
+  String get lossLimit => 'Loss limit';
+
+  @override
+  String get adaptiveIntradayOnly =>
+      'This calculation applies only to intraday (day trade) positions; overnight positions are not covered.';
+
+  @override
+  String analysisCandleSnapshotFetched(String date) {
+    return 'Analysis candle snapshot fetched: $date';
+  }
+
+  @override
+  String get createRecommendation => 'Create recommendation';
+
+  @override
+  String get understandDetails => 'Understand the details';
+
+  @override
+  String get understandDetailsSubtitle =>
+      'See what the saved analysis found and how Adaptive responded. Live indicators do not update this plan automatically.';
+
+  @override
+  String get whyThisAnalysis => 'Why this analysis';
+
+  @override
+  String get analysisInvalidWhen => 'This analysis becomes invalid if:';
+
+  @override
+  String get scenariosSupportingFactors =>
+      'See scenarios and supporting factors';
+
+  @override
+  String get scenarios => 'Scenarios';
+
+  @override
+  String get scenarioMain => 'Scenario A — Main';
+
+  @override
+  String get scenarioAlternative => 'Scenario B — Alternative';
+
+  @override
+  String get scenarioWait => 'Scenario C — Wait / No Position';
+
+  @override
+  String get wherePlanComesFrom => 'Where this plan comes from';
+
+  @override
+  String planCandidateSummary(int buy, int sell) {
+    return 'From this analysis snapshot: $buy Buy and $sell Sell swing candidates. Only levels within the saved plan and safety limits can be used.';
+  }
+
+  @override
+  String get sourceLayeredPlan => 'Source of this layered plan';
+
+  @override
+  String get sourceLayeredPlanBody =>
+      'Primary basis: the saved analysis—its analysis-time entry zone, one final Stop Loss, targets, bias, confidence, technical counts, market condition, and fundamental snapshot. Current chart swing levels may become separate layer candidates; they never silently replace the saved analysis levels.';
+
+  @override
+  String fixedAccountProfileSummary(String lot, String margin) {
+    return 'Minimum $lot lot · $margin margin';
+  }
+
+  @override
+  String get adaptiveSupportedInstruments =>
+      'Adaptive Plan supports XAU/USD, BRENT, HSI, and NIKKEI analyses. Choose the account tier that matches your active account.';
+
+  @override
+  String get tradingCapitalHelp =>
+      'Enter the funds available for this trading plan. They must cover day margin and the risk if the final Stop Loss is hit; any shortfall will be shown.';
+
+  @override
+  String get lossLimitHelp =>
+      'Enter the maximum USD loss you accept for the entire plan. Raising this limit only helps if trading capital also covers day margin and final Stop Loss risk.';
+
+  @override
+  String get riskStyleHelp =>
+      'Style controls how much of the loss ceiling may be used and how risk is allocated across the complete layer plan. Lots come from each entry\'s distance to Stop Loss; market guardrails still take priority.';
+
+  @override
+  String get printSavePdf => 'Print / save PDF';
+
+  @override
+  String get printableReportOpenFailed =>
+      'The printable report could not be opened.';
+
+  @override
+  String get priceRiseScenario => 'Price-rise scenario (Buy)';
+
+  @override
+  String get priceFallScenario => 'Price-fall scenario (Sell)';
+
+  @override
+  String scenarioFitsRisk(String side) {
+    return 'The $side setup fits your risk and funds. Confirm the current chart before entry.';
+  }
+
+  @override
+  String watchEntry(String entry) {
+    return 'Watch entry around $entry. Enter only if the setup is confirmed; do not move the stop.';
+  }
+
+  @override
+  String get minimumRiskAtStop => 'Minimum risk at stop';
+
+  @override
+  String get brokerFundsAtStop => 'Broker funds at stop';
+
+  @override
+  String get reviewOneDirection => 'Review one direction at a time';
+
+  @override
+  String get planReadyToReview => 'Plan ready to review';
+
+  @override
+  String get answerAtGlance => 'Answer at a glance';
+
+  @override
+  String get objectiveScenario =>
+      'Your selected tier and risk style, shown as an objective scenario.';
+
+  @override
+  String get entryLotPerPosition => 'Entry point & lot per position';
+
+  @override
+  String get initialEntry => 'Initial entry';
+
+  @override
+  String get additionalPosition => 'Additional';
+
+  @override
+  String allEntriesFill(int positions, String lots) {
+    return 'If all entries fill: $positions positions · $lots lot';
+  }
+
+  @override
+  String get oneFinalStopLoss => 'One final Stop Loss';
+
+  @override
+  String get estimatedMaximumLoss => 'Estimated maximum loss';
+
+  @override
+  String get riskContext => 'Risk context';
+
+  @override
+  String get usableRiskBudget => 'Usable risk budget';
+
+  @override
+  String get reservedLossCeiling => 'Reserved loss ceiling';
+
+  @override
+  String get profitTargets => 'Profit targets';
+
+  @override
+  String estimatedProfit(String amount) {
+    return 'Estimated profit: +$amount';
+  }
+
+  @override
+  String get extraPositionsManual =>
+      'Extra positions are manual: confirm the chart and setup before each one.';
+
+  @override
+  String get viewPlanDetails => 'View plan details';
+
+  @override
+  String get extraLayersManual =>
+      'Extra layers are manual checkpoints for this scenario only. Before each layer, confirm the planned level is reachable, the analysis remains aligned, invalidation has not occurred, and no new fundamental risk needs review.';
+
+  @override
+  String get ifEntriesFill => 'If entries fill';
+
+  @override
+  String get firstEntryOnly => 'First entry only';
+
+  @override
+  String get allPlannedEntries => 'All planned entries';
+
+  @override
+  String get grossEstimateDisclaimer =>
+      'Only filled entries count. These are gross estimates at the displayed levels, not guaranteed fills or net returns; spread, fees, slippage, and early liquidation can change the outcome.';
+
+  @override
+  String get whyLossCeilingUnused => 'Why the loss ceiling is not used up';
+
+  @override
+  String get lossCeilingUnusedBody =>
+      'The remaining loss ceiling does not by itself justify another position; each entry also needs a valid price and sufficient free funds.';
+
+  @override
+  String get showExplanation => 'Show explanation';
+
+  @override
+  String get layerExplanation =>
+      'Each row shows the position\'s own amount, the cumulative amount through that layer, and the funds left after day margin plus the one final Stop Loss.';
+
+  @override
+  String get marginThisPosition => 'Margin this position';
+
+  @override
+  String get marginUsedSoFar => 'Margin used so far';
+
+  @override
+  String get riskThisPosition => 'Risk this position at final SL';
+
+  @override
+  String get riskAtStopSoFar => 'Risk at final SL so far';
+
+  @override
+  String get fundsNeededAtStop => 'Funds needed at final SL';
+
+  @override
+  String get fundsRemaining => 'Funds remaining';
+
+  @override
+  String get cumulativeProfitTp1 => 'Cumulative profit to TP1';
+
+  @override
+  String get cumulativeProfitTp2 => 'Cumulative profit to TP2';
+
+  @override
+  String get moreCalculationDetails => 'More calculation details';
+
+  @override
+  String get weightedAverageEntry => 'Weighted average entry';
+
+  @override
+  String get dayMarginPlusLoss => 'Day margin + loss at SL';
+
+  @override
+  String get howUseRecommendation => 'How to use this recommendation';
+
+  @override
+  String get howUseRecommendationBody =>
+      '1. Choose only one scenario based on your own decision.\n2. Enter only at a valid entry from the analysis plan.\n3. Before every extra layer, reconfirm the setup and invalidation.\n4. Close at the final Stop Loss; never move it to hold a losing trade.';
+
+  @override
+  String get manualExecutionDisclaimer =>
+      'You still decide and place each trade yourself; this feature never opens or closes positions automatically.';
 
   @override
   String get adaptivePlanIntro =>

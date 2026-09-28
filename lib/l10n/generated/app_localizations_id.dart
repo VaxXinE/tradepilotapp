@@ -74,7 +74,42 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get tradingPlanDisclaimer =>
-      'Gunakan level berikut sebagai struktur risiko, bukan jaminan harga akan bergerak sesuai skenario.';
+      'Harga entry / stop / target konkret untuk skenario buy dan sell — berdasarkan harga saat analisis dibuat.';
+
+  @override
+  String suggestedSide(String side) {
+    return 'Sisi yang disarankan: $side';
+  }
+
+  @override
+  String get buyScenario => 'Skenario Buy';
+
+  @override
+  String get sellScenario => 'Skenario Sell';
+
+  @override
+  String get waitLabel => 'Tunggu';
+
+  @override
+  String get takeProfit1 => 'Take Profit 1';
+
+  @override
+  String get takeProfit2 => 'Take Profit 2';
+
+  @override
+  String get riskReward => 'Risiko : Imbalan';
+
+  @override
+  String get rationale => 'Alasan';
+
+  @override
+  String get copyLevels => 'Salin level';
+
+  @override
+  String get levelsCopied => 'Level disalin';
+
+  @override
+  String get levelsCopyFailed => 'Level gagal disalin.';
 
   @override
   String get marketEvidence => 'Bukti pasar';
@@ -288,6 +323,48 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get beginnerWaitAction =>
       'AI belum melihat entry yang cukup kuat. Untuk pemula, menunggu konfirmasi adalah keputusan yang valid.';
+
+  @override
+  String get marketContextSummaryTitle => 'RINGKASAN KONTEKS PASAR';
+
+  @override
+  String get marketContextLeaningBullish => 'Cenderung Bullish';
+
+  @override
+  String get marketContextLeaningBearish => 'Cenderung Bearish';
+
+  @override
+  String get marketContextLeaningNeutral => 'Netral / Campuran';
+
+  @override
+  String marketContextIndicatorSummaryBullish(
+    int bullish,
+    int total,
+    int bearish,
+    int neutral,
+  ) {
+    return '$bullish dari $total indikator cenderung bullish, sementara $bearish cenderung bearish dan $neutral netral. Data saat ini condong ke skenario kenaikan — konfirmasi dengan price action sebelum mengambil keputusan.';
+  }
+
+  @override
+  String marketContextIndicatorSummaryBearish(
+    int bearish,
+    int total,
+    int bullish,
+    int neutral,
+  ) {
+    return '$bearish dari $total indikator cenderung bearish, sementara $bullish cenderung bullish dan $neutral netral. Data saat ini condong ke skenario penurunan — konfirmasi dengan price action sebelum mengambil keputusan.';
+  }
+
+  @override
+  String marketContextIndicatorSummaryNeutral(
+    int total,
+    int bullish,
+    int bearish,
+    int neutral,
+  ) {
+    return 'Dari $total indikator, $bullish cenderung bullish, $bearish cenderung bearish, dan $neutral netral. Buktinya masih campuran — tunggu price action yang lebih jelas sebelum mengambil keputusan.';
+  }
 
   @override
   String get analysisSnapshotTitle => 'Konteks Saat Analisis Dibuat';
@@ -2481,8 +2558,11 @@ class AppLocalizationsId extends AppLocalizations {
   String get riskMapTitle => 'Peta Risiko Timeframe';
 
   @override
+  String get riskMapButton => 'Compare Risk';
+
+  @override
   String get riskMapDescription =>
-      'Bandingkan risiko teknikal di berbagai timeframe sebelum membuat analisis.';
+      'Bandingkan risiko teknikal antar-timeframe untuk menemukan jendela setup terbaik.';
 
   @override
   String get riskMapLoading => 'Memindai timeframe...';
@@ -2526,7 +2606,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String useTimeframe(String timeframe) {
-    return 'Gunakan $timeframe';
+    return 'Gunakan & Analisis $timeframe';
   }
 
   @override
@@ -3425,6 +3505,44 @@ class AppLocalizationsId extends AppLocalizations {
   String get whyNotHigherConfidence => 'Kenapa keyakinan tidak lebih tinggi?';
 
   @override
+  String get seeFullReasoning => 'Lihat alasan lengkap';
+
+  @override
+  String analysisBasis(String instrument, String timeframe) {
+    return 'Dasar analisis: $instrument · $timeframe';
+  }
+
+  @override
+  String get technicalEvidence => 'Bukti teknikal';
+
+  @override
+  String get newsCalendarContext => 'Konteks berita & kalender';
+
+  @override
+  String get mainRisk => 'Risiko utama';
+
+  @override
+  String get reassessIf => 'Tinjau ulang jika';
+
+  @override
+  String get copyText => 'Salin teks';
+
+  @override
+  String get copyImage => 'Salin gambar';
+
+  @override
+  String get fullReasoningCopied => 'Alasan lengkap disalin';
+
+  @override
+  String get fullReasoningCopyFailed => 'Alasan lengkap gagal disalin.';
+
+  @override
+  String get reasoningImageCopied => 'Gambar disalin';
+
+  @override
+  String get reasoningImageCopyFailed => 'Gambar gagal disalin.';
+
+  @override
   String get citedSources => 'Sumber yang dirujuk';
 
   @override
@@ -3442,6 +3560,260 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get positionSizeRecommendation => 'Rekomendasi Ukuran Posisi';
+
+  @override
+  String get adaptiveTradingPlan => 'Rencana Trading Adaptif';
+
+  @override
+  String get adaptiveTradingPlanSubtitle =>
+      'Simulasikan entry, ukuran lot, dan risiko dari analisis ini.';
+
+  @override
+  String get fixedAccountRulesProfile => 'PROFIL ATURAN AKUN TETAP';
+
+  @override
+  String get tradingCapital => 'Modal trading';
+
+  @override
+  String get lossLimit => 'Batas kerugian';
+
+  @override
+  String get adaptiveIntradayOnly =>
+      'Perhitungan ini hanya berlaku untuk posisi intraday (day trade); posisi overnight tidak termasuk.';
+
+  @override
+  String analysisCandleSnapshotFetched(String date) {
+    return 'Snapshot candle analisis diambil: $date';
+  }
+
+  @override
+  String get createRecommendation => 'Buat rekomendasi';
+
+  @override
+  String get understandDetails => 'Pahami detailnya';
+
+  @override
+  String get understandDetailsSubtitle =>
+      'Lihat temuan analisis tersimpan dan cara Adaptive meresponsnya. Indikator live tidak memperbarui plan ini secara otomatis.';
+
+  @override
+  String get whyThisAnalysis => 'Alasan analisis ini';
+
+  @override
+  String get analysisInvalidWhen => 'Analisis ini menjadi tidak valid jika:';
+
+  @override
+  String get scenariosSupportingFactors =>
+      'Lihat skenario dan faktor pendukung';
+
+  @override
+  String get scenarios => 'Skenario';
+
+  @override
+  String get scenarioMain => 'Skenario A — Utama';
+
+  @override
+  String get scenarioAlternative => 'Skenario B — Alternatif';
+
+  @override
+  String get scenarioWait => 'Skenario C — Tunggu / Tanpa Posisi';
+
+  @override
+  String get wherePlanComesFrom => 'Asal plan ini';
+
+  @override
+  String planCandidateSummary(int buy, int sell) {
+    return 'Dari snapshot analisis ini: $buy kandidat swing Buy dan $sell kandidat swing Sell. Hanya level dalam plan tersimpan dan batas keamanan yang dapat digunakan.';
+  }
+
+  @override
+  String get sourceLayeredPlan => 'Sumber plan berlapis ini';
+
+  @override
+  String get sourceLayeredPlanBody =>
+      'Dasar utama: analisis tersimpan—zona entry pada waktu analisis, satu Stop Loss final, target, bias, confidence, hitungan teknikal, kondisi market, dan snapshot fundamental. Level swing chart saat ini dapat menjadi kandidat layer terpisah; level tersebut tidak pernah diam-diam menggantikan level analisis tersimpan.';
+
+  @override
+  String fixedAccountProfileSummary(String lot, String margin) {
+    return 'Minimum $lot lot · margin $margin';
+  }
+
+  @override
+  String get adaptiveSupportedInstruments =>
+      'Adaptive Plan mendukung analisis XAU/USD, BRENT, HSI, dan NIKKEI. Pilih tier akun yang sesuai dengan akun aktifmu.';
+
+  @override
+  String get tradingCapitalHelp =>
+      'Masukkan dana yang tersedia untuk plan ini. Dana harus menutup margin harian dan risiko jika Stop Loss final tersentuh; kekurangan dana akan ditampilkan.';
+
+  @override
+  String get lossLimitHelp =>
+      'Masukkan kerugian maksimum dalam USD yang kamu terima untuk seluruh plan. Menaikkan batas ini hanya membantu jika modal trading juga menutup margin harian dan risiko Stop Loss final.';
+
+  @override
+  String get riskStyleHelp =>
+      'Gaya menentukan seberapa banyak batas kerugian yang dapat dipakai dan cara risiko dialokasikan pada seluruh layer. Lot dihitung dari jarak tiap entry ke Stop Loss; batas pengaman market tetap menjadi prioritas.';
+
+  @override
+  String get printSavePdf => 'Cetak / simpan PDF';
+
+  @override
+  String get printableReportOpenFailed =>
+      'Laporan siap cetak tidak dapat dibuka.';
+
+  @override
+  String get priceRiseScenario => 'Skenario harga naik (Buy)';
+
+  @override
+  String get priceFallScenario => 'Skenario harga turun (Sell)';
+
+  @override
+  String scenarioFitsRisk(String side) {
+    return 'Setup $side sesuai dengan risiko dan danamu. Konfirmasi chart saat ini sebelum entry.';
+  }
+
+  @override
+  String watchEntry(String entry) {
+    return 'Pantau entry di sekitar $entry. Entry hanya jika setup terkonfirmasi; jangan menggeser stop.';
+  }
+
+  @override
+  String get minimumRiskAtStop => 'Risiko minimum saat stop';
+
+  @override
+  String get brokerFundsAtStop => 'Dana broker saat stop';
+
+  @override
+  String get reviewOneDirection => 'Tinjau satu arah pada satu waktu';
+
+  @override
+  String get planReadyToReview => 'Plan siap ditinjau';
+
+  @override
+  String get answerAtGlance => 'Jawaban sekilas';
+
+  @override
+  String get objectiveScenario =>
+      'Tier dan gaya risiko pilihanmu, ditampilkan sebagai skenario objektif.';
+
+  @override
+  String get entryLotPerPosition => 'Titik entry & lot per posisi';
+
+  @override
+  String get initialEntry => 'Entry awal';
+
+  @override
+  String get additionalPosition => 'Tambahan';
+
+  @override
+  String allEntriesFill(int positions, String lots) {
+    return 'Jika semua entry terisi: $positions posisi · $lots lot';
+  }
+
+  @override
+  String get oneFinalStopLoss => 'Satu Stop Loss final';
+
+  @override
+  String get estimatedMaximumLoss => 'Estimasi kerugian maksimum';
+
+  @override
+  String get riskContext => 'Konteks risiko';
+
+  @override
+  String get usableRiskBudget => 'Anggaran risiko terpakai';
+
+  @override
+  String get reservedLossCeiling => 'Batas kerugian tersisa';
+
+  @override
+  String get profitTargets => 'Target profit';
+
+  @override
+  String estimatedProfit(String amount) {
+    return 'Estimasi profit: +$amount';
+  }
+
+  @override
+  String get extraPositionsManual =>
+      'Posisi tambahan bersifat manual: konfirmasi chart dan setup sebelum setiap penambahan.';
+
+  @override
+  String get viewPlanDetails => 'Lihat detail plan';
+
+  @override
+  String get extraLayersManual =>
+      'Layer tambahan adalah checkpoint manual untuk skenario ini. Sebelum setiap layer, pastikan level dapat dicapai, analisis masih selaras, invalidation belum terjadi, dan tidak ada risiko fundamental baru.';
+
+  @override
+  String get ifEntriesFill => 'Jika entry terisi';
+
+  @override
+  String get firstEntryOnly => 'Hanya entry pertama';
+
+  @override
+  String get allPlannedEntries => 'Semua entry terencana';
+
+  @override
+  String get grossEstimateDisclaimer =>
+      'Hanya entry yang terisi yang dihitung. Ini estimasi kotor pada level yang ditampilkan, bukan jaminan fill atau hasil bersih; spread, fee, slippage, dan likuidasi dini dapat mengubah hasil.';
+
+  @override
+  String get whyLossCeilingUnused => 'Mengapa batas rugi tidak habis digunakan';
+
+  @override
+  String get lossCeilingUnusedBody =>
+      'Sisa batas rugi tidak otomatis membenarkan posisi tambahan; setiap entry juga memerlukan harga valid dan dana bebas yang cukup.';
+
+  @override
+  String get showExplanation => 'Tampilkan penjelasan';
+
+  @override
+  String get layerExplanation =>
+      'Setiap baris menunjukkan nilai posisi tersebut, nilai kumulatif sampai layer itu, dan sisa dana setelah margin harian serta satu Stop Loss final.';
+
+  @override
+  String get marginThisPosition => 'Margin posisi ini';
+
+  @override
+  String get marginUsedSoFar => 'Margin terpakai sejauh ini';
+
+  @override
+  String get riskThisPosition => 'Risiko posisi ini pada SL final';
+
+  @override
+  String get riskAtStopSoFar => 'Risiko pada SL final sejauh ini';
+
+  @override
+  String get fundsNeededAtStop => 'Dana dibutuhkan pada SL final';
+
+  @override
+  String get fundsRemaining => 'Dana tersisa';
+
+  @override
+  String get cumulativeProfitTp1 => 'Profit kumulatif ke TP1';
+
+  @override
+  String get cumulativeProfitTp2 => 'Profit kumulatif ke TP2';
+
+  @override
+  String get moreCalculationDetails => 'Detail kalkulasi lainnya';
+
+  @override
+  String get weightedAverageEntry => 'Rata-rata entry tertimbang';
+
+  @override
+  String get dayMarginPlusLoss => 'Margin harian + rugi pada SL';
+
+  @override
+  String get howUseRecommendation => 'Cara menggunakan rekomendasi ini';
+
+  @override
+  String get howUseRecommendationBody =>
+      '1. Pilih hanya satu skenario berdasarkan keputusanmu sendiri.\n2. Entry hanya pada titik valid dari plan analisis.\n3. Sebelum setiap layer tambahan, konfirmasi ulang setup dan invalidation.\n4. Tutup pada Stop Loss final; jangan menggesernya untuk menahan posisi rugi.';
+
+  @override
+  String get manualExecutionDisclaimer =>
+      'Kamu tetap memutuskan dan memasang setiap trade sendiri; fitur ini tidak pernah membuka atau menutup posisi secara otomatis.';
 
   @override
   String get adaptivePlanIntro =>

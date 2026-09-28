@@ -12,5 +12,19 @@ import UIKit
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    let clipboardChannel = FlutterMethodChannel(
+      name: "id.tradepilot.app/clipboard",
+      binaryMessenger: engineBridge.applicationRegistrar.messenger()
+    )
+    clipboardChannel.setMethodCallHandler { call, result in
+      guard call.method == "copyImage",
+            let bytes = call.arguments as? FlutterStandardTypedData,
+            let image = UIImage(data: bytes.data) else {
+        result(FlutterMethodNotImplemented)
+        return
+      }
+      UIPasteboard.general.image = image
+      result(nil)
+    }
   }
 }

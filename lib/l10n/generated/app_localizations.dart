@@ -227,8 +227,74 @@ abstract class AppLocalizations {
   /// No description provided for @tradingPlanDisclaimer.
   ///
   /// In en, this message translates to:
-  /// **'Use these levels as a risk structure, not as a guarantee that price will follow the scenario.'**
+  /// **'Concrete entry / stop / target prices for both buy and sell scenarios — anchored to the price at analysis time.'**
   String get tradingPlanDisclaimer;
+
+  /// No description provided for @suggestedSide.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested side: {side}'**
+  String suggestedSide(String side);
+
+  /// No description provided for @buyScenario.
+  ///
+  /// In en, this message translates to:
+  /// **'Buy Scenario'**
+  String get buyScenario;
+
+  /// No description provided for @sellScenario.
+  ///
+  /// In en, this message translates to:
+  /// **'Sell Scenario'**
+  String get sellScenario;
+
+  /// No description provided for @waitLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait'**
+  String get waitLabel;
+
+  /// No description provided for @takeProfit1.
+  ///
+  /// In en, this message translates to:
+  /// **'Take Profit 1'**
+  String get takeProfit1;
+
+  /// No description provided for @takeProfit2.
+  ///
+  /// In en, this message translates to:
+  /// **'Take Profit 2'**
+  String get takeProfit2;
+
+  /// No description provided for @riskReward.
+  ///
+  /// In en, this message translates to:
+  /// **'Risk : Reward'**
+  String get riskReward;
+
+  /// No description provided for @rationale.
+  ///
+  /// In en, this message translates to:
+  /// **'Rationale'**
+  String get rationale;
+
+  /// No description provided for @copyLevels.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy levels'**
+  String get copyLevels;
+
+  /// No description provided for @levelsCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Levels copied'**
+  String get levelsCopied;
+
+  /// No description provided for @levelsCopyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Levels could not be copied.'**
+  String get levelsCopyFailed;
 
   /// No description provided for @marketEvidence.
   ///
@@ -607,6 +673,63 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The AI does not see a strong enough entry yet. Waiting for confirmation is a valid decision for beginners.'**
   String get beginnerWaitAction;
+
+  /// No description provided for @marketContextSummaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'MARKET CONTEXT SUMMARY'**
+  String get marketContextSummaryTitle;
+
+  /// No description provided for @marketContextLeaningBullish.
+  ///
+  /// In en, this message translates to:
+  /// **'Leaning Bullish'**
+  String get marketContextLeaningBullish;
+
+  /// No description provided for @marketContextLeaningBearish.
+  ///
+  /// In en, this message translates to:
+  /// **'Leaning Bearish'**
+  String get marketContextLeaningBearish;
+
+  /// No description provided for @marketContextLeaningNeutral.
+  ///
+  /// In en, this message translates to:
+  /// **'Neutral / Mixed'**
+  String get marketContextLeaningNeutral;
+
+  /// No description provided for @marketContextIndicatorSummaryBullish.
+  ///
+  /// In en, this message translates to:
+  /// **'{bullish} of {total} indicators are leaning bullish, while {bearish} lean bearish and {neutral} are neutral. The data is currently tilted toward upside scenarios — confirm with price action before deciding.'**
+  String marketContextIndicatorSummaryBullish(
+    int bullish,
+    int total,
+    int bearish,
+    int neutral,
+  );
+
+  /// No description provided for @marketContextIndicatorSummaryBearish.
+  ///
+  /// In en, this message translates to:
+  /// **'{bearish} of {total} indicators are leaning bearish, while {bullish} lean bullish and {neutral} are neutral. The data is currently tilted toward downside scenarios — confirm with price action before deciding.'**
+  String marketContextIndicatorSummaryBearish(
+    int bearish,
+    int total,
+    int bullish,
+    int neutral,
+  );
+
+  /// No description provided for @marketContextIndicatorSummaryNeutral.
+  ///
+  /// In en, this message translates to:
+  /// **'Of {total} indicators, {bullish} lean bullish, {bearish} lean bearish, and {neutral} are neutral. The evidence is mixed — wait for clearer price action before deciding.'**
+  String marketContextIndicatorSummaryNeutral(
+    int total,
+    int bullish,
+    int bearish,
+    int neutral,
+  );
 
   /// No description provided for @analysisSnapshotTitle.
   ///
@@ -4490,10 +4613,16 @@ abstract class AppLocalizations {
   /// **'Timeframe Risk Map'**
   String get riskMapTitle;
 
+  /// No description provided for @riskMapButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare Risk'**
+  String get riskMapButton;
+
   /// No description provided for @riskMapDescription.
   ///
   /// In en, this message translates to:
-  /// **'Compare technical risk across timeframes before creating an analysis.'**
+  /// **'Compare technical risk across timeframes to find the best setup window.'**
   String get riskMapDescription;
 
   /// No description provided for @riskMapLoading.
@@ -4511,7 +4640,7 @@ abstract class AppLocalizations {
   /// No description provided for @riskMapOverallWait.
   ///
   /// In en, this message translates to:
-  /// **'Overall: wait'**
+  /// **'Overall: Wait'**
   String get riskMapOverallWait;
 
   /// No description provided for @riskMapOverallCompare.
@@ -4577,7 +4706,7 @@ abstract class AppLocalizations {
   /// No description provided for @useTimeframe.
   ///
   /// In en, this message translates to:
-  /// **'Use {timeframe}'**
+  /// **'Use & Analyze {timeframe}'**
   String useTimeframe(String timeframe);
 
   /// No description provided for @standardRulesTitle.
@@ -6110,6 +6239,78 @@ abstract class AppLocalizations {
   /// **'Why isn\'t confidence higher?'**
   String get whyNotHigherConfidence;
 
+  /// No description provided for @seeFullReasoning.
+  ///
+  /// In en, this message translates to:
+  /// **'See full reasoning'**
+  String get seeFullReasoning;
+
+  /// No description provided for @analysisBasis.
+  ///
+  /// In en, this message translates to:
+  /// **'Analysis basis: {instrument} · {timeframe}'**
+  String analysisBasis(String instrument, String timeframe);
+
+  /// No description provided for @technicalEvidence.
+  ///
+  /// In en, this message translates to:
+  /// **'Technical evidence'**
+  String get technicalEvidence;
+
+  /// No description provided for @newsCalendarContext.
+  ///
+  /// In en, this message translates to:
+  /// **'News & calendar context'**
+  String get newsCalendarContext;
+
+  /// No description provided for @mainRisk.
+  ///
+  /// In en, this message translates to:
+  /// **'Main risk'**
+  String get mainRisk;
+
+  /// No description provided for @reassessIf.
+  ///
+  /// In en, this message translates to:
+  /// **'Reassess if'**
+  String get reassessIf;
+
+  /// No description provided for @copyText.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy text'**
+  String get copyText;
+
+  /// No description provided for @copyImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy image'**
+  String get copyImage;
+
+  /// No description provided for @fullReasoningCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Full reasoning copied'**
+  String get fullReasoningCopied;
+
+  /// No description provided for @fullReasoningCopyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Full reasoning could not be copied.'**
+  String get fullReasoningCopyFailed;
+
+  /// No description provided for @reasoningImageCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Image copied'**
+  String get reasoningImageCopied;
+
+  /// No description provided for @reasoningImageCopyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Image could not be copied.'**
+  String get reasoningImageCopyFailed;
+
   /// No description provided for @citedSources.
   ///
   /// In en, this message translates to:
@@ -6145,6 +6346,450 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Position Size Recommendation'**
   String get positionSizeRecommendation;
+
+  /// No description provided for @adaptiveTradingPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Adaptive Trading Plan'**
+  String get adaptiveTradingPlan;
+
+  /// No description provided for @adaptiveTradingPlanSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Simulate entries, lot sizes, and risk from this analysis.'**
+  String get adaptiveTradingPlanSubtitle;
+
+  /// No description provided for @fixedAccountRulesProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'FIXED ACCOUNT RULES PROFILE'**
+  String get fixedAccountRulesProfile;
+
+  /// No description provided for @tradingCapital.
+  ///
+  /// In en, this message translates to:
+  /// **'Trading capital'**
+  String get tradingCapital;
+
+  /// No description provided for @lossLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Loss limit'**
+  String get lossLimit;
+
+  /// No description provided for @adaptiveIntradayOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'This calculation applies only to intraday (day trade) positions; overnight positions are not covered.'**
+  String get adaptiveIntradayOnly;
+
+  /// No description provided for @analysisCandleSnapshotFetched.
+  ///
+  /// In en, this message translates to:
+  /// **'Analysis candle snapshot fetched: {date}'**
+  String analysisCandleSnapshotFetched(String date);
+
+  /// No description provided for @createRecommendation.
+  ///
+  /// In en, this message translates to:
+  /// **'Create recommendation'**
+  String get createRecommendation;
+
+  /// No description provided for @understandDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Understand the details'**
+  String get understandDetails;
+
+  /// No description provided for @understandDetailsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'See what the saved analysis found and how Adaptive responded. Live indicators do not update this plan automatically.'**
+  String get understandDetailsSubtitle;
+
+  /// No description provided for @whyThisAnalysis.
+  ///
+  /// In en, this message translates to:
+  /// **'Why this analysis'**
+  String get whyThisAnalysis;
+
+  /// No description provided for @analysisInvalidWhen.
+  ///
+  /// In en, this message translates to:
+  /// **'This analysis becomes invalid if:'**
+  String get analysisInvalidWhen;
+
+  /// No description provided for @scenariosSupportingFactors.
+  ///
+  /// In en, this message translates to:
+  /// **'See scenarios and supporting factors'**
+  String get scenariosSupportingFactors;
+
+  /// No description provided for @scenarios.
+  ///
+  /// In en, this message translates to:
+  /// **'Scenarios'**
+  String get scenarios;
+
+  /// No description provided for @scenarioMain.
+  ///
+  /// In en, this message translates to:
+  /// **'Scenario A — Main'**
+  String get scenarioMain;
+
+  /// No description provided for @scenarioAlternative.
+  ///
+  /// In en, this message translates to:
+  /// **'Scenario B — Alternative'**
+  String get scenarioAlternative;
+
+  /// No description provided for @scenarioWait.
+  ///
+  /// In en, this message translates to:
+  /// **'Scenario C — Wait / No Position'**
+  String get scenarioWait;
+
+  /// No description provided for @wherePlanComesFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Where this plan comes from'**
+  String get wherePlanComesFrom;
+
+  /// No description provided for @planCandidateSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'From this analysis snapshot: {buy} Buy and {sell} Sell swing candidates. Only levels within the saved plan and safety limits can be used.'**
+  String planCandidateSummary(int buy, int sell);
+
+  /// No description provided for @sourceLayeredPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Source of this layered plan'**
+  String get sourceLayeredPlan;
+
+  /// No description provided for @sourceLayeredPlanBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Primary basis: the saved analysis—its analysis-time entry zone, one final Stop Loss, targets, bias, confidence, technical counts, market condition, and fundamental snapshot. Current chart swing levels may become separate layer candidates; they never silently replace the saved analysis levels.'**
+  String get sourceLayeredPlanBody;
+
+  /// No description provided for @fixedAccountProfileSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum {lot} lot · {margin} margin'**
+  String fixedAccountProfileSummary(String lot, String margin);
+
+  /// No description provided for @adaptiveSupportedInstruments.
+  ///
+  /// In en, this message translates to:
+  /// **'Adaptive Plan supports XAU/USD, BRENT, HSI, and NIKKEI analyses. Choose the account tier that matches your active account.'**
+  String get adaptiveSupportedInstruments;
+
+  /// No description provided for @tradingCapitalHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the funds available for this trading plan. They must cover day margin and the risk if the final Stop Loss is hit; any shortfall will be shown.'**
+  String get tradingCapitalHelp;
+
+  /// No description provided for @lossLimitHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the maximum USD loss you accept for the entire plan. Raising this limit only helps if trading capital also covers day margin and final Stop Loss risk.'**
+  String get lossLimitHelp;
+
+  /// No description provided for @riskStyleHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Style controls how much of the loss ceiling may be used and how risk is allocated across the complete layer plan. Lots come from each entry\'s distance to Stop Loss; market guardrails still take priority.'**
+  String get riskStyleHelp;
+
+  /// No description provided for @printSavePdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Print / save PDF'**
+  String get printSavePdf;
+
+  /// No description provided for @printableReportOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The printable report could not be opened.'**
+  String get printableReportOpenFailed;
+
+  /// No description provided for @priceRiseScenario.
+  ///
+  /// In en, this message translates to:
+  /// **'Price-rise scenario (Buy)'**
+  String get priceRiseScenario;
+
+  /// No description provided for @priceFallScenario.
+  ///
+  /// In en, this message translates to:
+  /// **'Price-fall scenario (Sell)'**
+  String get priceFallScenario;
+
+  /// No description provided for @scenarioFitsRisk.
+  ///
+  /// In en, this message translates to:
+  /// **'The {side} setup fits your risk and funds. Confirm the current chart before entry.'**
+  String scenarioFitsRisk(String side);
+
+  /// No description provided for @watchEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch entry around {entry}. Enter only if the setup is confirmed; do not move the stop.'**
+  String watchEntry(String entry);
+
+  /// No description provided for @minimumRiskAtStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum risk at stop'**
+  String get minimumRiskAtStop;
+
+  /// No description provided for @brokerFundsAtStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Broker funds at stop'**
+  String get brokerFundsAtStop;
+
+  /// No description provided for @reviewOneDirection.
+  ///
+  /// In en, this message translates to:
+  /// **'Review one direction at a time'**
+  String get reviewOneDirection;
+
+  /// No description provided for @planReadyToReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan ready to review'**
+  String get planReadyToReview;
+
+  /// No description provided for @answerAtGlance.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer at a glance'**
+  String get answerAtGlance;
+
+  /// No description provided for @objectiveScenario.
+  ///
+  /// In en, this message translates to:
+  /// **'Your selected tier and risk style, shown as an objective scenario.'**
+  String get objectiveScenario;
+
+  /// No description provided for @entryLotPerPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'Entry point & lot per position'**
+  String get entryLotPerPosition;
+
+  /// No description provided for @initialEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Initial entry'**
+  String get initialEntry;
+
+  /// No description provided for @additionalPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'Additional'**
+  String get additionalPosition;
+
+  /// No description provided for @allEntriesFill.
+  ///
+  /// In en, this message translates to:
+  /// **'If all entries fill: {positions} positions · {lots} lot'**
+  String allEntriesFill(int positions, String lots);
+
+  /// No description provided for @oneFinalStopLoss.
+  ///
+  /// In en, this message translates to:
+  /// **'One final Stop Loss'**
+  String get oneFinalStopLoss;
+
+  /// No description provided for @estimatedMaximumLoss.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated maximum loss'**
+  String get estimatedMaximumLoss;
+
+  /// No description provided for @riskContext.
+  ///
+  /// In en, this message translates to:
+  /// **'Risk context'**
+  String get riskContext;
+
+  /// No description provided for @usableRiskBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Usable risk budget'**
+  String get usableRiskBudget;
+
+  /// No description provided for @reservedLossCeiling.
+  ///
+  /// In en, this message translates to:
+  /// **'Reserved loss ceiling'**
+  String get reservedLossCeiling;
+
+  /// No description provided for @profitTargets.
+  ///
+  /// In en, this message translates to:
+  /// **'Profit targets'**
+  String get profitTargets;
+
+  /// No description provided for @estimatedProfit.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated profit: +{amount}'**
+  String estimatedProfit(String amount);
+
+  /// No description provided for @extraPositionsManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra positions are manual: confirm the chart and setup before each one.'**
+  String get extraPositionsManual;
+
+  /// No description provided for @viewPlanDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'View plan details'**
+  String get viewPlanDetails;
+
+  /// No description provided for @extraLayersManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra layers are manual checkpoints for this scenario only. Before each layer, confirm the planned level is reachable, the analysis remains aligned, invalidation has not occurred, and no new fundamental risk needs review.'**
+  String get extraLayersManual;
+
+  /// No description provided for @ifEntriesFill.
+  ///
+  /// In en, this message translates to:
+  /// **'If entries fill'**
+  String get ifEntriesFill;
+
+  /// No description provided for @firstEntryOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'First entry only'**
+  String get firstEntryOnly;
+
+  /// No description provided for @allPlannedEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'All planned entries'**
+  String get allPlannedEntries;
+
+  /// No description provided for @grossEstimateDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Only filled entries count. These are gross estimates at the displayed levels, not guaranteed fills or net returns; spread, fees, slippage, and early liquidation can change the outcome.'**
+  String get grossEstimateDisclaimer;
+
+  /// No description provided for @whyLossCeilingUnused.
+  ///
+  /// In en, this message translates to:
+  /// **'Why the loss ceiling is not used up'**
+  String get whyLossCeilingUnused;
+
+  /// No description provided for @lossCeilingUnusedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The remaining loss ceiling does not by itself justify another position; each entry also needs a valid price and sufficient free funds.'**
+  String get lossCeilingUnusedBody;
+
+  /// No description provided for @showExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Show explanation'**
+  String get showExplanation;
+
+  /// No description provided for @layerExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Each row shows the position\'s own amount, the cumulative amount through that layer, and the funds left after day margin plus the one final Stop Loss.'**
+  String get layerExplanation;
+
+  /// No description provided for @marginThisPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'Margin this position'**
+  String get marginThisPosition;
+
+  /// No description provided for @marginUsedSoFar.
+  ///
+  /// In en, this message translates to:
+  /// **'Margin used so far'**
+  String get marginUsedSoFar;
+
+  /// No description provided for @riskThisPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'Risk this position at final SL'**
+  String get riskThisPosition;
+
+  /// No description provided for @riskAtStopSoFar.
+  ///
+  /// In en, this message translates to:
+  /// **'Risk at final SL so far'**
+  String get riskAtStopSoFar;
+
+  /// No description provided for @fundsNeededAtStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Funds needed at final SL'**
+  String get fundsNeededAtStop;
+
+  /// No description provided for @fundsRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'Funds remaining'**
+  String get fundsRemaining;
+
+  /// No description provided for @cumulativeProfitTp1.
+  ///
+  /// In en, this message translates to:
+  /// **'Cumulative profit to TP1'**
+  String get cumulativeProfitTp1;
+
+  /// No description provided for @cumulativeProfitTp2.
+  ///
+  /// In en, this message translates to:
+  /// **'Cumulative profit to TP2'**
+  String get cumulativeProfitTp2;
+
+  /// No description provided for @moreCalculationDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'More calculation details'**
+  String get moreCalculationDetails;
+
+  /// No description provided for @weightedAverageEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Weighted average entry'**
+  String get weightedAverageEntry;
+
+  /// No description provided for @dayMarginPlusLoss.
+  ///
+  /// In en, this message translates to:
+  /// **'Day margin + loss at SL'**
+  String get dayMarginPlusLoss;
+
+  /// No description provided for @howUseRecommendation.
+  ///
+  /// In en, this message translates to:
+  /// **'How to use this recommendation'**
+  String get howUseRecommendation;
+
+  /// No description provided for @howUseRecommendationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Choose only one scenario based on your own decision.\n2. Enter only at a valid entry from the analysis plan.\n3. Before every extra layer, reconfirm the setup and invalidation.\n4. Close at the final Stop Loss; never move it to hold a losing trade.'**
+  String get howUseRecommendationBody;
+
+  /// No description provided for @manualExecutionDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'You still decide and place each trade yourself; this feature never opens or closes positions automatically.'**
+  String get manualExecutionDisclaimer;
 
   /// No description provided for @adaptivePlanIntro.
   ///

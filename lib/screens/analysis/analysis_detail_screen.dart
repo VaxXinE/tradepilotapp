@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
@@ -28,6 +31,7 @@ import '../journal/trade_journal_screen.dart';
 import '../mindset/mindset_screen.dart';
 
 const _analysisTimeframes = ['1m', '5m', '15m', '30m', '1h', '4h', '1D', '1W'];
+const _reasoningClipboard = MethodChannel('id.tradepilot.app/clipboard');
 
 const _tradingViewSymbols = <String, String>{
   'XAU/USD': 'OANDA:XAUUSD',
@@ -412,6 +416,20 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
     }
   }
 
+  Future<void> _openFullReasoning(Analysis analysis, bool isPro) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _FullReasoningSheet(
+        analysis: analysis,
+        isPro: isPro,
+        onOpenUrl: _openExternalUrl,
+      ),
+    );
+  }
+
   void _openGuide(ProgressionEvidenceStartInputGuideIdEnum guideId) {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => MindsetScreen(initialGuideId: guideId)),
@@ -422,16 +440,21 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      showDragHandle: true,
+      useSafeArea: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
       builder: (sheetContext) => SafeArea(
         child: FractionallySizedBox(
-          heightFactor: .85,
+          heightFactor: .9,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
             child: RiskMapCard(
               instrument: analysis.instrument,
               selectedTimeframe: _selectedTimeframe ?? analysis.timeframe,
               initiallyExpanded: true,
+              sheetMode: true,
               onSelectTimeframe: (timeframe) {
                 Navigator.of(sheetContext).pop();
                 _selectTimeframe(timeframe);
@@ -832,6 +855,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
           onLearn: () => _openGuide(
             ProgressionEvidenceStartInputGuideIdEnum.biasConfidenceValidity,
           ),
+          onOpenReasoning: () => _openFullReasoning(analysis, isPro),
         ),
 
         const SizedBox(height: 14),
@@ -850,19 +874,13 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
 
         if (analysis.tradePlan != null) ...[
           const SizedBox(height: 14),
-          Text(
-            context.l10n.tradingPlanTitle,
-            style: Theme.of(context).textTheme.titleMedium,
+          _TradePlanCard(
+            plan: analysis.tradePlan!,
+            isDark: isDark,
+            onLearn: () => _openGuide(
+              ProgressionEvidenceStartInputGuideIdEnum.standardPlan,
+            ),
           ),
-          const SizedBox(height: 5),
-          Text(
-            context.l10n.tradingPlanDisclaimer,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: muted),
-          ),
-          const SizedBox(height: 12),
-          _TradePlanCard(plan: analysis.tradePlan!, isDark: isDark),
         ],
 
         // Ringkasan "Bukti pasar" disembunyikan atas permintaan produk.
@@ -876,31 +894,27 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
             refreshed: _fundamentalRefresh,
             refreshing: _refreshingFundamentals,
             onRefresh: _refreshFundamentals,
+            onLearn: () => _openGuide(
+              ProgressionEvidenceStartInputGuideIdEnum.technicalFundamental,
+            ),
             onOpenUrl: _openExternalUrl,
           ),
           const SizedBox(height: 10),
         ],
-        Card(
-          child: ExpansionTile(
-            key: const ValueKey('analysis-market-snapshot'),
-            initiallyExpanded: true,
-            leading: Icon(
-              Icons.query_stats_rounded,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            title: Text(
-              context.l10n.analysisSnapshotTitle,
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
-            subtitle: Text(context.l10n.analysisSnapshotDescription),
-            childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-            children: [_MarketSnapshotCard(analysis: analysis)],
-          ),
+        _MarketSnapshotCard(
+          key: const ValueKey('analysis-market-snapshot'),
+          analysis: analysis,
         ),
 
         if (analysis.tradePlan != null) ...[
           const SizedBox(height: 14),
-          AdaptivePositionPlanCard(analysis: analysis, candles: _candles),
+          AdaptivePositionPlanCard(
+            analysis: analysis,
+            candles: _candles,
+            onLearn: () => _openGuide(
+              ProgressionEvidenceStartInputGuideIdEnum.adaptivePositionPlan,
+            ),
+          ),
         ],
 
         if (_technical != null) ...[
@@ -1648,11 +1662,19 @@ class _DetailTimeframeCard extends StatelessWidget {
                             child: OutlinedButton.icon(
                               key: const Key('timeframe-risk-map-button'),
                               onPressed: loading ? null : onOpenRiskMap,
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: colors.primary,
+                                side: BorderSide(color: colors.primary),
+                                minimumSize: const Size(0, 44),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
                               icon: const Icon(
                                 Icons.monitor_heart_outlined,
-                                size: 17,
+                                size: 19,
                               ),
-                              label: Text(context.l10n.riskMapTitle),
+                              label: Text(context.l10n.riskMapButton),
                             ),
                           ),
                       ],
@@ -1823,8 +1845,16 @@ class _TimeframeCard extends StatelessWidget {
                 child: OutlinedButton.icon(
                   key: const Key('timeframe-risk-map-button'),
                   onPressed: loading ? null : onOpenRiskMap,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: colors.primary,
+                    side: BorderSide(color: colors.primary),
+                    minimumSize: const Size.fromHeight(48),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                   icon: const Icon(Icons.monitor_heart_outlined, size: 18),
-                  label: Text(context.l10n.riskMapTitle),
+                  label: Text(context.l10n.riskMapButton),
                 ),
               ),
             ],
@@ -1907,6 +1937,7 @@ class _HeaderCard extends StatelessWidget {
     required this.muted,
     required this.isPro,
     required this.onLearn,
+    required this.onOpenReasoning,
   });
 
   final Analysis analysis;
@@ -1916,6 +1947,7 @@ class _HeaderCard extends StatelessWidget {
   final Color muted;
   final bool isPro;
   final VoidCallback onLearn;
+  final VoidCallback onOpenReasoning;
 
   @override
   Widget build(BuildContext context) {
@@ -2096,6 +2128,20 @@ class _HeaderCard extends StatelessWidget {
                       confidenceReason!,
                       style: const TextStyle(height: 1.45),
                     ),
+                    const SizedBox(height: 6),
+                    TextButton(
+                      key: const ValueKey('analysis-full-reasoning-button'),
+                      onPressed: onOpenReasoning,
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: const Size(48, 48),
+                        alignment: Alignment.centerLeft,
+                      ),
+                      child: Text(
+                        context.l10n.seeFullReasoning,
+                        style: const TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -2105,6 +2151,470 @@ class _HeaderCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _FullReasoningSheet extends StatefulWidget {
+  const _FullReasoningSheet({
+    required this.analysis,
+    required this.isPro,
+    required this.onOpenUrl,
+  });
+
+  final Analysis analysis;
+  final bool isPro;
+  final ValueChanged<String> onOpenUrl;
+
+  @override
+  State<_FullReasoningSheet> createState() => _FullReasoningSheetState();
+}
+
+class _FullReasoningSheetState extends State<_FullReasoningSheet> {
+  final _imageKey = GlobalKey();
+  bool _copyingImage = false;
+  Timer? _noticeTimer;
+  String? _notice;
+  bool _noticeIsError = false;
+
+  String? _value(String? value) {
+    final trimmed = value?.trim();
+    return trimmed?.isNotEmpty == true ? trimmed : null;
+  }
+
+  List<String> get _conditions {
+    final raw = _value(
+      widget.isPro
+          ? widget.analysis.invalidationConditions
+          : widget.analysis.failureConditions,
+    );
+    if (raw == null) return const [];
+    final parts = raw
+        .split(RegExp(r'(?:\r?\n|[•;])'))
+        .map((item) => item.replaceFirst(RegExp(r'^\s*[-*]\s*'), '').trim())
+        .where((item) => item.isNotEmpty)
+        .toList();
+    return parts.isEmpty ? [raw] : parts;
+  }
+
+  List<(String, String?)> get _citations {
+    final cited = widget.analysis.fundamentalCitations;
+    if (cited == null) return const [];
+    final news = widget.analysis.fundamentalContext?.newsItems;
+    return [
+      for (final title in cited.newsTitles)
+        (
+          title,
+          news
+              ?.where(
+                (item) =>
+                    item.title.trim().toLowerCase() ==
+                    title.trim().toLowerCase(),
+              )
+              .firstOrNull
+              ?.url,
+        ),
+      for (final event in cited.calendarEvents) (event, null),
+    ];
+  }
+
+  String _copyableText(BuildContext context) {
+    final l10n = context.l10n;
+    final reason = _value(
+      widget.isPro
+          ? widget.analysis.uncertaintyNotes
+          : widget.analysis.whyReason,
+    );
+    final technical = _value(widget.analysis.keyDriversTechnical);
+    final fundamental = _value(widget.analysis.keyDriversFundamental);
+    final risk = _value(widget.analysis.risk);
+    final sections = <String>[
+      l10n.whyNotHigherConfidence,
+      l10n.analysisBasis(widget.analysis.instrument, widget.analysis.timeframe),
+      ?reason,
+      ?technical == null ? null : '${l10n.technicalEvidence}: $technical',
+      ?fundamental == null ? null : '${l10n.newsCalendarContext}: $fundamental',
+      if (_citations.isNotEmpty)
+        '${l10n.citedSources}: ${_citations.map((item) => item.$1).join(', ')}',
+      ?risk == null ? null : '${l10n.mainRisk}: $risk',
+      if (_conditions.isNotEmpty)
+        '${l10n.reassessIf}:\n${_conditions.map((item) => '• $item').join('\n')}',
+    ];
+    return sections.join('\n\n');
+  }
+
+  void _showMessage(String message, {bool isError = false}) {
+    _noticeTimer?.cancel();
+    setState(() {
+      _notice = message;
+      _noticeIsError = isError;
+    });
+    _noticeTimer = Timer(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _notice = null);
+    });
+  }
+
+  Future<void> _copyText() async {
+    try {
+      await Clipboard.setData(ClipboardData(text: _copyableText(context)));
+      if (mounted) _showMessage(context.l10n.fullReasoningCopied);
+    } catch (_) {
+      if (mounted) {
+        _showMessage(context.l10n.fullReasoningCopyFailed, isError: true);
+      }
+    }
+  }
+
+  Future<void> _copyImage() async {
+    if (_copyingImage) return;
+    final pixelRatio = MediaQuery.devicePixelRatioOf(
+      context,
+    ).clamp(1, 2).toDouble();
+    setState(() => _copyingImage = true);
+    try {
+      await WidgetsBinding.instance.endOfFrame;
+      final boundary =
+          _imageKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
+      if (boundary == null) throw StateError('Reasoning image is unavailable');
+      final image = await boundary.toImage(pixelRatio: pixelRatio);
+      final data = await image.toByteData(format: ui.ImageByteFormat.png);
+      image.dispose();
+      if (data == null) throw StateError('Reasoning image encoding failed');
+      await _reasoningClipboard.invokeMethod<void>(
+        'copyImage',
+        data.buffer.asUint8List(),
+      );
+      if (mounted) _showMessage(context.l10n.reasoningImageCopied);
+    } catch (_) {
+      if (mounted) {
+        _showMessage(context.l10n.reasoningImageCopyFailed, isError: true);
+      }
+    } finally {
+      if (mounted) setState(() => _copyingImage = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _noticeTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final muted = colors.onSurfaceVariant;
+    final reason = _value(
+      widget.isPro
+          ? widget.analysis.uncertaintyNotes
+          : widget.analysis.whyReason,
+    );
+    final technical = _value(widget.analysis.keyDriversTechnical);
+    final fundamental = _value(widget.analysis.keyDriversFundamental);
+    final risk = _value(widget.analysis.risk);
+
+    return FractionallySizedBox(
+      heightFactor: .94,
+      child: Material(
+        color: colors.surface,
+        shape: RoundedRectangleBorder(
+          side: BorderSide(color: colors.outlineVariant),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Column(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(24, 18, 24, 8),
+                      child: RepaintBoundary(
+                        key: _imageKey,
+                        child: ColoredBox(
+                          color: colors.surface,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      context.l10n.whyNotHigherConfidence,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleLarge
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w900,
+                                          ),
+                                    ),
+                                  ),
+                                  IconButton(
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(),
+                                    tooltip: MaterialLocalizations.of(
+                                      context,
+                                    ).closeButtonTooltip,
+                                    icon: const Icon(Icons.close_rounded),
+                                  ),
+                                ],
+                              ),
+                              Text(
+                                context.l10n.analysisBasis(
+                                  widget.analysis.instrument,
+                                  widget.analysis.timeframe,
+                                ),
+                                style: TextStyle(color: muted),
+                              ),
+                              if (reason != null) ...[
+                                const SizedBox(height: 18),
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: colors.surfaceContainerHigh,
+                                    borderRadius: BorderRadius.circular(
+                                      AppColors.radiusMd,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    reason,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      height: 1.55,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              if (technical != null)
+                                _ReasoningParagraph(
+                                  label: context.l10n.technicalEvidence,
+                                  value: technical,
+                                ),
+                              if (fundamental != null)
+                                _ReasoningParagraph(
+                                  label: context.l10n.newsCalendarContext,
+                                  value: fundamental,
+                                ),
+                              if (_citations.isNotEmpty) ...[
+                                const SizedBox(height: 12),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  children: [
+                                    Text(
+                                      '${context.l10n.citedSources.toUpperCase()}:',
+                                      style: TextStyle(
+                                        color: muted,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                    for (final citation in _citations)
+                                      ActionChip(
+                                        avatar: const Icon(
+                                          Icons.article_outlined,
+                                          size: 16,
+                                        ),
+                                        label: ConstrainedBox(
+                                          constraints: const BoxConstraints(
+                                            maxWidth: 240,
+                                          ),
+                                          child: Text(
+                                            citation.$1,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        onPressed: citation.$2 == null
+                                            ? null
+                                            : () => widget.onOpenUrl(
+                                                citation.$2!,
+                                              ),
+                                      ),
+                                  ],
+                                ),
+                              ],
+                              if (risk != null)
+                                _ReasoningParagraph(
+                                  label: context.l10n.mainRisk,
+                                  value: risk,
+                                ),
+                              if (_conditions.isNotEmpty) ...[
+                                const SizedBox(height: 22),
+                                Text(
+                                  '${context.l10n.reassessIf}:',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                for (final condition in _conditions)
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 6),
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '• ',
+                                          style: TextStyle(color: muted),
+                                        ),
+                                        Expanded(
+                                          child: Text(
+                                            condition,
+                                            style: TextStyle(
+                                              color: muted,
+                                              height: 1.45,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+                    child: Column(
+                      children: [
+                        const Divider(),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            key: const ValueKey('copy-full-reasoning-text'),
+                            onPressed: _copyText,
+                            icon: const Icon(Icons.copy_rounded),
+                            label: Text(context.l10n.copyText),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton.icon(
+                            key: const ValueKey('copy-full-reasoning-image'),
+                            onPressed: _copyingImage ? null : _copyImage,
+                            icon: _copyingImage
+                                ? const SizedBox.square(
+                                    dimension: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.image_outlined),
+                            label: Text(context.l10n.copyImage),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: IgnorePointer(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 180),
+                  child: _notice == null
+                      ? const SizedBox.shrink()
+                      : _CopyNotice(
+                          key: ValueKey(_notice),
+                          message: _notice!,
+                          isError: _noticeIsError,
+                        ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CopyNotice extends StatelessWidget {
+  const _CopyNotice({super.key, required this.message, required this.isError});
+
+  final String message;
+  final bool isError;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final color = isError ? colors.error : colors.primary;
+    return Semantics(
+      liveRegion: true,
+      child: Material(
+        color: colors.surfaceContainerHigh,
+        elevation: 8,
+        shadowColor: Colors.black54,
+        child: Container(
+          key: const ValueKey('copy-reasoning-popup'),
+          constraints: const BoxConstraints(minHeight: 72),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: colors.outlineVariant)),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                isError ? Icons.error_outline_rounded : Icons.check_rounded,
+                color: color,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  message,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ReasoningParagraph extends StatelessWidget {
+  const _ReasoningParagraph({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(top: 22),
+    child: Text.rich(
+      TextSpan(
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          height: 1.55,
+        ),
+        children: [
+          TextSpan(
+            text: '$label: ',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          TextSpan(text: value),
+        ],
+      ),
+    ),
+  );
 }
 
 class _ConfidenceRange extends StatelessWidget {
@@ -2682,114 +3192,143 @@ class _EvidenceSummary extends StatelessWidget {
 // =============================================================================
 
 class _MarketSnapshotCard extends StatelessWidget {
-  const _MarketSnapshotCard({required this.analysis});
+  const _MarketSnapshotCard({super.key, required this.analysis});
 
   final Analysis analysis;
 
   @override
   Widget build(BuildContext context) {
-    final muted = Theme.of(context).colorScheme.onSurfaceVariant;
+    final bullish = analysis.techBuyCount ?? 0;
+    final bearish = analysis.techSellCount ?? 0;
+    final neutral = analysis.techNeutralCount ?? 0;
+    final total = bullish + bearish + neutral;
+    final rawBias = (analysis.tradingBias ?? '').toLowerCase();
+    final isBullish = total > 0
+        ? bullish > bearish && bullish > neutral
+        : rawBias.contains('bull') || rawBias == 'buy';
+    final isBearish = total > 0
+        ? bearish > bullish && bearish > neutral
+        : rawBias.contains('bear') || rawBias == 'sell';
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final accent = isBullish
+        ? (dark ? AppColors.bullishDark : AppColors.bullishLight)
+        : isBearish
+        ? (dark ? AppColors.bearishDark : AppColors.bearishLight)
+        : Theme.of(context).colorScheme.primary;
+    final direction = isBullish
+        ? context.l10n.marketContextLeaningBullish
+        : isBearish
+        ? context.l10n.marketContextLeaningBearish
+        : context.l10n.marketContextLeaningNeutral;
+    final side = isBullish
+        ? context.l10n.buy.toUpperCase()
+        : isBearish
+        ? context.l10n.sell.toUpperCase()
+        : context.l10n.waitLabel.toUpperCase();
+    final summary = total == 0
+        ? (analysis.marketContext?.trim().isNotEmpty == true
+              ? analysis.marketContext!.trim()
+              : context.l10n.analysisSnapshotDescription)
+        : isBullish
+        ? context.l10n.marketContextIndicatorSummaryBullish(
+            bullish,
+            total,
+            bearish,
+            neutral,
+          )
+        : isBearish
+        ? context.l10n.marketContextIndicatorSummaryBearish(
+            bearish,
+            total,
+            bullish,
+            neutral,
+          )
+        : context.l10n.marketContextIndicatorSummaryNeutral(
+            total,
+            bullish,
+            bearish,
+            neutral,
+          );
 
-    final buy = analysis.techBuyCount;
-
-    final sell = analysis.techSellCount;
-
-    final neutral = analysis.techNeutralCount;
-
-    final hasCounts = buy != null || sell != null || neutral != null;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Color.alphaBlend(
+          accent.withValues(alpha: dark ? 0.16 : 0.08),
+          Theme.of(context).colorScheme.surface,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: accent.withValues(alpha: 0.7)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.analytics_outlined, size: 19),
-              SizedBox(width: 8),
-              Text(
-                context.l10n.analysisSnapshotTitle,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w900,
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(Icons.explore_outlined, color: accent, size: 23),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.l10n.marketContextSummaryTitle,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.35,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Wrap(
+                      spacing: 7,
+                      runSpacing: 3,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Text(
+                          direction,
+                          style: TextStyle(
+                            color: accent,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        Text(
+                          '($side)',
+                          style: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-
-          const SizedBox(height: 5),
-
+          const SizedBox(height: 14),
           Text(
-            context.l10n.analysisSnapshotDescription,
-            style: TextStyle(color: muted, fontSize: 11),
-          ),
-
-          if (hasCounts) ...[
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Expanded(
-                  child: _CountTile(
-                    label: context.l10n.buy,
-                    value: buy ?? 0,
-                    icon: Icons.north_east_rounded,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _CountTile(
-                    label: context.l10n.sell,
-                    value: sell ?? 0,
-                    icon: Icons.south_east_rounded,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _CountTile(
-                    label: context.l10n.neutral,
-                    value: neutral ?? 0,
-                    icon: Icons.remove_rounded,
-                  ),
-                ),
-              ],
+            summary,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
+              height: 1.55,
+              fontSize: 13.5,
             ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _CountTile extends StatelessWidget {
-  const _CountTile({
-    required this.label,
-    required this.value,
-    required this.icon,
-  });
-
-  final String label;
-  final int value;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        color: Theme.of(
-          context,
-        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, size: 16),
-          const SizedBox(height: 3),
-          Text(
-            '$value',
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
           ),
-          Text(label, style: const TextStyle(fontSize: 10)),
         ],
       ),
     );
@@ -2936,6 +3475,7 @@ class _FundamentalSnapshotCard extends StatefulWidget {
     required this.refreshed,
     required this.refreshing,
     required this.onRefresh,
+    required this.onLearn,
     required this.onOpenUrl,
   });
 
@@ -2943,6 +3483,7 @@ class _FundamentalSnapshotCard extends StatefulWidget {
   final RefreshFundamentalsResponse? refreshed;
   final bool refreshing;
   final VoidCallback onRefresh;
+  final VoidCallback onLearn;
   final ValueChanged<String> onOpenUrl;
 
   @override
@@ -3004,18 +3545,30 @@ class _FundamentalSnapshotCardState extends State<_FundamentalSnapshotCard> {
                       : const Icon(Icons.refresh_rounded, size: 20),
                   label: Text(context.l10n.refreshFundamentals),
                 );
+                final actions = Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    refresh,
+                    TextButton.icon(
+                      key: const ValueKey('fundamental-learn'),
+                      onPressed: widget.onLearn,
+                      icon: const Icon(Icons.menu_book_outlined, size: 18),
+                      label: Text(context.l10n.learn),
+                    ),
+                  ],
+                );
                 if (constraints.maxWidth < 350 ||
                     MediaQuery.textScalerOf(context).scale(1) > 1.2) {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [title, const SizedBox(height: 10), refresh],
+                    children: [title, const SizedBox(height: 10), actions],
                   );
                 }
                 return Row(
                   children: [
                     Expanded(child: title),
                     const SizedBox(width: 10),
-                    refresh,
+                    actions,
                   ],
                 );
               },
@@ -4192,10 +4745,15 @@ class _SectionCard extends StatelessWidget {
 // =============================================================================
 
 class _TradePlanCard extends StatelessWidget {
-  const _TradePlanCard({required this.plan, required this.isDark});
+  const _TradePlanCard({
+    required this.plan,
+    required this.isDark,
+    required this.onLearn,
+  });
 
   final TradePlan plan;
   final bool isDark;
+  final VoidCallback onLearn;
 
   @override
   Widget build(BuildContext context) {
@@ -4205,62 +4763,149 @@ class _TradePlanCard extends StatelessWidget {
 
     final wait = plan.preferredSide == TradePlanPreferredSideEnum.wait;
 
-    return Column(
-      children: [
-        if (wait) ...[
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              color: Theme.of(
-                context,
-              ).colorScheme.primary.withValues(alpha: 0.08),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(Icons.hourglass_top_rounded, size: 18),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    context.l10n.awaitConfirmationNotice,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      height: 1.4,
+    final preferredLabel = preferBuy
+        ? context.l10n.buy
+        : preferSell
+        ? context.l10n.sell
+        : context.l10n.waitLabel;
+
+    return Card(
+      key: const ValueKey('suggested-levels-card'),
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final intro = Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.adjust_rounded,
+                          color: Theme.of(context).colorScheme.primary,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            context.l10n.tradingPlanTitle,
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w900),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ),
-              ],
+                    const SizedBox(height: 6),
+                    Text(
+                      context.l10n.tradingPlanDisclaimer,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        height: 1.45,
+                      ),
+                    ),
+                  ],
+                );
+                final actions = Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    _StatusChip(
+                      label: context.l10n.suggestedSide(preferredLabel),
+                      color: preferBuy
+                          ? (isDark
+                                ? AppColors.bullishDark
+                                : AppColors.bullishLight)
+                          : preferSell
+                          ? (isDark
+                                ? AppColors.bearishDark
+                                : AppColors.bearishLight)
+                          : Theme.of(context).colorScheme.primary,
+                    ),
+                    TextButton.icon(
+                      key: const ValueKey('suggested-levels-learn'),
+                      onPressed: onLearn,
+                      icon: const Icon(Icons.menu_book_outlined, size: 18),
+                      label: Text(context.l10n.learn),
+                    ),
+                  ],
+                );
+                final stack =
+                    constraints.maxWidth < 300 ||
+                    MediaQuery.textScalerOf(context).scale(1) > 1.3;
+                if (stack) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [intro, const SizedBox(height: 10), actions],
+                  );
+                }
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: intro),
+                    const SizedBox(width: 12),
+                    actions,
+                  ],
+                );
+              },
             ),
-          ),
-          const SizedBox(height: 10),
-        ],
-
-        _SideCard(
-          side: plan.buy,
-          label: context.l10n.buy,
-          color: isDark ? AppColors.bullishDark : AppColors.bullishLight,
-          icon: Icons.trending_up_rounded,
-          highlighted: preferBuy,
+            if (wait) ...[
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(top: 10),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.08),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.hourglass_top_rounded, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        context.l10n.awaitConfirmationNotice,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 12),
+            _SideCard(
+              side: plan.buy,
+              label: context.l10n.buyScenario,
+              color: isDark ? AppColors.bullishDark : AppColors.bullishLight,
+              icon: Icons.trending_up_rounded,
+              highlighted: preferBuy,
+            ),
+            const SizedBox(height: 10),
+            _SideCard(
+              side: plan.sell,
+              label: context.l10n.sellScenario,
+              color: isDark ? AppColors.bearishDark : AppColors.bearishLight,
+              icon: Icons.trending_down_rounded,
+              highlighted: preferSell,
+            ),
+          ],
         ),
-
-        const SizedBox(height: 10),
-
-        _SideCard(
-          side: plan.sell,
-          label: context.l10n.sell,
-          color: isDark ? AppColors.bearishDark : AppColors.bearishLight,
-          icon: Icons.trending_down_rounded,
-          highlighted: preferSell,
-        ),
-      ],
+      ),
     );
   }
 }
 
-class _SideCard extends StatelessWidget {
+class _SideCard extends StatefulWidget {
   const _SideCard({
     required this.side,
     required this.label,
@@ -4276,6 +4921,37 @@ class _SideCard extends StatelessWidget {
   final bool highlighted;
 
   @override
+  State<_SideCard> createState() => _SideCardState();
+}
+
+class _SideCardState extends State<_SideCard> {
+  bool _showRationale = false;
+
+  Future<void> _copyLevels() async {
+    final l10n = context.l10n;
+    final text = [
+      widget.label,
+      '${l10n.entryZone}: ${widget.side.entryZone}',
+      'Stop Loss: ${widget.side.stopLoss}',
+      '${l10n.takeProfit1}: ${widget.side.takeProfit1}',
+      '${l10n.takeProfit2}: ${widget.side.takeProfit2}',
+      '${l10n.riskReward}: ${widget.side.riskRewardRatio}',
+    ].join('\n');
+    try {
+      await Clipboard.setData(ClipboardData(text: text));
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.levelsCopied)));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.levelsCopyFailed)));
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -4285,182 +4961,150 @@ class _SideCard extends StatelessWidget {
 
     final border = isDark ? AppColors.darkBorder : AppColors.lightBorder;
 
-    return Card(
-      shape: RoundedRectangleBorder(
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(AppColors.radius),
-        side: BorderSide(
-          color: highlighted ? color : border,
-          width: highlighted ? 1.5 : 1,
+        border: Border.all(
+          color: widget.highlighted
+              ? Theme.of(context).colorScheme.primary
+              : border,
         ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, size: 18, color: color),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    label,
-                    style: TextStyle(fontWeight: FontWeight.w900, color: color),
-                  ),
-                ),
-              ],
+      child: Stack(
+        children: [
+          Positioned(
+            top: 0,
+            bottom: 0,
+            left: 0,
+            child: ColoredBox(
+              color: widget.color,
+              child: const SizedBox(width: 3),
             ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 6,
+          ),
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (highlighted)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.13),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      context.l10n.primaryScenario,
-                      style: TextStyle(
-                        color: color,
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: color.withValues(alpha: 0.3)),
-                  ),
-                  child: Text(
-                    _planRiskRewardLabel(side.riskRewardRatio),
-                    style: TextStyle(
-                      color: color,
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 12),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final stack =
-                    constraints.maxWidth < 290 ||
-                    MediaQuery.textScalerOf(context).scale(1) > 1.3;
-                final width = stack
-                    ? constraints.maxWidth
-                    : (constraints.maxWidth - 8) / 2;
-                return Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
+                Row(
                   children: [
-                    SizedBox(
-                      width: width,
-                      child: _LevelTile(
-                        label: context.l10n.entryZone,
-                        value: side.entryZone,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                    SizedBox(
-                      width: width,
-                      child: _LevelTile(
-                        label: 'Stop Loss',
-                        value: side.stopLoss,
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                    SizedBox(
-                      width: width,
-                      child: _LevelTile(
-                        label: 'TP1',
-                        value: side.takeProfit1,
-                        color: color,
-                      ),
-                    ),
-                    SizedBox(
-                      width: width,
-                      child: _LevelTile(
-                        label: 'TP2',
-                        value: side.takeProfit2,
-                        color: color,
+                    Icon(widget.icon, size: 18, color: widget.color),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        widget.label,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w900,
+                          color: widget.color,
+                        ),
                       ),
                     ),
                   ],
-                );
-              },
+                ),
+                const SizedBox(height: 10),
+                _PlanLevelRow(
+                  label: context.l10n.entryZone,
+                  value: widget.side.entryZone,
+                ),
+                _PlanLevelRow(
+                  label: 'Stop Loss',
+                  value: widget.side.stopLoss,
+                  valueColor: Theme.of(context).colorScheme.error,
+                ),
+                _PlanLevelRow(
+                  label: context.l10n.takeProfit1,
+                  value: widget.side.takeProfit1,
+                  valueColor: widget.color,
+                ),
+                _PlanLevelRow(
+                  label: context.l10n.takeProfit2,
+                  value: widget.side.takeProfit2,
+                  valueColor: widget.color,
+                ),
+                _PlanLevelRow(
+                  label: context.l10n.riskReward,
+                  value: widget.side.riskRewardRatio,
+                ),
+                const Divider(height: 16),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 4,
+                  alignment: WrapAlignment.spaceBetween,
+                  children: [
+                    TextButton.icon(
+                      onPressed: () =>
+                          setState(() => _showRationale = !_showRationale),
+                      style: TextButton.styleFrom(
+                        foregroundColor: muted,
+                        padding: EdgeInsets.zero,
+                      ),
+                      iconAlignment: IconAlignment.end,
+                      icon: Icon(
+                        _showRationale
+                            ? Icons.keyboard_arrow_up_rounded
+                            : Icons.keyboard_arrow_down_rounded,
+                      ),
+                      label: Text(context.l10n.rationale),
+                    ),
+                    TextButton.icon(
+                      key: ValueKey('copy-${widget.label}-levels'),
+                      onPressed: _copyLevels,
+                      style: TextButton.styleFrom(foregroundColor: muted),
+                      icon: const Icon(Icons.copy_rounded, size: 18),
+                      label: Text(context.l10n.copyLevels),
+                    ),
+                  ],
+                ),
+                if (_showRationale) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    widget.side.rationale,
+                    style: TextStyle(color: muted, height: 1.45),
+                  ),
+                ],
+              ],
             ),
-
-            const SizedBox(height: 10),
-
-            Text(
-              side.rationale,
-              style: TextStyle(color: muted, fontSize: 11.5, height: 1.45),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
 
-String _planRiskRewardLabel(String value) => value.trim().isEmpty
-    ? 'R:R -'
-    : value.toUpperCase().startsWith('R:R')
-    ? value
-    : 'R:R $value';
-
-class _LevelTile extends StatelessWidget {
-  const _LevelTile({
+class _PlanLevelRow extends StatelessWidget {
+  const _PlanLevelRow({
     required this.label,
     required this.value,
-    required this.color,
+    this.valueColor,
   });
 
   final String label;
   final String value;
-  final Color color;
+  final Color? valueColor;
 
   @override
-  Widget build(BuildContext context) => Container(
-    constraints: const BoxConstraints(minHeight: 64),
-    padding: const EdgeInsets.all(10),
-    decoration: BoxDecoration(
-      color: color.withValues(alpha: 0.08),
-      borderRadius: BorderRadius.circular(11),
-      border: Border.all(color: color.withValues(alpha: 0.28)),
-    ),
-    child: Column(
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 4),
+    child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: color,
-            fontSize: 10.5,
-            fontWeight: FontWeight.w700,
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
-        const SizedBox(height: 3),
-        Text(
-          value,
-          style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w900),
+        const SizedBox(width: 12),
+        Flexible(
+          child: Text(
+            value,
+            textAlign: TextAlign.end,
+            style: TextStyle(color: valueColor, fontWeight: FontWeight.w800),
+          ),
         ),
       ],
     ),

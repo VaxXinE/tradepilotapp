@@ -66,6 +66,8 @@ flutter:
   generate: true
   uses-material-design: true
   assets:
+    - assets/guide_core.json
+    - assets/guide_more.json
     - assets/images/trade_pilot_app_icon.png
     - shorebird.yaml
   fonts:

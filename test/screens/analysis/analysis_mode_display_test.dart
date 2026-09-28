@@ -1,22 +1,27 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
+import 'package:tradepilotapp/core/localization/locale_controller.dart';
 import 'package:tradepilotapp/core/theme/app_colors.dart';
 import 'package:tradepilotapp/models/market_models.dart';
 import 'package:tradepilotapp/providers/analysis_provider.dart';
 import 'package:tradepilotapp/providers/auth_provider.dart';
 import 'package:tradepilotapp/providers/market_provider.dart';
+import 'package:tradepilotapp/providers/progression_provider.dart';
 import 'package:tradepilotapp/repositories/market_repository.dart';
 import 'package:tradepilotapp/screens/analysis/analysis_detail_screen.dart';
 
 import '../../helpers/localized_test_app.dart';
 
 void main() {
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   testWidgets('analysis detail hides legacy mode labels', (tester) async {
     await _pumpDetail(tester, _analysis(AnalysisModeEnum.beginner));
 
@@ -101,6 +106,77 @@ void main() {
     expect(find.byTooltip('Reanalyze'), findsNothing);
   });
 
+  testWidgets('market context summary follows the indicator counts', (
+    tester,
+  ) async {
+    await _pumpDetail(
+      tester,
+      _analysis(
+        AnalysisModeEnum.beginner,
+        techBuyCount: 3,
+        techSellCount: 8,
+        techNeutralCount: 0,
+      ),
+    );
+    final card = find.byKey(const ValueKey('analysis-market-snapshot'));
+    await _reveal(tester, card, find.byType(Scrollable).first);
+
+    expect(find.text('MARKET CONTEXT SUMMARY'), findsOneWidget);
+    expect(find.text('Leaning Bearish'), findsOneWidget);
+    expect(find.text('(SELL)'), findsOneWidget);
+    expect(
+      find.textContaining('8 of 11 indicators are leaning bearish'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('adaptive plan uses the web card heading', (tester) async {
+    await _pumpDetail(
+      tester,
+      _analysis(AnalysisModeEnum.beginner, tradePlan: _tradePlan()),
+    );
+    await _reveal(
+      tester,
+      find.text('Adaptive Trading Plan'),
+      find.byType(Scrollable).first,
+    );
+
+    expect(find.text('Adaptive Trading Plan'), findsOneWidget);
+    expect(
+      find.text('Simulate entries, lot sizes, and risk from this analysis.'),
+      findsOneWidget,
+    );
+    expect(find.text('Position Size Recommendation'), findsNothing);
+  });
+
+  testWidgets('adaptive details opens as a scrollable modal', (tester) async {
+    await _pumpDetail(
+      tester,
+      _analysis(
+        AnalysisModeEnum.beginner,
+        tradePlan: _tradePlan(),
+        failureConditions: 'Close above invalidation.',
+        opportunity: 'Price may continue lower.',
+        risk: 'A technical rebound may invalidate the setup.',
+      ),
+    );
+    await tester.pumpAndSettle();
+    final details = find.byKey(const ValueKey('adaptive-plan-details'));
+    await _reveal(tester, details, find.byType(Scrollable).first);
+    await tester.tap(details);
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(
+        'See what the saved analysis found and how Adaptive responded. '
+        'Live indicators do not update this plan automatically.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Why this analysis'), findsOneWidget);
+    expect(find.text('Print / save PDF'), findsOneWidget);
+  });
+
   testWidgets('analysis summary remains usable with large text', (
     tester,
   ) async {
@@ -155,6 +231,51 @@ void main() {
       ),
       findsNothing,
     );
+  });
+
+  testWidgets('suggested levels can copy a side and open its guide', (
+    tester,
+  ) async {
+    await _pumpDetail(
+      tester,
+      _analysis(AnalysisModeEnum.beginner, tradePlan: _tradePlan()),
+    );
+    final scrollable = find.byType(Scrollable).first;
+    await _reveal(
+      tester,
+      find.byKey(const ValueKey('suggested-levels-card')),
+      scrollable,
+    );
+
+    expect(find.text('Suggested side: Buy'), findsOneWidget);
+    expect(find.text('Buy Scenario'), findsOneWidget);
+    expect(find.text('Sell Scenario'), findsOneWidget);
+
+    String? copiedText;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(SystemChannels.platform, (call) async {
+          if (call.method == 'Clipboard.setData') {
+            copiedText =
+                (call.arguments as Map<Object?, Object?>)['text'] as String?;
+          }
+          return null;
+        });
+    addTearDown(
+      () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(SystemChannels.platform, null),
+    );
+    await tester.tap(find.byKey(const ValueKey('copy-Buy Scenario-levels')));
+    await tester.pump();
+    expect(copiedText, contains('Entry zone: 4400'));
+    expect(copiedText, contains('Stop Loss: 4380'));
+
+    await tester.tap(find.byKey(const ValueKey('suggested-levels-learn')));
+    for (var attempt = 0; attempt < 20; attempt++) {
+      await tester.pump(const Duration(milliseconds: 100));
+      if (find.text('Using the Standard Plan').evaluate().isNotEmpty) break;
+    }
+    expect(find.text('Using the Standard Plan'), findsOneWidget);
+    expect(find.text('Meaning and purpose'), findsOneWidget);
   });
 
   testWidgets(
@@ -244,6 +365,10 @@ void main() {
       find.text('There are no relevant upcoming economic events.'),
       findsOneWidget,
     );
+
+    final learnButton = find.byKey(const ValueKey('fundamental-learn'));
+    await _reveal(tester, learnButton, scrollable);
+    expect(learnButton, findsOneWidget);
   });
 
   testWidgets('invalidation, opportunity, and risk are collapsed by default', (
@@ -370,6 +495,103 @@ void main() {
     expect(find.descendant(of: header, matching: reason), findsOneWidget);
     expect(find.text('Confidence reason details'), findsOneWidget);
     expect(find.text('Cited sources'), findsNothing);
+  });
+
+  testWidgets('full reasoning uses analysis evidence and supports copying', (
+    tester,
+  ) async {
+    final analysis = _analysis(
+      AnalysisModeEnum.beginner,
+      whyReason: 'Confidence reason details',
+      technicalDrivers: 'Moving averages remain bearish.',
+      fundamentalDrivers: 'No major catalyst in the current window.',
+      risk: 'A strong rebound can invalidate the bearish bias.',
+      failureConditions: 'Break support 4100\nPrice closes above EMA9',
+      fundamentalContext: _fundamentalContext(),
+      fundamentalCitations: FundamentalCitations(
+        (builder) => builder
+          ..newsTitles.add('Test headline')
+          ..calendarEvents.add('FOMC Minutes'),
+      ),
+    );
+    await _pumpDetail(tester, analysis);
+
+    final button = find.byKey(const ValueKey('analysis-full-reasoning-button'));
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -600));
+    await tester.pumpAndSettle();
+    await tester.tap(button);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Analysis basis: XAU/USD · 1h'), findsOneWidget);
+    expect(
+      find.textContaining(
+        'Moving averages remain bearish.',
+        findRichText: true,
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining(
+        'No major catalyst in the current window.',
+        findRichText: true,
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining(
+        'A strong rebound can invalidate the bearish bias.',
+        findRichText: true,
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Test headline'), findsOneWidget);
+    expect(find.text('FOMC Minutes'), findsOneWidget);
+    expect(find.text('Break support 4100'), findsOneWidget);
+
+    String? copiedText;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(SystemChannels.platform, (call) async {
+          if (call.method == 'Clipboard.setData') {
+            copiedText =
+                (call.arguments as Map<Object?, Object?>)['text'] as String?;
+          }
+          return null;
+        });
+    addTearDown(
+      () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(SystemChannels.platform, null),
+    );
+    await tester.tap(find.byKey(const ValueKey('copy-full-reasoning-text')));
+    await tester.pump();
+    expect(copiedText, contains('Moving averages remain bearish.'));
+    expect(find.byKey(const ValueKey('copy-reasoning-popup')), findsOneWidget);
+    expect(find.text('Full reasoning copied'), findsOneWidget);
+
+    Uint8List? copiedImage;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          const MethodChannel('id.tradepilot.app/clipboard'),
+          (call) async {
+            copiedImage = call.arguments as Uint8List;
+            return null;
+          },
+        );
+    addTearDown(
+      () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+            const MethodChannel('id.tradepilot.app/clipboard'),
+            null,
+          ),
+    );
+    await tester.tap(find.byKey(const ValueKey('copy-full-reasoning-image')));
+    await tester.pump();
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 100)),
+    );
+    await tester.pump();
+    expect(copiedImage, isNotNull);
+    expect(copiedImage, isNotEmpty);
+    expect(find.text('Image copied'), findsOneWidget);
   });
 
   testWidgets('active alert levels are collapsed until requested', (
@@ -500,6 +722,30 @@ void main() {
     await tester.pumpAndSettle();
   });
 
+  testWidgets('compare risk opens the map and analyzes the chosen timeframe', (
+    tester,
+  ) async {
+    final provider = await _pumpDetail(
+      tester,
+      _analysis(AnalysisModeEnum.beginner),
+      onAnalysisCreated: (_) {},
+    );
+
+    expect(find.text('Compare Risk'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('timeframe-risk-map-button')));
+    await tester.pump();
+    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Timeframe Risk Map'), findsOneWidget);
+    expect(find.text('Overall: Wait'), findsOneWidget);
+    await tester.tap(find.text('Use & Analyze 4h'));
+    await tester.pump(const Duration(milliseconds: 700));
+    await tester.pumpAndSettle();
+
+    expect(provider.requestedTimeframes, [CreateAnalysisBodyTimeframeEnum.n4h]);
+  });
+
   testWidgets('new analysis button opens the analysis flow', (tester) async {
     var opened = false;
     await _pumpDetail(
@@ -546,8 +792,13 @@ Future<_FakeAnalysisProvider> _pumpDetail(
     alertStatus: alertStatus,
   );
   final marketProvider = _FakeMarketProvider(auth);
+  final preferences = await SharedPreferences.getInstance();
+  final localeController = LocaleController(preferences);
+  final progressionProvider = ProgressionProvider(auth);
   addTearDown(analysisProvider.dispose);
   addTearDown(marketProvider.dispose);
+  addTearDown(localeController.dispose);
+  addTearDown(progressionProvider.dispose);
 
   await tester.pumpWidget(
     MultiProvider(
@@ -555,6 +806,10 @@ Future<_FakeAnalysisProvider> _pumpDetail(
         ChangeNotifierProvider<AuthProvider>.value(value: auth),
         ChangeNotifierProvider<AnalysisProvider>.value(value: analysisProvider),
         ChangeNotifierProvider<MarketProvider>.value(value: marketProvider),
+        ChangeNotifierProvider<LocaleController>.value(value: localeController),
+        ChangeNotifierProvider<ProgressionProvider>.value(
+          value: progressionProvider,
+        ),
       ],
       child: localizedTestApp(
         home: Builder(
@@ -587,6 +842,60 @@ class _JournalAdapter implements HttpClientAdapter {
     Stream<Uint8List>? requestStream,
     Future<void>? cancelFuture,
   ) async {
+    if (options.path == '/risk-map/timeframes') {
+      return ResponseBody.fromString(
+        jsonEncode({
+          'instrument': 'XAU/USD',
+          'generatedAt': '2026-09-28T12:00:00.000Z',
+          'timeframes': [
+            {
+              'timeframe': '1h',
+              'status': 'available',
+              'riskScore': 37,
+              'riskCategory': 'moderate',
+              'reasonCodes': ['SIGNAL_CONFLICT'],
+              'metrics': {
+                'buySignals': 3,
+                'sellSignals': 3,
+                'neutralSignals': 2,
+                'rsi14': 50.0,
+                'change20Pct': 0.1,
+                'bollingerWidthPct': 1.5,
+              },
+              'dataQuality': 'good',
+              'confidence': 'medium',
+              'recommendation': 'caution',
+            },
+            {
+              'timeframe': '4h',
+              'status': 'available',
+              'riskScore': 18,
+              'riskCategory': 'low',
+              'reasonCodes': ['SIGNALS_RELATIVELY_ALIGNED'],
+              'metrics': {
+                'buySignals': 6,
+                'sellSignals': 1,
+                'neutralSignals': 1,
+                'rsi14': 52.0,
+                'change20Pct': 0.4,
+                'bollingerWidthPct': 1.2,
+              },
+              'dataQuality': 'good',
+              'confidence': 'high',
+              'recommendation': 'eligible',
+            },
+          ],
+          'overall': {
+            'state': 'wait',
+            'reasonCode': 'RISK_OR_CONFLICT_PRESENT',
+          },
+        }),
+        200,
+        headers: {
+          Headers.contentTypeHeader: [Headers.jsonContentType],
+        },
+      );
+    }
     if (options.path.startsWith('/journal/for-analysis/')) {
       if (journal == null) return ResponseBody.fromString('', 404);
       return ResponseBody.fromString(
@@ -620,6 +929,10 @@ Analysis _analysis(
   String? marketCondition,
   TradePlan? tradePlan,
   FundamentalContext? fundamentalContext,
+  FundamentalCitations? fundamentalCitations,
+  int? techBuyCount,
+  int? techSellCount,
+  int? techNeutralCount,
 }) => $Analysis(
   (builder) => builder
     ..id = id ?? (mode == AnalysisModeEnum.pro ? 2 : 1)
@@ -641,6 +954,10 @@ Analysis _analysis(
     ..marketCondition = marketCondition
     ..tradePlan = tradePlan?.toBuilder()
     ..fundamentalContext = fundamentalContext?.toBuilder()
+    ..fundamentalCitations = fundamentalCitations?.toBuilder()
+    ..techBuyCount = techBuyCount
+    ..techSellCount = techSellCount
+    ..techNeutralCount = techNeutralCount
     ..validUntil = DateTime.utc(2030)
     ..createdAt = DateTime.utc(2026),
 );
@@ -654,6 +971,7 @@ FundamentalContext _fundamentalContext() => FundamentalContext(
           ..title = 'Test headline'
           ..summary = 'Test summary'
           ..source_ = 'Test Source'
+          ..url = 'https://example.com/news-1'
           ..publishedAt = DateTime.utc(2026),
       ),
     ),
