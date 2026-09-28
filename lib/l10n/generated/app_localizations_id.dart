@@ -1106,6 +1106,26 @@ class AppLocalizationsId extends AppLocalizations {
   String get loginDescription => 'Masuk untuk melanjutkan analisis';
 
   @override
+  String get onboardingEyebrow => 'Universe comes to us';
+
+  @override
+  String get onboardingTitle => 'Insight pasar, bukan sinyal buta.';
+
+  @override
+  String get onboardingDescription =>
+      'Asisten trading berbasis AI untuk membantu kamu membaca bias, risiko, serta konteks teknikal dan fundamental dengan lebih terstruktur.';
+
+  @override
+  String get onboardingStructuredAnalysis =>
+      'Analisis teknikal dan fundamental dalam satu alur';
+
+  @override
+  String get onboardingPrimaryAction => 'Mulai analisis pertamamu';
+
+  @override
+  String get onboardingSecondaryAction => 'Sudah punya akun? Masuk';
+
+  @override
   String get usernameEmail => 'Username / Email';
 
   @override

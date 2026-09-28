@@ -2072,6 +2072,42 @@ abstract class AppLocalizations {
   /// **'Sign in to continue your analysis'**
   String get loginDescription;
 
+  /// No description provided for @onboardingEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Universe comes to us'**
+  String get onboardingEyebrow;
+
+  /// No description provided for @onboardingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Market insight, not blind signals.'**
+  String get onboardingTitle;
+
+  /// No description provided for @onboardingDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'An AI-powered trading assistant that helps you read bias, risk, and technical and fundamental context in a structured way.'**
+  String get onboardingDescription;
+
+  /// No description provided for @onboardingStructuredAnalysis.
+  ///
+  /// In en, this message translates to:
+  /// **'Technical and fundamental analysis in one flow'**
+  String get onboardingStructuredAnalysis;
+
+  /// No description provided for @onboardingPrimaryAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Start your first analysis'**
+  String get onboardingPrimaryAction;
+
+  /// No description provided for @onboardingSecondaryAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account? Sign in'**
+  String get onboardingSecondaryAction;
+
   /// No description provided for @usernameEmail.
   ///
   /// In en, this message translates to:

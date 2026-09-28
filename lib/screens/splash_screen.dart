@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../providers/auth_provider.dart';
 import '../l10n/l10n.dart';
 import 'auth/login_screen.dart';
+import 'auth/welcome_screen.dart';
 import 'home/home_shell.dart';
 import 'lock_screen.dart';
 
@@ -24,7 +26,10 @@ class SplashScreen extends StatelessWidget {
             // fresh sign-in never is: the user just proved who they are.
             return auth.isLocked ? const LockScreen() : const HomeShell();
           case AuthStatus.unauthenticated:
-            return const LoginScreen();
+            final preferences = context.read<SharedPreferences>();
+            return preferences.getBool(WelcomeScreen.preferenceKey) == true
+                ? const LoginScreen()
+                : WelcomeScreen(preferences: preferences);
         }
       },
     );

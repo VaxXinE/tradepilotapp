@@ -1110,6 +1110,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginDescription => 'Sign in to continue your analysis';
 
   @override
+  String get onboardingEyebrow => 'Universe comes to us';
+
+  @override
+  String get onboardingTitle => 'Market insight, not blind signals.';
+
+  @override
+  String get onboardingDescription =>
+      'An AI-powered trading assistant that helps you read bias, risk, and technical and fundamental context in a structured way.';
+
+  @override
+  String get onboardingStructuredAnalysis =>
+      'Technical and fundamental analysis in one flow';
+
+  @override
+  String get onboardingPrimaryAction => 'Start your first analysis';
+
+  @override
+  String get onboardingSecondaryAction => 'Already have an account? Sign in';
+
+  @override
   String get usernameEmail => 'Username / Email';
 
   @override

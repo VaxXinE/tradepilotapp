@@ -60,6 +60,7 @@ class TradePilotApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        Provider<SharedPreferences>.value(value: preferences),
         ChangeNotifierProvider<ThemeController>(
           create: (_) => ThemeController(preferences),
         ),
