@@ -3091,7 +3091,6 @@ class _FundamentalSnapshotCardState extends State<_FundamentalSnapshotCard> {
                   _FundamentalRow(
                     title: item.title,
                     meta: '${item.source_}  ${_publishedAgo(item.publishedAt)}',
-                    icon: Icons.article_outlined,
                     onTap: item.url?.trim().isNotEmpty == true
                         ? () => widget.onOpenUrl(item.url!)
                         : null,
@@ -3112,7 +3111,6 @@ class _FundamentalSnapshotCardState extends State<_FundamentalSnapshotCard> {
                         '${event.currency} • ${event.date}'
                         '${event.time == null ? '' : ' ${event.time}'}'
                         '${event.impact == null ? '' : ' • ${event.impact}'}',
-                    icon: Icons.calendar_month_outlined,
                   ),
             ],
           ],
@@ -3132,6 +3130,17 @@ class _FundamentalSnapshotCardState extends State<_FundamentalSnapshotCard> {
     return OutlinedButton(
       key: ValueKey('fundamental-${view.name}'),
       onPressed: () => setState(() => _selected = selected ? null : view),
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size(0, 56),
+        alignment: Alignment.centerLeft,
+        backgroundColor: selected ? primary.withValues(alpha: .18) : null,
+        side: BorderSide(
+          color: selected
+              ? primary
+              : Theme.of(context).colorScheme.outlineVariant,
+          width: selected ? 1.5 : 1,
+        ),
+      ),
       child: Row(
         children: [
           Icon(icon, size: 19),
@@ -3144,17 +3153,6 @@ class _FundamentalSnapshotCardState extends State<_FundamentalSnapshotCard> {
             size: 20,
           ),
         ],
-      ),
-      style: OutlinedButton.styleFrom(
-        minimumSize: const Size(0, 56),
-        alignment: Alignment.centerLeft,
-        backgroundColor: selected ? primary.withValues(alpha: .18) : null,
-        side: BorderSide(
-          color: selected
-              ? primary
-              : Theme.of(context).colorScheme.outlineVariant,
-          width: selected ? 1.5 : 1,
-        ),
       ),
     );
   }
@@ -3175,16 +3173,10 @@ class _FundamentalSnapshotCardState extends State<_FundamentalSnapshotCard> {
 }
 
 class _FundamentalRow extends StatelessWidget {
-  const _FundamentalRow({
-    required this.title,
-    required this.meta,
-    required this.icon,
-    this.onTap,
-  });
+  const _FundamentalRow({required this.title, required this.meta, this.onTap});
 
   final String title;
   final String meta;
-  final IconData icon;
   final VoidCallback? onTap;
 
   @override
@@ -3194,37 +3186,42 @@ class _FundamentalRow extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 44),
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 2),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Icon(icon, size: 16, color: muted),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(meta, style: TextStyle(color: muted, fontSize: 10)),
-                    ],
-                  ),
+      child: IntrinsicHeight(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                width: 3,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                  borderRadius: BorderRadius.circular(999),
                 ),
-                if (onTap != null)
-                  const Icon(Icons.open_in_new_rounded, size: 15),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(meta, style: TextStyle(color: muted, fontSize: 11)),
+                  ],
+                ),
+              ),
+              if (onTap != null) ...[
+                const SizedBox(width: 8),
+                const Icon(Icons.open_in_new_rounded, size: 15),
               ],
-            ),
+            ],
           ),
         ),
       ),
