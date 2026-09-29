@@ -5,9 +5,7 @@ import 'package:tradepilotapp/l10n/l10n.dart';
 import 'package:tradepilotapp/widgets/history/history_analysis_card.dart';
 
 void main() {
-  testWidgets('shows pending status, confidence, journal, and legacy bias', (
-    tester,
-  ) async {
+  testWidgets('shows the compact web history row', (tester) async {
     await _pumpCard(
       tester,
       _analysis(
@@ -17,9 +15,10 @@ void main() {
       ),
     );
 
-    expect(find.text('Evaluation pending'), findsOneWidget);
-    expect(find.text('Confidence 70–80%'), findsOneWidget);
-    expect(find.text('Strong bullish'), findsOneWidget);
+    expect(find.text('Pending'), findsOneWidget);
+    expect(find.text('1h'), findsOneWidget);
+    expect(find.text('Confidence 70–80%'), findsNothing);
+    expect(find.text('Strong bullish'), findsNothing);
     expect(find.byIcon(Icons.menu_book_rounded), findsOneWidget);
   });
 
@@ -30,13 +29,13 @@ void main() {
       tester,
       _analysis(outcome: AnalysisOutcomeStatusEnum.tp1Hit),
     );
-    expect(find.text('Reference target 1 reached'), findsOneWidget);
+    expect(find.text('TP1 Hit'), findsOneWidget);
 
     await _pumpCard(
       tester,
       _analysis(outcome: AnalysisOutcomeStatusEnum.slHit),
     );
-    expect(find.text('Risk limit reached'), findsOneWidget);
+    expect(find.text('SL Hit'), findsOneWidget);
   });
 
   testWidgets('legacy null outcome uses a safe fallback', (tester) async {
@@ -47,21 +46,17 @@ void main() {
     expect(find.textContaining('PROFIT'), findsNothing);
   });
 
-  testWidgets('labels the credit-sensitive analysis action clearly', (
-    tester,
-  ) async {
+  testWidgets('uses the web re-analyze action', (tester) async {
     var tapped = false;
     await _pumpCard(tester, _analysis(), onReanalyze: () => tapped = true);
 
-    await tester.tap(find.text('Use for a new analysis'));
+    await tester.tap(find.text('Re-analyze'));
 
     expect(tapped, isTrue);
     expect(find.byIcon(Icons.refresh_rounded), findsNothing);
   });
 
-  testWidgets('keeps risk and market context readable at 200% text', (
-    tester,
-  ) async {
+  testWidgets('keeps the compact row readable at 200% text', (tester) async {
     await tester.binding.setSurfaceSize(const Size(320, 700));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -72,7 +67,6 @@ void main() {
     );
 
     expect(tester.takeException(), isNull);
-    expect(find.text('Risk Medium'), findsOneWidget);
     expect(find.text('Trending'), findsOneWidget);
   });
 }

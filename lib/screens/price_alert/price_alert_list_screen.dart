@@ -57,26 +57,6 @@ class _PriceAlertListScreenState extends State<PriceAlertListScreen> {
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(16),
             children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.notifications_active_outlined,
-                    size: 20,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      context.l10n.myPriceAlerts,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
               Text(
                 context.l10n.priceAlertsSubtitle,
                 style: TextStyle(
@@ -86,6 +66,7 @@ class _PriceAlertListScreenState extends State<PriceAlertListScreen> {
               ),
               const SizedBox(height: 16),
               PriceAlertCard(
+                showHeader: false,
                 alerts: provider.alerts,
                 isLoading: provider.isLoading,
                 hasError: provider.hasError,

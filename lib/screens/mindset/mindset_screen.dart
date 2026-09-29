@@ -27,6 +27,7 @@ class MindsetScreen extends StatefulWidget {
 
 class _MindsetScreenState extends State<MindsetScreen> {
   List<_MindsetModule> _modules = const [];
+  final _searchController = TextEditingController();
   String _query = '';
   String? _selectedCategory;
   bool _openedInitialGuide = false;
@@ -35,6 +36,12 @@ class _MindsetScreenState extends State<MindsetScreen> {
   void initState() {
     super.initState();
     _loadGuide();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadGuide() async {
@@ -83,6 +90,12 @@ class _MindsetScreenState extends State<MindsetScreen> {
                   .read<ProgressionProvider>()
                   .completedGuideIds
                   .contains(module.guideKey),
+              relatedModule: module.relatedArticleId == null
+                  ? null
+                  : _modules.cast<_MindsetModule?>().firstWhere(
+                      (item) => item?.articleId == module.relatedArticleId,
+                      orElse: () => null,
+                    ),
             ),
           ),
         );
@@ -118,6 +131,7 @@ class _MindsetScreenState extends State<MindsetScreen> {
               .where((module) => module.category == _selectedCategory)
               .toList();
     final categories = visible.map((module) => module.category).toSet();
+    final colors = Theme.of(context).colorScheme;
     final l10n = context.l10n;
     final completedGuideIds = context
         .watch<ProgressionProvider?>()
@@ -147,6 +161,12 @@ class _MindsetScreenState extends State<MindsetScreen> {
             id: id,
             initiallyCompleted:
                 completedGuideIds?.contains(module.guideKey) == true,
+            relatedModule: module.relatedArticleId == null
+                ? null
+                : _modules.cast<_MindsetModule?>().firstWhere(
+                    (item) => item?.articleId == module.relatedArticleId,
+                    orElse: () => null,
+                  ),
           ),
         ),
       );
@@ -159,9 +179,20 @@ class _MindsetScreenState extends State<MindsetScreen> {
         padding: responsivePagePadding(context),
         children: [
           if (widget.embedded) ...[
-            Text(
-              l10n.guide,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+            Row(
+              children: [
+                Icon(Icons.menu_book_outlined, size: 18, color: colors.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    l10n.guide,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 2),
             Text(
@@ -173,20 +204,46 @@ class _MindsetScreenState extends State<MindsetScreen> {
             ),
             const SizedBox(height: 14),
           ],
-          TextField(
-            onChanged: (value) => setState(() => _query = value),
-            decoration: InputDecoration(
-              prefixIcon: const Icon(Icons.search_rounded),
-              hintText: l10n.guideSearchHint,
+          SizedBox(
+            height: 48,
+            child: TextField(
+              controller: _searchController,
+              style: const TextStyle(fontSize: 14),
+              onChanged: (value) => setState(() => _query = value),
+              decoration: InputDecoration(
+                isDense: true,
+                prefixIcon: const Icon(Icons.search_rounded, size: 19),
+                hintText: l10n.guideSearchHint,
+                suffixIcon: _query.isEmpty
+                    ? null
+                    : IconButton(
+                        tooltip: id ? 'Hapus pencarian' : 'Clear search',
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _query = '');
+                        },
+                        icon: const Icon(Icons.close_rounded, size: 18),
+                      ),
+              ),
             ),
           ),
           const SizedBox(height: 12),
           if (_query.trim().isEmpty && _selectedCategory == null) ...[
-            Text(
-              l10n.guideQuickStart,
-              style: Theme.of(
-                context,
-              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
+            Row(
+              children: [
+                Icon(
+                  Icons.auto_awesome_rounded,
+                  size: 17,
+                  color: colors.primary,
+                ),
+                const SizedBox(width: 7),
+                Text(
+                  l10n.guideQuickStart,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
+                ),
+              ],
             ),
             const SizedBox(height: 2),
             Text(
@@ -195,28 +252,78 @@ class _MindsetScreenState extends State<MindsetScreen> {
             ),
             const SizedBox(height: 8),
             for (var index = 0; index < quickStart.length; index++) ...[
-              Card(
-                clipBehavior: Clip.antiAlias,
-                child: ListTile(
-                  key: ValueKey(
-                    'guide-quick-start-${quickStart[index].guideKey}',
-                  ),
-                  leading: CircleAvatar(child: Text('${index + 1}')),
-                  title: Text(
-                    id ? quickStart[index].titleId : quickStart[index].titleEn,
-                  ),
-                  trailing:
-                      completedGuideIds?.contains(quickStart[index].guideKey) ==
-                          true
-                      ? const Icon(
+              _GuideCard(
+                key: ValueKey(
+                  'guide-quick-start-${quickStart[index].guideKey}',
+                ),
+                onTap: () => openModule(quickStart[index]),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 54),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 30,
+                        height: 30,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: colors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '${index + 1}',
+                          style: TextStyle(
+                            color: colors.primary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _categoryName(
+                                quickStart[index].category,
+                                id,
+                              ).toUpperCase(),
+                              style: TextStyle(
+                                color: colors.onSurfaceVariant,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.7,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              id
+                                  ? quickStart[index].titleId
+                                  : quickStart[index].titleEn,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                height: 1.25,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (completedGuideIds?.contains(
+                            quickStart[index].guideKey,
+                          ) ==
+                          true)
+                        const Icon(
                           Icons.check_circle_rounded,
                           color: Colors.green,
-                        )
-                      : const Icon(Icons.chevron_right_rounded),
-                  onTap: () => openModule(quickStart[index]),
+                          size: 18,
+                        ),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
             ],
             const SizedBox(height: 6),
           ],
@@ -229,6 +336,7 @@ class _MindsetScreenState extends State<MindsetScreen> {
                   child: ChoiceChip(
                     label: Text(l10n.all),
                     selected: _selectedCategory == null,
+                    showCheckmark: false,
                     onSelected: (_) => setState(() => _selectedCategory = null),
                   ),
                 ),
@@ -239,6 +347,7 @@ class _MindsetScreenState extends State<MindsetScreen> {
                       avatar: Icon(_categoryIcon(category), size: 16),
                       label: Text(_categoryName(category, id)),
                       selected: _selectedCategory == category,
+                      showCheckmark: false,
                       onSelected: (_) =>
                           setState(() => _selectedCategory = category),
                     ),
@@ -246,7 +355,71 @@ class _MindsetScreenState extends State<MindsetScreen> {
               ],
             ),
           ),
+          const SizedBox(height: 4),
+          Text(
+            id
+                ? 'Geser untuk melihat kategori lain'
+                : 'Swipe to see more categories',
+            style: TextStyle(fontSize: 10, color: colors.onSurfaceVariant),
+          ),
           const SizedBox(height: 18),
+          if (_query.trim().isEmpty && _selectedCategory == null) ...[
+            _GuideCard(
+              key: const ValueKey('guide-psychology-spotlight'),
+              onTap: () => setState(() => _selectedCategory = 'psychology'),
+              child: Row(
+                children: [
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: colors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    child: Icon(
+                      Icons.psychology_alt_outlined,
+                      color: colors.primary,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          id
+                              ? 'Trading juga soal disiplin'
+                              : 'Trading also takes discipline',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          id
+                              ? 'Pelajari cara menghadapi FOMO, revenge trading, dan keputusan impulsif.'
+                              : 'Learn how to handle FOMO, revenge trading, and impulsive decisions.',
+                          style: TextStyle(
+                            color: colors.onSurfaceVariant,
+                            fontSize: 11,
+                            height: 1.35,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: colors.onSurfaceVariant,
+                    size: 18,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 22),
+          ],
           if (visible.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 40),
@@ -261,29 +434,57 @@ class _MindsetScreenState extends State<MindsetScreen> {
           for (final category in categories) ...[
             Padding(
               padding: const EdgeInsets.only(top: 4, bottom: 8),
-              child: Text(
-                _categoryName(category, id),
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+              child: Row(
+                children: [
+                  Icon(
+                    _categoryIcon(category),
+                    size: 17,
+                    color: colors.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _categoryName(category, id),
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             for (final module in visible.where(
               (item) => item.category == category,
             )) ...[
-              Card(
-                clipBehavior: Clip.antiAlias,
-                child: ListTile(
-                  leading: Icon(_categoryIcon(category)),
-                  title: Text(id ? module.titleId : module.titleEn),
-                  subtitle: Text(id ? module.summaryId : module.summaryEn),
-                  trailing: completedGuideIds?.contains(module.guideKey) == true
-                      ? const Icon(
+              _GuideCard(
+                onTap: () => openModule(module),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        id ? module.titleId : module.titleEn,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    if (completedGuideIds?.contains(module.guideKey) == true)
+                      const Padding(
+                        padding: EdgeInsets.only(left: 8),
+                        child: Icon(
                           Icons.check_circle_rounded,
                           color: Colors.green,
-                        )
-                      : const Icon(Icons.chevron_right_rounded),
-                  onTap: () => openModule(module),
+                          size: 17,
+                        ),
+                      ),
+                    const SizedBox(width: 6),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      color: colors.onSurfaceVariant,
+                      size: 18,
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 8),
@@ -303,22 +504,26 @@ class _MindsetScreenState extends State<MindsetScreen> {
     );
   }
 
-  String _categoryName(String category, bool id) => switch (category) {
-    'getting-started' =>
-      id ? 'Panduan Awal & Fitur' : 'Getting Started & Features',
-    'analysis-manual' => id ? 'Manual Analisis' : 'Analysis Manual',
-    'glossary' => id ? 'Glosarium' : 'Glossary',
-    'privacy' => id ? 'Data & Privasi' : 'Data & Privacy',
-    _ => id ? 'Psikologi & Disiplin' : 'Psychology & Discipline',
-  };
+  String _categoryName(String category, bool id) =>
+      _guideCategoryName(category, id);
 
-  IconData _categoryIcon(String category) => switch (category) {
-    'getting-started' => Icons.lightbulb_outline_rounded,
-    'analysis-manual' => Icons.candlestick_chart_rounded,
-    'glossary' => Icons.menu_book_outlined,
-    'privacy' => Icons.shield_outlined,
-    _ => Icons.psychology_alt_outlined,
-  };
+  IconData _categoryIcon(String category) => _guideCategoryIcon(category);
+}
+
+class _GuideCard extends StatelessWidget {
+  const _GuideCard({required this.onTap, required this.child, super.key});
+
+  final VoidCallback onTap;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    clipBehavior: Clip.antiAlias,
+    child: InkWell(
+      onTap: onTap,
+      child: Padding(padding: const EdgeInsets.all(12), child: child),
+    ),
+  );
 }
 
 class _MindsetModuleScreen extends StatefulWidget {
@@ -326,10 +531,12 @@ class _MindsetModuleScreen extends StatefulWidget {
     required this.module,
     required this.id,
     required this.initiallyCompleted,
+    this.relatedModule,
   });
   final _MindsetModule module;
   final bool id;
   final bool initiallyCompleted;
+  final _MindsetModule? relatedModule;
 
   @override
   State<_MindsetModuleScreen> createState() => _MindsetModuleScreenState();
@@ -434,36 +641,120 @@ class _MindsetModuleScreenState extends State<_MindsetModuleScreen> {
     final module = widget.module;
     final id = widget.id;
     final blocks = id ? module.blocksId : module.blocksEn;
+    final colors = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: Text(id ? module.titleId : module.titleEn)),
-      body: ListView(
-        padding: responsivePagePadding(context, horizontal: 20),
-        children: [
-          for (final block in blocks) _GuideBlockView(block: block),
-          if (module.guideId != null) ...[
-            const SizedBox(height: 18),
-            FilledButton.icon(
-              onPressed: _completed || !_canComplete || _isCompleting
-                  ? null
-                  : _complete,
-              icon: _isStarting || _isCompleting
-                  ? const SizedBox.square(
-                      dimension: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.check_circle_outline_rounded),
-              label: Text(context.l10n.guideComplete),
+      body: SafeArea(
+        child: ListView(
+          padding: responsivePagePadding(context),
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.chevron_left_rounded, size: 18),
+                label: Text(id ? 'Kembali ke Panduan' : 'Back to Guide'),
+                style: TextButton.styleFrom(
+                  foregroundColor: colors.onSurfaceVariant,
+                  padding: EdgeInsets.zero,
+                  textStyle: const TextStyle(fontSize: 12),
+                ),
+              ),
             ),
-            if (!_canComplete && !_completed) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                decoration: BoxDecoration(
+                  color: colors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(7),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _guideCategoryIcon(module.category),
+                      color: colors.primary,
+                      size: 14,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      _guideCategoryName(module.category, id).toUpperCase(),
+                      style: TextStyle(
+                        color: colors.primary,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              id ? module.titleId : module.titleEn,
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontSize: 22, height: 1.2),
+            ),
+            const SizedBox(height: 20),
+            for (final block in blocks) _GuideBlockView(block: block),
+            if (widget.relatedModule case final related?) ...[
               const SizedBox(height: 8),
-              Text(
-                context.l10n.guideReading,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodySmall,
+              OutlinedButton.icon(
+                onPressed: () => Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => _MindsetModuleScreen(
+                      module: related,
+                      id: id,
+                      initiallyCompleted: context
+                          .read<ProgressionProvider>()
+                          .completedGuideIds
+                          .contains(related.guideKey),
+                    ),
+                  ),
+                ),
+                iconAlignment: IconAlignment.end,
+                icon: const Icon(Icons.chevron_right_rounded, size: 18),
+                label: Text(
+                  id ? 'Baca pembahasan lengkap' : 'Read the full topic',
+                ),
               ),
             ],
+            if (module.guideId != null) ...[
+              const SizedBox(height: 32),
+              const Divider(),
+              const SizedBox(height: 18),
+              OutlinedButton.icon(
+                onPressed: _completed || !_canComplete || _isCompleting
+                    ? null
+                    : _complete,
+                icon: _isStarting || _isCompleting
+                    ? const SizedBox.square(
+                        dimension: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.check_circle_outline_rounded),
+                label: Text(
+                  _completed
+                      ? (id ? 'Panduan selesai' : 'Guide completed')
+                      : context.l10n.guideComplete,
+                ),
+              ),
+              if (!_canComplete && !_completed) ...[
+                const SizedBox(height: 8),
+                Text(
+                  context.l10n.guideReading,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ],
+            const SizedBox(height: 24),
           ],
-        ],
+        ),
       ),
     );
   }
@@ -482,7 +773,7 @@ class _GuideBlockView extends StatelessWidget {
         block.text,
         style: Theme.of(
           context,
-        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+        ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
       ),
     ),
     'list' => Padding(
@@ -525,14 +816,19 @@ class _GuideBlockView extends StatelessWidget {
       ),
       child: Text(
         block.text,
-        style: const TextStyle(fontWeight: FontWeight.w700, height: 1.55),
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          fontStyle: FontStyle.italic,
+          height: 1.55,
+        ),
       ),
     ),
     _ => Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Text(
         block.text,
-        style: const TextStyle(fontSize: 16, height: 1.55),
+        style: const TextStyle(fontSize: 14, height: 1.55),
       ),
     ),
   };
@@ -549,6 +845,7 @@ class _MindsetModule {
     required this.blocksEn,
     required this.blocksId,
     this.guideId,
+    this.relatedArticleId,
   });
 
   factory _MindsetModule.fromJson(String category, Map<String, dynamic> json) {
@@ -581,6 +878,7 @@ class _MindsetModule {
       blocksEn: blocksEn,
       blocksId: blocksId,
       guideId: _progressionGuideId(articleId),
+      relatedArticleId: json['relatedArticleId'] as String?,
     );
   }
 
@@ -593,6 +891,7 @@ class _MindsetModule {
   final List<_GuideBlock> blocksEn;
   final List<_GuideBlock> blocksId;
   final ProgressionEvidenceStartInputGuideIdEnum? guideId;
+  final String? relatedArticleId;
 
   String get guideKey => articleId;
 
@@ -621,6 +920,23 @@ class _GuideBlock {
   final String text;
   final List<String> items;
 }
+
+String _guideCategoryName(String category, bool id) => switch (category) {
+  'getting-started' =>
+    id ? 'Panduan Awal & Fitur' : 'Getting Started & Features',
+  'analysis-manual' => id ? 'Manual Analisis' : 'Analysis Manual',
+  'glossary' => id ? 'Glosarium' : 'Glossary',
+  'privacy' => id ? 'Data & Privasi' : 'Data & Privacy',
+  _ => id ? 'Psikologi & Disiplin' : 'Psychology & Discipline',
+};
+
+IconData _guideCategoryIcon(String category) => switch (category) {
+  'getting-started' => Icons.lightbulb_outline_rounded,
+  'analysis-manual' => Icons.candlestick_chart_rounded,
+  'glossary' => Icons.menu_book_outlined,
+  'privacy' => Icons.shield_outlined,
+  _ => Icons.psychology_alt_outlined,
+};
 
 ProgressionEvidenceStartInputGuideIdEnum? _progressionGuideId(String id) =>
     switch (id) {

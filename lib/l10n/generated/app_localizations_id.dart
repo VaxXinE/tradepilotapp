@@ -466,15 +466,38 @@ class AppLocalizationsId extends AppLocalizations {
   String get history => 'Riwayat';
 
   @override
-  String get historyPageTitle => 'Riwayat Analisis';
+  String get historyPageTitle => 'Riwayat & Performa Analisis';
 
   @override
   String historyTotalAnalyses(int count) {
-    return '$count analisis tersimpan';
+    return '$count analisis total';
   }
 
   @override
   String get profile => 'Profil';
+
+  @override
+  String get profilePrivacySecurity => 'Privasi & Keamanan';
+
+  @override
+  String get profilePrivacySecuritySubtitle =>
+      'Kelola privasi dan penghapusan akun';
+
+  @override
+  String get profileMyAlerts => 'Alert Saya';
+
+  @override
+  String get profileMyAlertsSubtitle => 'Lihat dan kelola alert harga kamu.';
+
+  @override
+  String get profileNotificationSettings => 'Pengaturan Notifikasi';
+
+  @override
+  String get profileNotificationSettingsSubtitle =>
+      'Pilih push notification, jenis notifikasi, dan ringkasan harian.';
+
+  @override
+  String get profileAnalysisCredits => 'Kredit Analisis';
 
   @override
   String get account => 'Akun';
@@ -751,7 +774,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get otherInstruments => 'Instrumen Lainnya';
 
   @override
-  String get performanceByInstrument => 'Per instrumen';
+  String get performanceByInstrument => 'Performa berdasarkan instrumen';
 
   @override
   String get performanceBySession => 'Per sesi pasar';
@@ -1964,7 +1987,7 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get searchInstrumentOrNote => 'Cari instrumen atau catatan';
+  String get searchInstrumentOrNote => 'Cari catatan, instrumen, analisis AI…';
 
   @override
   String get clearSearch => 'Hapus pencarian';
@@ -2039,10 +2062,99 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get historySummary => 'Ringkasan riwayat';
+  String get historySummary => 'Ringkasan';
 
   @override
   String get historyListTab => 'Riwayat';
+
+  @override
+  String get historyFiltersButton => 'Filter';
+
+  @override
+  String get historyMetricTotal => 'Total analisis';
+
+  @override
+  String get historyMetricValid => 'Masih valid';
+
+  @override
+  String get historyMetricInvalid => 'Invalid';
+
+  @override
+  String get historyInsightConsistent => 'Timeframe paling konsisten';
+
+  @override
+  String get historyInsightExpired => 'Paling sering expired';
+
+  @override
+  String get historyInsightSl => 'Paling sering kena SL';
+
+  @override
+  String get historyNeedMoreSamples => 'Sampel belum cukup';
+
+  @override
+  String get historyInstrumentHint =>
+      'Pilih instrumen untuk memfokuskan performa timeframe.';
+
+  @override
+  String get historyOtherInstrumentsHint =>
+      'Gabungan riwayat instrumen di luar empat produk utama.';
+
+  @override
+  String get historyViewHistory => 'Lihat riwayat';
+
+  @override
+  String get historyTimeframePerformance => 'Performa per timeframe';
+
+  @override
+  String get historyRateExplainer =>
+      'Win rate membandingkan TP dengan TP + SL. Setup expired hanya masuk ke completion rate.';
+
+  @override
+  String get historySampleShort => 'sampel';
+
+  @override
+  String historySampleCount(int count) {
+    return '$count sampel';
+  }
+
+  @override
+  String historySamplesNeeded(int remaining, int have, int need) {
+    return 'Butuh $remaining lagi ($have/$need)';
+  }
+
+  @override
+  String historyPageStatus(int page, int pages) {
+    return 'Halaman $page dari $pages';
+  }
+
+  @override
+  String historyRangeStatus(int start, int end, int total) {
+    return 'Menampilkan $start–$end dari $total';
+  }
+
+  @override
+  String get historyPrevious => 'Sebelumnya';
+
+  @override
+  String get historyNext => 'Selanjutnya';
+
+  @override
+  String get historyReanalyze => 'Analisis ulang';
+
+  @override
+  String get historyOutcomePending => 'Menunggu';
+
+  @override
+  String get historyOutcomeTp1 => 'TP1 Kena';
+
+  @override
+  String get historyOutcomeTp2 => 'TP2 Kena';
+
+  @override
+  String get historyOutcomeSl => 'SL Kena';
+
+  @override
+  String get historyMarketRanging => 'Ranging';
 
   @override
   String get timeframePerformance => 'Per timeframe';
@@ -2738,6 +2850,14 @@ class AppLocalizationsId extends AppLocalizations {
   String get creditBalance => 'Saldo credit';
 
   @override
+  String get analysisCreditsDescription =>
+      'Credit digunakan otomatis ketika kuota analisis gratis kamu sudah habis.';
+
+  @override
+  String get mobileCreditPurchaseUnavailable =>
+      'Pembelian credit saat ini tidak tersedia di aplikasi mobile.';
+
+  @override
   String get creditBalanceFailed => 'Saldo gagal dimuat.';
 
   @override
@@ -2760,6 +2880,41 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get topUpChooseAmount => 'Pilih nominal top-up';
+
+  @override
+  String get topUpChoosePackageFirst =>
+      'Pilih salah satu paket top up terlebih dahulu.';
+
+  @override
+  String get topUpPayNow => 'Bayar sekarang';
+
+  @override
+  String get topUpPaymentMethod => 'Pilih metode pembayaran';
+
+  @override
+  String get topUpVirtualAccount => 'Virtual Account (Otomatis)';
+
+  @override
+  String get topUpVirtualAccountDescription =>
+      'Transfer bank. Kredit masuk otomatis setelah pembayaran dikonfirmasi.';
+
+  @override
+  String topUpVirtualAccountFee(String fee, String total) {
+    return 'Biaya admin $fee. Total dibayar $total.';
+  }
+
+  @override
+  String get topUpQrisDescription =>
+      'Pindai dengan e-wallet atau mobile banking. Kredit masuk otomatis setelah konfirmasi.';
+
+  @override
+  String get topUpNoAdminFee => 'Tanpa biaya admin';
+
+  @override
+  String get topUpCheckoutFailed => 'Gagal membuat sesi pembayaran. Coba lagi.';
+
+  @override
+  String get topUpResumePayment => 'Lanjutkan pembayaran';
 
   @override
   String get topUpContinuePayment => 'Lanjut ke pembayaran';
@@ -3415,7 +3570,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get guideQuickStart => 'Mulai cepat';
 
   @override
-  String get guideQuickStartHint => 'Tiga panduan untuk memahami alur utama.';
+  String get guideQuickStartHint => 'Mulai dari alur yang paling penting.';
 
   @override
   String get guideSubtitle => 'Pengetahuan, fitur, dan mindset.';
@@ -3582,6 +3737,14 @@ class AppLocalizationsId extends AppLocalizations {
       'Perhitungan ini hanya berlaku untuk posisi intraday (day trade); posisi overnight tidak termasuk.';
 
   @override
+  String get theoreticalMarginCapacity => 'Kapasitas margin teoretis';
+
+  @override
+  String theoreticalMarginCapacityValue(String lot) {
+    return 'Hingga $lot lot per posisi sebelum Stop Loss dan batas risiko seluruh plan diterapkan.';
+  }
+
+  @override
   String analysisCandleSnapshotFetched(String date) {
     return 'Snapshot candle analisis diambil: $date';
   }
@@ -3688,6 +3851,32 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get planReadyToReview => 'Plan siap ditinjau';
+
+  @override
+  String get conditionalScenarioNotActionable =>
+      'Skenario kondisional · belum bisa dieksekusi';
+
+  @override
+  String get adaptiveWaitDecisionBody =>
+      'Arah pasar belum terkonfirmasi. Tunggu sampai sinyal selaras; jangan entry ke sisi sebaliknya.';
+
+  @override
+  String get hardLossMaximum => 'Batas kerugian maksimum';
+
+  @override
+  String get entryDirectionUnconfirmedTitle => 'Arah entry belum terkonfirmasi';
+
+  @override
+  String get entryDirectionUnconfirmedBody =>
+      'Ini hanya skenario kondisional—belum bisa dieksekusi sekarang. Tunggu sampai analisis tersimpan dan arah pasar saat ini mendukung sisi ini; menyalin sebagai rencana entry dinonaktifkan.';
+
+  @override
+  String get entryDirectionUnconfirmedNextAction =>
+      'Langkah selanjutnya: tunggu atau lewati. Jangan gunakan limit finansial lebih besar untuk mengakali pengaman arah ini.';
+
+  @override
+  String get referenceNumbersOnly =>
+      'Hanya angka referensi—pilihan saat ini diblokir atau menunggu konfirmasi.';
 
   @override
   String get answerAtGlance => 'Jawaban sekilas';

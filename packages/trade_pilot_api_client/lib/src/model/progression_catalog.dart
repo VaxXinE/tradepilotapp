@@ -21,6 +21,7 @@ abstract class ProgressionCatalog
   @BuiltValueField(wireName: r'achievements')
   BuiltList<ProgressionAchievement> get achievements;
 
+  /// Guide article IDs with a valid, non-revoked completion award.
   @BuiltValueField(wireName: r'completedGuideIds')
   BuiltList<String> get completedGuideIds;
 

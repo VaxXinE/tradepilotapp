@@ -168,6 +168,21 @@ void main() {
     );
     expect(find.byKey(const Key('submit-analysis-button')), findsOneWidget);
   });
+
+  testWidgets(
+    'concurrent analysis uses the dialog without a stale error banner',
+    (tester) async {
+      await _pumpAnalyzeTab(tester, concurrentFailure: true);
+
+      await _runAnalysis(tester);
+      expect(find.text('Analysis still in progress'), findsOneWidget);
+
+      await tester.tap(find.text('Close'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Previous analysis raw backend error'), findsNothing);
+    },
+  );
 }
 
 Future<void> _scrollToTop(WidgetTester tester) async {
@@ -189,6 +204,7 @@ Future<void> _runAnalysis(WidgetTester tester) async {
 Future<_FakeAnalysisProvider> _pumpAnalyzeTab(
   WidgetTester tester, {
   VoidCallback? onNewAnalysis,
+  bool concurrentFailure = false,
 }) async {
   SharedPreferences.setMockInitialValues({});
   final preferences = await SharedPreferences.getInstance();
@@ -197,7 +213,10 @@ Future<_FakeAnalysisProvider> _pumpAnalyzeTab(
   await tester.runAsync(() => Future<void>.delayed(Duration.zero));
   auth.client.dio.httpClientAdapter = _OfflineAdapter();
 
-  final analysisProvider = _FakeAnalysisProvider(auth);
+  final analysisProvider = _FakeAnalysisProvider(
+    auth,
+    concurrentFailure: concurrentFailure,
+  );
   final marketProvider = _FakeMarketProvider(auth);
   final watchlistProvider = WatchlistProvider(
     auth,
@@ -271,7 +290,9 @@ class _OfflineAdapter implements HttpClientAdapter {
 }
 
 class _FakeAnalysisProvider extends AnalysisProvider {
-  _FakeAnalysisProvider(super.auth);
+  _FakeAnalysisProvider(super.auth, {this.concurrentFailure = false});
+
+  final bool concurrentFailure;
 
   final List<String> requested = [];
   final List<CreateAnalysisBodyModeEnum> requestedModes = [];
@@ -285,6 +306,15 @@ class _FakeAnalysisProvider extends AnalysisProvider {
   }) async {
     requested.add(instrument);
     requestedModes.add(mode);
+    if (concurrentFailure) {
+      quotaLimit = const AnalysisQuotaLimit(
+        scope: 'concurrent',
+        retryAfter: Duration(seconds: 5),
+      );
+      errorMessage = 'Previous analysis raw backend error';
+      notifyListeners();
+      return null;
+    }
     return _analysis(instrument);
   }
 

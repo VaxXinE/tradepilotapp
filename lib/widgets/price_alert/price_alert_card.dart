@@ -13,6 +13,7 @@ class PriceAlertCard extends StatelessWidget {
     this.onRetry,
     this.isDeleting,
     this.onDelete,
+    this.showHeader = true,
   });
 
   final List<UserPriceAlert> alerts;
@@ -21,6 +22,7 @@ class PriceAlertCard extends StatelessWidget {
   final VoidCallback? onRetry;
   final bool Function(int id)? isDeleting;
   final void Function(int id)? onDelete;
+  final bool showHeader;
 
   @override
   Widget build(BuildContext context) {
@@ -32,22 +34,24 @@ class PriceAlertCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                const Icon(Icons.notifications_active_outlined, size: 19),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    context.l10n.myPriceAlertsTitle,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
+            if (showHeader) ...[
+              Row(
+                children: [
+                  const Icon(Icons.notifications_active_outlined, size: 19),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      context.l10n.myPriceAlertsTitle,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
+                ],
+              ),
+              const SizedBox(height: 6),
+            ],
             Text(
               context.l10n.priceAlertDisclaimer,
               style: TextStyle(color: muted, fontSize: 11.5, height: 1.4),

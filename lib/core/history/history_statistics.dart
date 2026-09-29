@@ -9,6 +9,9 @@ class HistoryStatistics {
     required this.expiredCount,
     required this.invalidatedCount,
     required this.targetHitRate,
+    this.activeValidCount = 0,
+    this.tp1HitCount = 0,
+    this.tp2HitCount = 0,
   });
 
   final int total;
@@ -25,6 +28,12 @@ class HistoryStatistics {
 
   final double targetHitRate;
 
+  final int activeValidCount;
+
+  final int tp1HitCount;
+
+  final int tp2HitCount;
+
   factory HistoryStatistics.fromAnalyses(List<Analysis> analyses) {
     if (analyses.isEmpty) {
       return const HistoryStatistics(
@@ -39,6 +48,8 @@ class HistoryStatistics {
     }
 
     var targetHit = 0;
+    var tp1Hit = 0;
+    var tp2Hit = 0;
     var riskLimitHit = 0;
     var pending = 0;
     var expired = 0;
@@ -47,7 +58,11 @@ class HistoryStatistics {
     for (final analysis in analyses) {
       switch (analysis.outcomeStatus) {
         case AnalysisOutcomeStatusEnum.tp1Hit:
+          tp1Hit++;
+          targetHit++;
+          break;
         case AnalysisOutcomeStatusEnum.tp2Hit:
+          tp2Hit++;
           targetHit++;
           break;
 
@@ -80,6 +95,11 @@ class HistoryStatistics {
       expiredCount: expired,
       invalidatedCount: invalidated,
       targetHitRate: evaluated == 0 ? 0 : (targetHit / evaluated) * 100,
+      activeValidCount: analyses
+          .where((analysis) => analysis.validUntil.isAfter(DateTime.now()))
+          .length,
+      tp1HitCount: tp1Hit,
+      tp2HitCount: tp2Hit,
     );
   }
 
@@ -97,6 +117,9 @@ class HistoryStatistics {
       expiredCount: stats.expired,
       invalidatedCount: stats.invalidated,
       targetHitRate: evaluated == 0 ? 0 : (targetHit / evaluated) * 100,
+      activeValidCount: stats.activeValid,
+      tp1HitCount: stats.tp1Hit,
+      tp2HitCount: stats.tp2Hit,
     );
   }
 }

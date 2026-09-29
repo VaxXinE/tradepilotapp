@@ -24,33 +24,41 @@ class HistoryAnalysisCard extends StatelessWidget {
     final muted = dark
         ? AppColors.darkMutedForeground
         : AppColors.lightMutedForeground;
-    final confidence = _confidenceLabel(analysis);
-    final risk = analysis.riskLevel?.trim();
     final marketCondition = analysis.marketCondition?.trim();
     final createdAt = analysis.createdAt.toLocal();
-    final createdAtLabel =
-        '${MaterialLocalizations.of(context).formatMediumDate(createdAt)}, '
-        '${DateFormat.Hm().format(createdAt)}';
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    final createdAtLabel = DateFormat(
+      'dd MMM yyyy HH:mm',
+      locale,
+    ).format(createdAt);
+    final valid = analysis.validUntil.isAfter(DateTime.now());
 
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
+              Wrap(
+                spacing: 7,
+                runSpacing: 7,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  Expanded(
-                    child: Text(
-                      analysis.instrument,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w900,
-                      ),
+                  Text(
+                    analysis.instrument,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w900,
                     ),
                   ),
+                  _CompactChip(
+                    label: analysis.timeframe,
+                    color: muted,
+                    filled: false,
+                  ),
+                  _OutcomeBadge(status: analysis.outcomeStatus),
                   if (analysis.hasNote == true)
                     Tooltip(
                       message: context.l10n.hasJournalNote,
@@ -60,120 +68,70 @@ class HistoryAnalysisCard extends StatelessWidget {
                         color: theme.colorScheme.primary,
                       ),
                     ),
-                  Icon(Icons.chevron_right_rounded, color: muted),
-                ],
-              ),
-              const SizedBox(height: 3),
-              Text(
-                '${analysis.timeframe} • ${_modeLabel(context, analysis.mode)} • '
-                '$createdAtLabel',
-                style: theme.textTheme.bodySmall?.copyWith(color: muted),
-              ),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 7,
-                runSpacing: 7,
-                children: [
-                  _InfoChip(
-                    icon: Icons.swap_vert_rounded,
-                    label: _biasLabel(context, analysis.tradingBias),
-                    color: _biasColor(dark, analysis.tradingBias),
+                  _CompactChip(
+                    label: valid ? context.l10n.valid : context.l10n.expired,
+                    color: valid ? theme.colorScheme.primary : muted,
+                    filled: valid,
                   ),
-                  _InfoChip(
-                    icon: Icons.speed_rounded,
-                    label: context.l10n.confidenceValue(confidence),
-                    color: theme.colorScheme.primary,
-                  ),
-                  _OutcomeBadge(status: analysis.outcomeStatus),
-                ],
-              ),
-              if (risk?.isNotEmpty == true ||
-                  marketCondition?.isNotEmpty == true) ...[
-                const SizedBox(height: 9),
-                Wrap(
-                  spacing: 7,
-                  runSpacing: 7,
-                  children: [
-                    if (risk?.isNotEmpty == true)
-                      _SecondaryFact(
-                        icon: Icons.shield_outlined,
-                        label: context.l10n.riskValue(
-                          _riskLabel(context, risk!),
+                  if (onReanalyze != null)
+                    TextButton(
+                      onPressed: onReanalyze,
+                      style: TextButton.styleFrom(
+                        minimumSize: const Size(0, 32),
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        backgroundColor: theme.colorScheme.primary.withValues(
+                          alpha: .1,
                         ),
                       ),
-                    if (marketCondition?.isNotEmpty == true)
-                      _SecondaryFact(
-                        icon: Icons.query_stats_rounded,
-                        label: _marketConditionLabel(context, marketCondition!),
+                      child: Text(
+                        context.l10n.historyReanalyze,
+                        style: const TextStyle(fontSize: 11),
                       ),
-                  ],
-                ),
-              ],
-              if (onReanalyze != null) ...[
-                const SizedBox(height: 8),
-                OutlinedButton.icon(
-                  onPressed: onReanalyze,
-                  icon: const Icon(Icons.add_chart_rounded, size: 18),
-                  label: Text(context.l10n.useForNewAnalysis),
-                ),
-              ],
+                    ),
+                ],
+              ),
+              const SizedBox(height: 7),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  if (marketCondition?.isNotEmpty == true)
+                    _CompactChip(
+                      label: _marketConditionLabel(context, marketCondition!),
+                      color: _marketConditionColor(dark, marketCondition),
+                    ),
+                  if (analysis.techBuyCount != null &&
+                      analysis.techSellCount != null)
+                    _MarketContextChip(
+                      buy: analysis.techBuyCount!,
+                      sell: analysis.techSellCount!,
+                    ),
+                  SizedBox(
+                    width: double.infinity,
+                    child: Row(
+                      children: [
+                        Icon(Icons.schedule_rounded, size: 13, color: muted),
+                        const SizedBox(width: 3),
+                        Expanded(
+                          child: Text(
+                            createdAtLabel,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: muted,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
       ),
     );
-  }
-
-  static String _modeLabel(BuildContext context, AnalysisModeEnum mode) {
-    return mode == AnalysisModeEnum.pro
-        ? context.l10n.pro
-        : context.l10n.beginner;
-  }
-
-  static String _confidenceLabel(Analysis analysis) {
-    final minimum = analysis.confidenceMin;
-    final maximum = analysis.confidenceMax;
-    if (minimum == null && maximum == null) {
-      return '—';
-    }
-    if (minimum == null || maximum == null || minimum == maximum) {
-      return '${minimum ?? maximum}%';
-    }
-    return '$minimum–$maximum%';
-  }
-
-  static String _biasLabel(BuildContext context, String? value) {
-    switch (value?.trim().toLowerCase()) {
-      case 'bearish_strong':
-      case 'strong_sell':
-        return context.l10n.strongBearish;
-      case 'bearish':
-      case 'sell':
-        return 'Bearish';
-      case 'bullish':
-      case 'buy':
-        return 'Bullish';
-      case 'bullish_strong':
-      case 'strong_buy':
-        return context.l10n.strongBullish;
-      case 'neutral':
-        return context.l10n.neutral;
-      default:
-        return context.l10n.biasUnavailable;
-    }
-  }
-
-  static String _riskLabel(BuildContext context, String value) {
-    switch (value.trim().toLowerCase()) {
-      case 'low':
-        return context.l10n.low;
-      case 'medium':
-        return context.l10n.medium;
-      case 'high':
-        return context.l10n.high;
-      default:
-        return value.trim().replaceAll('_', ' ');
-    }
   }
 
   static String _marketConditionLabel(BuildContext context, String value) {
@@ -186,7 +144,9 @@ class HistoryAnalysisCard extends StatelessWidget {
         return context.l10n.trendingDown;
       case 'sideways':
       case 'ranging':
-        return context.l10n.movingSideways;
+        return context.l10n.historyMarketRanging;
+      case 'volatile':
+        return context.l10n.volatileMarket;
       case 'trending':
         return context.l10n.trendingMarket;
       default:
@@ -197,41 +157,19 @@ class HistoryAnalysisCard extends StatelessWidget {
     }
   }
 
-  static Color _biasColor(bool dark, String? value) {
-    final normalized = value?.toLowerCase() ?? '';
-    if (normalized.contains('bullish') ||
-        normalized == 'buy' ||
-        normalized == 'strong_buy') {
-      return dark ? AppColors.bullishDark : AppColors.bullishLight;
+  static Color _marketConditionColor(bool dark, String value) {
+    switch (value.trim().toLowerCase()) {
+      case 'trending_up':
+      case 'uptrend':
+        return dark ? AppColors.bullishDark : AppColors.bullishLight;
+      case 'trending_down':
+      case 'downtrend':
+        return dark ? AppColors.bearishDark : AppColors.bearishLight;
+      case 'volatile':
+        return const Color(0xFFF97316);
+      default:
+        return dark ? AppColors.neutralDark : AppColors.neutralLight;
     }
-    if (normalized.contains('bearish') ||
-        normalized == 'sell' ||
-        normalized == 'strong_sell') {
-      return dark ? AppColors.bearishDark : AppColors.bearishLight;
-    }
-    return dark ? AppColors.neutralDark : AppColors.neutralLight;
-  }
-}
-
-class _SecondaryFact extends StatelessWidget {
-  const _SecondaryFact({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.onSurfaceVariant;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 14, color: color),
-        const SizedBox(width: 4),
-        Flexible(
-          child: Text(label, style: TextStyle(color: color, fontSize: 12)),
-        ),
-      ],
-    );
   }
 }
 
@@ -256,8 +194,10 @@ class _OutcomeBadge extends StatelessWidget {
         ? theme.colorScheme.primary
         : theme.colorScheme.onSurfaceVariant;
 
-    return _InfoChip(
-      icon: Icons.fact_check_outlined,
+    return _CompactChip(
+      icon: status == AnalysisOutcomeStatusEnum.slHit
+          ? Icons.cancel_outlined
+          : Icons.hourglass_empty_rounded,
       label: _label(context, status),
       color: color,
     );
@@ -269,17 +209,17 @@ class _OutcomeBadge extends StatelessWidget {
   ) {
     switch (status) {
       case AnalysisOutcomeStatusEnum.pending:
-        return context.l10n.evaluationPending;
+        return context.l10n.historyOutcomePending;
       case AnalysisOutcomeStatusEnum.tp1Hit:
-        return context.l10n.referenceTargetOneHit;
+        return context.l10n.historyOutcomeTp1;
       case AnalysisOutcomeStatusEnum.tp2Hit:
-        return context.l10n.referenceTargetTwoHit;
+        return context.l10n.historyOutcomeTp2;
       case AnalysisOutcomeStatusEnum.slHit:
-        return context.l10n.riskLimitHit;
+        return context.l10n.historyOutcomeSl;
       case AnalysisOutcomeStatusEnum.expired:
-        return context.l10n.analysisPeriodEnded;
+        return context.l10n.expired;
       case AnalysisOutcomeStatusEnum.invalidated:
-        return context.l10n.analysisCannotBeEvaluated;
+        return context.l10n.historyMetricInvalid;
       case null:
         return context.l10n.notYetEvaluated;
     }
@@ -288,45 +228,83 @@ class _OutcomeBadge extends StatelessWidget {
   }
 }
 
-class _InfoChip extends StatelessWidget {
-  const _InfoChip({
-    required this.icon,
+class _CompactChip extends StatelessWidget {
+  const _CompactChip({
     required this.label,
     required this.color,
+    this.icon,
+    this.filled = true,
   });
 
-  final IconData icon;
+  final IconData? icon;
   final String label;
   final Color color;
+  final bool filled;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.11),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: 0.34)),
-        boxShadow: AppColors.signalGlow(color, enabled: isDark),
+        color: filled ? color.withValues(alpha: 0.12) : Colors.transparent,
+        borderRadius: BorderRadius.circular(6),
+        border: filled ? null : Border.all(color: color.withValues(alpha: .25)),
+        boxShadow: filled
+            ? AppColors.signalGlow(color, enabled: isDark)
+            : const [],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 13, color: color),
-          const SizedBox(width: 4),
+          if (icon != null) ...[
+            Icon(icon, size: 12, color: color),
+            const SizedBox(width: 3),
+          ],
           Flexible(
             child: Text(
               label,
               style: TextStyle(
                 color: color,
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _MarketContextChip extends StatelessWidget {
+  const _MarketContextChip({required this.buy, required this.sell});
+
+  final int buy;
+  final int sell;
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final bullish = buy > sell * 1.5;
+    final bearish = sell > buy * 1.5;
+    final color = bullish
+        ? (dark ? AppColors.bullishDark : AppColors.bullishLight)
+        : bearish
+        ? (dark ? AppColors.bearishDark : AppColors.bearishLight)
+        : (dark ? AppColors.neutralDark : AppColors.neutralLight);
+    return _CompactChip(
+      icon: bullish
+          ? Icons.trending_up_rounded
+          : bearish
+          ? Icons.trending_down_rounded
+          : Icons.remove_rounded,
+      label: bullish
+          ? context.l10n.marketContextLeaningBullish
+          : bearish
+          ? context.l10n.marketContextLeaningBearish
+          : context.l10n.marketContextLeaningNeutral,
+      color: color,
     );
   }
 }

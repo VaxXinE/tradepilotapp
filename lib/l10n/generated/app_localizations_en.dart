@@ -466,15 +466,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get history => 'History';
 
   @override
-  String get historyPageTitle => 'Analysis History';
+  String get historyPageTitle => 'History & Analysis Performance';
 
   @override
   String historyTotalAnalyses(int count) {
-    return '$count saved analyses';
+    return '$count analyses total';
   }
 
   @override
   String get profile => 'Profile';
+
+  @override
+  String get profilePrivacySecurity => 'Privacy & Security';
+
+  @override
+  String get profilePrivacySecuritySubtitle =>
+      'Manage privacy and account deletion';
+
+  @override
+  String get profileMyAlerts => 'My Alerts';
+
+  @override
+  String get profileMyAlertsSubtitle => 'View and manage your price alerts.';
+
+  @override
+  String get profileNotificationSettings => 'Notification Settings';
+
+  @override
+  String get profileNotificationSettingsSubtitle =>
+      'Choose push, notification types, and daily summaries.';
+
+  @override
+  String get profileAnalysisCredits => 'Analysis Credits';
 
   @override
   String get account => 'Account';
@@ -751,7 +774,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get otherInstruments => 'Other Instruments';
 
   @override
-  String get performanceByInstrument => 'By instrument';
+  String get performanceByInstrument => 'Performance by instrument';
 
   @override
   String get performanceBySession => 'By market session';
@@ -1970,7 +1993,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get searchInstrumentOrNote => 'Search instruments or notes';
+  String get searchInstrumentOrNote =>
+      'Search notes, instrument, AI reasoning…';
 
   @override
   String get clearSearch => 'Clear search';
@@ -2045,10 +2069,99 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get historySummary => 'History summary';
+  String get historySummary => 'Summary';
 
   @override
   String get historyListTab => 'History';
+
+  @override
+  String get historyFiltersButton => 'Filters';
+
+  @override
+  String get historyMetricTotal => 'Total analyses';
+
+  @override
+  String get historyMetricValid => 'Still valid';
+
+  @override
+  String get historyMetricInvalid => 'Invalid';
+
+  @override
+  String get historyInsightConsistent => 'Most consistent timeframe';
+
+  @override
+  String get historyInsightExpired => 'Most often expired';
+
+  @override
+  String get historyInsightSl => 'Most SL hits';
+
+  @override
+  String get historyNeedMoreSamples => 'Not enough samples yet';
+
+  @override
+  String get historyInstrumentHint =>
+      'Select an instrument to focus timeframe performance.';
+
+  @override
+  String get historyOtherInstrumentsHint =>
+      'Combined history for instruments outside the four core products.';
+
+  @override
+  String get historyViewHistory => 'View history';
+
+  @override
+  String get historyTimeframePerformance => 'Performance by timeframe';
+
+  @override
+  String get historyRateExplainer =>
+      'Win rate compares TP vs TP + SL. Expired setups are included only in completion rate.';
+
+  @override
+  String get historySampleShort => 'sample';
+
+  @override
+  String historySampleCount(int count) {
+    return '$count sample';
+  }
+
+  @override
+  String historySamplesNeeded(int remaining, int have, int need) {
+    return 'Need $remaining more ($have/$need)';
+  }
+
+  @override
+  String historyPageStatus(int page, int pages) {
+    return 'Page $page of $pages';
+  }
+
+  @override
+  String historyRangeStatus(int start, int end, int total) {
+    return 'Showing $start–$end of $total';
+  }
+
+  @override
+  String get historyPrevious => 'Previous';
+
+  @override
+  String get historyNext => 'Next';
+
+  @override
+  String get historyReanalyze => 'Re-analyze';
+
+  @override
+  String get historyOutcomePending => 'Pending';
+
+  @override
+  String get historyOutcomeTp1 => 'TP1 Hit';
+
+  @override
+  String get historyOutcomeTp2 => 'TP2 Hit';
+
+  @override
+  String get historyOutcomeSl => 'SL Hit';
+
+  @override
+  String get historyMarketRanging => 'Ranging';
 
   @override
   String get timeframePerformance => 'By timeframe';
@@ -2746,6 +2859,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get creditBalance => 'Credit balance';
 
   @override
+  String get analysisCreditsDescription =>
+      'Credits are used automatically when your free analysis quota has run out.';
+
+  @override
+  String get mobileCreditPurchaseUnavailable =>
+      'Credit purchases are currently unavailable in the mobile app.';
+
+  @override
   String get creditBalanceFailed => 'Balance could not be loaded.';
 
   @override
@@ -2768,6 +2889,41 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get topUpChooseAmount => 'Choose a top-up amount';
+
+  @override
+  String get topUpChoosePackageFirst => 'Pick a top-up package first.';
+
+  @override
+  String get topUpPayNow => 'Pay now';
+
+  @override
+  String get topUpPaymentMethod => 'Choose payment method';
+
+  @override
+  String get topUpVirtualAccount => 'Virtual Account (Automatic)';
+
+  @override
+  String get topUpVirtualAccountDescription =>
+      'Bank transfer. Credits are added automatically after payment is confirmed.';
+
+  @override
+  String topUpVirtualAccountFee(String fee, String total) {
+    return '$fee admin fee. Total charged $total.';
+  }
+
+  @override
+  String get topUpQrisDescription =>
+      'Scan with any e-wallet or mobile banking app. Credits are added automatically after confirmation.';
+
+  @override
+  String get topUpNoAdminFee => 'No admin fee';
+
+  @override
+  String get topUpCheckoutFailed =>
+      'Could not create a payment session. Try again.';
+
+  @override
+  String get topUpResumePayment => 'Resume payment';
 
   @override
   String get topUpContinuePayment => 'Continue to payment';
@@ -3430,8 +3586,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get guideQuickStart => 'Quick start';
 
   @override
-  String get guideQuickStartHint =>
-      'Three guides to understand the core workflow.';
+  String get guideQuickStartHint => 'Begin with the most important workflows.';
 
   @override
   String get guideSubtitle => 'Knowledge, features, and mindset.';
@@ -3599,6 +3754,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'This calculation applies only to intraday (day trade) positions; overnight positions are not covered.';
 
   @override
+  String get theoreticalMarginCapacity => 'Theoretical margin capacity';
+
+  @override
+  String theoreticalMarginCapacityValue(String lot) {
+    return 'Up to $lot lot per position before the complete plan\'s Stop Loss and risk limits are applied.';
+  }
+
+  @override
   String analysisCandleSnapshotFetched(String date) {
     return 'Analysis candle snapshot fetched: $date';
   }
@@ -3705,6 +3868,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planReadyToReview => 'Plan ready to review';
+
+  @override
+  String get conditionalScenarioNotActionable =>
+      'Conditional scenario · not actionable now';
+
+  @override
+  String get adaptiveWaitDecisionBody =>
+      'Market direction is unconfirmed. Wait for alignment; do not enter the opposite side.';
+
+  @override
+  String get hardLossMaximum => 'Hard loss maximum';
+
+  @override
+  String get entryDirectionUnconfirmedTitle => 'Entry direction is unconfirmed';
+
+  @override
+  String get entryDirectionUnconfirmedBody =>
+      'Conditional scenario only—not actionable now. Wait until the saved analysis and current market direction support this side; copying as an entry plan is disabled.';
+
+  @override
+  String get entryDirectionUnconfirmedNextAction =>
+      'Next action: wait or skip. Do not use larger financial limits to work around the directional safeguard.';
+
+  @override
+  String get referenceNumbersOnly =>
+      'Reference numbers only—the current choice is blocked or waiting for confirmation.';
 
   @override
   String get answerAtGlance => 'Answer at a glance';

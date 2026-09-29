@@ -39,7 +39,7 @@ void main() {
         .setMockMethodCallHandler(storageChannel, null);
   });
 
-  testWidgets('profile renders account sections without notification entry', (
+  testWidgets('profile follows the compact responsive web structure', (
     tester,
   ) async {
     final auth = AuthProvider();
@@ -54,6 +54,10 @@ void main() {
     addTearDown(progression.dispose);
     final credit = CreditProvider(auth, TopupRepository(auth.client));
     addTearDown(credit.dispose);
+    final originalLauncher = UrlLauncherPlatform.instance;
+    final launcher = _RecordingUrlLauncher();
+    UrlLauncherPlatform.instance = launcher;
+    addTearDown(() => UrlLauncherPlatform.instance = originalLauncher);
 
     await tester.pumpWidget(
       MultiProvider(
@@ -71,43 +75,28 @@ void main() {
 
     expect(find.text('User Profile'), findsOneWidget);
     expect(find.text('user@example.com'), findsOneWidget);
-    expect(find.text('Profile Information'), findsOneWidget);
-    expect(find.text('Analysis mode'), findsNothing);
+    expect(find.text('Edit'), findsOneWidget);
     expect(find.text('Appearance'), findsOneWidget);
     expect(find.byKey(const Key('profile-theme-segmented')), findsOneWidget);
     expect(find.text('Light'), findsOneWidget);
     expect(find.text('Dark'), findsOneWidget);
-    expect(find.textContaining('Current: Beginner'), findsNothing);
-    expect(find.text('Top Up Credit'), findsNothing);
     expect(find.text('Change Password'), findsOneWidget);
-    expect(find.text('Privacy Policy'), findsOneWidget);
-    expect(find.text('Terms of Service'), findsOneWidget);
-    expect(find.text('Support'), findsOneWidget);
-    expect(find.text('Delete Account'), findsOneWidget);
-    expect(find.text('Notification Settings'), findsNothing);
+    expect(find.text('Security Question'), findsOneWidget);
+    expect(find.text('Privacy & Security'), findsOneWidget);
+    expect(find.text('My Alerts'), findsOneWidget);
+    expect(find.text('Notification Settings'), findsOneWidget);
+    expect(find.text('Analysis Credits'), findsOneWidget);
+    expect(find.byKey(const Key('profile-sign-out')), findsOneWidget);
 
-    final originalLauncher = UrlLauncherPlatform.instance;
-    UrlLauncherPlatform.instance = _FailingUrlLauncher();
-    addTearDown(() => UrlLauncherPlatform.instance = originalLauncher);
     await tester.scrollUntilVisible(
-      find.text('Privacy Policy'),
+      find.text('Analysis Credits'),
       300,
       scrollable: find.byType(Scrollable).first,
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Privacy Policy'));
-    await tester.pump();
-    expect(find.text('The link could not be opened.'), findsOneWidget);
-
-    await tester.ensureVisible(find.text('Language'));
+    await tester.tap(find.text('Analysis Credits'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Language'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Bahasa Indonesia'));
-    await tester.pumpAndSettle();
-
-    expect(locale.locale.languageCode, 'id');
-    expect(find.text('Preferensi'), findsOneWidget);
+    expect(launcher.launchedUrls, ['https://tradepilot.id/topup']);
   });
 
   testWidgets('account deletion requires confirmation and clears session', (
@@ -237,12 +226,63 @@ void main() {
     expect(auth.status, AuthStatus.unauthenticated);
     expect(auth.user, isNull);
   });
+
+  testWidgets('profile remains readable at 200% text scaling', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(440, 956));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final auth = AuthProvider();
+    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+    _authenticate(auth);
+    final preferences = await SharedPreferences.getInstance();
+    final progression = ProgressionProvider(auth);
+    addTearDown(progression.dispose);
+    final credit = CreditProvider(auth, TopupRepository(auth.client));
+    addTearDown(credit.dispose);
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: auth),
+          ChangeNotifierProvider(create: (_) => ThemeController(preferences)),
+          ChangeNotifierProvider(create: (_) => LocaleController(preferences)),
+          ChangeNotifierProvider.value(value: progression),
+          ChangeNotifierProvider.value(value: credit),
+        ],
+        child: const _LocalizedApp(
+          home: ProfileTab(),
+          textScaler: TextScaler.linear(2),
+        ),
+      ),
+    );
+
+    await tester.fling(find.byType(ListView), const Offset(0, -900), 1200);
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+  });
+}
+
+class _RecordingUrlLauncher extends UrlLauncherPlatform {
+  final List<String> launchedUrls = [];
+
+  @override
+  LinkDelegate? get linkDelegate => null;
+
+  @override
+  Future<bool> launchUrl(String url, LaunchOptions options) async {
+    launchedUrls.add(url);
+    return true;
+  }
 }
 
 class _LocalizedApp extends StatelessWidget {
-  const _LocalizedApp({required this.home});
+  const _LocalizedApp({
+    required this.home,
+    this.textScaler = TextScaler.noScaling,
+  });
 
   final Widget home;
+  final TextScaler textScaler;
 
   @override
   Widget build(BuildContext context) {
@@ -256,6 +296,10 @@ class _LocalizedApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: AppLocalizations.supportedLocales,
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(textScaler: textScaler),
+        child: child!,
+      ),
       home: home,
     );
   }
@@ -339,14 +383,4 @@ class _DeleteAccountAdapter implements HttpClientAdapter {
 
   @override
   void close({bool force = false}) {}
-}
-
-class _FailingUrlLauncher extends UrlLauncherPlatform {
-  @override
-  LinkDelegate? get linkDelegate => null;
-
-  @override
-  Future<bool> launchUrl(String url, LaunchOptions options) {
-    throw PlatformException(code: 'channel-error');
-  }
 }

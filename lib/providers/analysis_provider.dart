@@ -653,6 +653,7 @@ class AnalysisProvider extends ChangeNotifier {
       } else {
         if (error is DioException && error.response?.statusCode == 429) {
           quotaLimit = _parseQuotaLimit(error);
+          unawaited(loadQuota(ensureFresh: true));
         }
 
         errorMessage = _friendlyError(error);

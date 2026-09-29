@@ -36,6 +36,40 @@ void main() {
     expect(invalid.valid, isFalse);
     expect(invalid.errors.single, contains('cannot exceed'));
   });
+
+  test('neutral high-risk snapshot stays a conditional wait plan', () {
+    final analysis = $Analysis(
+      (builder) => builder
+        ..replace(_analysis() as $Analysis)
+        ..marketCondition = 'ranging'
+        ..riskLevel = 'high'
+        ..confidenceMin = 40
+        ..confidenceMax = 60
+        ..tradingBias = 'neutral'
+        ..techBuyCount = 4
+        ..techSellCount = 6
+        ..techNeutralCount = 1
+        ..tradePlan.preferredSide = TradePlanPreferredSideEnum.wait,
+    );
+
+    final plan = buildAdaptiveRecommendation(
+      analysis: analysis,
+      standardRule: _goldRule(),
+      availableMargin: 1000,
+      maximumLoss: 1000,
+      existingExposure: 0,
+      accountTier: AdaptiveAccountTier.mini,
+      riskStyle: AdaptiveRiskStyle.aggressive,
+    );
+
+    expect(plan.valid, isTrue);
+    expect(plan.preferredSide, 'none');
+    expect(plan.posture, AdaptivePosture.entryOnly);
+    expect(plan.usableRisk, 500);
+    expect(plan.unusedRisk, 500);
+    expect(plan.buy, isNotNull);
+    expect(plan.sell, isNotNull);
+  });
 }
 
 Analysis _analysis() => $Analysis(

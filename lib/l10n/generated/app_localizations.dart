@@ -908,13 +908,13 @@ abstract class AppLocalizations {
   /// No description provided for @historyPageTitle.
   ///
   /// In en, this message translates to:
-  /// **'Analysis History'**
+  /// **'History & Analysis Performance'**
   String get historyPageTitle;
 
   /// No description provided for @historyTotalAnalyses.
   ///
   /// In en, this message translates to:
-  /// **'{count} saved analyses'**
+  /// **'{count} analyses total'**
   String historyTotalAnalyses(int count);
 
   /// No description provided for @profile.
@@ -922,6 +922,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Profile'**
   String get profile;
+
+  /// No description provided for @profilePrivacySecurity.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy & Security'**
+  String get profilePrivacySecurity;
+
+  /// No description provided for @profilePrivacySecuritySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage privacy and account deletion'**
+  String get profilePrivacySecuritySubtitle;
+
+  /// No description provided for @profileMyAlerts.
+  ///
+  /// In en, this message translates to:
+  /// **'My Alerts'**
+  String get profileMyAlerts;
+
+  /// No description provided for @profileMyAlertsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'View and manage your price alerts.'**
+  String get profileMyAlertsSubtitle;
+
+  /// No description provided for @profileNotificationSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification Settings'**
+  String get profileNotificationSettings;
+
+  /// No description provided for @profileNotificationSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose push, notification types, and daily summaries.'**
+  String get profileNotificationSettingsSubtitle;
+
+  /// No description provided for @profileAnalysisCredits.
+  ///
+  /// In en, this message translates to:
+  /// **'Analysis Credits'**
+  String get profileAnalysisCredits;
 
   /// No description provided for @account.
   ///
@@ -1442,7 +1484,7 @@ abstract class AppLocalizations {
   /// No description provided for @performanceByInstrument.
   ///
   /// In en, this message translates to:
-  /// **'By instrument'**
+  /// **'Performance by instrument'**
   String get performanceByInstrument;
 
   /// No description provided for @performanceBySession.
@@ -3554,7 +3596,7 @@ abstract class AppLocalizations {
   /// No description provided for @searchInstrumentOrNote.
   ///
   /// In en, this message translates to:
-  /// **'Search instruments or notes'**
+  /// **'Search notes, instrument, AI reasoning…'**
   String get searchInstrumentOrNote;
 
   /// No description provided for @clearSearch.
@@ -3680,7 +3722,7 @@ abstract class AppLocalizations {
   /// No description provided for @historySummary.
   ///
   /// In en, this message translates to:
-  /// **'History summary'**
+  /// **'Summary'**
   String get historySummary;
 
   /// No description provided for @historyListTab.
@@ -3688,6 +3730,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'History'**
   String get historyListTab;
+
+  /// No description provided for @historyFiltersButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get historyFiltersButton;
+
+  /// No description provided for @historyMetricTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total analyses'**
+  String get historyMetricTotal;
+
+  /// No description provided for @historyMetricValid.
+  ///
+  /// In en, this message translates to:
+  /// **'Still valid'**
+  String get historyMetricValid;
+
+  /// No description provided for @historyMetricInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid'**
+  String get historyMetricInvalid;
+
+  /// No description provided for @historyInsightConsistent.
+  ///
+  /// In en, this message translates to:
+  /// **'Most consistent timeframe'**
+  String get historyInsightConsistent;
+
+  /// No description provided for @historyInsightExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Most often expired'**
+  String get historyInsightExpired;
+
+  /// No description provided for @historyInsightSl.
+  ///
+  /// In en, this message translates to:
+  /// **'Most SL hits'**
+  String get historyInsightSl;
+
+  /// No description provided for @historyNeedMoreSamples.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough samples yet'**
+  String get historyNeedMoreSamples;
+
+  /// No description provided for @historyInstrumentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select an instrument to focus timeframe performance.'**
+  String get historyInstrumentHint;
+
+  /// No description provided for @historyOtherInstrumentsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Combined history for instruments outside the four core products.'**
+  String get historyOtherInstrumentsHint;
+
+  /// No description provided for @historyViewHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'View history'**
+  String get historyViewHistory;
+
+  /// No description provided for @historyTimeframePerformance.
+  ///
+  /// In en, this message translates to:
+  /// **'Performance by timeframe'**
+  String get historyTimeframePerformance;
+
+  /// No description provided for @historyRateExplainer.
+  ///
+  /// In en, this message translates to:
+  /// **'Win rate compares TP vs TP + SL. Expired setups are included only in completion rate.'**
+  String get historyRateExplainer;
+
+  /// No description provided for @historySampleShort.
+  ///
+  /// In en, this message translates to:
+  /// **'sample'**
+  String get historySampleShort;
+
+  /// No description provided for @historySampleCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} sample'**
+  String historySampleCount(int count);
+
+  /// No description provided for @historySamplesNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Need {remaining} more ({have}/{need})'**
+  String historySamplesNeeded(int remaining, int have, int need);
+
+  /// No description provided for @historyPageStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Page {page} of {pages}'**
+  String historyPageStatus(int page, int pages);
+
+  /// No description provided for @historyRangeStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing {start}–{end} of {total}'**
+  String historyRangeStatus(int start, int end, int total);
+
+  /// No description provided for @historyPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous'**
+  String get historyPrevious;
+
+  /// No description provided for @historyNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get historyNext;
+
+  /// No description provided for @historyReanalyze.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-analyze'**
+  String get historyReanalyze;
+
+  /// No description provided for @historyOutcomePending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get historyOutcomePending;
+
+  /// No description provided for @historyOutcomeTp1.
+  ///
+  /// In en, this message translates to:
+  /// **'TP1 Hit'**
+  String get historyOutcomeTp1;
+
+  /// No description provided for @historyOutcomeTp2.
+  ///
+  /// In en, this message translates to:
+  /// **'TP2 Hit'**
+  String get historyOutcomeTp2;
+
+  /// No description provided for @historyOutcomeSl.
+  ///
+  /// In en, this message translates to:
+  /// **'SL Hit'**
+  String get historyOutcomeSl;
+
+  /// No description provided for @historyMarketRanging.
+  ///
+  /// In en, this message translates to:
+  /// **'Ranging'**
+  String get historyMarketRanging;
 
   /// No description provided for @timeframePerformance.
   ///
@@ -4931,6 +5129,18 @@ abstract class AppLocalizations {
   /// **'Credit balance'**
   String get creditBalance;
 
+  /// No description provided for @analysisCreditsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Credits are used automatically when your free analysis quota has run out.'**
+  String get analysisCreditsDescription;
+
+  /// No description provided for @mobileCreditPurchaseUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit purchases are currently unavailable in the mobile app.'**
+  String get mobileCreditPurchaseUnavailable;
+
   /// No description provided for @creditBalanceFailed.
   ///
   /// In en, this message translates to:
@@ -4972,6 +5182,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose a top-up amount'**
   String get topUpChooseAmount;
+
+  /// No description provided for @topUpChoosePackageFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a top-up package first.'**
+  String get topUpChoosePackageFirst;
+
+  /// No description provided for @topUpPayNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay now'**
+  String get topUpPayNow;
+
+  /// No description provided for @topUpPaymentMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose payment method'**
+  String get topUpPaymentMethod;
+
+  /// No description provided for @topUpVirtualAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Virtual Account (Automatic)'**
+  String get topUpVirtualAccount;
+
+  /// No description provided for @topUpVirtualAccountDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank transfer. Credits are added automatically after payment is confirmed.'**
+  String get topUpVirtualAccountDescription;
+
+  /// No description provided for @topUpVirtualAccountFee.
+  ///
+  /// In en, this message translates to:
+  /// **'{fee} admin fee. Total charged {total}.'**
+  String topUpVirtualAccountFee(String fee, String total);
+
+  /// No description provided for @topUpQrisDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan with any e-wallet or mobile banking app. Credits are added automatically after confirmation.'**
+  String get topUpQrisDescription;
+
+  /// No description provided for @topUpNoAdminFee.
+  ///
+  /// In en, this message translates to:
+  /// **'No admin fee'**
+  String get topUpNoAdminFee;
+
+  /// No description provided for @topUpCheckoutFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create a payment session. Try again.'**
+  String get topUpCheckoutFailed;
+
+  /// No description provided for @topUpResumePayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume payment'**
+  String get topUpResumePayment;
 
   /// No description provided for @topUpContinuePayment.
   ///
@@ -6086,7 +6356,7 @@ abstract class AppLocalizations {
   /// No description provided for @guideQuickStartHint.
   ///
   /// In en, this message translates to:
-  /// **'Three guides to understand the core workflow.'**
+  /// **'Begin with the most important workflows.'**
   String get guideQuickStartHint;
 
   /// No description provided for @guideSubtitle.
@@ -6383,6 +6653,18 @@ abstract class AppLocalizations {
   /// **'This calculation applies only to intraday (day trade) positions; overnight positions are not covered.'**
   String get adaptiveIntradayOnly;
 
+  /// No description provided for @theoreticalMarginCapacity.
+  ///
+  /// In en, this message translates to:
+  /// **'Theoretical margin capacity'**
+  String get theoreticalMarginCapacity;
+
+  /// No description provided for @theoreticalMarginCapacityValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to {lot} lot per position before the complete plan\'s Stop Loss and risk limits are applied.'**
+  String theoreticalMarginCapacityValue(String lot);
+
   /// No description provided for @analysisCandleSnapshotFetched.
   ///
   /// In en, this message translates to:
@@ -6562,6 +6844,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Plan ready to review'**
   String get planReadyToReview;
+
+  /// No description provided for @conditionalScenarioNotActionable.
+  ///
+  /// In en, this message translates to:
+  /// **'Conditional scenario · not actionable now'**
+  String get conditionalScenarioNotActionable;
+
+  /// No description provided for @adaptiveWaitDecisionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Market direction is unconfirmed. Wait for alignment; do not enter the opposite side.'**
+  String get adaptiveWaitDecisionBody;
+
+  /// No description provided for @hardLossMaximum.
+  ///
+  /// In en, this message translates to:
+  /// **'Hard loss maximum'**
+  String get hardLossMaximum;
+
+  /// No description provided for @entryDirectionUnconfirmedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Entry direction is unconfirmed'**
+  String get entryDirectionUnconfirmedTitle;
+
+  /// No description provided for @entryDirectionUnconfirmedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Conditional scenario only—not actionable now. Wait until the saved analysis and current market direction support this side; copying as an entry plan is disabled.'**
+  String get entryDirectionUnconfirmedBody;
+
+  /// No description provided for @entryDirectionUnconfirmedNextAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Next action: wait or skip. Do not use larger financial limits to work around the directional safeguard.'**
+  String get entryDirectionUnconfirmedNextAction;
+
+  /// No description provided for @referenceNumbersOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Reference numbers only—the current choice is blocked or waiting for confirmation.'**
+  String get referenceNumbersOnly;
 
   /// No description provided for @answerAtGlance.
   ///

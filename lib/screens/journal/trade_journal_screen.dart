@@ -10,6 +10,7 @@ import '../../l10n/l10n.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/product_state_view.dart';
 import '../analysis/analysis_detail_screen.dart';
+import '../trader_mirror/trader_mirror_screen.dart';
 
 class TradeJournalScreen extends StatefulWidget {
   const TradeJournalScreen({super.key, this.analysis, this.initialEntry});
@@ -244,11 +245,21 @@ class _TradeJournalScreenState extends State<TradeJournalScreen> {
       );
     }
     return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.tradeJournal)),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _mutating ? null : () => _openForm(),
-        icon: const Icon(Icons.add),
-        label: Text(context.l10n.add),
+      appBar: AppBar(
+        title: Text(context.l10n.tradeJournal),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const TraderMirrorScreen()),
+            ),
+            child: Text(context.l10n.traderMirror),
+          ),
+          IconButton(
+            tooltip: context.l10n.addJournal,
+            onPressed: _mutating ? null : () => _openForm(),
+            icon: const Icon(Icons.add_rounded),
+          ),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: _load,
@@ -300,6 +311,15 @@ class _TradeJournalScreenState extends State<TradeJournalScreen> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        Text(
+                          context.l10n.tradeJournalDescription,
+                          style: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 14),
                         if (_stats case final stats?)
                           _JournalStatsCard(stats: stats),
                         DropdownButtonFormField<String?>(

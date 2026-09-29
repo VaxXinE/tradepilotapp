@@ -9,7 +9,7 @@ import 'package:built_value/serializer.dart';
 
 part 'native_push_test_result.g.dart';
 
-/// Result of submitting a native push test to FCM. `accepted` confirms provider acceptance only; it is not proof that an OS notification was displayed on a device.
+/// Result of submitting a native push test to FCM. accepted confirms provider acceptance only; it is not proof that an OS notification was displayed on a device.
 ///
 /// Properties:
 /// * [targeted] - Number of registered mobile device tokens targeted

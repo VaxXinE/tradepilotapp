@@ -10,18 +10,12 @@ class _$UserQuota extends UserQuota {
   @override
   final int id;
   @override
-  final int customQuotaPerHour;
-  @override
-  final int customQuotaPerDay;
+  final int? customQuotaPerDay;
 
   factory _$UserQuota([void Function(UserQuotaBuilder)? updates]) =>
       (UserQuotaBuilder()..update(updates))._build();
 
-  _$UserQuota._(
-      {required this.id,
-      required this.customQuotaPerHour,
-      required this.customQuotaPerDay})
-      : super._();
+  _$UserQuota._({required this.id, this.customQuotaPerDay}) : super._();
   @override
   UserQuota rebuild(void Function(UserQuotaBuilder) updates) =>
       (toBuilder()..update(updates)).build();
@@ -34,7 +28,6 @@ class _$UserQuota extends UserQuota {
     if (identical(other, this)) return true;
     return other is UserQuota &&
         id == other.id &&
-        customQuotaPerHour == other.customQuotaPerHour &&
         customQuotaPerDay == other.customQuotaPerDay;
   }
 
@@ -42,7 +35,6 @@ class _$UserQuota extends UserQuota {
   int get hashCode {
     var _$hash = 0;
     _$hash = $jc(_$hash, id.hashCode);
-    _$hash = $jc(_$hash, customQuotaPerHour.hashCode);
     _$hash = $jc(_$hash, customQuotaPerDay.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
@@ -52,7 +44,6 @@ class _$UserQuota extends UserQuota {
   String toString() {
     return (newBuiltValueToStringHelper(r'UserQuota')
           ..add('id', id)
-          ..add('customQuotaPerHour', customQuotaPerHour)
           ..add('customQuotaPerDay', customQuotaPerDay))
         .toString();
   }
@@ -64,11 +55,6 @@ class UserQuotaBuilder implements Builder<UserQuota, UserQuotaBuilder> {
   int? _id;
   int? get id => _$this._id;
   set id(int? id) => _$this._id = id;
-
-  int? _customQuotaPerHour;
-  int? get customQuotaPerHour => _$this._customQuotaPerHour;
-  set customQuotaPerHour(int? customQuotaPerHour) =>
-      _$this._customQuotaPerHour = customQuotaPerHour;
 
   int? _customQuotaPerDay;
   int? get customQuotaPerDay => _$this._customQuotaPerDay;
@@ -83,7 +69,6 @@ class UserQuotaBuilder implements Builder<UserQuota, UserQuotaBuilder> {
     final $v = _$v;
     if ($v != null) {
       _id = $v.id;
-      _customQuotaPerHour = $v.customQuotaPerHour;
       _customQuotaPerDay = $v.customQuotaPerDay;
       _$v = null;
     }
@@ -107,10 +92,7 @@ class UserQuotaBuilder implements Builder<UserQuota, UserQuotaBuilder> {
     final _$result = _$v ??
         _$UserQuota._(
           id: BuiltValueNullFieldError.checkNotNull(id, r'UserQuota', 'id'),
-          customQuotaPerHour: BuiltValueNullFieldError.checkNotNull(
-              customQuotaPerHour, r'UserQuota', 'customQuotaPerHour'),
-          customQuotaPerDay: BuiltValueNullFieldError.checkNotNull(
-              customQuotaPerDay, r'UserQuota', 'customQuotaPerDay'),
+          customQuotaPerDay: customQuotaPerDay,
         );
     replace(_$result);
     return _$result;

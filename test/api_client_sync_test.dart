@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:built_value/built_value.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -181,6 +180,23 @@ void main() {
     expect(thinBanner.recentHitRate, isNull);
   });
 
+  test('analysis requests use a two-minute receive timeout', () async {
+    final adapter = _RequestOptionsAdapter();
+    final dio = Dio(BaseOptions(receiveTimeout: const Duration(seconds: 3)))
+      ..httpClientAdapter = adapter;
+    final client = TradePilotClient(
+      baseUrl: 'https://example.com/api',
+      dio: dio,
+    );
+
+    await expectLater(
+      client.dio.post<void>('/analyses'),
+      throwsA(isA<DioException>()),
+    );
+
+    expect(adapter.options?.receiveTimeout, const Duration(minutes: 2));
+  });
+
   test('analysis requests omit the retired timeframe-switch hint', () {
     final body = CreateAnalysisBody(
       (builder) => builder
@@ -236,14 +252,13 @@ void main() {
       'reviewNote': null,
       'creditsGranted': null,
       'createdAt': '2026-09-08T10:00:00.000Z',
+      'paymentProvider': 'doku',
+      'dokuPaymentUrl': 'https://pay.example.com/7',
     });
     expect(topup?.status, TopupRequestStatus.pending);
     expect(topup?.reviewNote, isNull);
 
-    expect(
-      () => CreateTopupRequestBody((builder) => builder.amountRupiah = 5000),
-      throwsA(isA<BuiltValueNullFieldError>()),
-    );
+    expect(topup?.paymentProvider, TopupRequestPaymentProviderEnum.doku);
   });
 
   test('top-up endpoints round-trip through the generated TopupsApi', () async {
@@ -252,22 +267,21 @@ void main() {
     client.dio.httpClientAdapter = adapter;
 
     final config = await client.topups.getTopupConfig();
-    expect(config.data?.rupiahPerCredit, 5000);
-    expect(config.data?.qrisImageUrl, 'https://cdn.example.com/qris.png');
+    expect(config.data?.packages, hasLength(2));
+    expect(config.data?.packages.first.credits, 2);
 
     final balance = await client.topups.getCreditBalance();
     expect(balance.data?.balance, 10);
 
-    final created = await client.topups.createTopupRequest(
-      createTopupRequestBody: CreateTopupRequestBody(
+    final created = await client.topups.createDokuCheckout(
+      createDokuCheckoutBody: CreateDokuCheckoutBody(
         (builder) => builder
           ..amountRupiah = 50000
-          ..paymentReferenceNote = 'BCA 1234'
-          ..proofObjectPath = 'topups/proof-1.jpg',
+          ..method = CreateDokuCheckoutBodyMethodEnum.qris,
       ),
     );
-    expect(created.data?.status, TopupRequestStatus.pending);
-    expect(created.data?.creditsRequested, 10);
+    expect(created.data?.id, 99);
+    expect(created.data?.paymentUrl, 'https://pay.example.com/99');
 
     // History goes through the serializer registry, so a missing
     // ListBuilder<TopupRequest> factory would only fail here.
@@ -283,7 +297,7 @@ void main() {
       [
         'GET /topups/config',
         'GET /topups/balance',
-        'POST /topups',
+        'POST /topups/doku/checkout',
         'GET /topups/mine',
       ],
     );
@@ -292,7 +306,7 @@ void main() {
       adapter.requests[2].data as Map,
     );
     expect(createBody['amountRupiah'], 50000);
-    expect(createBody['proofObjectPath'], 'topups/proof-1.jpg');
+    expect(createBody['method'], 'qris');
 
     final historyQuery = adapter.requests.last.queryParameters;
     expect(historyQuery['page'], 1);
@@ -349,6 +363,8 @@ const _pendingTopup = {
   'reviewNote': null,
   'creditsGranted': null,
   'createdAt': '2026-09-08T10:00:00.000Z',
+  'paymentProvider': 'doku',
+  'dokuPaymentUrl': 'https://pay.example.com/7',
 };
 
 const _approvedTopup = {
@@ -365,6 +381,8 @@ const _approvedTopup = {
   'reviewNote': 'Verified',
   'creditsGranted': 10,
   'createdAt': '2026-09-07T09:00:00.000Z',
+  'paymentProvider': 'doku',
+  'dokuPaymentUrl': null,
 };
 
 class _TopupsAdapter implements HttpClientAdapter {
@@ -380,11 +398,27 @@ class _TopupsAdapter implements HttpClientAdapter {
 
     final body = switch (options.path) {
       '/topups/config' => {
-        'rupiahPerCredit': 5000,
-        'qrisImageUrl': 'https://cdn.example.com/qris.png',
+        'packages': [
+          {
+            'amountRupiah': 10000,
+            'credits': 2,
+            'dokuMethods': ['qris'],
+            'adminFeeRupiah': 0,
+          },
+          {
+            'amountRupiah': 50000,
+            'credits': 12,
+            'dokuMethods': ['va', 'qris'],
+            'adminFeeRupiah': 4000,
+          },
+        ],
       },
       '/topups/balance' => {'balance': 10},
-      '/topups' => _pendingTopup,
+      '/topups/doku/checkout' => {
+        'id': 99,
+        'paymentUrl': 'https://pay.example.com/99',
+        'expiresAt': '2026-09-08T11:00:00.000Z',
+      },
       '/topups/mine' => {
         'requests': [_pendingTopup, _approvedTopup],
         'total': 2,
@@ -401,11 +435,28 @@ class _TopupsAdapter implements HttpClientAdapter {
 
     return ResponseBody.fromString(
       jsonEncode(body),
-      options.path == '/topups' ? 201 : 200,
+      options.path == '/topups/doku/checkout' ? 201 : 200,
       headers: {
         Headers.contentTypeHeader: [Headers.jsonContentType],
       },
     );
+  }
+
+  @override
+  void close({bool force = false}) {}
+}
+
+class _RequestOptionsAdapter implements HttpClientAdapter {
+  RequestOptions? options;
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    this.options = options;
+    return ResponseBody.fromString('', 500);
   }
 
   @override

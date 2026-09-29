@@ -117,7 +117,16 @@ class NativePushApi {
     );
   }
 
-  /// Send a sample FCM push to the caller's registered mobile devices
+  /// Send a sample FCM push to the caller&#39;s own registered mobile devices
+  /// Native-channel equivalent of POST /push/test. Sends one sample notification through the exact &#x60;sendNativePushToUser&#x60; code path production uses, so a passing result is real proof the FCM HTTP v1 wiring works. Authenticated + per-user rate limited. Does not accept a device token or a URL from the request body. Unlike /push/test, the outcome reflects FCM&#39;s per-message acceptance — see NativePushTestResult.
+  ///
+  /// Parameters:
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
   ///
   /// Returns a [Future] containing a [Response] with a [NativePushTestResult] as data
   /// Throws [DioException] if API call or serialization fails

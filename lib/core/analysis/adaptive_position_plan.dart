@@ -317,7 +317,9 @@ AdaptiveRecommendation buildAdaptiveRecommendation({
       reasons.add('technical_mixed');
     } else {
       final technicalSide = buy > sell ? 'buy' : 'sell';
-      if (preferred != 'both' && preferred != technicalSide) {
+      if (preferred == 'none') {
+        // A technical lean cannot override a saved Wait decision.
+      } else if (preferred != 'both' && preferred != technicalSide) {
         conflict = true;
       } else {
         preferred = technicalSide;

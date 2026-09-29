@@ -106,6 +106,19 @@ void main() {
     expect(find.byTooltip('Reanalyze'), findsNothing);
   });
 
+  testWidgets('header uses the resolved analysis outcome', (tester) async {
+    await _pumpDetail(
+      tester,
+      _analysis(
+        AnalysisModeEnum.beginner,
+        outcomeStatus: AnalysisOutcomeStatusEnum.slHit,
+      ),
+    );
+
+    expect(find.text('Stop Loss Hit'), findsWidgets);
+    expect(find.text('Awaiting result'), findsNothing);
+  });
+
   testWidgets('market context summary follows the indicator counts', (
     tester,
   ) async {
@@ -176,6 +189,53 @@ void main() {
     expect(find.text('Why this analysis'), findsOneWidget);
     expect(find.text('Print / save PDF'), findsOneWidget);
   });
+
+  testWidgets('adaptive details counts the saved invalidation rules', (
+    tester,
+  ) async {
+    await _pumpDetail(
+      tester,
+      _analysis(
+        AnalysisModeEnum.beginner,
+        tradePlan: _tradePlan(),
+        failureConditions: '• Break support 4100\n• Close above EMA9',
+      ),
+    );
+    final details = find.byKey(const ValueKey('adaptive-plan-details'));
+    await _reveal(tester, details, find.byType(Scrollable).first);
+
+    expect(
+      find.descendant(of: details, matching: find.text('2')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets(
+    'adaptive details reads Pro invalidation from invalidationConditions',
+    (tester) async {
+      await _pumpDetail(
+        tester,
+        _analysis(
+          AnalysisModeEnum.pro,
+          tradePlan: _tradePlan(),
+          invalidationConditions: '• Break support 4100\n• Close above EMA9',
+        ),
+      );
+      final details = find.byKey(const ValueKey('adaptive-plan-details'));
+      await _reveal(tester, details, find.byType(Scrollable).first);
+
+      expect(
+        find.descendant(of: details, matching: find.text('2')),
+        findsOneWidget,
+      );
+
+      await tester.tap(details);
+      await tester.pumpAndSettle();
+
+      expect(find.text('This analysis becomes invalid if:'), findsOneWidget);
+      expect(find.textContaining('Break support 4100'), findsOneWidget);
+    },
+  );
 
   testWidgets('analysis summary remains usable with large text', (
     tester,
@@ -317,10 +377,36 @@ void main() {
 
       await _reveal(
         tester,
+        find.byKey(const ValueKey('analysis-market-snapshot')),
+        scrollable,
+      );
+      final marketOffset = tester
+          .state<ScrollableState>(scrollable)
+          .position
+          .pixels;
+
+      await _reveal(tester, find.text('Adaptive Trading Plan'), scrollable);
+      final adaptiveOffset = tester
+          .state<ScrollableState>(scrollable)
+          .position
+          .pixels;
+
+      await _reveal(
+        tester,
         find.byKey(const ValueKey('analysis-technical-indicators')),
         scrollable,
       );
       final technicalOffset = tester
+          .state<ScrollableState>(scrollable)
+          .position
+          .pixels;
+
+      await _reveal(
+        tester,
+        find.byKey(const ValueKey('analysis-level-alert-card')),
+        scrollable,
+      );
+      final alertsOffset = tester
           .state<ScrollableState>(scrollable)
           .position
           .pixels;
@@ -333,8 +419,11 @@ void main() {
 
       expect(levelsOffset, greaterThan(chartOffset));
       expect(fundamentalOffset, greaterThan(levelsOffset));
-      expect(technicalOffset, greaterThan(fundamentalOffset));
-      expect(toolsOffset, greaterThan(technicalOffset));
+      expect(marketOffset, greaterThan(fundamentalOffset));
+      expect(adaptiveOffset, greaterThan(marketOffset));
+      expect(technicalOffset, greaterThan(adaptiveOffset));
+      expect(alertsOffset, greaterThan(technicalOffset));
+      expect(toolsOffset, greaterThan(alertsOffset));
     },
   );
 
@@ -371,113 +460,117 @@ void main() {
     expect(learnButton, findsOneWidget);
   });
 
-  testWidgets('invalidation, opportunity, and risk are collapsed by default', (
-    tester,
-  ) async {
-    final analysis = _analysis(
-      AnalysisModeEnum.beginner,
-      failureConditions: 'Invalidation details',
-      opportunity: 'Opportunity details',
-      risk: 'Risk details',
-    );
-    await _pumpDetail(tester, analysis);
-
-    for (final entry in const [
-      (ValueKey('analysis-invalidation'), 'Invalidation details'),
-      (ValueKey('analysis-opportunity'), 'Opportunity details'),
-      (ValueKey('analysis-risk'), 'Risk details'),
-    ]) {
-      final card = find.byKey(entry.$1);
-      await _reveal(tester, card, find.byType(Scrollable).first);
-      expect(find.text(entry.$2), findsNothing);
-      await tester.tap(card);
-      await tester.pumpAndSettle();
-      expect(find.text(entry.$2), findsOneWidget);
-    }
-  });
-
-  testWidgets('execution insight matches the three web scenarios', (
-    tester,
-  ) async {
-    await _pumpDetail(tester, _analysis(AnalysisModeEnum.beginner));
-
-    final insight = find.byKey(const ValueKey('analysis-execution-insight'));
-    await _reveal(tester, insight, find.byType(Scrollable).first);
-    expect(find.text('If Scenario A continues'), findsNothing);
-
-    await tester.tap(insight);
-    await tester.pumpAndSettle();
-
-    expect(find.text('If Scenario A continues'), findsOneWidget);
-    expect(find.textContaining('nearest resistance area'), findsOneWidget);
-    expect(find.text('If Scenario B plays out'), findsOneWidget);
-    expect(find.text('If waiting is the better choice'), findsOneWidget);
-  });
-
-  testWidgets('analysis scenarios share one collapsed card', (tester) async {
-    await _pumpDetail(
-      tester,
-      _analysis(
-        AnalysisModeEnum.beginner,
-        mainScenario: 'Primary scenario details',
-        alternativeScenario: 'Alternative scenario details',
-      ),
-    );
-
-    final scenarios = find.byKey(const ValueKey('analysis-scenarios'));
-    await _reveal(tester, scenarios, find.byType(Scrollable).first);
-    expect(find.text('Primary scenario details'), findsNothing);
-
-    await tester.tap(scenarios);
-    await tester.pumpAndSettle();
-
-    expect(find.text('Primary scenario details'), findsOneWidget);
-    expect(find.text('Alternative scenario details'), findsOneWidget);
-    expect(find.text('Scenario C — Wait / No Position'), findsOneWidget);
-  });
-
-  testWidgets('pro analysis factors share one collapsed card', (tester) async {
-    await _pumpDetail(
-      tester,
-      _analysis(
-        AnalysisModeEnum.pro,
-        technicalDrivers: 'Technical factor details',
-        fundamentalDrivers: 'Fundamental factor details',
-        marketContext: 'Market context details',
-      ),
-    );
-
-    expect(
-      find.byKey(const ValueKey('analysis-evidence-summary')),
-      findsNothing,
-    );
-
-    final details = find.byKey(const ValueKey('analysis-pro-details'));
-    final scrollable = find.byType(Scrollable).first;
-    await _reveal(
-      tester,
-      find.byKey(const ValueKey('analysis-scenarios')),
-      scrollable,
-    );
-    final scenariosOffset = tester
-        .state<ScrollableState>(scrollable)
-        .position
-        .pixels;
-    await _reveal(tester, details, scrollable);
-    final detailsOffset = tester
-        .state<ScrollableState>(scrollable)
-        .position
-        .pixels;
-    expect(detailsOffset, greaterThan(scenariosOffset));
-    expect(find.text('Technical factor details'), findsNothing);
-
-    await tester.tap(details);
-    await tester.pumpAndSettle();
-
-    expect(find.text('Technical factor details'), findsOneWidget);
-    expect(find.text('Fundamental factor details'), findsOneWidget);
-    expect(find.text('Market context details'), findsOneWidget);
-  });
+  // Invalidation, Opportunity/Risk, Scenarios, Pro details, dan Execution
+  // insight tidak lagi dirender (lihat komentar di reading order pada
+  // analysis_detail_screen.dart) karena tidak ada padanannya di web, jadi
+  // test yang mengecek card-card ini juga dinonaktifkan.
+  // testWidgets('invalidation, opportunity, and risk are collapsed by default', (
+  //   tester,
+  // ) async {
+  //   final analysis = _analysis(
+  //     AnalysisModeEnum.beginner,
+  //     failureConditions: 'Invalidation details',
+  //     opportunity: 'Opportunity details',
+  //     risk: 'Risk details',
+  //   );
+  //   await _pumpDetail(tester, analysis);
+  //
+  //   for (final entry in const [
+  //     (ValueKey('analysis-invalidation'), 'Invalidation details'),
+  //     (ValueKey('analysis-opportunity'), 'Opportunity details'),
+  //     (ValueKey('analysis-risk'), 'Risk details'),
+  //   ]) {
+  //     final card = find.byKey(entry.$1);
+  //     await _reveal(tester, card, find.byType(Scrollable).first);
+  //     expect(find.text(entry.$2), findsNothing);
+  //     await tester.tap(card);
+  //     await tester.pumpAndSettle();
+  //     expect(find.text(entry.$2), findsOneWidget);
+  //   }
+  // });
+  //
+  // testWidgets('execution insight matches the three web scenarios', (
+  //   tester,
+  // ) async {
+  //   await _pumpDetail(tester, _analysis(AnalysisModeEnum.beginner));
+  //
+  //   final insight = find.byKey(const ValueKey('analysis-execution-insight'));
+  //   await _reveal(tester, insight, find.byType(Scrollable).first);
+  //   expect(find.text('If Scenario A continues'), findsNothing);
+  //
+  //   await tester.tap(insight);
+  //   await tester.pumpAndSettle();
+  //
+  //   expect(find.text('If Scenario A continues'), findsOneWidget);
+  //   expect(find.textContaining('nearest resistance area'), findsOneWidget);
+  //   expect(find.text('If Scenario B plays out'), findsOneWidget);
+  //   expect(find.text('If waiting is the better choice'), findsOneWidget);
+  // });
+  //
+  // testWidgets('analysis scenarios share one collapsed card', (tester) async {
+  //   await _pumpDetail(
+  //     tester,
+  //     _analysis(
+  //       AnalysisModeEnum.beginner,
+  //       mainScenario: 'Primary scenario details',
+  //       alternativeScenario: 'Alternative scenario details',
+  //     ),
+  //   );
+  //
+  //   final scenarios = find.byKey(const ValueKey('analysis-scenarios'));
+  //   await _reveal(tester, scenarios, find.byType(Scrollable).first);
+  //   expect(find.text('Primary scenario details'), findsNothing);
+  //
+  //   await tester.tap(scenarios);
+  //   await tester.pumpAndSettle();
+  //
+  //   expect(find.text('Primary scenario details'), findsOneWidget);
+  //   expect(find.text('Alternative scenario details'), findsOneWidget);
+  //   expect(find.text('Scenario C — Wait / No Position'), findsOneWidget);
+  // });
+  //
+  // testWidgets('pro analysis factors share one collapsed card', (tester) async {
+  //   await _pumpDetail(
+  //     tester,
+  //     _analysis(
+  //       AnalysisModeEnum.pro,
+  //       technicalDrivers: 'Technical factor details',
+  //       fundamentalDrivers: 'Fundamental factor details',
+  //       marketContext: 'Market context details',
+  //     ),
+  //   );
+  //
+  //   expect(
+  //     find.byKey(const ValueKey('analysis-evidence-summary')),
+  //     findsNothing,
+  //   );
+  //
+  //   final details = find.byKey(const ValueKey('analysis-pro-details'));
+  //   final scrollable = find.byType(Scrollable).first;
+  //   await _reveal(
+  //     tester,
+  //     find.byKey(const ValueKey('analysis-scenarios')),
+  //     scrollable,
+  //   );
+  //   final scenariosOffset = tester
+  //       .state<ScrollableState>(scrollable)
+  //       .position
+  //       .pixels;
+  //   await _reveal(tester, details, scrollable);
+  //   final detailsOffset = tester
+  //       .state<ScrollableState>(scrollable)
+  //       .position
+  //       .pixels;
+  //   expect(detailsOffset, greaterThan(scenariosOffset));
+  //   expect(find.text('Technical factor details'), findsNothing);
+  //
+  //   await tester.tap(details);
+  //   await tester.pumpAndSettle();
+  //
+  //   expect(find.text('Technical factor details'), findsOneWidget);
+  //   expect(find.text('Fundamental factor details'), findsOneWidget);
+  //   expect(find.text('Market context details'), findsOneWidget);
+  // });
 
   testWidgets('confidence reason is visible in the directional bias card', (
     tester,
@@ -918,6 +1011,7 @@ Analysis _analysis(
   int? id,
   String timeframe = '1h',
   String? failureConditions,
+  String? invalidationConditions,
   String? opportunity,
   String? risk,
   String? mainScenario,
@@ -933,6 +1027,7 @@ Analysis _analysis(
   int? techBuyCount,
   int? techSellCount,
   int? techNeutralCount,
+  AnalysisOutcomeStatusEnum? outcomeStatus,
 }) => $Analysis(
   (builder) => builder
     ..id = id ?? (mode == AnalysisModeEnum.pro ? 2 : 1)
@@ -943,6 +1038,7 @@ Analysis _analysis(
     ..tradingBias = 'bearish'
     ..riskLevel = 'medium'
     ..failureConditions = failureConditions
+    ..invalidationConditions = invalidationConditions
     ..opportunity = opportunity
     ..risk = risk
     ..mainScenario = mainScenario
@@ -958,6 +1054,7 @@ Analysis _analysis(
     ..techBuyCount = techBuyCount
     ..techSellCount = techSellCount
     ..techNeutralCount = techNeutralCount
+    ..outcomeStatus = outcomeStatus
     ..validUntil = DateTime.utc(2030)
     ..createdAt = DateTime.utc(2026),
 );

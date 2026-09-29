@@ -83,13 +83,11 @@ class _$FundamentalCalendarEventSerializer
       object.date,
       specifiedType: const FullType(String),
     );
-    if (object.time != null) {
-      yield r'time';
-      yield serializers.serialize(
-        object.time,
-        specifiedType: const FullType.nullable(String),
-      );
-    }
+    yield r'time';
+    yield serializers.serialize(
+      object.time,
+      specifiedType: const FullType.nullable(String),
+    );
     yield r'currency';
     yield serializers.serialize(
       object.currency,
@@ -100,34 +98,26 @@ class _$FundamentalCalendarEventSerializer
       object.event,
       specifiedType: const FullType(String),
     );
-    if (object.impact != null) {
-      yield r'impact';
-      yield serializers.serialize(
-        object.impact,
-        specifiedType: const FullType.nullable(String),
-      );
-    }
-    if (object.actual != null) {
-      yield r'actual';
-      yield serializers.serialize(
-        object.actual,
-        specifiedType: const FullType.nullable(String),
-      );
-    }
-    if (object.forecast != null) {
-      yield r'forecast';
-      yield serializers.serialize(
-        object.forecast,
-        specifiedType: const FullType.nullable(String),
-      );
-    }
-    if (object.previous != null) {
-      yield r'previous';
-      yield serializers.serialize(
-        object.previous,
-        specifiedType: const FullType.nullable(String),
-      );
-    }
+    yield r'impact';
+    yield serializers.serialize(
+      object.impact,
+      specifiedType: const FullType.nullable(String),
+    );
+    yield r'actual';
+    yield serializers.serialize(
+      object.actual,
+      specifiedType: const FullType.nullable(String),
+    );
+    yield r'forecast';
+    yield serializers.serialize(
+      object.forecast,
+      specifiedType: const FullType.nullable(String),
+    );
+    yield r'previous';
+    yield serializers.serialize(
+      object.previous,
+      specifiedType: const FullType.nullable(String),
+    );
   }
 
   @override
@@ -165,7 +155,6 @@ class _$FundamentalCalendarEventSerializer
             value,
             specifiedType: const FullType.nullable(String),
           ) as String?;
-          if (valueDes == null) continue;
           result.time = valueDes;
           break;
         case r'currency':
@@ -187,7 +176,6 @@ class _$FundamentalCalendarEventSerializer
             value,
             specifiedType: const FullType.nullable(String),
           ) as String?;
-          if (valueDes == null) continue;
           result.impact = valueDes;
           break;
         case r'actual':
@@ -195,7 +183,6 @@ class _$FundamentalCalendarEventSerializer
             value,
             specifiedType: const FullType.nullable(String),
           ) as String?;
-          if (valueDes == null) continue;
           result.actual = valueDes;
           break;
         case r'forecast':
@@ -203,7 +190,6 @@ class _$FundamentalCalendarEventSerializer
             value,
             specifiedType: const FullType.nullable(String),
           ) as String?;
-          if (valueDes == null) continue;
           result.forecast = valueDes;
           break;
         case r'previous':
@@ -211,7 +197,6 @@ class _$FundamentalCalendarEventSerializer
             value,
             specifiedType: const FullType.nullable(String),
           ) as String?;
-          if (valueDes == null) continue;
           result.previous = valueDes;
           break;
         default:

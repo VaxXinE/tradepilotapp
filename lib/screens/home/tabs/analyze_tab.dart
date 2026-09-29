@@ -228,10 +228,12 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
     if (!mounted) return;
 
     if (result == null) {
-      setState(() => _analysisSubmitError = analysisProvider.errorMessage);
       final limit = analysisProvider.quotaLimit;
       if (limit != null) {
+        setState(() => _analysisSubmitError = null);
         await showAnalysisQuotaDialog(context, limit);
+      } else {
+        setState(() => _analysisSubmitError = analysisProvider.errorMessage);
       }
       return;
     }

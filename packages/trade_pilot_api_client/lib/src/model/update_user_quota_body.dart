@@ -11,18 +11,13 @@ part 'update_user_quota_body.g.dart';
 /// UpdateUserQuotaBody
 ///
 /// Properties:
-/// * [customQuotaPerHour] - Positive integer to set an override, or null to clear it.
 /// * [customQuotaPerDay] - Positive integer to set an override, or null to clear it.
 @BuiltValue()
 abstract class UpdateUserQuotaBody
     implements Built<UpdateUserQuotaBody, UpdateUserQuotaBodyBuilder> {
   /// Positive integer to set an override, or null to clear it.
-  @BuiltValueField(wireName: r'customQuotaPerHour')
-  int get customQuotaPerHour;
-
-  /// Positive integer to set an override, or null to clear it.
   @BuiltValueField(wireName: r'customQuotaPerDay')
-  int get customQuotaPerDay;
+  int? get customQuotaPerDay;
 
   UpdateUserQuotaBody._();
 
@@ -53,15 +48,10 @@ class _$UpdateUserQuotaBodySerializer
     UpdateUserQuotaBody object, {
     FullType specifiedType = FullType.unspecified,
   }) sync* {
-    yield r'customQuotaPerHour';
-    yield serializers.serialize(
-      object.customQuotaPerHour,
-      specifiedType: const FullType(int),
-    );
     yield r'customQuotaPerDay';
     yield serializers.serialize(
       object.customQuotaPerDay,
-      specifiedType: const FullType(int),
+      specifiedType: const FullType.nullable(int),
     );
   }
 
@@ -88,18 +78,11 @@ class _$UpdateUserQuotaBodySerializer
       final key = serializedList[i] as String;
       final value = serializedList[i + 1];
       switch (key) {
-        case r'customQuotaPerHour':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType(int),
-          ) as int;
-          result.customQuotaPerHour = valueDes;
-          break;
         case r'customQuotaPerDay':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(int),
-          ) as int;
+            specifiedType: const FullType.nullable(int),
+          ) as int?;
           result.customQuotaPerDay = valueDes;
           break;
         default:

@@ -94,27 +94,21 @@ class _$AlertLevelRowSerializer implements PrimitiveSerializer<AlertLevelRow> {
       object.direction,
       specifiedType: const FullType(AlertLevelRowDirectionEnum),
     );
-    if (object.triggeredAt != null) {
-      yield r'triggeredAt';
-      yield serializers.serialize(
-        object.triggeredAt,
-        specifiedType: const FullType.nullable(DateTime),
-      );
-    }
-    if (object.triggeredPrice != null) {
-      yield r'triggeredPrice';
-      yield serializers.serialize(
-        object.triggeredPrice,
-        specifiedType: const FullType.nullable(String),
-      );
-    }
-    if (object.cancelledAt != null) {
-      yield r'cancelledAt';
-      yield serializers.serialize(
-        object.cancelledAt,
-        specifiedType: const FullType.nullable(DateTime),
-      );
-    }
+    yield r'triggeredAt';
+    yield serializers.serialize(
+      object.triggeredAt,
+      specifiedType: const FullType.nullable(DateTime),
+    );
+    yield r'triggeredPrice';
+    yield serializers.serialize(
+      object.triggeredPrice,
+      specifiedType: const FullType.nullable(String),
+    );
+    yield r'cancelledAt';
+    yield serializers.serialize(
+      object.cancelledAt,
+      specifiedType: const FullType.nullable(DateTime),
+    );
   }
 
   @override
@@ -173,7 +167,6 @@ class _$AlertLevelRowSerializer implements PrimitiveSerializer<AlertLevelRow> {
             value,
             specifiedType: const FullType.nullable(DateTime),
           ) as DateTime?;
-          if (valueDes == null) continue;
           result.triggeredAt = valueDes;
           break;
         case r'triggeredPrice':
@@ -181,7 +174,6 @@ class _$AlertLevelRowSerializer implements PrimitiveSerializer<AlertLevelRow> {
             value,
             specifiedType: const FullType.nullable(String),
           ) as String?;
-          if (valueDes == null) continue;
           result.triggeredPrice = valueDes;
           break;
         case r'cancelledAt':
@@ -189,7 +181,6 @@ class _$AlertLevelRowSerializer implements PrimitiveSerializer<AlertLevelRow> {
             value,
             specifiedType: const FullType.nullable(DateTime),
           ) as DateTime?;
-          if (valueDes == null) continue;
           result.cancelledAt = valueDes;
           break;
         default:

@@ -808,13 +808,16 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
         : context.l10n.neutral;
 
     final isExpired = analysis.validUntil.isBefore(DateTime.now());
-    final mainScenario = isPro ? analysis.baseCase : analysis.mainScenario;
-    final alternativeScenario = isPro
-        ? (isBearish ? analysis.bullishScenario : analysis.bearishScenario)
-        : analysis.alternativeScenario;
-    final invalidation = isPro
-        ? analysis.invalidationConditions
-        : analysis.failureConditions;
+    // Dipakai oleh Scenarios/Opportunity/Risk/invalidation yang sekarang
+    // dinonaktifkan di bawah (lihat komentar di reading order) karena tidak
+    // ada padanannya di web.
+    // final mainScenario = isPro ? analysis.baseCase : analysis.mainScenario;
+    // final alternativeScenario = isPro
+    //     ? (isBearish ? analysis.bullishScenario : analysis.bearishScenario)
+    //     : analysis.alternativeScenario;
+    // final invalidation = isPro
+    //     ? analysis.invalidationConditions
+    //     : analysis.failureConditions;
 
     // Saat embedded, detail ini menjadi bagian dari ListView halaman Analisis,
     // jadi ia tidak boleh menggulir (atau menarik-untuk-refresh) sendiri.
@@ -825,8 +828,8 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
           : const AlwaysScrollableScrollPhysics(),
       padding: widget.embedded ? EdgeInsets.zero : const EdgeInsets.all(16),
       // Urutan mengikuti reading order web (Aset/Timeframe -> Bias -> Sinyal
-      // -> Chart -> Saran Level -> Ukuran Posisi -> Alert -> Fundamental ->
-      // Ringkasan Konteks Pasar -> Indikator Teknikal -> panel batal/peluang/
+      // -> Chart -> Saran Level -> Fundamental -> Ringkasan Konteks Pasar ->
+      // Ukuran Posisi -> Indikator Teknikal -> Alert -> panel batal/peluang/
       // risiko/skenario/pro/eksekusi), supaya mobile terasa sama dengan web.
       // Seksi yang cuma ada di mobile (outcome, beginner explainer, catatan
       // konteks pengguna, jurnal, catatan, panduan) ditaruh di ekor, setelah
@@ -901,6 +904,8 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
           ),
           const SizedBox(height: 10),
         ],
+
+        const SizedBox(height: 14),
         _MarketSnapshotCard(
           key: const ValueKey('analysis-market-snapshot'),
           analysis: analysis,
@@ -918,7 +923,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
         ],
 
         if (_technical != null) ...[
-          const SizedBox(height: 10),
+          const SizedBox(height: 14),
           Card(
             child: ExpansionTile(
               key: const ValueKey('analysis-technical-indicators'),
@@ -966,39 +971,43 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
           ),
         ],
 
-        if (invalidation?.trim().isNotEmpty == true) ...[
-          const SizedBox(height: 14),
-          _InfoPanel(
-            key: const ValueKey('analysis-invalidation'),
-            title: context.l10n.analysisInvalidationTitle,
-            body: invalidation!,
-            icon: Icons.report_gmailerrorred_outlined,
-            color: Theme.of(context).colorScheme.error,
-          ),
-        ],
-
-        if (analysis.opportunity?.trim().isNotEmpty == true ||
-            analysis.risk?.trim().isNotEmpty == true) ...[
-          const SizedBox(height: 10),
-          _OpportunityRiskCard(analysis: analysis),
-        ],
-
-        const SizedBox(height: 14),
-        _ScenariosCard(
-          mainScenario: mainScenario,
-          alternativeScenario: alternativeScenario,
-        ),
-
-        if (isPro &&
-            (analysis.keyDriversTechnical?.trim().isNotEmpty == true ||
-                analysis.keyDriversFundamental?.trim().isNotEmpty == true ||
-                analysis.marketContext?.trim().isNotEmpty == true)) ...[
-          const SizedBox(height: 10),
-          _ProAnalysisDetailsCard(analysis: analysis),
-        ],
-
-        const SizedBox(height: 12),
-        _ExecutionInsightCard(analysis: analysis),
+        // Invalidation, Opportunity/Risk, Scenarios, Pro details, dan
+        // Execution insight disembunyikan: tidak ada padanannya di web
+        // (dicek langsung, termasuk di dalam modal "See full reasoning"),
+        // jadi tampil di mobile saja akan memecah paritas layout dengan web.
+        // if (invalidation?.trim().isNotEmpty == true) ...[
+        //   const SizedBox(height: 14),
+        //   _InfoPanel(
+        //     key: const ValueKey('analysis-invalidation'),
+        //     title: context.l10n.analysisInvalidationTitle,
+        //     body: invalidation!,
+        //     icon: Icons.report_gmailerrorred_outlined,
+        //     color: Theme.of(context).colorScheme.error,
+        //   ),
+        // ],
+        //
+        // if (analysis.opportunity?.trim().isNotEmpty == true ||
+        //     analysis.risk?.trim().isNotEmpty == true) ...[
+        //   const SizedBox(height: 10),
+        //   _OpportunityRiskCard(analysis: analysis),
+        // ],
+        //
+        // const SizedBox(height: 14),
+        // _ScenariosCard(
+        //   mainScenario: mainScenario,
+        //   alternativeScenario: alternativeScenario,
+        // ),
+        //
+        // if (isPro &&
+        //     (analysis.keyDriversTechnical?.trim().isNotEmpty == true ||
+        //         analysis.keyDriversFundamental?.trim().isNotEmpty == true ||
+        //         analysis.marketContext?.trim().isNotEmpty == true)) ...[
+        //   const SizedBox(height: 10),
+        //   _ProAnalysisDetailsCard(analysis: analysis),
+        // ],
+        //
+        // const SizedBox(height: 12),
+        // _ExecutionInsightCard(analysis: analysis),
 
         // ---------------------------------------------------------------
         // Seksi berikut ini spesifik mobile (belum ada di web), jadi
@@ -1576,6 +1585,7 @@ class _DetailTimeframeCard extends StatelessWidget {
     final condition = _marketConditionMeta(context, analysis.marketCondition);
     final remaining = analysis.validUntil.difference(DateTime.now());
     final hours = remaining.isNegative ? 0 : math.max(1, remaining.inHours);
+    final outcome = _outcomeBadgeMeta(context, analysis.outcomeStatus);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1614,11 +1624,12 @@ class _DetailTimeframeCard extends StatelessWidget {
                 ),
               ),
             ),
-            _StatusChip(
-              label: context.l10n.pending,
-              color: muted,
-              icon: Icons.hourglass_empty_rounded,
-            ),
+            if (outcome != null)
+              _StatusChip(
+                label: outcome.$1,
+                color: outcome.$2,
+                icon: outcome.$3,
+              ),
           ],
         ),
         const SizedBox(height: 8),
@@ -1697,6 +1708,51 @@ class _DetailTimeframeCard extends StatelessWidget {
       ],
     );
   }
+}
+
+(String, Color, IconData)? _outcomeBadgeMeta(
+  BuildContext context,
+  AnalysisOutcomeStatusEnum? status,
+) {
+  final dark = Theme.of(context).brightness == Brightness.dark;
+  final positive = dark ? AppColors.bullishDark : AppColors.bullishLight;
+  final negative = dark ? AppColors.bearishDark : AppColors.bearishLight;
+  final neutral = Theme.of(context).colorScheme.onSurfaceVariant;
+
+  return switch (status) {
+    AnalysisOutcomeStatusEnum.pending => (
+      context.l10n.outcomePendingLabel,
+      neutral,
+      Icons.hourglass_empty_rounded,
+    ),
+    AnalysisOutcomeStatusEnum.tp1Hit => (
+      context.l10n.outcomeTp1Label,
+      positive,
+      Icons.check_circle_outline_rounded,
+    ),
+    AnalysisOutcomeStatusEnum.tp2Hit => (
+      context.l10n.outcomeTp2Label,
+      positive,
+      Icons.check_circle_outline_rounded,
+    ),
+    AnalysisOutcomeStatusEnum.slHit => (
+      context.l10n.outcomeSlLabel,
+      negative,
+      Icons.cancel_outlined,
+    ),
+    AnalysisOutcomeStatusEnum.expired => (
+      context.l10n.outcomeExpiredLabel,
+      Theme.of(context).colorScheme.primary,
+      Icons.schedule_outlined,
+    ),
+    AnalysisOutcomeStatusEnum.invalidated => (
+      context.l10n.outcomeInvalidatedLabel,
+      negative,
+      Icons.warning_amber_rounded,
+    ),
+    null => null,
+    _ => null,
+  };
 }
 
 // ignore: unused_element
@@ -3662,8 +3718,8 @@ class _FundamentalSnapshotCardState extends State<_FundamentalSnapshotCard> {
                     title: event.event,
                     meta:
                         '${event.currency} • ${event.date}'
-                        '${event.time == null ? '' : ' ${event.time}'}'
-                        '${event.impact == null ? '' : ' • ${event.impact}'}',
+                        ' ${event.time}'
+                        ' • ${event.impact}',
                   ),
             ],
           ],
@@ -3926,8 +3982,8 @@ String _number(double? value, {int decimals = 2}) =>
     value == null ? '—' : value.toStringAsFixed(decimals);
 
 String _summarySignal(int buy, int neutral, int sell) {
-  if (buy > sell && buy > neutral) return 'Bullish';
-  if (sell > buy && sell > neutral) return 'Bearish';
+  if (buy > sell && buy > neutral) return 'Leaning Bullish';
+  if (sell > buy && sell > neutral) return 'Leaning Bearish';
   return 'Neutral';
 }
 
@@ -4252,7 +4308,7 @@ class _SignalScaleBar extends StatelessWidget {
     final position = total == 0 ? 0.5 : ((buy - sell) / total + 1) / 2;
 
     return Semantics(
-      label: '$sell Bearish, $neutral Netral, $buy Bullish',
+      label: '$sell Bearish, $neutral Neutral, $buy Bullish',
       child: Column(
         children: [
           LayoutBuilder(
@@ -4325,7 +4381,7 @@ class _SignalScaleBar extends StatelessWidget {
                 style: TextStyle(color: bearish, fontSize: 10.5),
               ),
               Text(
-                'Netral ($neutral)',
+                'Neutral ($neutral)',
                 style: TextStyle(color: neutralColor, fontSize: 10.5),
               ),
               Text(
@@ -4392,6 +4448,7 @@ class _IndicatorRow extends StatelessWidget {
   }
 }
 
+// ignore: unused_element
 class _OpportunityRiskCard extends StatelessWidget {
   const _OpportunityRiskCard({required this.analysis});
   final Analysis analysis;
@@ -4483,6 +4540,7 @@ class _InfoPanel extends StatelessWidget {
   );
 }
 
+// ignore: unused_element
 class _ExecutionInsightCard extends StatelessWidget {
   const _ExecutionInsightCard({required this.analysis});
   final Analysis analysis;
@@ -4550,8 +4608,14 @@ class _ExecutionInsightCard extends StatelessWidget {
   );
 }
 
+// ignore: unused_element
 class _ScenariosCard extends StatelessWidget {
-  const _ScenariosCard({this.mainScenario, this.alternativeScenario});
+  const _ScenariosCard({
+    // ignore: unused_element_parameter
+    this.mainScenario,
+    // ignore: unused_element_parameter
+    this.alternativeScenario,
+  });
 
   final String? mainScenario;
   final String? alternativeScenario;
@@ -4610,6 +4674,7 @@ class _ScenariosCard extends StatelessWidget {
   );
 }
 
+// ignore: unused_element
 class _ProAnalysisDetailsCard extends StatelessWidget {
   const _ProAnalysisDetailsCard({required this.analysis});
 

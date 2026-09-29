@@ -44,6 +44,8 @@ class _AdaptivePositionPlanCardState extends State<AdaptivePositionPlanCard> {
   @override
   void initState() {
     super.initState();
+    _margin.addListener(_onMoneyChanged);
+    _loss.addListener(_onMoneyChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) unawaited(_loadRule());
     });
@@ -51,9 +53,15 @@ class _AdaptivePositionPlanCardState extends State<AdaptivePositionPlanCard> {
 
   @override
   void dispose() {
+    _margin.removeListener(_onMoneyChanged);
+    _loss.removeListener(_onMoneyChanged);
     _margin.dispose();
     _loss.dispose();
     super.dispose();
+  }
+
+  void _onMoneyChanged() {
+    if (mounted) setState(() => _recommendation = null);
   }
 
   Future<void> _loadRule() async {
@@ -211,6 +219,7 @@ class _AdaptivePositionPlanCardState extends State<AdaptivePositionPlanCard> {
         ],
       );
     }
+    final capacity = _theoreticalCapacity(_rule!, _tier, _number(_margin.text));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -277,6 +286,21 @@ class _AdaptivePositionPlanCardState extends State<AdaptivePositionPlanCard> {
             height: 1.5,
           ),
         ),
+        if (capacity != null) ...[
+          const SizedBox(height: 12),
+          Text(
+            context.l10n.theoreticalMarginCapacity,
+            style: const TextStyle(fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            context.l10n.theoreticalMarginCapacityValue(_decimal(capacity)),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              height: 1.5,
+            ),
+          ),
+        ],
         const SizedBox(height: 12),
         Text(
           context.l10n.analysisCandleSnapshotFetched(
@@ -321,9 +345,22 @@ class _AdaptivePositionPlanCardState extends State<AdaptivePositionPlanCard> {
 
   Widget _detailsTile() => _DetailsTile(
     title: context.l10n.understandDetails,
-    count: 2,
+    count: _invalidationRuleCount(
+      widget.analysis.mode == AnalysisModeEnum.pro
+          ? widget.analysis.invalidationConditions
+          : widget.analysis.failureConditions,
+    ),
     onTap: _showDetails,
   );
+}
+
+int _invalidationRuleCount(String? value) {
+  final text = value?.trim();
+  if (text == null || text.isEmpty) return 0;
+  return text
+      .split(RegExp(r'(?:\r?\n)+|[•●]\s*'))
+      .where((item) => item.trim().isNotEmpty)
+      .length;
 }
 
 class _MoneyRow extends StatelessWidget {
@@ -472,15 +509,20 @@ class _DetailsTile extends StatelessWidget {
                 ),
               ),
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(999),
+            if (count > 0) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text('$count'),
               ),
-              child: Text('$count'),
-            ),
-            const SizedBox(width: 12),
+              const SizedBox(width: 12),
+            ],
             Icon(
               Icons.chevron_right_rounded,
               color: Theme.of(context).colorScheme.primary,
@@ -528,6 +570,11 @@ class _AdaptiveDetailsSheet extends StatelessWidget {
     final preferred =
         recommendation?.preferredSide ??
         (analysis.tradePlan?.preferredSide.name ?? 'wait');
+    // Pro and Beginner store invalidation rules in different API fields.
+    final isPro = analysis.mode == AnalysisModeEnum.pro;
+    final invalidationConditions = isPro
+        ? analysis.invalidationConditions
+        : analysis.failureConditions;
 
     return FractionallySizedBox(
       heightFactor: .94,
@@ -583,10 +630,10 @@ class _AdaptiveDetailsSheet extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
                 children: [
                   _sectionTitle(context.l10n.whyThisAnalysis),
-                  if (_has(analysis.failureConditions)) ...[
+                  if (_has(invalidationConditions)) ...[
                     _WarningBlock(
                       title: context.l10n.analysisInvalidWhen,
-                      body: analysis.failureConditions!.trim(),
+                      body: invalidationConditions!.trim(),
                     ),
                     const SizedBox(height: 16),
                   ],
@@ -962,6 +1009,33 @@ String _tierMargin(
   return _money(rule.initialMarginUsdPerLot.toDouble() * multiplier);
 }
 
+double? _theoreticalCapacity(
+  StandardTradingRuleInstrument rule,
+  AdaptiveAccountTier tier,
+  double? funds,
+) {
+  if (funds == null || funds <= 0) return null;
+  final multiplier = switch (tier) {
+    AdaptiveAccountTier.micro => .1,
+    AdaptiveAccountTier.mini => 1.0,
+    AdaptiveAccountTier.regular => 10.0,
+  };
+  final minimumLot = switch (tier) {
+    AdaptiveAccountTier.micro => .01,
+    AdaptiveAccountTier.mini => .1,
+    AdaptiveAccountTier.regular => 1.0,
+  };
+  final maximumLot = switch (tier) {
+    AdaptiveAccountTier.micro => .09,
+    AdaptiveAccountTier.mini => .9,
+    AdaptiveAccountTier.regular => 50.0,
+  };
+  final marginAtMinimum = rule.initialMarginUsdPerLot * multiplier;
+  if (marginAtMinimum <= 0) return null;
+  final capacity = (funds / marginAtMinimum).floor() * minimumLot;
+  return capacity > maximumLot ? maximumLot : capacity;
+}
+
 String _riskStyleLabel(BuildContext context, AdaptiveRiskStyle style) =>
     switch (style) {
       AdaptiveRiskStyle.conservative => context.l10n.riskStyleConservative,
@@ -1004,50 +1078,76 @@ class _Result extends StatelessWidget {
     final isSell = shownSide == 'sell';
     final accent = isSell ? const Color(0xFFFF4D5E) : const Color(0xFF00D8A2);
     final first = side.layers.first;
+    // A directionless result is reference data, not an actionable plan.
+    final isConditional =
+        recommendation.preferredSide != 'buy' &&
+        recommendation.preferredSide != 'sell';
     return Column(
       key: const ValueKey('adaptive-recommendation-result'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          isSell
-              ? context.l10n.priceFallScenario
-              : context.l10n.priceRiseScenario,
-          style: TextStyle(
-            color: accent,
-            fontSize: 22,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          context.l10n.scenarioFitsRisk(
-            isSell ? context.l10n.sell : context.l10n.buy,
-          ),
-          style: const TextStyle(height: 1.5),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          context.l10n.watchEntry(_decimal(side.entry)),
-          style: const TextStyle(fontWeight: FontWeight.w800, height: 1.4),
-        ),
-        const SizedBox(height: 18),
-        Row(
-          children: [
-            Expanded(
-              child: _CompactMetric(
-                context.l10n.minimumRiskAtStop,
-                _money(first.cumulativeRisk),
-              ),
+        if (isConditional) ...[
+          Text(
+            context.l10n.waitLabel.toUpperCase(),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _CompactMetric(
-                context.l10n.brokerFundsAtStop,
-                _money(first.cumulativeFundsAtStop),
-              ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            context.l10n.adaptiveWaitDecisionBody,
+            style: const TextStyle(height: 1.5),
+          ),
+          const SizedBox(height: 14),
+          _CompactMetric(context.l10n.hardLossMaximum, _money(maximumLoss)),
+          const SizedBox(height: 18),
+          _EntryDirectionUnconfirmedNotice(
+            key: const ValueKey('adaptive-conditional-notice'),
+          ),
+        ] else ...[
+          Text(
+            isSell
+                ? context.l10n.priceFallScenario
+                : context.l10n.priceRiseScenario,
+            style: TextStyle(
+              color: accent,
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            context.l10n.scenarioFitsRisk(
+              isSell ? context.l10n.sell : context.l10n.buy,
+            ),
+            style: const TextStyle(height: 1.5),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            context.l10n.watchEntry(_decimal(side.entry)),
+            style: const TextStyle(fontWeight: FontWeight.w800, height: 1.4),
+          ),
+          const SizedBox(height: 18),
+          Row(
+            children: [
+              Expanded(
+                child: _CompactMetric(
+                  context.l10n.minimumRiskAtStop,
+                  _money(first.cumulativeRisk),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _CompactMetric(
+                  context.l10n.brokerFundsAtStop,
+                  _money(first.cumulativeFundsAtStop),
+                ),
+              ),
+            ],
+          ),
+        ],
         const SizedBox(height: 22),
         Text(
           context.l10n.reviewOneDirection,
@@ -1069,11 +1169,19 @@ class _Result extends StatelessWidget {
           alignment: WrapAlignment.spaceBetween,
           children: [
             Chip(
-              label: Text(context.l10n.planReadyToReview),
-              side: BorderSide(color: Theme.of(context).colorScheme.primary),
+              label: Text(
+                isConditional
+                    ? context.l10n.conditionalScenarioNotActionable
+                    : context.l10n.planReadyToReview,
+              ),
+              side: BorderSide(
+                color: isConditional
+                    ? const Color(0xFFF59E0B)
+                    : Theme.of(context).colorScheme.primary,
+              ),
             ),
             OutlinedButton.icon(
-              onPressed: () => _copyPlan(context, side),
+              onPressed: isConditional ? null : () => _copyPlan(context, side),
               icon: const Icon(Icons.copy_rounded, size: 18),
               label: Text(context.l10n.copyPositionPlan),
             ),
@@ -1083,6 +1191,7 @@ class _Result extends StatelessWidget {
         _ScenarioPlanCard(
           side: side,
           accent: accent,
+          isConditional: isConditional,
           riskStyle: riskStyle,
           recommendation: recommendation,
           availableFunds: availableFunds,
@@ -1192,6 +1301,7 @@ class _ScenarioPlanCard extends StatelessWidget {
     required this.availableFunds,
     required this.maximumLoss,
     required this.onCopy,
+    this.isConditional = false,
   });
 
   final AdaptiveSidePlan side;
@@ -1201,6 +1311,7 @@ class _ScenarioPlanCard extends StatelessWidget {
   final double availableFunds;
   final double maximumLoss;
   final VoidCallback onCopy;
+  final bool isConditional;
 
   @override
   Widget build(BuildContext context) {
@@ -1234,12 +1345,18 @@ class _ScenarioPlanCard extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               _ValueCard(
-                context.l10n.planReadyToReview,
-                borderColor: Theme.of(context).colorScheme.primary,
+                isConditional
+                    ? context.l10n.conditionalScenarioNotActionable
+                    : context.l10n.planReadyToReview,
+                borderColor: isConditional
+                    ? const Color(0xFFF59E0B)
+                    : Theme.of(context).colorScheme.primary,
               ),
               const SizedBox(height: 10),
               Text(
-                context.l10n.objectiveScenario,
+                isConditional
+                    ? context.l10n.referenceNumbersOnly
+                    : context.l10n.objectiveScenario,
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                   height: 1.5,
@@ -1323,7 +1440,7 @@ class _ScenarioPlanCard extends StatelessWidget {
               Align(
                 alignment: Alignment.centerRight,
                 child: OutlinedButton.icon(
-                  onPressed: onCopy,
+                  onPressed: isConditional ? null : onCopy,
                   icon: const Icon(Icons.copy_rounded),
                   label: Text(context.l10n.copyPositionPlan),
                 ),
@@ -1694,6 +1811,58 @@ class _Notice extends StatelessWidget {
         borderRadius: BorderRadius.circular(11),
       ),
       child: Text(text, style: const TextStyle(fontSize: 11.5, height: 1.4)),
+    );
+  }
+}
+
+class _EntryDirectionUnconfirmedNotice extends StatelessWidget {
+  const _EntryDirectionUnconfirmedNotice({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    const color = Color(0xFFF59E0B);
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: .09),
+        border: Border.all(color: color.withValues(alpha: .35)),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: color, size: 19),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  context.l10n.entryDirectionUnconfirmedTitle,
+                  style: const TextStyle(
+                    color: color,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            context.l10n.entryDirectionUnconfirmedBody,
+            style: const TextStyle(color: color, height: 1.5),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            context.l10n.entryDirectionUnconfirmedNextAction,
+            style: const TextStyle(
+              color: color,
+              height: 1.5,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

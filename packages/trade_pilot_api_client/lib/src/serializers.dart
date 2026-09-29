@@ -38,6 +38,7 @@ import 'package:trade_pilot_api_client/src/model/analytics_event_body.dart';
 import 'package:trade_pilot_api_client/src/model/analytics_token_stats.dart';
 import 'package:trade_pilot_api_client/src/model/analytics_token_stats_by_instrument_inner.dart';
 import 'package:trade_pilot_api_client/src/model/analytics_token_stats_by_model_inner.dart';
+import 'package:trade_pilot_api_client/src/model/analytics_token_stats_by_segment_inner.dart';
 import 'package:trade_pilot_api_client/src/model/analytics_token_stats_daily_tokens_inner.dart';
 import 'package:trade_pilot_api_client/src/model/analytics_token_stats_top_users_inner.dart';
 import 'package:trade_pilot_api_client/src/model/analytics_token_stats_totals.dart';
@@ -59,10 +60,10 @@ import 'package:trade_pilot_api_client/src/model/change_password_body.dart';
 import 'package:trade_pilot_api_client/src/model/change_security_question_body.dart';
 import 'package:trade_pilot_api_client/src/model/create_analysis_body.dart';
 import 'package:trade_pilot_api_client/src/model/create_analysis_result.dart';
+import 'package:trade_pilot_api_client/src/model/create_doku_checkout_body.dart';
 import 'package:trade_pilot_api_client/src/model/create_filter_preset_body.dart';
 import 'package:trade_pilot_api_client/src/model/create_journal_entry_body.dart';
 import 'package:trade_pilot_api_client/src/model/create_journal_entry_body_entry_price.dart';
-import 'package:trade_pilot_api_client/src/model/create_topup_request_body.dart';
 import 'package:trade_pilot_api_client/src/model/create_user_body.dart';
 import 'package:trade_pilot_api_client/src/model/create_user_price_alert_body.dart';
 import 'package:trade_pilot_api_client/src/model/credit_balance.dart';
@@ -72,6 +73,9 @@ import 'package:trade_pilot_api_client/src/model/daily_summary_settings.dart';
 import 'package:trade_pilot_api_client/src/model/daily_summary_settings_update.dart';
 import 'package:trade_pilot_api_client/src/model/daily_summary_today.dart';
 import 'package:trade_pilot_api_client/src/model/delete_account_body.dart';
+import 'package:trade_pilot_api_client/src/model/delete_topup_response.dart';
+import 'package:trade_pilot_api_client/src/model/doku_checkout_session.dart';
+import 'package:trade_pilot_api_client/src/model/doku_topup_status.dart';
 import 'package:trade_pilot_api_client/src/model/error_response.dart';
 import 'package:trade_pilot_api_client/src/model/feedback.dart';
 import 'package:trade_pilot_api_client/src/model/feedback_body.dart';
@@ -99,9 +103,11 @@ import 'package:trade_pilot_api_client/src/model/journal_sentiment.dart';
 import 'package:trade_pilot_api_client/src/model/journal_stats.dart';
 import 'package:trade_pilot_api_client/src/model/journal_stats_totals.dart';
 import 'package:trade_pilot_api_client/src/model/login_body.dart';
+import 'package:trade_pilot_api_client/src/model/manual_topup_body.dart';
 import 'package:trade_pilot_api_client/src/model/message_response.dart';
 import 'package:trade_pilot_api_client/src/model/mirror_gated_insight.dart';
 import 'package:trade_pilot_api_client/src/model/mirror_group_stat.dart';
+import 'package:trade_pilot_api_client/src/model/mobile_auth_exchange_body.dart';
 import 'package:trade_pilot_api_client/src/model/native_push_register_body.dart';
 import 'package:trade_pilot_api_client/src/model/native_push_test_result.dart';
 import 'package:trade_pilot_api_client/src/model/native_push_unregister_body.dart';
@@ -151,6 +157,7 @@ import 'package:trade_pilot_api_client/src/model/rename_filter_preset_body.dart'
 import 'package:trade_pilot_api_client/src/model/reset_password_body.dart';
 import 'package:trade_pilot_api_client/src/model/reset_token_response.dart';
 import 'package:trade_pilot_api_client/src/model/reset_user_password_body.dart';
+import 'package:trade_pilot_api_client/src/model/review_topup_request_body.dart';
 import 'package:trade_pilot_api_client/src/model/security_question_response.dart';
 import 'package:trade_pilot_api_client/src/model/set_analysis_note_request.dart';
 import 'package:trade_pilot_api_client/src/model/standard_trading_rule_account.dart';
@@ -160,14 +167,22 @@ import 'package:trade_pilot_api_client/src/model/standard_trading_rule_text.dart
 import 'package:trade_pilot_api_client/src/model/standard_trading_rules.dart';
 import 'package:trade_pilot_api_client/src/model/standard_trading_rules_fixed_rate.dart';
 import 'package:trade_pilot_api_client/src/model/tags_list.dart';
+import 'package:trade_pilot_api_client/src/model/tiktok_complete_signup_body.dart';
+import 'package:trade_pilot_api_client/src/model/tiktok_pending_signup_response.dart';
 import 'package:trade_pilot_api_client/src/model/timeframe_risk.dart';
 import 'package:trade_pilot_api_client/src/model/timeframe_risk_map.dart';
 import 'package:trade_pilot_api_client/src/model/timeframe_risk_map_overall.dart';
 import 'package:trade_pilot_api_client/src/model/timeframe_risk_metrics.dart';
 import 'package:trade_pilot_api_client/src/model/topup_config.dart';
+import 'package:trade_pilot_api_client/src/model/topup_month_summary.dart';
+import 'package:trade_pilot_api_client/src/model/topup_package_option.dart';
 import 'package:trade_pilot_api_client/src/model/topup_request.dart';
 import 'package:trade_pilot_api_client/src/model/topup_request_list.dart';
 import 'package:trade_pilot_api_client/src/model/topup_request_status.dart';
+import 'package:trade_pilot_api_client/src/model/topup_request_with_user.dart';
+import 'package:trade_pilot_api_client/src/model/topup_request_with_user_list.dart';
+import 'package:trade_pilot_api_client/src/model/topup_summary.dart';
+import 'package:trade_pilot_api_client/src/model/topup_user_summary.dart';
 import 'package:trade_pilot_api_client/src/model/trade_plan.dart';
 import 'package:trade_pilot_api_client/src/model/trade_side.dart';
 import 'package:trade_pilot_api_client/src/model/trader_mirror_highlight.dart';
@@ -175,11 +190,13 @@ import 'package:trade_pilot_api_client/src/model/trader_mirror_insights.dart';
 import 'package:trade_pilot_api_client/src/model/trader_mirror_response.dart';
 import 'package:trade_pilot_api_client/src/model/update_journal_entry_body.dart';
 import 'package:trade_pilot_api_client/src/model/update_profile_body.dart';
+import 'package:trade_pilot_api_client/src/model/update_user_credit_body.dart';
 import 'package:trade_pilot_api_client/src/model/update_user_quota_body.dart';
 import 'package:trade_pilot_api_client/src/model/update_user_role_body.dart';
 import 'package:trade_pilot_api_client/src/model/upload_url_request.dart';
 import 'package:trade_pilot_api_client/src/model/upload_url_response.dart';
 import 'package:trade_pilot_api_client/src/model/user.dart';
+import 'package:trade_pilot_api_client/src/model/user_credit_balance.dart';
 import 'package:trade_pilot_api_client/src/model/user_price_alert.dart';
 import 'package:trade_pilot_api_client/src/model/user_price_alert_list.dart';
 import 'package:trade_pilot_api_client/src/model/user_quota.dart';
@@ -218,6 +235,7 @@ part 'serializers.g.dart';
   AnalyticsTokenStats,
   AnalyticsTokenStatsByInstrumentInner,
   AnalyticsTokenStatsByModelInner,
+  AnalyticsTokenStatsBySegmentInner,
   AnalyticsTokenStatsDailyTokensInner,
   AnalyticsTokenStatsTopUsersInner,
   AnalyticsTokenStatsTotals,
@@ -239,10 +257,10 @@ part 'serializers.g.dart';
   ChangeSecurityQuestionBody,
   CreateAnalysisBody,
   CreateAnalysisResult,
+  CreateDokuCheckoutBody,
   CreateFilterPresetBody,
   CreateJournalEntryBody,
   CreateJournalEntryBodyEntryPrice,
-  CreateTopupRequestBody,
   CreateUserBody,
   CreateUserPriceAlertBody,
   CreditBalance,
@@ -252,6 +270,9 @@ part 'serializers.g.dart';
   DailySummarySettingsUpdate,
   DailySummaryToday,
   DeleteAccountBody,
+  DeleteTopupResponse,
+  DokuCheckoutSession,
+  DokuTopupStatus,
   ErrorResponse,
   Feedback,
   FeedbackBody,
@@ -279,9 +300,11 @@ part 'serializers.g.dart';
   JournalStats,
   JournalStatsTotals,
   LoginBody,
+  ManualTopupBody,
   MessageResponse,
   MirrorGatedInsight,
   MirrorGroupStat,
+  MobileAuthExchangeBody,
   NativePushRegisterBody,
   NativePushTestResult,
   NativePushUnregisterBody,
@@ -331,6 +354,7 @@ part 'serializers.g.dart';
   ResetPasswordBody,
   ResetTokenResponse,
   ResetUserPasswordBody,
+  ReviewTopupRequestBody,
   SecurityQuestionResponse,
   SetAnalysisNoteRequest,
   StandardTradingRuleAccount,
@@ -340,15 +364,23 @@ part 'serializers.g.dart';
   StandardTradingRules,
   StandardTradingRulesFixedRate,
   TagsList,
+  TiktokCompleteSignupBody,
+  TiktokPendingSignupResponse,
   TimeframeRisk,
   TimeframeRiskMap,
   TimeframeRiskMapOverall,
   TimeframeRiskMetrics,
   TopupConfig,
+  TopupMonthSummary,
+  TopupPackageOption,
   TopupRequest,
   $TopupRequest,
   TopupRequestList,
   TopupRequestStatus,
+  TopupRequestWithUser,
+  TopupRequestWithUserList,
+  TopupSummary,
+  TopupUserSummary,
   TradePlan,
   TradeSide,
   TraderMirrorHighlight,
@@ -356,11 +388,13 @@ part 'serializers.g.dart';
   TraderMirrorResponse,
   UpdateJournalEntryBody,
   UpdateProfileBody,
+  UpdateUserCreditBody,
   UpdateUserQuotaBody,
   UpdateUserRoleBody,
   UploadUrlRequest,
   UploadUrlResponse,
   User,
+  UserCreditBalance,
   UserPriceAlert,
   UserPriceAlertList,
   UserQuota,
@@ -387,6 +421,15 @@ Serializers serializers = (_$serializers.toBuilder()
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(StandardTradingRuleInstrument)]),
         () => ListBuilder<StandardTradingRuleInstrument>(),
+      )
+      ..addBuilderFactory(
+        const FullType(
+            BuiltList, [FullType(AnalyticsTokenStatsBySegmentInner)]),
+        () => ListBuilder<AnalyticsTokenStatsBySegmentInner>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(TopupMonthSummary)]),
+        () => ListBuilder<TopupMonthSummary>(),
       )
       ..addBuilderFactory(
         const FullType(
@@ -424,6 +467,10 @@ Serializers serializers = (_$serializers.toBuilder()
         () => ListBuilder<AnalyticsUsageStatsFeatureBreakdownInner>(),
       )
       ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(TopupPackageOption)]),
+        () => ListBuilder<TopupPackageOption>(),
+      )
+      ..addBuilderFactory(
         const FullType(BuiltList, [FullType(PerformanceBucket)]),
         () => ListBuilder<PerformanceBucket>(),
       )
@@ -446,6 +493,10 @@ Serializers serializers = (_$serializers.toBuilder()
         () => ListBuilder<AnalysisHistoryTimeframeStats>(),
       )
       ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(TopupUserSummary)]),
+        () => ListBuilder<TopupUserSummary>(),
+      )
+      ..addBuilderFactory(
         const FullType(
             BuiltList, [FullType(AnalyticsUsageStatsCountryBreakdownInner)]),
         () => ListBuilder<AnalyticsUsageStatsCountryBreakdownInner>(),
@@ -453,6 +504,10 @@ Serializers serializers = (_$serializers.toBuilder()
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(ProgressionLedgerEntry)]),
         () => ListBuilder<ProgressionLedgerEntry>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(TopupRequestWithUser)]),
+        () => ListBuilder<TopupRequestWithUser>(),
       )
       ..addBuilderFactory(
         const FullType(

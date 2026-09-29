@@ -33,21 +33,20 @@ class HistoryTab extends StatefulWidget {
 enum _HistoryPresetAction { open, save }
 
 class _HistoryTabState extends State<HistoryTab> {
-  final ScrollController _scrollController = ScrollController();
-
   final TextEditingController _searchController = TextEditingController();
 
   Timer? _searchDebounce;
   List<FilterPreset> _presets = const [];
   bool _loadingPresets = false;
   bool _summaryView = true;
-  String _summaryRange = 'all';
+  String _summaryRange = '30';
+  String _focusedInstrument = 'XAU/USD';
+  int _listPage = 1;
+  static const _itemsPerPage = 5;
 
   @override
   void initState() {
     super.initState();
-
-    _scrollController.addListener(_handleScroll);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
@@ -58,7 +57,11 @@ class _HistoryTabState extends State<HistoryTab> {
 
       _searchController.text = filters.query;
       unawaited(_loadPresets());
-      unawaited(context.read<AnalysisProvider>().loadHistoryOutcomeSummary());
+      unawaited(
+        context.read<AnalysisProvider>().loadHistoryOutcomeSummary(
+          range: _summaryRange,
+        ),
+      );
     });
   }
 
@@ -267,10 +270,6 @@ class _HistoryTabState extends State<HistoryTab> {
   void dispose() {
     _searchDebounce?.cancel();
 
-    _scrollController.removeListener(_handleScroll);
-
-    _scrollController.dispose();
-
     _searchController.dispose();
 
     super.dispose();
@@ -300,6 +299,8 @@ class _HistoryTabState extends State<HistoryTab> {
         return;
       }
 
+      setState(() => _listPage = 1);
+
       unawaited(
         provider.applyHistoryFilters(
           provider.historyFilters.copyWith(query: query),
@@ -312,28 +313,13 @@ class _HistoryTabState extends State<HistoryTab> {
     _searchDebounce?.cancel();
 
     _searchController.clear();
+    setState(() => _listPage = 1);
 
     final provider = context.read<AnalysisProvider>();
 
     await provider.applyHistoryFilters(
       provider.historyFilters.copyWith(query: ''),
     );
-  }
-
-  // ===========================================================================
-  // PAGINATION
-  // ===========================================================================
-
-  void _handleScroll() {
-    if (!_scrollController.hasClients) {
-      return;
-    }
-
-    final position = _scrollController.position;
-
-    if (position.pixels > position.maxScrollExtent - 240) {
-      unawaited(context.read<AnalysisProvider>().loadMoreVisibleHistory());
-    }
   }
 
   // ===========================================================================
@@ -356,6 +342,7 @@ class _HistoryTabState extends State<HistoryTab> {
       return;
     }
 
+    setState(() => _listPage = 1);
     await provider.applyHistoryFilters(result);
   }
 
@@ -364,9 +351,22 @@ class _HistoryTabState extends State<HistoryTab> {
 
     _searchController.clear();
 
+    setState(() => _listPage = 1);
+
     await context.read<AnalysisProvider>().applyHistoryFilters(
       const HistoryFilters(),
     );
+  }
+
+  Future<void> _goToNextPage(AnalysisProvider provider) async {
+    final totalPages =
+        (provider.visibleHistoryTotal + _itemsPerPage - 1) ~/ _itemsPerPage;
+    if (_listPage >= totalPages) return;
+    final nextPage = _listPage + 1;
+    if (provider.visibleHistory.length < nextPage * _itemsPerPage) {
+      await provider.loadMoreVisibleHistory();
+    }
+    if (mounted) setState(() => _listPage = nextPage);
   }
 
   // ===========================================================================
@@ -383,199 +383,142 @@ class _HistoryTabState extends State<HistoryTab> {
 
     final provider = context.watch<AnalysisProvider>();
 
+    return Scaffold(
+      body: RefreshIndicator(
+        onRefresh: () {
+          final provider = context.read<AnalysisProvider>();
+          return Future.wait([
+            if (!_summaryView) provider.refreshVisibleHistory(silent: false),
+            provider.loadHistoryOutcomeSummary(range: _summaryRange),
+          ]);
+        },
+        child: _summaryView
+            ? _buildSummaryContent(provider, muted)
+            : _buildContent(context: context, provider: provider, muted: muted),
+      ),
+    );
+  }
+
+  Widget _buildPageHeader(AnalysisProvider provider, Color muted) {
     final filters = provider.historyFilters;
     final l10n = context.l10n;
-
-    return Scaffold(
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.historyPageTitle,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  provider.visibleHistoryTotal > 0
-                      ? l10n.historyTotalAnalyses(provider.visibleHistoryTotal)
-                      : l10n.noAnalyses,
-                  style: TextStyle(fontSize: 12, color: muted),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-            child: SegmentedButton<bool>(
-              segments: [
-                ButtonSegment(value: true, label: Text(l10n.historySummary)),
-                ButtonSegment(value: false, label: Text(l10n.historyListTab)),
-              ],
-              selected: {_summaryView},
-              onSelectionChanged: (selection) {
-                setState(() => _summaryView = selection.first);
-              },
-            ),
-          ),
-          if (!_summaryView) ...[
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: _handleSearchChanged,
-                      maxLength: HistoryFilters.maxSearchLength,
-                      textInputAction: TextInputAction.search,
-                      decoration: InputDecoration(
-                        counterText: '',
-                        hintText: l10n.searchInstrumentOrNote,
-                        prefixIcon: const Icon(Icons.search_rounded),
-                        suffixIcon: filters.query.isEmpty
-                            ? null
-                            : IconButton(
-                                tooltip: l10n.clearSearch,
-                                onPressed: _clearSearch,
-                                icon: const Icon(Icons.close_rounded),
-                              ),
-                      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          l10n.historyPageTitle,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          provider.visibleHistoryTotal > 0
+              ? l10n.historyTotalAnalyses(provider.visibleHistoryTotal)
+              : l10n.noAnalyses,
+          style: TextStyle(fontSize: 12, color: muted),
+        ),
+        const SizedBox(height: 12),
+        _HistoryViewTabs(
+          summarySelected: _summaryView,
+          summaryLabel: l10n.historySummary,
+          historyLabel: l10n.historyListTab,
+          onChanged: (summary) => setState(() {
+            _summaryView = summary;
+            if (!summary) _listPage = 1;
+          }),
+        ),
+        if (!_summaryView) ...[
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: _handleSearchChanged,
+                  maxLength: HistoryFilters.maxSearchLength,
+                  textInputAction: TextInputAction.search,
+                  decoration: InputDecoration(
+                    counterText: '',
+                    hintText: l10n.searchInstrumentOrNote,
+                    prefixIcon: const Icon(Icons.search_rounded, size: 18),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 12,
                     ),
-                  ),
-
-                  const SizedBox(width: 8),
-
-                  Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      IconButton.filled(
-                        tooltip: l10n.filter,
-                        onPressed: _openFilters,
-                        icon: const Icon(Icons.filter_list_rounded),
-                      ),
-
-                      if (filters.activeCategoryCount > 0)
-                        Positioned(
-                          right: -3,
-                          top: -3,
-                          child: Container(
-                            constraints: const BoxConstraints(
-                              minWidth: 22,
-                              minHeight: 22,
-                            ),
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primary,
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              '${filters.activeCategoryCount}',
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.onPrimary,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
+                    suffixIcon: filters.query.isEmpty
+                        ? null
+                        : IconButton(
+                            tooltip: l10n.clearSearch,
+                            onPressed: _clearSearch,
+                            icon: const Icon(Icons.close_rounded),
                           ),
-                        ),
-                    ],
                   ),
-
-                  const SizedBox(width: 4),
-
-                  PopupMenuButton<_HistoryPresetAction>(
-                    tooltip: l10n.basicFilters,
-                    enabled: !_loadingPresets,
-                    icon: const Icon(Icons.more_vert_rounded),
-                    onSelected: (action) {
-                      switch (action) {
-                        case _HistoryPresetAction.open:
-                          unawaited(_showPresets());
-                          break;
-                        case _HistoryPresetAction.save:
-                          unawaited(_savePreset());
-                          break;
-                      }
-                    },
-                    itemBuilder: (_) => [
-                      PopupMenuItem(
-                        value: _HistoryPresetAction.open,
-                        child: ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: const Icon(Icons.bookmarks_outlined),
-                          title: Text(l10n.savedFilters),
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: _HistoryPresetAction.save,
-                        child: ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: const Icon(Icons.bookmark_add_outlined),
-                          title: Text(l10n.saveBasicFilter),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            if (filters.isActive)
-              _ActiveFilters(
-                filters: filters,
-                resultCount: provider.visibleHistoryTotal,
-                onChanged: (next) {
-                  unawaited(provider.applyHistoryFilters(next));
-                },
-                onReset: _resetFilters,
-              ),
-
-            if (provider.isLoadingVisibleHistory &&
-                provider.visibleHistory.isNotEmpty)
-              const LinearProgressIndicator(minHeight: 2),
-
-            if (provider.visibleHistoryError != null)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-                child: ErrorBanner(
-                  message: provider.visibleHistoryError,
-                  retryLabel: l10n.tryAgain,
-                  onRetry: () {
-                    unawaited(provider.refreshVisibleHistory(silent: false));
-                  },
                 ),
               ),
-          ],
-
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: () {
-                final provider = context.read<AnalysisProvider>();
-                return Future.wait([
-                  if (!_summaryView)
-                    provider.refreshVisibleHistory(silent: false),
-                  provider.loadHistoryOutcomeSummary(range: _summaryRange),
-                ]);
-              },
-              child: _summaryView
-                  ? _buildSummaryContent(provider)
-                  : _buildContent(
-                      context: context,
-                      provider: provider,
-                      muted: muted,
+              const SizedBox(width: 8),
+              OutlinedButton.icon(
+                onPressed: _openFilters,
+                icon: const Icon(Icons.filter_alt_outlined, size: 17),
+                label: Text(
+                  filters.activeCategoryCount == 0
+                      ? l10n.historyFiltersButton
+                      : '${l10n.historyFiltersButton} ${filters.activeCategoryCount}',
+                ),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(0, 48),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                ),
+              ),
+              if (_presets.isNotEmpty || filters.isActive)
+                PopupMenuButton<_HistoryPresetAction>(
+                  tooltip: l10n.basicFilters,
+                  enabled: !_loadingPresets,
+                  icon: const Icon(Icons.more_vert_rounded),
+                  onSelected: (action) {
+                    if (action == _HistoryPresetAction.open) {
+                      unawaited(_showPresets());
+                    } else {
+                      unawaited(_savePreset());
+                    }
+                  },
+                  itemBuilder: (_) => [
+                    PopupMenuItem(
+                      value: _HistoryPresetAction.open,
+                      child: Text(l10n.savedFilters),
                     ),
-            ),
+                    PopupMenuItem(
+                      value: _HistoryPresetAction.save,
+                      child: Text(l10n.saveBasicFilter),
+                    ),
+                  ],
+                ),
+            ],
           ),
+          if (filters.isActive)
+            _ActiveFilters(
+              filters: filters,
+              resultCount: provider.visibleHistoryTotal,
+              onChanged: (next) {
+                setState(() => _listPage = 1);
+                unawaited(provider.applyHistoryFilters(next));
+              },
+              onReset: _resetFilters,
+            ),
+          if (provider.isLoadingVisibleHistory &&
+              provider.visibleHistory.isNotEmpty)
+            const LinearProgressIndicator(minHeight: 2),
+          if (provider.visibleHistoryError != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: ErrorBanner(
+                message: provider.visibleHistoryError,
+                retryLabel: l10n.tryAgain,
+                onRetry: () {
+                  unawaited(provider.refreshVisibleHistory(silent: false));
+                },
+              ),
+            ),
         ],
-      ),
+      ],
     );
   }
 
@@ -590,7 +533,9 @@ class _HistoryTabState extends State<HistoryTab> {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        padding: const EdgeInsets.all(16),
         children: [
+          _buildPageHeader(provider, muted),
           SizedBox(height: MediaQuery.sizeOf(context).height * 0.28),
           const Center(child: CircularProgressIndicator(strokeWidth: 2.4)),
         ],
@@ -603,8 +548,9 @@ class _HistoryTabState extends State<HistoryTab> {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(16),
         children: [
+          _buildPageHeader(provider, muted),
           SizedBox(height: MediaQuery.sizeOf(context).height * 0.1),
           Icon(
             filtered ? Icons.search_off_rounded : Icons.history_rounded,
@@ -654,58 +600,65 @@ class _HistoryTabState extends State<HistoryTab> {
       );
     }
 
-    return ListView.separated(
-      controller: _scrollController,
+    final total = provider.visibleHistoryTotal;
+    final totalPages = (total + _itemsPerPage - 1) ~/ _itemsPerPage;
+    final page = _listPage.clamp(1, totalPages == 0 ? 1 : totalPages);
+    final start = (page - 1) * _itemsPerPage;
+    final pageItems = start >= items.length
+        ? const <Analysis>[]
+        : items.skip(start).take(_itemsPerPage).toList();
+    final end = start + pageItems.length;
+
+    return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: const EdgeInsets.all(16),
-      itemCount:
-          items.length + 1 + (provider.isLoadingMoreVisibleHistory ? 1 : 0),
-      separatorBuilder: (_, _) {
-        return const SizedBox(height: 10);
-      },
-      itemBuilder: (context, index) {
-        final itemIndex = index;
-
-        if (itemIndex >= items.length) {
-          final tailIndex = itemIndex - items.length;
-          if (provider.isLoadingMoreVisibleHistory && tailIndex == 0) {
-            return const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
-              child: Center(child: CircularProgressIndicator(strokeWidth: 2.4)),
-            );
-          }
-          return const SizedBox(height: 24);
-        }
-
-        final analysis = items[itemIndex];
-
-        return HistoryAnalysisCard(
-          analysis: analysis,
-          onReanalyze: widget.onReanalyze == null
+      children: [
+        _buildPageHeader(provider, muted),
+        const SizedBox(height: 12),
+        for (final analysis in pageItems) ...[
+          HistoryAnalysisCard(
+            analysis: analysis,
+            onReanalyze: widget.onReanalyze == null
+                ? null
+                : () => widget.onReanalyze!(
+                    analysis.instrument,
+                    analysis.timeframe,
+                  ),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => AnalysisDetailScreen(
+                    analysisId: analysis.id,
+                    preloaded: analysis,
+                    onNewAnalysis: widget.onNewAnalysis == null
+                        ? null
+                        : () {
+                            Navigator.of(context).pop();
+                            widget.onNewAnalysis!();
+                          },
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 10),
+        ],
+        _HistoryPagination(
+          page: page,
+          totalPages: totalPages == 0 ? 1 : totalPages,
+          start: total == 0 ? 0 : start + 1,
+          end: end,
+          total: total,
+          loading: provider.isLoadingMoreVisibleHistory,
+          onPrevious: page == 1
               ? null
-              : () => widget.onReanalyze!(
-                  analysis.instrument,
-                  analysis.timeframe,
-                ),
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => AnalysisDetailScreen(
-                  analysisId: analysis.id,
-                  preloaded: analysis,
-                  onNewAnalysis: widget.onNewAnalysis == null
-                      ? null
-                      : () {
-                          Navigator.of(context).pop();
-                          widget.onNewAnalysis!();
-                        },
-                ),
-              ),
-            );
-          },
-        );
-      },
+              : () => setState(() => _listPage = page - 1),
+          onNext: page >= totalPages
+              ? null
+              : () => unawaited(_goToNextPage(provider)),
+        ),
+      ],
     );
   }
 
@@ -714,6 +667,18 @@ class _HistoryTabState extends State<HistoryTab> {
     if (summary != null) {
       return HistorySummaryCard(
         statistics: HistoryStatistics.fromOutcomeStats(summary.overall),
+        onMetricTap: (metric) {
+          final outcome = switch (metric) {
+            HistorySummaryMetric.valid => HistoryOutcomeFilter.pending,
+            HistorySummaryMetric.expired => HistoryOutcomeFilter.expired,
+            HistorySummaryMetric.sl => HistoryOutcomeFilter.riskLimitHit,
+            HistorySummaryMetric.tp1 ||
+            HistorySummaryMetric.tp2 => HistoryOutcomeFilter.targetReached,
+            HistorySummaryMetric.invalid => HistoryOutcomeFilter.invalidated,
+            HistorySummaryMetric.total => HistoryOutcomeFilter.all,
+          };
+          _showHistoryFor(outcome: outcome);
+        },
       );
     }
     if (provider.historyOutcomeSummaryError != null) {
@@ -721,7 +686,7 @@ class _HistoryTabState extends State<HistoryTab> {
         message: provider.historyOutcomeSummaryError,
         retryLabel: context.l10n.tryAgain,
         onRetry: () {
-          unawaited(provider.loadHistoryOutcomeSummary());
+          unawaited(provider.loadHistoryOutcomeSummary(range: _summaryRange));
         },
       );
     }
@@ -733,105 +698,197 @@ class _HistoryTabState extends State<HistoryTab> {
     );
   }
 
-  Widget _buildSummaryContent(AnalysisProvider provider) {
+  Widget _buildSummaryContent(AnalysisProvider provider, Color muted) {
     final summary = provider.historyOutcomeSummary;
+    final instrumentRows = summary == null
+        ? const <_HistoryBreakdownRow>[]
+        : _instrumentRows(summary);
+    final selected = instrumentRows.where(
+      (row) => row.label == _focusedInstrument,
+    );
+    final selectedInstrument = selected.isEmpty ? null : selected.first;
+    final timeframeRows = summary == null
+        ? const <_HistoryBreakdownRow>[]
+        : _timeframeRows(summary, selectedInstrument);
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
       children: [
+        _buildPageHeader(provider, muted),
+        const SizedBox(height: 12),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          child: SegmentedButton<String>(
-            segments: [
-              ButtonSegment(value: '7', label: Text(context.l10n.daysShort(7))),
-              ButtonSegment(
-                value: '30',
-                label: Text(context.l10n.daysShort(30)),
-              ),
-              ButtonSegment(
-                value: '90',
-                label: Text(context.l10n.daysShort(90)),
-              ),
-              ButtonSegment(value: 'all', label: Text(context.l10n.allTime)),
+          child: Row(
+            children: [
+              for (final range in const ['7', '30', '90', 'all']) ...[
+                _RangeButton(
+                  label: range == 'all' ? context.l10n.all : '${range}D',
+                  selected: _summaryRange == range,
+                  onTap: () {
+                    setState(() => _summaryRange = range);
+                    unawaited(provider.loadHistoryOutcomeSummary(range: range));
+                  },
+                ),
+                if (range != 'all') const SizedBox(width: 7),
+              ],
             ],
-            selected: {_summaryRange},
-            onSelectionChanged: (selection) {
-              final range = selection.first;
-              setState(() => _summaryRange = range);
-              unawaited(provider.loadHistoryOutcomeSummary(range: range));
-            },
           ),
         ),
         const SizedBox(height: 12),
         _buildHistorySummary(provider),
         if (summary != null) ...[
           const SizedBox(height: 12),
-          _HistoryBreakdown(
-            title: context.l10n.performanceByInstrument,
+          _HistoryInsights(rows: timeframeRows, minSamples: summary.minSamples),
+          const SizedBox(height: 12),
+          _InstrumentPerformanceCard(
             minSamples: summary.minSamples,
-            rows: _instrumentRows(summary),
+            rows: instrumentRows,
+            focused: _focusedInstrument,
+            onFocus: (instrument) =>
+                setState(() => _focusedInstrument = instrument),
+            onViewHistory: (row) =>
+                _showHistoryFor(instruments: row.filterInstruments),
           ),
           const SizedBox(height: 12),
-          _HistoryBreakdown(
-            title: context.l10n.timeframePerformance,
+          _TimeframePerformanceCard(
+            instrument: selectedInstrument?.label,
             minSamples: summary.minSamples,
-            rows: summary.byTimeframe
-                .map(
-                  (row) => _HistoryBreakdownRow(
-                    label: row.timeframe,
-                    total: row.total,
-                    wins: row.tp1Hit + row.tp2Hit,
-                    losses: row.slHit,
-                    expired: row.expired,
-                    winRate: row.winRate,
-                  ),
-                )
-                .toList(),
+            rows: timeframeRows,
+            onTap: (row) => _showHistoryFor(
+              instruments: selectedInstrument?.filterInstruments,
+              timeframes: [row.label],
+            ),
           ),
         ],
       ],
     );
   }
 
+  void _showHistoryFor({
+    HistoryOutcomeFilter outcome = HistoryOutcomeFilter.all,
+    List<String>? instruments,
+    List<String>? timeframes,
+  }) {
+    final days = int.tryParse(_summaryRange);
+    final from = days == null
+        ? null
+        : DateTime.now().subtract(Duration(days: days));
+    final filters = HistoryFilters(
+      outcome: outcome,
+      instruments: instruments ?? const [],
+      timeframes: timeframes ?? const [],
+      from: from,
+    );
+    setState(() {
+      _summaryView = false;
+      _listPage = 1;
+      _searchController.clear();
+    });
+    unawaited(context.read<AnalysisProvider>().applyHistoryFilters(filters));
+  }
+
   List<_HistoryBreakdownRow> _instrumentRows(AnalysisHistorySummary summary) {
     final rows = <_HistoryBreakdownRow>[];
     var otherTotal = 0;
-    var otherWins = 0;
-    var otherLosses = 0;
+    var otherActive = 0;
+    var otherTp1 = 0;
+    var otherTp2 = 0;
+    var otherSl = 0;
     var otherExpired = 0;
+    var otherInvalid = 0;
+    final otherInstruments = <String>[];
     for (final row in summary.byInstrument) {
-      final wins = row.tp1Hit + row.tp2Hit;
       if (MarketProvider.analyzeVisibleInstruments.contains(row.instrument)) {
         rows.add(
           _HistoryBreakdownRow(
             label: row.instrument,
             total: row.total,
-            wins: wins,
-            losses: row.slHit,
+            activeValid: row.activeValid,
+            tp1: row.tp1Hit,
+            tp2: row.tp2Hit,
+            sl: row.slHit,
             expired: row.expired,
+            invalidated: row.invalidated,
             winRate: row.winRate,
+            completionRate: row.completionRate,
+            filterInstruments: [row.instrument],
           ),
         );
       } else {
         otherTotal += row.total;
-        otherWins += wins;
-        otherLosses += row.slHit;
+        otherActive += row.activeValid;
+        otherTp1 += row.tp1Hit;
+        otherTp2 += row.tp2Hit;
+        otherSl += row.slHit;
         otherExpired += row.expired;
+        otherInvalid += row.invalidated;
+        otherInstruments.add(row.instrument);
       }
     }
     if (otherTotal > 0) {
-      final evaluated = otherWins + otherLosses;
+      final wins = otherTp1 + otherTp2;
+      final evaluated = wins + otherSl;
+      final completed = evaluated + otherExpired;
       rows.add(
         _HistoryBreakdownRow(
           label: context.l10n.otherInstruments,
           total: otherTotal,
-          wins: otherWins,
-          losses: otherLosses,
+          activeValid: otherActive,
+          tp1: otherTp1,
+          tp2: otherTp2,
+          sl: otherSl,
           expired: otherExpired,
-          winRate: evaluated == 0 ? null : otherWins / evaluated,
+          invalidated: otherInvalid,
+          winRate: evaluated == 0 ? null : wins / evaluated,
+          completionRate: completed == 0 ? null : wins / completed,
+          filterInstruments: otherInstruments,
         ),
       );
     }
+    return rows;
+  }
+
+  List<_HistoryBreakdownRow> _timeframeRows(
+    AnalysisHistorySummary summary,
+    _HistoryBreakdownRow? selected,
+  ) {
+    final selectedFilters = selected?.filterInstruments ?? const <String>[];
+    final source = selectedFilters.isEmpty
+        ? summary.byTimeframe
+        : summary.byInstrument
+              .where((row) => selectedFilters.contains(row.instrument))
+              .expand((row) => row.byTimeframe);
+    final grouped = <String, List<AnalysisHistoryOutcomeStats>>{};
+    for (final row in source) {
+      grouped.putIfAbsent(row.timeframe, () => []).add(row);
+    }
+    final rows = grouped.entries.map((entry) {
+      final stats = entry.value;
+      final total = stats.fold(0, (sum, row) => sum + row.total);
+      final active = stats.fold(0, (sum, row) => sum + row.activeValid);
+      final tp1 = stats.fold(0, (sum, row) => sum + row.tp1Hit);
+      final tp2 = stats.fold(0, (sum, row) => sum + row.tp2Hit);
+      final sl = stats.fold(0, (sum, row) => sum + row.slHit);
+      final expired = stats.fold(0, (sum, row) => sum + row.expired);
+      final invalidated = stats.fold(0, (sum, row) => sum + row.invalidated);
+      final wins = tp1 + tp2;
+      final evaluated = wins + sl;
+      final completed = evaluated + expired;
+      return _HistoryBreakdownRow(
+        label: entry.key,
+        total: total,
+        activeValid: active,
+        tp1: tp1,
+        tp2: tp2,
+        sl: sl,
+        expired: expired,
+        invalidated: invalidated,
+        winRate: evaluated == 0 ? null : wins / evaluated,
+        completionRate: completed == 0 ? null : wins / completed,
+        filterInstruments: selectedFilters,
+      );
+    }).toList();
+    rows.sort((a, b) => b.total.compareTo(a.total));
     return rows;
   }
 }
@@ -840,82 +897,482 @@ class _HistoryBreakdownRow {
   const _HistoryBreakdownRow({
     required this.label,
     required this.total,
-    required this.wins,
-    required this.losses,
+    required this.activeValid,
+    required this.tp1,
+    required this.tp2,
+    required this.sl,
     required this.expired,
+    required this.invalidated,
     required this.winRate,
+    required this.completionRate,
+    required this.filterInstruments,
   });
 
   final String label;
   final int total;
-  final int wins;
-  final int losses;
+  final int activeValid;
+  final int tp1;
+  final int tp2;
+  final int sl;
   final int expired;
+  final int invalidated;
   final num? winRate;
+  final num? completionRate;
+  final List<String> filterInstruments;
+
+  int get wins => tp1 + tp2;
 }
 
-class _HistoryBreakdown extends StatelessWidget {
-  const _HistoryBreakdown({
-    required this.title,
-    required this.minSamples,
-    required this.rows,
+class _HistoryViewTabs extends StatelessWidget {
+  const _HistoryViewTabs({
+    required this.summarySelected,
+    required this.summaryLabel,
+    required this.historyLabel,
+    required this.onChanged,
   });
 
-  final String title;
-  final int minSamples;
+  final bool summarySelected;
+  final String summaryLabel;
+  final String historyLabel;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      height: 42,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: .35),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _HistoryTabButton(
+              label: summaryLabel,
+              selected: summarySelected,
+              onTap: () => onChanged(true),
+            ),
+          ),
+          Expanded(
+            child: _HistoryTabButton(
+              label: historyLabel,
+              selected: !summarySelected,
+              onTap: () => onChanged(false),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HistoryTabButton extends StatelessWidget {
+  const _HistoryTabButton({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: selected ? theme.colorScheme.surface : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: selected
+                  ? theme.colorScheme.onSurface
+                  : theme.colorScheme.onSurfaceVariant,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RangeButton extends StatelessWidget {
+  const _RangeButton({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return SizedBox(
+      height: 36,
+      child: OutlinedButton(
+        onPressed: onTap,
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          backgroundColor: selected ? theme.colorScheme.primary : null,
+          foregroundColor: selected
+              ? theme.colorScheme.onPrimary
+              : theme.colorScheme.onSurfaceVariant,
+          side: BorderSide(
+            color: selected
+                ? theme.colorScheme.primary
+                : theme.colorScheme.outlineVariant,
+          ),
+        ),
+        child: Text(label, style: const TextStyle(fontSize: 12)),
+      ),
+    );
+  }
+}
+
+class _HistoryInsights extends StatelessWidget {
+  const _HistoryInsights({required this.rows, required this.minSamples});
+
   final List<_HistoryBreakdownRow> rows;
+  final int minSamples;
+
+  @override
+  Widget build(BuildContext context) {
+    final qualified = rows.where((row) => row.total >= minSamples).toList();
+    final byWin = [...qualified]
+      ..removeWhere((row) => row.winRate == null)
+      ..sort((a, b) => (b.winRate ?? 0).compareTo(a.winRate ?? 0));
+    final byExpired = [...qualified]
+      ..sort(
+        (a, b) => (b.expired / (b.total == 0 ? 1 : b.total)).compareTo(
+          a.expired / (a.total == 0 ? 1 : a.total),
+        ),
+      );
+    final bySl = [...qualified]..sort((a, b) => b.sl.compareTo(a.sl));
+    final unavailable = context.l10n.historyNeedMoreSamples;
+    return Column(
+      children: [
+        _InsightCard(
+          label: context.l10n.historyInsightConsistent,
+          value: byWin.isEmpty
+              ? unavailable
+              : '${byWin.first.label} · ${(byWin.first.winRate! * 100).round()}%',
+        ),
+        const SizedBox(height: 8),
+        _InsightCard(
+          label: context.l10n.historyInsightExpired,
+          value: byExpired.isEmpty
+              ? unavailable
+              : '${byExpired.first.label} · ${byExpired.first.expired}',
+        ),
+        const SizedBox(height: 8),
+        _InsightCard(
+          label: context.l10n.historyInsightSl,
+          value: bySl.isEmpty
+              ? unavailable
+              : '${bySl.first.label} · ${bySl.first.sl}',
+        ),
+      ],
+    );
+  }
+}
+
+class _InsightCard extends StatelessWidget {
+  const _InsightCard({required this.label, required this.value});
+
+  final String label;
+  final String value;
 
   @override
   Widget build(BuildContext context) => Card(
+    margin: EdgeInsets.zero,
     child: Padding(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(title, style: const TextStyle(fontWeight: FontWeight.w900)),
-          const SizedBox(height: 10),
-          if (rows.isEmpty)
-            Text(context.l10n.noAnalyses)
-          else
-            for (final row in rows) ...[
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      row.label,
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                  ),
-                  Text(
-                    row.winRate == null
-                        ? '—'
-                        : '${(row.winRate! * 100).round()}%',
-                    style: const TextStyle(fontWeight: FontWeight.w900),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 5),
-              _HistoryOutcomeBar(row: row),
-              const SizedBox(height: 4),
-              Text(
-                row.total < minSamples
-                    ? context.l10n.performanceSampleProgress(
-                        row.total,
-                        minSamples,
-                      )
-                    : context.l10n.performanceBucketTotals(
-                        row.wins,
-                        row.losses,
-                        row.expired,
-                      ),
-                style: Theme.of(context).textTheme.labelSmall,
-              ),
-              const SizedBox(height: 12),
-            ],
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.w800)),
         ],
       ),
     ),
   );
+}
+
+class _InstrumentPerformanceCard extends StatelessWidget {
+  const _InstrumentPerformanceCard({
+    required this.minSamples,
+    required this.rows,
+    required this.focused,
+    required this.onFocus,
+    required this.onViewHistory,
+  });
+
+  final int minSamples;
+  final List<_HistoryBreakdownRow> rows;
+  final String focused;
+  final ValueChanged<String> onFocus;
+  final ValueChanged<_HistoryBreakdownRow> onViewHistory;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.l10n.performanceByInstrument,
+                  style: const TextStyle(fontWeight: FontWeight.w900),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  context.l10n.historyInstrumentHint,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          if (rows.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Text(context.l10n.noAnalyses),
+            )
+          else
+            for (final row in rows) ...[
+              InkWell(
+                onTap: () => onFocus(row.label),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: row.label == focused
+                        ? theme.colorScheme.primary.withValues(alpha: .1)
+                        : null,
+                    border: row.label == focused
+                        ? Border.all(
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: .55,
+                            ),
+                          )
+                        : null,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              row.label,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            context.l10n.historySampleCount(row.total),
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Win ${row.total >= minSamples && row.winRate != null ? '${(row.winRate! * 100).round()}%' : '—'}',
+                            ),
+                          ),
+                          Expanded(child: Text('TP ${row.wins}')),
+                          Expanded(child: Text('SL ${row.sl}')),
+                        ],
+                      ),
+                      _HistoryOutcomeBar(row: row),
+                      if (row.total < minSamples) ...[
+                        const SizedBox(height: 7),
+                        Text(
+                          context.l10n.historySamplesNeeded(
+                            minSamples - row.total,
+                            row.total,
+                            minSamples,
+                          ),
+                          style: theme.textTheme.labelSmall,
+                        ),
+                      ],
+                      if (row.label == context.l10n.otherInstruments) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          context.l10n.historyOtherInstrumentsHint,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 8),
+                      TextButton(
+                        onPressed: () => onViewHistory(row),
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: const Size(0, 32),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: Text(context.l10n.historyViewHistory),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (row != rows.last) const Divider(height: 1),
+            ],
+        ],
+      ),
+    );
+  }
+}
+
+class _TimeframePerformanceCard extends StatelessWidget {
+  const _TimeframePerformanceCard({
+    required this.instrument,
+    required this.minSamples,
+    required this.rows,
+    required this.onTap,
+  });
+
+  final String? instrument;
+  final int minSamples;
+  final List<_HistoryBreakdownRow> rows;
+  final ValueChanged<_HistoryBreakdownRow> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${context.l10n.historyTimeframePerformance}${instrument == null ? '' : ' · $instrument'}',
+                  style: const TextStyle(fontWeight: FontWeight.w900),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  context.l10n.historyRateExplainer,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          if (rows.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Text(context.l10n.noAnalyses),
+            )
+          else
+            for (final row in rows) ...[
+              InkWell(
+                onTap: () => onTap(row),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              row.label,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ),
+                          Text(context.l10n.historySampleCount(row.total)),
+                        ],
+                      ),
+                      const SizedBox(height: 9),
+                      Wrap(
+                        spacing: 18,
+                        runSpacing: 8,
+                        children: [
+                          Text(
+                            '${context.l10n.historyMetricValid}: ${row.activeValid}',
+                          ),
+                          Text('${context.l10n.expired}: ${row.expired}'),
+                          Text('SL: ${row.sl}'),
+                          Text('TP1: ${row.tp1}'),
+                          Text('TP2: ${row.tp2}'),
+                          Text(
+                            row.total >= minSamples && row.winRate != null
+                                ? '${(row.winRate! * 100).round()}%'
+                                : '+${(minSamples - row.total).clamp(0, minSamples)} ${context.l10n.historySampleShort}',
+                            style: const TextStyle(fontWeight: FontWeight.w800),
+                          ),
+                          Text(
+                            row.total >= minSamples &&
+                                    row.completionRate != null
+                                ? '${(row.completionRate! * 100).round()}%'
+                                : '—',
+                            style: const TextStyle(fontWeight: FontWeight.w800),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (row != rows.last) const Divider(height: 1),
+            ],
+        ],
+      ),
+    );
+  }
 }
 
 class _HistoryOutcomeBar extends StatelessWidget {
@@ -924,7 +1381,7 @@ class _HistoryOutcomeBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final total = row.wins + row.losses + row.expired;
+    final total = row.wins + row.sl + row.expired;
     if (total == 0) {
       return const LinearProgressIndicator(value: 0, minHeight: 7);
     }
@@ -937,9 +1394,9 @@ class _HistoryOutcomeBar extends StatelessWidget {
               flex: row.wins,
               child: Container(height: 7, color: const Color(0xFF10B981)),
             ),
-          if (row.losses > 0)
+          if (row.sl > 0)
             Expanded(
-              flex: row.losses,
+              flex: row.sl,
               child: Container(height: 7, color: const Color(0xFFEF4444)),
             ),
           if (row.expired > 0)
@@ -951,6 +1408,71 @@ class _HistoryOutcomeBar extends StatelessWidget {
       ),
     );
   }
+}
+
+class _HistoryPagination extends StatelessWidget {
+  const _HistoryPagination({
+    required this.page,
+    required this.totalPages,
+    required this.start,
+    required this.end,
+    required this.total,
+    required this.loading,
+    required this.onPrevious,
+    required this.onNext,
+  });
+
+  final int page;
+  final int totalPages;
+  final int start;
+  final int end;
+  final int total;
+  final bool loading;
+  final VoidCallback? onPrevious;
+  final VoidCallback? onNext;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(top: 6, bottom: 20),
+    child: Column(
+      children: [
+        Text(
+          context.l10n.historyPageStatus(page, totalPages),
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          context.l10n.historyRangeStatus(start, end, total),
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: loading ? null : onPrevious,
+                child: Text(context.l10n.historyPrevious),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: OutlinedButton(
+                onPressed: loading ? null : onNext,
+                child: loading
+                    ? const SizedBox.square(
+                        dimension: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(context.l10n.historyNext),
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
 }
 
 // =============================================================================
@@ -1066,7 +1588,7 @@ class _ActiveFilters extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 2, 16, 8),
+      padding: const EdgeInsets.only(top: 2, bottom: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

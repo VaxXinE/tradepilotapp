@@ -18,9 +18,10 @@ part 'user_with_stats.g.dart';
 /// * [role]
 /// * [selectedMode]
 /// * [analysisCount]
+/// * [creditBalance] - Current purchased-credit balance (sum of credit_ledger for this user).
 /// * [tags]
-/// * [customQuotaPerHour] - Per-user analysis-quota override. Null = uses the global default.
 /// * [customQuotaPerDay] - Per-user analysis-quota override. Null = uses the global default.
+/// * [segment] - Cost/revenue/profit accounting segment (see GET /admin/stats' totalFreeUsers/totalPaidUsers/totalDevUsers). Mutually exclusive: \"dev\" (customQuotaPerDay set) wins over \"paid\" (a lifetime topup_approval credit_ledger entry) wins over \"free\".
 /// * [createdAt]
 @BuiltValue()
 abstract class UserWithStats
@@ -45,16 +46,21 @@ abstract class UserWithStats
   @BuiltValueField(wireName: r'analysisCount')
   int get analysisCount;
 
+  /// Current purchased-credit balance (sum of credit_ledger for this user).
+  @BuiltValueField(wireName: r'creditBalance')
+  int get creditBalance;
+
   @BuiltValueField(wireName: r'tags')
   BuiltList<String> get tags;
 
   /// Per-user analysis-quota override. Null = uses the global default.
-  @BuiltValueField(wireName: r'customQuotaPerHour')
-  int? get customQuotaPerHour;
-
-  /// Per-user analysis-quota override. Null = uses the global default.
   @BuiltValueField(wireName: r'customQuotaPerDay')
   int? get customQuotaPerDay;
+
+  /// Cost/revenue/profit accounting segment (see GET /admin/stats' totalFreeUsers/totalPaidUsers/totalDevUsers). Mutually exclusive: \"dev\" (customQuotaPerDay set) wins over \"paid\" (a lifetime topup_approval credit_ledger entry) wins over \"free\".
+  @BuiltValueField(wireName: r'segment')
+  UserWithStatsSegmentEnum get segment;
+  // enum segmentEnum {  free,  paid,  dev,  };
 
   @BuiltValueField(wireName: r'createdAt')
   DateTime get createdAt;
@@ -114,25 +120,26 @@ class _$UserWithStatsSerializer implements PrimitiveSerializer<UserWithStats> {
       object.analysisCount,
       specifiedType: const FullType(int),
     );
+    yield r'creditBalance';
+    yield serializers.serialize(
+      object.creditBalance,
+      specifiedType: const FullType(int),
+    );
     yield r'tags';
     yield serializers.serialize(
       object.tags,
       specifiedType: const FullType(BuiltList, [FullType(String)]),
     );
-    if (object.customQuotaPerHour != null) {
-      yield r'customQuotaPerHour';
-      yield serializers.serialize(
-        object.customQuotaPerHour,
-        specifiedType: const FullType(int),
-      );
-    }
-    if (object.customQuotaPerDay != null) {
-      yield r'customQuotaPerDay';
-      yield serializers.serialize(
-        object.customQuotaPerDay,
-        specifiedType: const FullType(int),
-      );
-    }
+    yield r'customQuotaPerDay';
+    yield serializers.serialize(
+      object.customQuotaPerDay,
+      specifiedType: const FullType.nullable(int),
+    );
+    yield r'segment';
+    yield serializers.serialize(
+      object.segment,
+      specifiedType: const FullType(UserWithStatsSegmentEnum),
+    );
     yield r'createdAt';
     yield serializers.serialize(
       object.createdAt,
@@ -205,6 +212,13 @@ class _$UserWithStatsSerializer implements PrimitiveSerializer<UserWithStats> {
           ) as int;
           result.analysisCount = valueDes;
           break;
+        case r'creditBalance':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(int),
+          ) as int;
+          result.creditBalance = valueDes;
+          break;
         case r'tags':
           final valueDes = serializers.deserialize(
             value,
@@ -212,21 +226,19 @@ class _$UserWithStatsSerializer implements PrimitiveSerializer<UserWithStats> {
           ) as BuiltList<String>;
           result.tags.replace(valueDes);
           break;
-        case r'customQuotaPerHour':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType.nullable(int),
-          ) as int?;
-          if (valueDes == null) continue;
-          result.customQuotaPerHour = valueDes;
-          break;
         case r'customQuotaPerDay':
           final valueDes = serializers.deserialize(
             value,
             specifiedType: const FullType.nullable(int),
           ) as int?;
-          if (valueDes == null) continue;
           result.customQuotaPerDay = valueDes;
+          break;
+        case r'segment':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(UserWithStatsSegmentEnum),
+          ) as UserWithStatsSegmentEnum;
+          result.segment = valueDes;
           break;
         case r'createdAt':
           final valueDes = serializers.deserialize(
@@ -301,4 +313,28 @@ class UserWithStatsSelectedModeEnum extends EnumClass {
       _$userWithStatsSelectedModeEnumValues;
   static UserWithStatsSelectedModeEnum valueOf(String name) =>
       _$userWithStatsSelectedModeEnumValueOf(name);
+}
+
+class UserWithStatsSegmentEnum extends EnumClass {
+  /// Cost/revenue/profit accounting segment (see GET /admin/stats' totalFreeUsers/totalPaidUsers/totalDevUsers). Mutually exclusive: \"dev\" (customQuotaPerDay set) wins over \"paid\" (a lifetime topup_approval credit_ledger entry) wins over \"free\".
+  @BuiltValueEnumConst(wireName: r'free')
+  static const UserWithStatsSegmentEnum free = _$userWithStatsSegmentEnum_free;
+
+  /// Cost/revenue/profit accounting segment (see GET /admin/stats' totalFreeUsers/totalPaidUsers/totalDevUsers). Mutually exclusive: \"dev\" (customQuotaPerDay set) wins over \"paid\" (a lifetime topup_approval credit_ledger entry) wins over \"free\".
+  @BuiltValueEnumConst(wireName: r'paid')
+  static const UserWithStatsSegmentEnum paid = _$userWithStatsSegmentEnum_paid;
+
+  /// Cost/revenue/profit accounting segment (see GET /admin/stats' totalFreeUsers/totalPaidUsers/totalDevUsers). Mutually exclusive: \"dev\" (customQuotaPerDay set) wins over \"paid\" (a lifetime topup_approval credit_ledger entry) wins over \"free\".
+  @BuiltValueEnumConst(wireName: r'dev')
+  static const UserWithStatsSegmentEnum dev = _$userWithStatsSegmentEnum_dev;
+
+  static Serializer<UserWithStatsSegmentEnum> get serializer =>
+      _$userWithStatsSegmentEnumSerializer;
+
+  const UserWithStatsSegmentEnum._(String name) : super(name);
+
+  static BuiltSet<UserWithStatsSegmentEnum> get values =>
+      _$userWithStatsSegmentEnumValues;
+  static UserWithStatsSegmentEnum valueOf(String name) =>
+      _$userWithStatsSegmentEnumValueOf(name);
 }

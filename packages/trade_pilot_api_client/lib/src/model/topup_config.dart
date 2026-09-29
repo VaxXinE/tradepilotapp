@@ -3,6 +3,8 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:built_collection/built_collection.dart';
+import 'package:trade_pilot_api_client/src/model/topup_package_option.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
 
@@ -11,15 +13,12 @@ part 'topup_config.g.dart';
 /// TopupConfig
 ///
 /// Properties:
-/// * [rupiahPerCredit]
-/// * [qrisImageUrl]
+/// * [packages] - The fixed set of purchasable packages. POST /topups/doku/checkout only accepts an amountRupiah matching one of these exactly.
 @BuiltValue()
 abstract class TopupConfig implements Built<TopupConfig, TopupConfigBuilder> {
-  @BuiltValueField(wireName: r'rupiahPerCredit')
-  int get rupiahPerCredit;
-
-  @BuiltValueField(wireName: r'qrisImageUrl')
-  String get qrisImageUrl;
+  /// The fixed set of purchasable packages. POST /topups/doku/checkout only accepts an amountRupiah matching one of these exactly.
+  @BuiltValueField(wireName: r'packages')
+  BuiltList<TopupPackageOption> get packages;
 
   TopupConfig._();
 
@@ -44,15 +43,10 @@ class _$TopupConfigSerializer implements PrimitiveSerializer<TopupConfig> {
     TopupConfig object, {
     FullType specifiedType = FullType.unspecified,
   }) sync* {
-    yield r'rupiahPerCredit';
+    yield r'packages';
     yield serializers.serialize(
-      object.rupiahPerCredit,
-      specifiedType: const FullType(int),
-    );
-    yield r'qrisImageUrl';
-    yield serializers.serialize(
-      object.qrisImageUrl,
-      specifiedType: const FullType(String),
+      object.packages,
+      specifiedType: const FullType(BuiltList, [FullType(TopupPackageOption)]),
     );
   }
 
@@ -79,19 +73,13 @@ class _$TopupConfigSerializer implements PrimitiveSerializer<TopupConfig> {
       final key = serializedList[i] as String;
       final value = serializedList[i + 1];
       switch (key) {
-        case r'rupiahPerCredit':
+        case r'packages':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(int),
-          ) as int;
-          result.rupiahPerCredit = valueDes;
-          break;
-        case r'qrisImageUrl':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType(String),
-          ) as String;
-          result.qrisImageUrl = valueDes;
+            specifiedType:
+                const FullType(BuiltList, [FullType(TopupPackageOption)]),
+          ) as BuiltList<TopupPackageOption>;
+          result.packages.replace(valueDes);
           break;
         default:
           unhandled.add(key);

@@ -97,6 +97,9 @@ void main() {
 
     expect(stats.total, 340);
     expect(stats.targetHitCount, 140);
+    expect(stats.activeValidCount, 12);
+    expect(stats.tp1HitCount, 100);
+    expect(stats.tp2HitCount, 40);
     expect(stats.riskLimitHitCount, 80);
     expect(stats.pendingCount, 20);
     expect(stats.expiredCount, 60);

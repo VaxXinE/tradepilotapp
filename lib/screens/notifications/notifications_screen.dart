@@ -13,21 +13,26 @@ import '../../providers/notifications_provider.dart';
 import '../../services/native_push_service.dart';
 import '../../widgets/error_banner.dart';
 import '../analysis/analysis_detail_screen.dart';
+import '../daily_summary/daily_summary_screen.dart';
 import '../home/tabs/history_tab.dart';
+import '../price_alert/price_alert_list_screen.dart';
 
 class NotificationsScreen extends StatefulWidget {
-  const NotificationsScreen({super.key});
+  const NotificationsScreen({super.key, this.showSettingsInitially = false});
+
+  final bool showSettingsInitially;
 
   @override
   State<NotificationsScreen> createState() => _NotificationsScreenState();
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
-  bool _showSettings = false;
+  late bool _showSettings;
 
   @override
   void initState() {
     super.initState();
+    _showSettings = widget.showSettingsInitially;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
@@ -98,10 +103,19 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         return;
 
       case NotificationActionType.notifications:
+        setState(() => _showSettings = true);
+        return;
+
       case NotificationActionType.dailySummary:
+        await Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const DailySummaryScreen()));
+        return;
+
       case NotificationActionType.alerts:
-        // Akan di-wire ketika screen mobile terkait
-        // sudah masuk parity.
+        await Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const PriceAlertListScreen()));
         return;
     }
   }
@@ -470,6 +484,17 @@ class _PreferencesCard extends StatelessWidget {
                 ),
               );
             },
+          ),
+
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const DailySummaryScreen()),
+              ),
+              icon: const Icon(Icons.wb_twilight_outlined),
+              label: Text(l10n.dailySummary),
+            ),
           ),
 
           _PreferenceSwitch(
