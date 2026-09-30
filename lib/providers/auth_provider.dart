@@ -463,6 +463,12 @@ class AuthProvider extends ChangeNotifier {
         error.code == 'email_already_registered') {
       return AppMessages.l10n.socialEmailAlreadyRegistered;
     }
+    if (error is _MobileOAuthException && error.code == 'facebook_no_email') {
+      return AppMessages.l10n.socialFacebookNoEmail;
+    }
+    if (error is _MobileOAuthException && error.code == 'signup_expired') {
+      return AppMessages.l10n.socialSignupExpired;
+    }
     if (error is DioException &&
         (error.type == DioExceptionType.connectionError ||
             error.type == DioExceptionType.connectionTimeout ||

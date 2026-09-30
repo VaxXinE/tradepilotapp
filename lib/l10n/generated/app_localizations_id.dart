@@ -9,10 +9,10 @@ class AppLocalizationsId extends AppLocalizations {
   AppLocalizationsId([String locale = 'id']) : super(locale);
 
   @override
-  String get appTitle => 'Trade Pilot';
+  String get appTitle => 'TradePilot.id';
 
   @override
-  String get tradePilotLogo => 'Logo Trade Pilot';
+  String get tradePilotLogo => 'Logo TradePilot.id';
 
   @override
   String get aiTradingAssistant => 'Analisis trading bertenaga AI';
@@ -202,7 +202,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get analysisSafetyDisclaimer =>
-      'Trade Pilot adalah alat pendukung keputusan, bukan saran keuangan atau jaminan profit. Selalu kelola risiko dan jangan membuka posisi hanya berdasarkan satu indikator.';
+      'TradePilot adalah alat pendukung keputusan, bukan saran keuangan atau jaminan profit. Selalu kelola risiko dan jangan membuka posisi hanya berdasarkan satu indikator.';
 
   @override
   String get journalCreateForTrade => 'Catat trade ini';
@@ -753,7 +753,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get performanceDescription =>
-      'Rekam jejak anonim seluruh analisis AI Trade Pilot. Ini bukan statistik akun pribadi.';
+      'Rekam jejak anonim seluruh analisis AI TradePilot. Ini bukan statistik akun pribadi.';
 
   @override
   String performanceDays(int count) {
@@ -1288,6 +1288,14 @@ class AppLocalizationsId extends AppLocalizations {
       'Email ini sudah terdaftar. Masuklah dengan metode yang sudah terhubung.';
 
   @override
+  String get socialFacebookNoEmail =>
+      'Akun Facebook kamu tidak punya email terdaftar. Coba metode login lain.';
+
+  @override
+  String get socialSignupExpired =>
+      'Sesi pendaftaran TikTok kamu sudah kedaluwarsa. Silakan coba login TikTok lagi.';
+
+  @override
   String get googleDeleteReauthDescription =>
       'Untuk melindungi akunmu, verifikasi identitas dengan Google sebelum penghapusan.';
 
@@ -1351,7 +1359,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get biometricReason =>
-      'Verifikasi identitasmu untuk masuk ke Trade Pilot';
+      'Verifikasi identitasmu untuk masuk ke TradePilot';
 
   @override
   String get biometricUnavailable =>
@@ -1545,7 +1553,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get notificationBroadcastDescription =>
-      'Informasi dan broadcast penting dari Trade Pilot.';
+      'Informasi dan broadcast penting dari TradePilot.';
 
   @override
   String get notificationDailyTitle => 'Ringkasan harian';
@@ -1662,13 +1670,13 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get decisionDisclaimer =>
-      'Trade Pilot membantu kamu memahami kondisi pasar, tetapi semua keputusan dan pengelolaan risiko tetap menjadi tanggung jawabmu.';
+      'TradePilot membantu kamu memahami kondisi pasar, tetapi semua keputusan dan pengelolaan risiko tetap menjadi tanggung jawabmu.';
 
   @override
   String get wantMarketAnalysis => 'Ingin analisis pasar?';
 
   @override
-  String get getStarted => 'Mulai menggunakan Trade Pilot';
+  String get getStarted => 'Mulai menggunakan TradePilot';
 
   @override
   String get onboardingSteps =>
@@ -1818,10 +1826,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get otherInstrument => 'Instrumen lain…';
 
   @override
-  String get quotaDay => 'Sisa per hari';
+  String get quotaDay => 'Sisa kuota gratis';
 
   @override
-  String get quotaDayShort => '/hari';
+  String get quotaDayShort => ' gratis';
 
   @override
   String get selectInstrument => 'Pilih Instrumen';
@@ -1930,7 +1938,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get beginnerAnalysisIntro =>
-      'Trade Pilot membantu menjelaskan harga, momentum, sesi pasar, dan peristiwa penting dengan bahasa yang lebih sederhana.';
+      'TradePilot membantu menjelaskan harga, momentum, sesi pasar, dan peristiwa penting dengan bahasa yang lebih sederhana.';
 
   @override
   String get livePrice => 'Harga live';
@@ -2636,7 +2644,7 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get appLocked => 'Trade Pilot terkunci';
+  String get appLocked => 'TradePilot terkunci';
 
   @override
   String get appLockedDescription =>
@@ -2647,7 +2655,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get biometricUnlockReason =>
-      'Verifikasi identitasmu untuk membuka Trade Pilot';
+      'Verifikasi identitasmu untuk membuka TradePilot';
 
   @override
   String get unlockFailed =>
@@ -2727,7 +2735,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get standardRulesDescription =>
-      'Aturan broker-neutral yang menjadi dasar estimasi Trade Pilot.';
+      'Aturan broker-neutral yang menjadi dasar estimasi TradePilot.';
 
   @override
   String get standardRulesLoading => 'Memuat aturan trading standar...';
@@ -2798,11 +2806,11 @@ class AppLocalizationsId extends AppLocalizations {
       'Ingin lanjut analisis? Lihat pilihan yang tersedia';
 
   @override
-  String get analysisQuotaDayTitle => 'Batas harian tercapai';
+  String get analysisQuotaDayTitle => 'Kuota Analisis Gratis Habis';
 
   @override
   String get analysisQuotaDayMessage =>
-      'Kuota analisis harian kamu sudah habis. Coba lagi besok.';
+      'Kuota analisis gratis kamu sudah habis terpakai.';
 
   @override
   String get analysisQuotaConcurrentTitle => 'Analisis masih diproses';
@@ -3396,7 +3404,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get publicAiPerformanceSubtitle =>
-      'Rekam jejak anonim seluruh analisis Trade Pilot';
+      'Rekam jejak anonim seluruh analisis TradePilot';
 
   @override
   String get analyticsLoadFailed => 'Analytics belum dapat dimuat. Coba lagi.';

@@ -22,7 +22,7 @@ void main() {
 
       // Sebelum AuthProvider selesai restore sesi, splash screen tampil
       // dengan indicator loading.
-      expect(find.text('Trade Pilot'), findsOneWidget);
+      expect(find.text('TradePilot.id'), findsOneWidget);
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
       final upgradeGate = tester.widget<UpgradeAlert>(
