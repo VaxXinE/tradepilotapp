@@ -305,13 +305,18 @@ class AuthProvider extends ChangeNotifier {
       _usedGoogleSignIn = true;
       return true;
     } catch (error) {
+      // Logged before the cancellation check: Android's Credential Manager
+      // reports config problems (SHA-1, missing account) as `canceled`, which
+      // would otherwise fail silently.
+      if (kDebugMode) {
+        debugPrint(
+          error is GoogleSignInException
+              ? 'Google Sign-In failed: ${error.code.name} — '
+                    '${error.description ?? 'no description'}'
+              : 'Google Sign-In failed: $error',
+        );
+      }
       if (!_isGoogleCancellation(error)) {
-        if (kDebugMode && error is GoogleSignInException) {
-          debugPrint(
-            'Google Sign-In failed: ${error.code.name} — '
-            '${error.description ?? 'no description'}',
-          );
-        }
         errorMessage = _googleFriendlyError(error);
       }
       return false;
