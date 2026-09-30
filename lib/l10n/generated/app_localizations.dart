@@ -7414,6 +7414,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn’t process the chart image. Please try again.'**
   String get chartImageFailed;
+
+  /// No description provided for @requestInstrument.
+  ///
+  /// In en, this message translates to:
+  /// **'Request {symbol}'**
+  String requestInstrument(String symbol);
+
+  /// No description provided for @instrumentNotAvailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{symbol} is not available'**
+  String instrumentNotAvailableTitle(String symbol);
+
+  /// No description provided for @instrumentNotAvailableBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks, your request helps us decide what to support next. We’ll consider adding analysis for this instrument in the future.'**
+  String get instrumentNotAvailableBody;
+
+  /// No description provided for @clear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get clear;
 }
 
 class _AppLocalizationsDelegate

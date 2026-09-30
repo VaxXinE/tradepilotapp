@@ -2039,5 +2039,11 @@
   "shareImage": "Share image",
   "chartImageCopied": "Chart image copied",
   "chartImageSaved": "Chart image saved to your gallery",
-  "chartImageFailed": "Couldn’t process the chart image. Please try again."
+  "chartImageFailed": "Couldn’t process the chart image. Please try again.",
+  "requestInstrument": "Request {symbol}",
+  "@requestInstrument": {"placeholders": {"symbol": {"type": "String"}}},
+  "instrumentNotAvailableTitle": "{symbol} is not available",
+  "@instrumentNotAvailableTitle": {"placeholders": {"symbol": {"type": "String"}}},
+  "instrumentNotAvailableBody": "Thanks, your request helps us decide what to support next. We’ll consider adding analysis for this instrument in the future.",
+  "clear": "Clear"
 }

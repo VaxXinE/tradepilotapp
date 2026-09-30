@@ -524,7 +524,7 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
                       ? null
                       : () => unawaited(_openPriceAlert(instrument, quote)),
                   icon: const Icon(Icons.notifications_none_rounded),
-                  label: Text('🔔 ${l10n.setAlertAction}'),
+                  label: Text(l10n.setAlertAction),
                 ),
               ),
               const SizedBox(height: 16),
@@ -1890,76 +1890,11 @@ class _AnalyzeInstrumentSelectorState
     final selected = await showDialog<String>(
       context: context,
       barrierColor: Colors.black54,
-      builder: (dialogContext) => Dialog(
-        insetPadding: const EdgeInsets.symmetric(horizontal: 14),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(28, 18, 28, 28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: Text(
-                      context.l10n.otherInstrument,
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                  ),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: IconButton(
-                      tooltip: context.l10n.close,
-                      onPressed: () => Navigator.pop(dialogContext),
-                      icon: const Icon(Icons.close_rounded),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-              TextFormField(
-                key: const Key('other-instrument-search-field'),
-                initialValue: _featured.contains(widget.selected)
-                    ? ''
-                    : widget.selected,
-                autofocus: true,
-                textCapitalization: TextCapitalization.characters,
-                textInputAction: TextInputAction.done,
-                autocorrect: false,
-                onFieldSubmitted: (value) {
-                  final symbol = value.trim().toUpperCase();
-                  if (symbol.isNotEmpty) Navigator.pop(dialogContext, symbol);
-                },
-                decoration: InputDecoration(
-                  hintText: context.l10n.searchOrEnterInstrumentCode,
-                ),
-              ),
-              const SizedBox(height: 14),
-              GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 2,
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-                childAspectRatio: 4.1,
-                children: [
-                  for (final instrument in _otherInstruments)
-                    OutlinedButton(
-                      key: ValueKey('other-instrument-$instrument'),
-                      onPressed: () => Navigator.pop(dialogContext, instrument),
-                      style: OutlinedButton.styleFrom(
-                        alignment: Alignment.centerLeft,
-                        padding: const EdgeInsets.symmetric(horizontal: 18),
-                      ),
-                      child: Text(instrument),
-                    ),
-                ],
-              ),
-            ],
-          ),
-        ),
+      builder: (dialogContext) => _OtherInstrumentDialog(
+        initialValue: _featured.contains(widget.selected)
+            ? ''
+            : widget.selected,
+        suggestions: _otherInstruments,
       ),
     );
     if (!mounted || selected == null || selected == widget.selected) return;
@@ -2183,6 +2118,210 @@ class _InstrumentSelectorState extends State<_InstrumentSelector> {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Dialog "Instrumen lain…": instrumen yang dikenal langsung dipilih, kode
+/// yang tidak dikenal berubah menjadi tombol "Request" dan membuka dialog
+/// "tidak tersedia", sama seperti di web.
+class _OtherInstrumentDialog extends StatefulWidget {
+  const _OtherInstrumentDialog({
+    required this.initialValue,
+    required this.suggestions,
+  });
+
+  final String initialValue;
+  final List<String> suggestions;
+
+  @override
+  State<_OtherInstrumentDialog> createState() => _OtherInstrumentDialogState();
+}
+
+class _OtherInstrumentDialogState extends State<_OtherInstrumentDialog> {
+  late final TextEditingController _controller = TextEditingController(
+    text: widget.initialValue,
+  );
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  String get _symbol => _controller.text.trim().toUpperCase();
+
+  void _submit() {
+    final symbol = _symbol;
+    if (symbol.isEmpty) return;
+    if (MarketProvider.supportedInstruments.contains(symbol)) {
+      Navigator.pop(context, symbol);
+      return;
+    }
+    unawaited(_showUnavailable(symbol));
+  }
+
+  Future<void> _showUnavailable(String symbol) => showDialog<void>(
+    context: context,
+    barrierColor: Colors.black54,
+    builder: (dialogContext) => _InstrumentUnavailableDialog(symbol: symbol),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = Theme.of(context).colorScheme;
+    final symbol = _symbol;
+    final isTyping = symbol.isNotEmpty;
+    final isKnown = MarketProvider.supportedInstruments.contains(symbol);
+
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 14),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(28, 18, 28, 28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                SizedBox(
+                  width: double.infinity,
+                  child: Text(
+                    l10n.otherInstrument,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: IconButton(
+                    tooltip: l10n.close,
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            TextField(
+              key: const Key('other-instrument-search-field'),
+              controller: _controller,
+              autofocus: true,
+              textCapitalization: TextCapitalization.characters,
+              textInputAction: TextInputAction.done,
+              autocorrect: false,
+              onChanged: (_) => setState(() {}),
+              onSubmitted: (_) => _submit(),
+              decoration: InputDecoration(
+                hintText: l10n.searchOrEnterInstrumentCode,
+                suffixIcon: isTyping
+                    ? IconButton(
+                        key: const Key('other-instrument-clear'),
+                        tooltip: l10n.clear,
+                        onPressed: () {
+                          _controller.clear();
+                          setState(() {});
+                        },
+                        icon: Icon(Icons.close_rounded, color: colors.primary),
+                      )
+                    : null,
+              ),
+            ),
+            const SizedBox(height: 14),
+            if (isTyping)
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  key: const Key('other-instrument-request-button'),
+                  onPressed: _submit,
+                  child: Text(
+                    isKnown ? symbol : l10n.requestInstrument(symbol),
+                  ),
+                ),
+              )
+            else
+              GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+                childAspectRatio: 4.1,
+                children: [
+                  for (final instrument in widget.suggestions)
+                    OutlinedButton(
+                      key: ValueKey('other-instrument-$instrument'),
+                      onPressed: () => Navigator.pop(context, instrument),
+                      style: OutlinedButton.styleFrom(
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.symmetric(horizontal: 18),
+                      ),
+                      child: Text(instrument),
+                    ),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InstrumentUnavailableDialog extends StatelessWidget {
+  const _InstrumentUnavailableDialog({required this.symbol});
+
+  final String symbol;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final muted = Theme.of(context).colorScheme.onSurfaceVariant;
+
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 14),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    l10n.instrumentNotAvailableTitle(symbol),
+                    key: const Key('instrument-unavailable-title'),
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  tooltip: l10n.close,
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close_rounded),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              l10n.instrumentNotAvailableBody,
+              style: TextStyle(color: muted, height: 1.6, fontSize: 14),
+            ),
+            const SizedBox(height: 18),
+            Align(
+              alignment: Alignment.centerRight,
+              child: FilledButton(
+                key: const Key('instrument-unavailable-close'),
+                onPressed: () => Navigator.pop(context),
+                child: Text(l10n.close),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

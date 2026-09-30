@@ -78,6 +78,41 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('an unknown instrument becomes a request that is not available', (
+    tester,
+  ) async {
+    await _pumpAnalyzeTab(tester);
+
+    await tester.tap(find.byKey(const Key('custom-instrument-field')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('other-instrument-search-field')),
+      'btc/usdh',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Request BTC/USDH'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('other-instrument-EUR/USD')),
+      findsNothing,
+    );
+
+    await tester.tap(find.byKey(const Key('other-instrument-request-button')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('BTC/USDH is not available'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('instrument-unavailable-close')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('BTC/USDH is not available'), findsNothing);
+    expect(
+      find.byKey(const Key('other-instrument-search-field')),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('the analysis form remains visible above the result', (
     tester,
   ) async {

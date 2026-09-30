@@ -4184,4 +4184,21 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get chartImageFailed =>
       'Couldn’t process the chart image. Please try again.';
+
+  @override
+  String requestInstrument(String symbol) {
+    return 'Request $symbol';
+  }
+
+  @override
+  String instrumentNotAvailableTitle(String symbol) {
+    return '$symbol is not available';
+  }
+
+  @override
+  String get instrumentNotAvailableBody =>
+      'Thanks, your request helps us decide what to support next. We’ll consider adding analysis for this instrument in the future.';
+
+  @override
+  String get clear => 'Clear';
 }

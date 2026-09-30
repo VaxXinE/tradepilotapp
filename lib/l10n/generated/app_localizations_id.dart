@@ -4167,4 +4167,21 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get chartImageFailed => 'Gambar chart gagal diproses. Coba lagi.';
+
+  @override
+  String requestInstrument(String symbol) {
+    return 'Request $symbol';
+  }
+
+  @override
+  String instrumentNotAvailableTitle(String symbol) {
+    return '$symbol belum tersedia';
+  }
+
+  @override
+  String get instrumentNotAvailableBody =>
+      'Terima kasih, permintaanmu membantu kami menentukan instrumen berikutnya. Kami akan mempertimbangkan analisis untuk instrumen ini di masa depan.';
+
+  @override
+  String get clear => 'Hapus';
 }

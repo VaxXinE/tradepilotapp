@@ -1855,5 +1855,11 @@
   "shareImage": "Bagikan gambar",
   "chartImageCopied": "Gambar chart disalin",
   "chartImageSaved": "Gambar chart tersimpan di galeri",
-  "chartImageFailed": "Gambar chart gagal diproses. Coba lagi."
+  "chartImageFailed": "Gambar chart gagal diproses. Coba lagi.",
+  "requestInstrument": "Request {symbol}",
+  "@requestInstrument": {"placeholders": {"symbol": {"type": "String"}}},
+  "instrumentNotAvailableTitle": "{symbol} belum tersedia",
+  "@instrumentNotAvailableTitle": {"placeholders": {"symbol": {"type": "String"}}},
+  "instrumentNotAvailableBody": "Terima kasih, permintaanmu membantu kami menentukan instrumen berikutnya. Kami akan mempertimbangkan analisis untuk instrumen ini di masa depan.",
+  "clear": "Hapus"
 }
