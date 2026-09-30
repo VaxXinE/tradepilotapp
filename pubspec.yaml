@@ -53,6 +53,8 @@ dependencies:
   sign_in_with_apple: ^7.0.1
   flutter_web_auth_2: ^5.1.0
   crypto: ^3.0.7
+  share_plus: ^13.3.0
+  gal: ^2.3.3
 
 dev_dependencies:
   flutter_test:

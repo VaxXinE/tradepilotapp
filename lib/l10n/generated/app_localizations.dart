@@ -7372,6 +7372,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Relevant for about {hours} hours more'**
   String relevantForHours(int hours);
+
+  /// No description provided for @shareChart.
+  ///
+  /// In en, this message translates to:
+  /// **'Share chart'**
+  String get shareChart;
+
+  /// No description provided for @copyAnalysisImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy analysis image'**
+  String get copyAnalysisImage;
+
+  /// No description provided for @savePng.
+  ///
+  /// In en, this message translates to:
+  /// **'Save PNG'**
+  String get savePng;
+
+  /// No description provided for @shareImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Share image'**
+  String get shareImage;
+
+  /// No description provided for @chartImageCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Chart image copied'**
+  String get chartImageCopied;
+
+  /// No description provided for @chartImageSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Chart image saved to your gallery'**
+  String get chartImageSaved;
+
+  /// No description provided for @chartImageFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t process the chart image. Please try again.'**
+  String get chartImageFailed;
 }
 
 class _AppLocalizationsDelegate

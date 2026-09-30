@@ -236,6 +236,10 @@ class _CandlestickPlotState extends State<CandlestickPlot> {
       height - axisHeight,
       labelHeight,
     );
+    final spansDays =
+        candles.first.date.year != candles.last.date.year ||
+        candles.first.date.month != candles.last.date.month ||
+        candles.first.date.day != candles.last.date.day;
     final showTimeAxis =
         candles.length > 1 &&
         candles.last.date.difference(candles.first.date).abs().inMilliseconds /
@@ -334,14 +338,20 @@ class _CandlestickPlotState extends State<CandlestickPlot> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _AxisLabel(candles.first.date, showTime: showTimeAxis),
+                _AxisLabel(
+                  candles.first.date,
+                  showTime: showTimeAxis,
+                  showDate: spansDays,
+                ),
                 _AxisLabel(
                   candles[candles.length ~/ 2].date,
                   showTime: showTimeAxis,
+                  showDate: spansDays,
                 ),
                 _AxisLabel(
                   candles.last.date,
                   showTime: showTimeAxis,
+                  showDate: spansDays,
                   isLive: widget.isLive,
                 ),
               ],
@@ -478,10 +488,19 @@ class _LevelBadge extends StatelessWidget {
 }
 
 class _AxisLabel extends StatelessWidget {
-  const _AxisLabel(this.date, {required this.showTime, this.isLive = false});
+  const _AxisLabel(
+    this.date, {
+    required this.showTime,
+    this.showDate = false,
+    this.isLive = false,
+  });
 
   final DateTime date;
   final bool showTime;
+
+  /// Menambahkan `dd/MM` di depan jam ketika chart intraday melewati lebih
+  /// dari satu hari, supaya jam yang sama di hari berbeda tidak ambigu.
+  final bool showDate;
 
   /// `true` cuma untuk label paling kanan ketika chart ini benar-benar
   /// menampilkan harga live (bukan sekadar histori candle) — bukan
@@ -492,9 +511,13 @@ class _AxisLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colors = Theme.of(context).colorScheme;
-    final time = showTime
-        ? '${_pad2(date.hour)}:${_pad2(date.minute)}'
-        : '${_pad2(date.day)}/${_pad2(date.month)}';
+    final day = '${_pad2(date.day)}/${_pad2(date.month)}';
+    final clock = '${_pad2(date.hour)}:${_pad2(date.minute)}';
+    final time = !showTime
+        ? day
+        : showDate
+        ? '$day $clock'
+        : clock;
     if (isLive) {
       return Text(
         '$time (Live)',

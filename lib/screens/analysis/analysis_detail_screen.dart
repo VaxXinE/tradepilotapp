@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
@@ -6,8 +7,10 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:gal/gal.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -3395,7 +3398,7 @@ class _MarketSnapshotCard extends StatelessWidget {
 // CHART
 // =============================================================================
 
-class _ChartCard extends StatelessWidget {
+class _ChartCard extends StatefulWidget {
   const _ChartCard({
     required this.analysis,
     required this.candles,
@@ -3414,103 +3417,253 @@ class _ChartCard extends StatelessWidget {
   final VoidCallback onOpenTradingView;
 
   @override
+  State<_ChartCard> createState() => _ChartCardState();
+}
+
+enum _ChartShareAction { copy, save, share }
+
+class _ChartCardState extends State<_ChartCard> {
+  final _captureKey = GlobalKey();
+  bool _busy = false;
+
+  Analysis get analysis => widget.analysis;
+  List<MarketCandle> get candles => widget.candles;
+  bool get isLoading => widget.isLoading;
+  String? get error => widget.error;
+  VoidCallback get onRetry => widget.onRetry;
+  VoidCallback get onOpenTradingView => widget.onOpenTradingView;
+
+  Future<Uint8List> _capturePng() async {
+    await WidgetsBinding.instance.endOfFrame;
+    final boundary =
+        _captureKey.currentContext?.findRenderObject()
+            as RenderRepaintBoundary?;
+    if (boundary == null) throw StateError('Chart is unavailable');
+    final image = await boundary.toImage(pixelRatio: 3);
+    final data = await image.toByteData(format: ui.ImageByteFormat.png);
+    image.dispose();
+    if (data == null) throw StateError('Chart encoding failed');
+    return data.buffer.asUint8List();
+  }
+
+  String get _fileStem {
+    final instrument = analysis.instrument.replaceAll(
+      RegExp(r'[^A-Za-z0-9]'),
+      '',
+    );
+    return 'tradepilot-$instrument-${analysis.timeframe}';
+  }
+
+  Future<void> _handleShare(_ChartShareAction action, Rect shareOrigin) async {
+    if (_busy) return;
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    void notify(String message) => messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+
+    setState(() => _busy = true);
+    try {
+      final bytes = await _capturePng();
+      switch (action) {
+        case _ChartShareAction.copy:
+          await _reasoningClipboard.invokeMethod<void>('copyImage', bytes);
+          notify(l10n.chartImageCopied);
+        case _ChartShareAction.save:
+          await Gal.putImageBytes(bytes, name: _fileStem);
+          notify(l10n.chartImageSaved);
+        case _ChartShareAction.share:
+          final file = File('${Directory.systemTemp.path}/$_fileStem.png');
+          await file.writeAsBytes(bytes, flush: true);
+          await SharePlus.instance.share(
+            ShareParams(
+              files: [XFile(file.path, mimeType: 'image/png')],
+              sharePositionOrigin: shareOrigin,
+            ),
+          );
+      }
+    } catch (_) {
+      notify(l10n.chartImageFailed);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final quote = context.watch<MarketProvider>().quotes[analysis.instrument];
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = Theme.of(context).colorScheme;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.primary.withValues(alpha: .12),
-                    borderRadius: BorderRadius.circular(9),
-                  ),
-                  child: Icon(
-                    Icons.candlestick_chart_rounded,
-                    size: 19,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.l10n.priceChart,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w900,
+            RepaintBoundary(
+              key: _captureKey,
+              child: ColoredBox(
+                color:
+                    Theme.of(context).cardTheme.color ??
+                    colors.surfaceContainerLow,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 34,
+                          height: 34,
+                          decoration: BoxDecoration(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: .12),
+                            borderRadius: BorderRadius.circular(9),
+                          ),
+                          child: Icon(
+                            Icons.candlestick_chart_rounded,
+                            size: 19,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
                         ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                context.l10n.priceChart,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Wrap(
+                                spacing: 6,
+                                runSpacing: 2,
+                                children: [
+                                  Text(
+                                    '${analysis.instrument} • ${analysis.timeframe}',
+                                    style: TextStyle(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                  if (quote != null)
+                                    Text(
+                                      '${quote.price.toStringAsFixed(2)} '
+                                      '${quote.changePercent >= 0 ? '+' : ''}'
+                                      '${quote.changePercent.toStringAsFixed(2)}%',
+                                      style: TextStyle(
+                                        color: quote.changePercent >= 0
+                                            ? (isDark
+                                                  ? AppColors.bullishDark
+                                                  : AppColors.bullishLight)
+                                            : (isDark
+                                                  ? AppColors.bearishDark
+                                                  : AppColors.bearishLight),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: context.l10n.openFullChart,
+                          onPressed: onOpenTradingView,
+                          icon: const Icon(Icons.open_in_new_rounded, size: 19),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    if (error != null && candles.isEmpty)
+                      ErrorBanner(
+                        message: error,
+                        onRetry: onRetry,
+                        retryLabel: context.l10n.tryAgain,
+                      )
+                    else
+                      AnalysisLevelsChart(
+                        candles: candles,
+                        tradePlan: analysis.tradePlan,
+                        tradingBias: analysis.tradingBias,
+                        currentPrice: quote?.price,
+                        isLoading: isLoading,
                       ),
-                      const SizedBox(height: 2),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 2,
-                        children: [
-                          Text(
-                            '${analysis.instrument} • ${analysis.timeframe}',
-                            style: TextStyle(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurfaceVariant,
-                              fontSize: 11,
+                  ],
+                ),
+              ),
+            ),
+            if (candles.length >= 2) ...[
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Builder(
+                  builder: (buttonContext) =>
+                      PopupMenuButton<_ChartShareAction>(
+                        enabled: !_busy,
+                        tooltip: context.l10n.shareChart,
+                        onSelected: (action) {
+                          final box =
+                              buttonContext.findRenderObject() as RenderBox;
+                          _handleShare(
+                            action,
+                            box.localToGlobal(Offset.zero) & box.size,
+                          );
+                        },
+                        itemBuilder: (context) => [
+                          PopupMenuItem(
+                            value: _ChartShareAction.copy,
+                            child: ListTile(
+                              leading: const Icon(Icons.copy_rounded),
+                              title: Text(context.l10n.copyAnalysisImage),
+                              contentPadding: EdgeInsets.zero,
                             ),
                           ),
-                          if (quote != null)
-                            Text(
-                              '${quote.price.toStringAsFixed(2)} '
-                              '${quote.changePercent >= 0 ? '+' : ''}'
-                              '${quote.changePercent.toStringAsFixed(2)}%',
-                              style: TextStyle(
-                                color: quote.changePercent >= 0
-                                    ? (isDark
-                                          ? AppColors.bullishDark
-                                          : AppColors.bullishLight)
-                                    : (isDark
-                                          ? AppColors.bearishDark
-                                          : AppColors.bearishLight),
-                                fontSize: 11,
-                                fontWeight: FontWeight.w800,
-                              ),
+                          PopupMenuItem(
+                            value: _ChartShareAction.save,
+                            child: ListTile(
+                              leading: const Icon(Icons.download_rounded),
+                              title: Text(context.l10n.savePng),
+                              contentPadding: EdgeInsets.zero,
                             ),
+                          ),
+                          PopupMenuItem(
+                            value: _ChartShareAction.share,
+                            child: ListTile(
+                              leading: const Icon(Icons.ios_share_rounded),
+                              title: Text(context.l10n.shareImage),
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                          ),
                         ],
+                        child: IgnorePointer(
+                          child: OutlinedButton.icon(
+                            onPressed: () {},
+                            icon: _busy
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.image_outlined, size: 18),
+                            label: Text(context.l10n.shareChart),
+                            iconAlignment: IconAlignment.start,
+                          ),
+                        ),
                       ),
-                    ],
-                  ),
                 ),
-                IconButton(
-                  tooltip: context.l10n.openFullChart,
-                  onPressed: onOpenTradingView,
-                  icon: const Icon(Icons.open_in_new_rounded, size: 19),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            if (error != null && candles.isEmpty)
-              ErrorBanner(
-                message: error,
-                onRetry: onRetry,
-                retryLabel: context.l10n.tryAgain,
-              )
-            else
-              AnalysisLevelsChart(
-                candles: candles,
-                tradePlan: analysis.tradePlan,
-                tradingBias: analysis.tradingBias,
-                currentPrice: quote?.price,
-                isLoading: isLoading,
               ),
+            ],
           ],
         ),
       ),

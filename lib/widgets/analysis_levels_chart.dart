@@ -99,6 +99,7 @@ class _AnalysisLevelsChartState extends State<AnalysisLevelsChart> {
     }
 
     final levels = _buildLevels(widget.tradePlan, _scenario);
+    final hasLive = live != null && live.isFinite && live > 0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -115,16 +116,24 @@ class _AnalysisLevelsChartState extends State<AnalysisLevelsChart> {
           child: LayoutBuilder(
             builder: (context, constraints) => CandlestickPlot(
               candles: visible,
-              levels: levels
-                  .map(
-                    (level) => MarketChartLevel(
-                      value: level.price,
-                      label: level.label,
-                      color: level.color,
-                      dashed: level.dashed,
-                    ),
-                  )
-                  .toList(),
+              levels: [
+                ...levels.map(
+                  (level) => MarketChartLevel(
+                    value: level.price,
+                    label: level.label,
+                    color: level.color,
+                    dashed: level.dashed,
+                  ),
+                ),
+                if (live != null && hasLive)
+                  MarketChartLevel(
+                    value: live,
+                    label: 'Live',
+                    color: AppColors.entry,
+                    dashed: true,
+                  ),
+              ],
+              isLive: hasLive,
               width: constraints.maxWidth,
               height: constraints.maxHeight,
             ),
@@ -143,7 +152,12 @@ class _AnalysisLevelsChartState extends State<AnalysisLevelsChart> {
 
     void addSide(String name, TradeSide side) {
       final values = [
-        ('Entry', side.entryZone, AppColors.entry, true),
+        (
+          'Entry',
+          side.entryZone,
+          name == 'BUY' ? AppColors.buyEntry : AppColors.sellEntry,
+          true,
+        ),
         ('SL', side.stopLoss, AppColors.stopLoss, false),
         ('TP1', side.takeProfit1, AppColors.takeProfit, false),
         ('TP2', side.takeProfit2, AppColors.takeProfit, false),

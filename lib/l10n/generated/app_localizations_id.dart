@@ -4145,4 +4145,25 @@ class AppLocalizationsId extends AppLocalizations {
   String relevantForHours(int hours) {
     return 'Masih relevan sekitar $hours jam lagi';
   }
+
+  @override
+  String get shareChart => 'Bagikan chart';
+
+  @override
+  String get copyAnalysisImage => 'Salin gambar analisis';
+
+  @override
+  String get savePng => 'Simpan PNG';
+
+  @override
+  String get shareImage => 'Bagikan gambar';
+
+  @override
+  String get chartImageCopied => 'Gambar chart disalin';
+
+  @override
+  String get chartImageSaved => 'Gambar chart tersimpan di galeri';
+
+  @override
+  String get chartImageFailed => 'Gambar chart gagal diproses. Coba lagi.';
 }

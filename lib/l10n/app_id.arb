@@ -1848,5 +1848,12 @@
   "biasNotInstruction": "Kecenderungan hasil analisis — bukan instruksi beli/jual",
   "learn": "Pelajari",
   "relevantForHours": "Masih relevan sekitar {hours} jam lagi",
-  "@relevantForHours": {"placeholders": {"hours": {"type": "int"}}}
+  "@relevantForHours": {"placeholders": {"hours": {"type": "int"}}},
+  "shareChart": "Bagikan chart",
+  "copyAnalysisImage": "Salin gambar analisis",
+  "savePng": "Simpan PNG",
+  "shareImage": "Bagikan gambar",
+  "chartImageCopied": "Gambar chart disalin",
+  "chartImageSaved": "Gambar chart tersimpan di galeri",
+  "chartImageFailed": "Gambar chart gagal diproses. Coba lagi."
 }

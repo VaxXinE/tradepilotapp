@@ -116,6 +116,8 @@ class AppColors {
 
   // ---- Chart levels (Tailwind amber/red/emerald 500 on the web) ----
   static const entry = Color(0xFFF59E0B);
+  static const buyEntry = Color(0xFF06B6D4);
+  static const sellEntry = Color(0xFFF97316);
   static const stopLoss = Color(0xFFEF4444);
   static const takeProfit = Color(0xFF10B981);
   static const chartTextLight = Color(0xFF475569);

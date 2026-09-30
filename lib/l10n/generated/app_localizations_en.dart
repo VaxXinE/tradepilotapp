@@ -4162,4 +4162,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String relevantForHours(int hours) {
     return 'Relevant for about $hours hours more';
   }
+
+  @override
+  String get shareChart => 'Share chart';
+
+  @override
+  String get copyAnalysisImage => 'Copy analysis image';
+
+  @override
+  String get savePng => 'Save PNG';
+
+  @override
+  String get shareImage => 'Share image';
+
+  @override
+  String get chartImageCopied => 'Chart image copied';
+
+  @override
+  String get chartImageSaved => 'Chart image saved to your gallery';
+
+  @override
+  String get chartImageFailed =>
+      'Couldn’t process the chart image. Please try again.';
 }

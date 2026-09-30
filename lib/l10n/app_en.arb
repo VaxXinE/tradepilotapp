@@ -2032,5 +2032,12 @@
   "biasNotInstruction": "Tendency from the analysis — not a buy/sell instruction",
   "learn": "Learn",
   "relevantForHours": "Relevant for about {hours} hours more",
-  "@relevantForHours": {"placeholders": {"hours": {"type": "int"}}}
+  "@relevantForHours": {"placeholders": {"hours": {"type": "int"}}},
+  "shareChart": "Share chart",
+  "copyAnalysisImage": "Copy analysis image",
+  "savePng": "Save PNG",
+  "shareImage": "Share image",
+  "chartImageCopied": "Chart image copied",
+  "chartImageSaved": "Chart image saved to your gallery",
+  "chartImageFailed": "Couldn’t process the chart image. Please try again."
 }
