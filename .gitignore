@@ -49,3 +49,10 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 .aider*
+
+# Internal docs, reports, and QA artifacts (kept locally, not tracked)
+/TradePilot_*.pdf
+/docs/
+/output/
+/anti-slop/
+/design-qa.md
