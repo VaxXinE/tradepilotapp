@@ -17,7 +17,7 @@ void main() {
     );
 
     for (final testCase in [
-      ('day', 'Daily limit reached'),
+      ('day', "You're Out of Free Analyses"),
       ('concurrent', 'Analysis still in progress'),
     ]) {
       final future = showAnalysisQuotaDialog(

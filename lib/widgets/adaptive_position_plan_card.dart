@@ -5,11 +5,11 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../core/analysis/adaptive_position_plan.dart';
 import 'analysis_levels_chart.dart';
 import '../models/market_models.dart';
+import '../services/adaptive_plan_report.dart';
 import '../providers/auth_provider.dart';
 import '../l10n/l10n.dart';
 
@@ -822,7 +822,15 @@ class _AdaptiveDetailsSheet extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: FilledButton.icon(
-                  onPressed: () => _openPrintableReport(context),
+                  onPressed: () => unawaited(
+                    _printReport(
+                      context,
+                      candidates: candidates,
+                      sources: sources,
+                      preferred: preferred,
+                      invalidationConditions: invalidationConditions,
+                    ),
+                  ),
                   icon: const Icon(Icons.print_outlined),
                   label: Text(context.l10n.printSavePdf),
                 ),
@@ -850,15 +858,118 @@ class _AdaptiveDetailsSheet extends StatelessWidget {
         )
       : const SizedBox.shrink();
 
-  Future<void> _openPrintableReport(BuildContext context) async {
-    final uri = Uri.https('tradepilot.id', '/app/analyze', {
-      'result': '${analysis.id}',
-    });
-    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!opened && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.printableReportOpenFailed)),
+  /// Same content as the sheet above, laid out as a document for the system
+  /// print / "Save as PDF" sheet. The web builds this HTML in the browser
+  /// (`buildConfidencePrintHtml`), so there is no URL to open from the app.
+  AdaptivePlanReport _buildReport(
+    BuildContext context, {
+    required Map<String, List<double>> candidates,
+    required Set<String> sources,
+    required String preferred,
+    required String? invalidationConditions,
+  }) {
+    final l10n = context.l10n;
+    final locale = Localizations.localeOf(context);
+    ReportBlock? detail(String title, String? body) => _has(body)
+        ? ReportBlock.paragraph('**$title**\n${body!.trim()}')
+        : null;
+    List<ReportBlock> blocks(Iterable<ReportBlock?> items) =>
+        items.whereType<ReportBlock>().toList();
+
+    return AdaptivePlanReport(
+      title: l10n.understandDetails,
+      instrument: analysis.instrument,
+      timeframe: analysis.timeframe,
+      analyzedAt: DateFormat.yMMMd(
+        locale.toString(),
+      ).add_Hm().format(analysis.createdAt.toLocal()),
+      summary: l10n.understandDetailsSubtitle,
+      briefLabel: l10n.reportBriefingTitle,
+      sections: [
+        ReportSection(
+          l10n.whyThisAnalysis,
+          blocks([
+            if (_has(invalidationConditions))
+              ReportBlock.paragraph(
+                '**${l10n.analysisInvalidWhen}**\n${invalidationConditions!.trim()}',
+              ),
+            detail(l10n.opportunity, analysis.opportunity),
+            detail(l10n.risk, analysis.risk),
+          ]),
+        ),
+        ReportSection(
+          l10n.scenarios,
+          blocks([
+            detail(l10n.scenarioMain, analysis.mainScenario),
+            detail(l10n.scenarioAlternative, analysis.alternativeScenario),
+            ReportBlock.paragraph(
+              '**${l10n.scenarioWait}**\n${l10n.executionScenarioCBody}',
+            ),
+            detail(l10n.technicalDrivers, analysis.keyDriversTechnical),
+            detail(l10n.fundamentalDrivers, analysis.keyDriversFundamental),
+            detail(l10n.marketContext, analysis.marketContext),
+          ]),
+        ),
+        ReportSection(l10n.wherePlanComesFrom, [
+          ReportBlock.paragraph(
+            l10n.planCandidateSummary(
+              candidates['buy']?.length ?? 0,
+              candidates['sell']?.length ?? 0,
+            ),
+          ),
+          ReportBlock.paragraph(l10n.adaptivePlanFootnote),
+          ReportBlock.paragraph(
+            '**${l10n.sourceLayeredPlan}**\n${l10n.sourceLayeredPlanBody}\n'
+            'Adaptive response: ${preferred.toUpperCase()}',
+          ),
+        ]),
+        ReportSection(l10n.fixedAccountRulesProfile, [
+          ReportBlock.paragraph(
+            l10n.fixedAccountProfileSummary(
+              _tierMinimumLot(tier),
+              _tierMargin(rule, tier),
+            ),
+          ),
+          ReportBlock.paragraph(l10n.adaptiveSupportedInstruments),
+          ReportBlock.paragraph(
+            '**${l10n.tradingCapital}**\n${l10n.tradingCapitalHelp}',
+          ),
+          ReportBlock.paragraph('**${l10n.lossLimit}**\n${l10n.lossLimitHelp}'),
+        ]),
+        ReportSection(l10n.riskStyle, [
+          ReportBlock.paragraph(
+            '**${_riskStyleLabel(context, style)}**\n${l10n.riskStyleHelp}',
+          ),
+        ]),
+      ],
+      sourcesTitle: l10n.reportSourcesTitle,
+      sources: sources.toList(),
+      disclaimer: l10n.adaptivePlanDisclaimer,
+      referenceId: 'Analysis #${analysis.id}',
+    );
+  }
+
+  Future<void> _printReport(
+    BuildContext context, {
+    required Map<String, List<double>> candidates,
+    required Set<String> sources,
+    required String preferred,
+    required String? invalidationConditions,
+  }) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final failedMessage = context.l10n.printableReportOpenFailed;
+    try {
+      await printAdaptivePlanReport(
+        _buildReport(
+          context,
+          candidates: candidates,
+          sources: sources,
+          preferred: preferred,
+          invalidationConditions: invalidationConditions,
+        ),
       );
+    } catch (_) {
+      messenger.showSnackBar(SnackBar(content: Text(failedMessage)));
     }
   }
 }

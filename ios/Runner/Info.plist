@@ -50,11 +50,11 @@
 	<key>GIDServerClientID</key>
 	<string>929958103345-cbf424vgelrer7nkrr81l4iptsikuc1u.apps.googleusercontent.com</string>
 	<key>NSFaceIDUsageDescription</key>
-	<string>Gunakan Face ID untuk masuk dengan aman ke Trade Pilot.</string>
+	<string>Gunakan Face ID untuk masuk dengan aman ke TradePilot.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Simpan gambar chart analisis ke galeri Anda.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Pilih foto profil untuk akun Trade Pilot Anda.</string>
+	<string>Pilih foto profil untuk akun TradePilot Anda.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

@@ -20,8 +20,8 @@ class NativePushService extends ChangeNotifier {
 
   static const _channel = AndroidNotificationChannel(
     'trade_pilot_alerts',
-    'Trade Pilot Alerts',
-    description: 'Trading alerts and important Trade Pilot notifications.',
+    'TradePilot Alerts',
+    description: 'Trading alerts and important TradePilot notifications.',
     importance: Importance.high,
   );
 
@@ -410,15 +410,15 @@ class NativePushService extends ChangeNotifier {
     if (notification == null) return;
     await _localNotifications.show(
       id: message.messageId?.hashCode ?? message.hashCode,
-      title: notification.title ?? 'Trade Pilot',
+      title: notification.title ?? 'TradePilot.id',
       body: notification.body ?? '',
       payload: jsonEncode(message.data),
       notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
           'trade_pilot_alerts',
-          'Trade Pilot Alerts',
+          'TradePilot Alerts',
           channelDescription:
-              'Trading alerts and important Trade Pilot notifications.',
+              'Trading alerts and important TradePilot notifications.',
           importance: Importance.high,
           priority: Priority.high,
         ),

@@ -216,6 +216,32 @@ void main() {
     },
   );
 
+  for (final (code, message) in [
+    (
+      'facebook_no_email',
+      'Your Facebook account has no email on file. Try a different login method.',
+    ),
+    (
+      'signup_expired',
+      'Your TikTok signup session has expired. Please try TikTok login again.',
+    ),
+  ]) {
+    test('mobile OAuth error "$code" gets its own message', () async {
+      final auth = AuthProvider(
+        mobileOAuthLauncher: ({required url, required callbackScheme}) async =>
+            'id.tradepilot.app://auth/callback?error=$code',
+      );
+      auth.client.dio.httpClientAdapter = _GoogleAuthAdapter();
+      await pumpEventQueue();
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+
+      expect(await auth.loginWithTikTok(), isFalse);
+      expect(auth.errorMessage, message);
+      expect(auth.status, isNot(AuthStatus.authenticated));
+    });
+  }
+
   test(
     'Apple credential is exchanged with nonce for a TradePilot session',
     () async {

@@ -527,6 +527,22 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
                   label: Text(l10n.setAlertAction),
                 ),
               ),
+              if (result == null) ...[
+                const SizedBox(height: 12),
+                // Sama seperti web: tombol Analisis tepat di bawah pemilih
+                // instrumen (dan tombol alert), sebelum peringatan dan
+                // checklist mental.
+                // Satu-satunya tombol dengan gradient + glow di halaman ini —
+                // aksen sengaja disimpan untuk aksi paling penting (submit
+                // analisis), bukan disebar ke elemen lain (dose cap R-13).
+                _SubmitAnalysisButton(
+                  isSubmitting: analysis.isSubmitting,
+                  onPressed: analysis.isSubmitting ? null : _submit,
+                  label: analysis.isSubmitting
+                      ? l10n.analyzingMarket
+                      : l10n.analyzeAction,
+                ),
+              ],
               const SizedBox(height: 16),
               if (result == null) ...[
                 if (highImpactSoon != null) ...[
@@ -541,16 +557,6 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
                   ),
                   const SizedBox(height: 20),
                 ],
-                // Satu-satunya tombol dengan gradient + glow di halaman ini —
-                // aksen sengaja disimpan untuk aksi paling penting (submit
-                // analisis), bukan disebar ke elemen lain (dose cap R-13).
-                _SubmitAnalysisButton(
-                  isSubmitting: analysis.isSubmitting,
-                  onPressed: analysis.isSubmitting ? null : _submit,
-                  label: analysis.isSubmitting
-                      ? l10n.analyzingMarket
-                      : l10n.analyzeAction,
-                ),
               ],
               _AnalyzeMarketCard(market: market),
               if (result == null) ...[
@@ -2694,7 +2700,7 @@ class _QuotaChip extends StatelessWidget {
           border: Border.all(color: border),
         ),
         child: Text(
-          '${daily.remaining}/${daily.limit}${l10n.quotaDayShort}',
+          '${daily.remaining}${l10n.quotaDayShort}',
           style: TextStyle(
             fontSize: 10,
             fontWeight: FontWeight.w600,

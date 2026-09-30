@@ -20,6 +20,21 @@ import 'package:tradepilotapp/screens/analysis/analysis_detail_screen.dart';
 import '../../helpers/localized_test_app.dart';
 
 void main() {
+  // AuthProvider restores its session from secure storage as soon as it is
+  // built; without a handler that surfaces as MissingPluginException once a
+  // test runs long enough (e.g. while waiting for a watermarked image).
+  const storageChannel = MethodChannel(
+    'plugins.it_nomads.com/flutter_secure_storage',
+  );
+  setUp(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(storageChannel, (_) async => null);
+  });
+  tearDown(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(storageChannel, null);
+  });
+
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
   testWidgets('analysis detail hides legacy mode labels', (tester) async {
@@ -657,6 +672,8 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('copy-full-reasoning-text')));
     await tester.pump();
     expect(copiedText, contains('Moving averages remain bearish.'));
+    expect(copiedText, contains('TradePilot.id · XAU/USD'));
+    expect(copiedText, contains('· Analysis #'));
     expect(find.byKey(const ValueKey('copy-reasoning-popup')), findsOneWidget);
     expect(find.text('Full reasoning copied'), findsOneWidget);
 
@@ -678,10 +695,14 @@ void main() {
     );
     await tester.tap(find.byKey(const ValueKey('copy-full-reasoning-image')));
     await tester.pump();
-    await tester.runAsync(
-      () => Future<void>.delayed(const Duration(milliseconds: 100)),
-    );
-    await tester.pump();
+    // Capture, watermark and PNG encoding finish on the real event loop, while
+    // their continuations are scheduled on the test's fake clock: alternate.
+    for (var i = 0; i < 100 && copiedImage == null; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 50)),
+      );
+      await tester.pump();
+    }
     expect(copiedImage, isNotNull);
     expect(copiedImage, isNotEmpty);
     expect(find.text('Image copied'), findsOneWidget);

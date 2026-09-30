@@ -22,6 +22,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/credit_provider.dart';
 import '../../providers/market_provider.dart';
 import '../../providers/progression_provider.dart';
+import '../../services/export_watermark.dart';
 import '../../services/native_push_service.dart';
 import '../../widgets/adaptive_position_plan_card.dart';
 import '../../widgets/analysis_levels_chart.dart';
@@ -2296,6 +2297,11 @@ class _FullReasoningSheetState extends State<_FullReasoningSheet> {
       ?risk == null ? null : '${l10n.mainRisk}: $risk',
       if (_conditions.isNotEmpty)
         '${l10n.reassessIf}:\n${_conditions.map((item) => '• $item').join('\n')}',
+      exportAttribution(
+        instrument: widget.analysis.instrument,
+        timeframe: widget.analysis.timeframe,
+        analysisId: widget.analysis.id,
+      ),
     ];
     return sections.join('\n\n');
   }
@@ -2338,10 +2344,15 @@ class _FullReasoningSheetState extends State<_FullReasoningSheet> {
       final data = await image.toByteData(format: ui.ImageByteFormat.png);
       image.dispose();
       if (data == null) throw StateError('Reasoning image encoding failed');
-      await _reasoningClipboard.invokeMethod<void>(
-        'copyImage',
+      final marked = await watermarkPng(
         data.buffer.asUint8List(),
+        attribution: exportAttribution(
+          instrument: widget.analysis.instrument,
+          timeframe: widget.analysis.timeframe,
+          analysisId: widget.analysis.id,
+        ),
       );
+      await _reasoningClipboard.invokeMethod<void>('copyImage', marked);
       if (mounted) _showMessage(context.l10n.reasoningImageCopied);
     } catch (_) {
       if (mounted) {
@@ -3443,7 +3454,14 @@ class _ChartCardState extends State<_ChartCard> {
     final data = await image.toByteData(format: ui.ImageByteFormat.png);
     image.dispose();
     if (data == null) throw StateError('Chart encoding failed');
-    return data.buffer.asUint8List();
+    return watermarkPng(
+      data.buffer.asUint8List(),
+      attribution: exportAttribution(
+        instrument: analysis.instrument,
+        timeframe: analysis.timeframe,
+        analysisId: analysis.id,
+      ),
+    );
   }
 
   String get _fileStem {

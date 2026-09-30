@@ -1,7 +1,7 @@
 {
   "@@locale": "en",
-  "appTitle": "Trade Pilot",
-  "tradePilotLogo": "Trade Pilot logo",
+  "appTitle": "TradePilot.id",
+  "tradePilotLogo": "TradePilot.id logo",
   "aiTradingAssistant": "AI-powered trading analysis",
   "dashboard": "Dashboard",
   "dashboardDescription": "Market overview, watchlist, and latest analyses",
@@ -67,7 +67,7 @@
   "helpful": "Helpful",
   "notHelpful": "Not helpful",
   "analysisSafetyDisclaimerTitle": "Not investment advice. Trading involves risk.",
-  "analysisSafetyDisclaimer": "Trade Pilot is a decision-support tool, not financial advice or a guarantee of profit. Always manage your risk and avoid opening a position based on a single indicator.",
+  "analysisSafetyDisclaimer": "TradePilot is a decision-support tool, not financial advice or a guarantee of profit. Always manage your risk and avoid opening a position based on a single indicator.",
   "journalCreateForTrade": "Journal this trade",
   "journalEntryForTrade": "My trade journal",
   "journalReflectionHint": "Save your decision and trade result for reflection.",
@@ -282,7 +282,7 @@
   "analytics": "Analytics",
   "publicAiPerformance": "Public AI Performance",
   "performanceMethodology": "Methodology",
-  "performanceDescription": "An anonymized track record of all Trade Pilot AI analyses. These are not personal account statistics.",
+  "performanceDescription": "An anonymized track record of all TradePilot AI analyses. These are not personal account statistics.",
   "performanceDays": "{count} days",
   "@performanceDays": {
     "placeholders": {
@@ -595,6 +595,8 @@
     "placeholders": { "provider": { "type": "String" } }
   },
   "socialEmailAlreadyRegistered": "This email is already registered. Sign in using the method already linked to it.",
+  "socialFacebookNoEmail": "Your Facebook account has no email on file. Try a different login method.",
+  "socialSignupExpired": "Your TikTok signup session has expired. Please try TikTok login again.",
   "googleDeleteReauthDescription": "To protect your account, verify your identity with Google before deletion.",
   "federatedDeleteReauthDescription": "To protect your account, verify with the sign-in method linked to this account before deletion.",
   "verifyGoogleAndDelete": "Verify with Google and delete",
@@ -612,7 +614,7 @@
   "signInWithBiometrics": "Sign in with fingerprint / face",
   "noAccount": "Don't have an account? ",
   "register": "Register free",
-  "biometricReason": "Verify your identity to sign in to Trade Pilot",
+  "biometricReason": "Verify your identity to sign in to TradePilot",
   "biometricUnavailable": "Biometrics are unavailable. Use your email and password.",
   "createAccount": "Create Account",
   "startTradingJourney": "Start your trading journey",
@@ -698,7 +700,7 @@
   "notificationExpiryTitle": "Analysis expiry",
   "notificationExpiryDescription": "Reminder when an analysis window is about to end.",
   "notificationBroadcastTitle": "Announcements",
-  "notificationBroadcastDescription": "Important information and broadcasts from Trade Pilot.",
+  "notificationBroadcastDescription": "Important information and broadcasts from TradePilot.",
   "notificationDailyTitle": "Daily summary",
   "notificationDailyDescription": "Daily activity and market summary.",
   "notificationNewsTitle": "Market news",
@@ -739,9 +741,9 @@
   "trader": "Trader",
   "latestAnalyses": "Latest Analyses",
   "viewAll": "View all",
-  "decisionDisclaimer": "Trade Pilot helps you understand market conditions, but all decisions and risk management remain your responsibility.",
+  "decisionDisclaimer": "TradePilot helps you understand market conditions, but all decisions and risk management remain your responsibility.",
   "wantMarketAnalysis": "Want a market analysis?",
-  "getStarted": "Get started with Trade Pilot",
+  "getStarted": "Get started with TradePilot",
   "onboardingSteps": "Choose a market, review the live context, then create your first analysis. Results are decision support—not trading orders.",
   "chooseMarketAndStartAnalysis": "Choose a market and start analysis",
   "gotIt": "Got it",
@@ -840,8 +842,8 @@
   "aiAnalysis": "AI Analysis",
   "analyzeTitle": "New Analysis",
   "otherInstrument": "Other instrument…",
-  "quotaDay": "Daily remaining",
-  "quotaDayShort": "/day",
+  "quotaDay": "Free remaining",
+  "quotaDayShort": " free",
   "selectInstrument": "Select Instrument",
   "instrumentCategoryCommoditiesIndices": "Commodities & Indices",
   "instrumentCategoryForex": "Forex",
@@ -919,7 +921,7 @@
   },
   "aiAnalysisDisclaimer": "AI analysis is a decision-support tool, not a guarantee of profit. Always consider the risks before opening a position.",
   "understandMarketBeforeEntry": "Understand the market before entering",
-  "beginnerAnalysisIntro": "Trade Pilot helps explain price, momentum, market sessions, and important events in simpler language.",
+  "beginnerAnalysisIntro": "TradePilot helps explain price, momentum, market sessions, and important events in simpler language.",
   "livePrice": "Live price",
   "referencePrice": "Reference price",
   "addToWatchlist": "Add to watchlist",
@@ -1316,7 +1318,7 @@
       }
     }
   },
-  "appLocked": "Trade Pilot is locked",
+  "appLocked": "TradePilot is locked",
   "@appLocked": {
     "description": "Title on the biometric app-lock screen"
   },
@@ -1328,7 +1330,7 @@
   "@unlock": {
     "description": "Button that starts the biometric prompt on the lock screen"
   },
-  "biometricUnlockReason": "Verify your identity to unlock Trade Pilot",
+  "biometricUnlockReason": "Verify your identity to unlock TradePilot",
   "@biometricUnlockReason": {
     "description": "System biometric prompt reason when unlocking an existing session"
   },
@@ -1377,7 +1379,7 @@
     }
   },
   "standardRulesTitle": "TP Standard Trading Rules",
-  "standardRulesDescription": "Broker-neutral rules used as the basis for Trade Pilot estimates.",
+  "standardRulesDescription": "Broker-neutral rules used as the basis for TradePilot estimates.",
   "standardRulesLoading": "Loading the standard trading rules...",
   "standardRulesError": "Standard trading rules are temporarily unavailable.",
   "ruleVersion": "Version",
@@ -1400,8 +1402,8 @@
   "sourceDocument": "Source document",
   "topUpCredit": "Top Up Credit",
   "analysisTopUpInfo": "Want to continue your analysis? See your options",
-  "analysisQuotaDayTitle": "Daily limit reached",
-  "analysisQuotaDayMessage": "Your daily analysis quota is used up. Try again tomorrow.",
+  "analysisQuotaDayTitle": "You're Out of Free Analyses",
+  "analysisQuotaDayMessage": "You've used up your free analyses.",
   "analysisQuotaConcurrentTitle": "Analysis still in progress",
   "analysisQuotaConcurrentMessage": "Wait for the previous analysis to finish before creating another one.",
   "analysisQuotaUnknownTitle": "Analysis could not be created",
@@ -1714,7 +1716,7 @@
   "latestNews": "Latest News",
   "refresh": "Refresh",
   "scrollForMore": "Swipe to see more",
-  "publicAiPerformanceSubtitle": "An anonymous track record of every Trade Pilot analysis",
+  "publicAiPerformanceSubtitle": "An anonymous track record of every TradePilot analysis",
   "analyticsLoadFailed": "Analytics could not be loaded. Please try again.",
   "sessionChangedReopen": "Your session changed. Please reopen this page.",
   "analyticsDisclaimer": "These statistics describe analysis habits, not trading profit.",
@@ -1931,6 +1933,8 @@
   "riskStyleHelp": "Style controls how much of the loss ceiling may be used and how risk is allocated across the complete layer plan. Lots come from each entry's distance to Stop Loss; market guardrails still take priority.",
   "printSavePdf": "Print / save PDF",
   "printableReportOpenFailed": "The printable report could not be opened.",
+  "reportBriefingTitle": "Briefing summary",
+  "reportSourcesTitle": "Data sources",
   "priceRiseScenario": "Price-rise scenario (Buy)",
   "priceFallScenario": "Price-fall scenario (Sell)",
   "scenarioFitsRisk": "The {side} setup fits your risk and funds. Confirm the current chart before entry.",

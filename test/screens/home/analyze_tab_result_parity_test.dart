@@ -41,6 +41,10 @@ void main() {
       lessThan(tester.getTopLeft(session).dy),
     );
     expect(session, findsOneWidget);
+    expect(
+      find.descendant(of: quota, matching: find.text('13 free')),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
 

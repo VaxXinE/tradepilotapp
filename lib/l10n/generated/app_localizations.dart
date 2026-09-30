@@ -101,13 +101,13 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'Trade Pilot'**
+  /// **'TradePilot.id'**
   String get appTitle;
 
   /// No description provided for @tradePilotLogo.
   ///
   /// In en, this message translates to:
-  /// **'Trade Pilot logo'**
+  /// **'TradePilot.id logo'**
   String get tradePilotLogo;
 
   /// No description provided for @aiTradingAssistant.
@@ -461,7 +461,7 @@ abstract class AppLocalizations {
   /// No description provided for @analysisSafetyDisclaimer.
   ///
   /// In en, this message translates to:
-  /// **'Trade Pilot is a decision-support tool, not financial advice or a guarantee of profit. Always manage your risk and avoid opening a position based on a single indicator.'**
+  /// **'TradePilot is a decision-support tool, not financial advice or a guarantee of profit. Always manage your risk and avoid opening a position based on a single indicator.'**
   String get analysisSafetyDisclaimer;
 
   /// No description provided for @journalCreateForTrade.
@@ -1454,7 +1454,7 @@ abstract class AppLocalizations {
   /// No description provided for @performanceDescription.
   ///
   /// In en, this message translates to:
-  /// **'An anonymized track record of all Trade Pilot AI analyses. These are not personal account statistics.'**
+  /// **'An anonymized track record of all TradePilot AI analyses. These are not personal account statistics.'**
   String get performanceDescription;
 
   /// No description provided for @performanceDays.
@@ -2387,6 +2387,18 @@ abstract class AppLocalizations {
   /// **'This email is already registered. Sign in using the method already linked to it.'**
   String get socialEmailAlreadyRegistered;
 
+  /// No description provided for @socialFacebookNoEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Facebook account has no email on file. Try a different login method.'**
+  String get socialFacebookNoEmail;
+
+  /// No description provided for @socialSignupExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Your TikTok signup session has expired. Please try TikTok login again.'**
+  String get socialSignupExpired;
+
   /// No description provided for @googleDeleteReauthDescription.
   ///
   /// In en, this message translates to:
@@ -2492,7 +2504,7 @@ abstract class AppLocalizations {
   /// No description provided for @biometricReason.
   ///
   /// In en, this message translates to:
-  /// **'Verify your identity to sign in to Trade Pilot'**
+  /// **'Verify your identity to sign in to TradePilot'**
   String get biometricReason;
 
   /// No description provided for @biometricUnavailable.
@@ -2840,7 +2852,7 @@ abstract class AppLocalizations {
   /// No description provided for @notificationBroadcastDescription.
   ///
   /// In en, this message translates to:
-  /// **'Important information and broadcasts from Trade Pilot.'**
+  /// **'Important information and broadcasts from TradePilot.'**
   String get notificationBroadcastDescription;
 
   /// No description provided for @notificationDailyTitle.
@@ -3044,7 +3056,7 @@ abstract class AppLocalizations {
   /// No description provided for @decisionDisclaimer.
   ///
   /// In en, this message translates to:
-  /// **'Trade Pilot helps you understand market conditions, but all decisions and risk management remain your responsibility.'**
+  /// **'TradePilot helps you understand market conditions, but all decisions and risk management remain your responsibility.'**
   String get decisionDisclaimer;
 
   /// No description provided for @wantMarketAnalysis.
@@ -3056,7 +3068,7 @@ abstract class AppLocalizations {
   /// No description provided for @getStarted.
   ///
   /// In en, this message translates to:
-  /// **'Get started with Trade Pilot'**
+  /// **'Get started with TradePilot'**
   String get getStarted;
 
   /// No description provided for @onboardingSteps.
@@ -3314,13 +3326,13 @@ abstract class AppLocalizations {
   /// No description provided for @quotaDay.
   ///
   /// In en, this message translates to:
-  /// **'Daily remaining'**
+  /// **'Free remaining'**
   String get quotaDay;
 
   /// No description provided for @quotaDayShort.
   ///
   /// In en, this message translates to:
-  /// **'/day'**
+  /// **' free'**
   String get quotaDayShort;
 
   /// No description provided for @selectInstrument.
@@ -3500,7 +3512,7 @@ abstract class AppLocalizations {
   /// No description provided for @beginnerAnalysisIntro.
   ///
   /// In en, this message translates to:
-  /// **'Trade Pilot helps explain price, momentum, market sessions, and important events in simpler language.'**
+  /// **'TradePilot helps explain price, momentum, market sessions, and important events in simpler language.'**
   String get beginnerAnalysisIntro;
 
   /// No description provided for @livePrice.
@@ -4754,7 +4766,7 @@ abstract class AppLocalizations {
   /// Title on the biometric app-lock screen
   ///
   /// In en, this message translates to:
-  /// **'Trade Pilot is locked'**
+  /// **'TradePilot is locked'**
   String get appLocked;
 
   /// Explains that the session survived and only needs unlocking
@@ -4772,7 +4784,7 @@ abstract class AppLocalizations {
   /// System biometric prompt reason when unlocking an existing session
   ///
   /// In en, this message translates to:
-  /// **'Verify your identity to unlock Trade Pilot'**
+  /// **'Verify your identity to unlock TradePilot'**
   String get biometricUnlockReason;
 
   /// Shown when biometric verification fails on the lock screen
@@ -4916,7 +4928,7 @@ abstract class AppLocalizations {
   /// No description provided for @standardRulesDescription.
   ///
   /// In en, this message translates to:
-  /// **'Broker-neutral rules used as the basis for Trade Pilot estimates.'**
+  /// **'Broker-neutral rules used as the basis for TradePilot estimates.'**
   String get standardRulesDescription;
 
   /// No description provided for @standardRulesLoading.
@@ -5054,13 +5066,13 @@ abstract class AppLocalizations {
   /// No description provided for @analysisQuotaDayTitle.
   ///
   /// In en, this message translates to:
-  /// **'Daily limit reached'**
+  /// **'You\'re Out of Free Analyses'**
   String get analysisQuotaDayTitle;
 
   /// No description provided for @analysisQuotaDayMessage.
   ///
   /// In en, this message translates to:
-  /// **'Your daily analysis quota is used up. Try again tomorrow.'**
+  /// **'You\'ve used up your free analyses.'**
   String get analysisQuotaDayMessage;
 
   /// No description provided for @analysisQuotaConcurrentTitle.
@@ -6050,7 +6062,7 @@ abstract class AppLocalizations {
   /// No description provided for @publicAiPerformanceSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'An anonymous track record of every Trade Pilot analysis'**
+  /// **'An anonymous track record of every TradePilot analysis'**
   String get publicAiPerformanceSubtitle;
 
   /// No description provided for @analyticsLoadFailed.
@@ -6796,6 +6808,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The printable report could not be opened.'**
   String get printableReportOpenFailed;
+
+  /// No description provided for @reportBriefingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Briefing summary'**
+  String get reportBriefingTitle;
+
+  /// No description provided for @reportSourcesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Data sources'**
+  String get reportSourcesTitle;
 
   /// No description provided for @priceRiseScenario.
   ///
