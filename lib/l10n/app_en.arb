@@ -1933,6 +1933,8 @@
   "riskStyleHelp": "Style controls how much of the loss ceiling may be used and how risk is allocated across the complete layer plan. Lots come from each entry's distance to Stop Loss; market guardrails still take priority.",
   "printSavePdf": "Print / save PDF",
   "printableReportOpenFailed": "The printable report could not be opened.",
+  "reportBriefingTitle": "Briefing summary",
+  "reportSourcesTitle": "Data sources",
   "priceRiseScenario": "Price-rise scenario (Buy)",
   "priceFallScenario": "Price-fall scenario (Sell)",
   "scenarioFitsRisk": "The {side} setup fits your risk and funds. Confirm the current chart before entry.",

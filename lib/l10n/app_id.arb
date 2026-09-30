@@ -1748,6 +1748,8 @@
   "lossLimitHelp": "Masukkan kerugian maksimum dalam USD yang kamu terima untuk seluruh plan. Menaikkan batas ini hanya membantu jika modal trading juga menutup margin harian dan risiko Stop Loss final.",
   "riskStyleHelp": "Gaya menentukan seberapa banyak batas kerugian yang dapat dipakai dan cara risiko dialokasikan pada seluruh layer. Lot dihitung dari jarak tiap entry ke Stop Loss; batas pengaman market tetap menjadi prioritas.",
   "printSavePdf": "Cetak / simpan PDF",
+  "reportBriefingTitle": "Ringkasan briefing",
+  "reportSourcesTitle": "Sumber data",
   "printableReportOpenFailed": "Laporan siap cetak tidak dapat dibuka.",
   "priceRiseScenario": "Skenario harga naik (Buy)",
   "priceFallScenario": "Skenario harga turun (Sell)",

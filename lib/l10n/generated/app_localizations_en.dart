@@ -3848,6 +3848,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'The printable report could not be opened.';
 
   @override
+  String get reportBriefingTitle => 'Briefing summary';
+
+  @override
+  String get reportSourcesTitle => 'Data sources';
+
+  @override
   String get priceRiseScenario => 'Price-rise scenario (Buy)';
 
   @override

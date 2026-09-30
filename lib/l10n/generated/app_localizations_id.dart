@@ -3834,6 +3834,12 @@ class AppLocalizationsId extends AppLocalizations {
       'Laporan siap cetak tidak dapat dibuka.';
 
   @override
+  String get reportBriefingTitle => 'Ringkasan briefing';
+
+  @override
+  String get reportSourcesTitle => 'Sumber data';
+
+  @override
   String get priceRiseScenario => 'Skenario harga naik (Buy)';
 
   @override

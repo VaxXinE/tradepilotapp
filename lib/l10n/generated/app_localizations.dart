@@ -6809,6 +6809,18 @@ abstract class AppLocalizations {
   /// **'The printable report could not be opened.'**
   String get printableReportOpenFailed;
 
+  /// No description provided for @reportBriefingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Briefing summary'**
+  String get reportBriefingTitle;
+
+  /// No description provided for @reportSourcesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Data sources'**
+  String get reportSourcesTitle;
+
   /// No description provided for @priceRiseScenario.
   ///
   /// In en, this message translates to:
