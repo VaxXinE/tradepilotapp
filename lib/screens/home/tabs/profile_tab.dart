@@ -11,6 +11,7 @@ import '../../../l10n/l10n.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/credit_provider.dart';
 import '../../../providers/progression_provider.dart';
+import '../../../services/live_chat_service.dart';
 import '../../../services/native_push_service.dart';
 import '../../../widgets/app_footer.dart';
 import '../../../widgets/progression/progression_emblem.dart';
@@ -61,7 +62,20 @@ class ProfileTab extends StatelessWidget {
     );
     if (confirmed != true || !context.mounted) return;
     await context.read<NativePushService?>()?.unregister();
+    unawaited(const LiveChatService().reset());
     if (context.mounted) await context.read<AuthProvider>().logout();
+  }
+
+  Future<void> _openLiveChat(BuildContext context) async {
+    final language = Localizations.localeOf(context).languageCode;
+    final opened = await const LiveChatService().open(
+      language: language == 'en' ? 'en' : 'id',
+    );
+    if (!opened && context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.liveChatOpenFailed)));
+    }
   }
 
   void _push(BuildContext context, Widget screen) {
@@ -164,6 +178,14 @@ class ProfileTab extends StatelessWidget {
                         subtitle: l10n.profilePrivacySecuritySubtitle,
                         onTap: () =>
                             _push(context, const PrivacySecurityScreen()),
+                      ),
+                      const Divider(height: 1),
+                      _ProfileSettingTile(
+                        key: const Key('profile-live-chat'),
+                        icon: Icons.support_agent_rounded,
+                        title: l10n.profileLiveChat,
+                        subtitle: l10n.profileLiveChatSubtitle,
+                        onTap: () => unawaited(_openLiveChat(context)),
                       ),
                       const Divider(height: 1),
                       _ProfileSettingTile(

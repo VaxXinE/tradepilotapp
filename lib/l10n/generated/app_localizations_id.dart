@@ -484,6 +484,17 @@ class AppLocalizationsId extends AppLocalizations {
       'Kelola privasi dan penghapusan akun';
 
   @override
+  String get profileLiveChat => 'Live Chat';
+
+  @override
+  String get profileLiveChatSubtitle =>
+      'Ngobrol dengan asisten AI atau agen support.';
+
+  @override
+  String get liveChatOpenFailed =>
+      'Live chat sedang tidak tersedia. Coba lagi nanti.';
+
+  @override
   String get profileMyAlerts => 'Alert Saya';
 
   @override

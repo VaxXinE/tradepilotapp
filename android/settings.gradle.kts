@@ -24,6 +24,10 @@ plugins {
     id("com.google.gms.google-services") version("4.5.0") apply false
     // END: FlutterFire Configuration
     id("org.jetbrains.kotlin.android") version "2.3.20" apply false
+    id("org.jetbrains.kotlin.plugin.compose") version "2.3.20" apply false
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.3.20" apply false
 }
 
 include(":app")
+// Vendored SolidChat SDK (see solidchat-sdk/VENDORED.md).
+include(":solidchat-sdk")

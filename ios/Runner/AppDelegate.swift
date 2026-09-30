@@ -12,6 +12,7 @@ import UIKit
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    LiveChatBridge.register(messenger: engineBridge.applicationRegistrar.messenger())
     let clipboardChannel = FlutterMethodChannel(
       name: "id.tradepilot.app/clipboard",
       binaryMessenger: engineBridge.applicationRegistrar.messenger()

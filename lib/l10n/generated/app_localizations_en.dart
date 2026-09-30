@@ -484,6 +484,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'Manage privacy and account deletion';
 
   @override
+  String get profileLiveChat => 'Live Chat';
+
+  @override
+  String get profileLiveChatSubtitle =>
+      'Talk to our AI assistant or a support agent.';
+
+  @override
+  String get liveChatOpenFailed =>
+      'Live chat is unavailable right now. Please try again later.';
+
+  @override
   String get profileMyAlerts => 'My Alerts';
 
   @override

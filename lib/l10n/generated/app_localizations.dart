@@ -935,6 +935,24 @@ abstract class AppLocalizations {
   /// **'Manage privacy and account deletion'**
   String get profilePrivacySecuritySubtitle;
 
+  /// No description provided for @profileLiveChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Live Chat'**
+  String get profileLiveChat;
+
+  /// No description provided for @profileLiveChatSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Talk to our AI assistant or a support agent.'**
+  String get profileLiveChatSubtitle;
+
+  /// No description provided for @liveChatOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Live chat is unavailable right now. Please try again later.'**
+  String get liveChatOpenFailed;
+
   /// No description provided for @profileMyAlerts.
   ///
   /// In en, this message translates to:
