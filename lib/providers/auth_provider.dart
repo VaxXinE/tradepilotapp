@@ -231,6 +231,46 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// How long the app may stay in the background before the biometric lock
+  /// asks again. Short enough to matter on a shared phone, long enough that
+  /// switching to a banking app and back does not become a chore.
+  static const lockGracePeriod = Duration(minutes: 1);
+
+  DateTime? _backgroundedAt;
+  bool _lockEnabledAtBackground = false;
+
+  @visibleForTesting
+  DateTime Function() clock = DateTime.now;
+
+  /// Call when the app leaves the foreground. Remembers when, and whether the
+  /// lock is on, so [lockIfBackgroundedTooLong] can decide synchronously on
+  /// resume instead of flashing the dashboard while a storage read finishes.
+  Future<void> noteAppBackgrounded() async {
+    if (status != AuthStatus.authenticated || isLocked) return;
+    _backgroundedAt = clock();
+    try {
+      _lockEnabledAtBackground = await _storage.readBiometricLockEnabled();
+    } catch (_) {
+      _lockEnabledAtBackground = false;
+    }
+  }
+
+  /// Call when the app returns to the foreground.
+  void lockIfBackgroundedTooLong() {
+    final since = _backgroundedAt;
+    _backgroundedAt = null;
+    if (since == null ||
+        status != AuthStatus.authenticated ||
+        isLocked ||
+        !_lockEnabledAtBackground) {
+      return;
+    }
+    if (clock().difference(since) >= lockGracePeriod) {
+      isLocked = true;
+      notifyListeners();
+    }
+  }
+
   void unlockSession() {
     if (!isLocked) return;
     isLocked = false;

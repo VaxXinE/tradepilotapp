@@ -1322,7 +1322,7 @@
   "biometricUnlockReason": "Verifikasi identitasmu untuk membuka Trade Pilot",
   "unlockFailed": "Identitasmu tidak bisa diverifikasi. Coba lagi atau keluar.",
   "biometricLock": "Kunci biometrik",
-  "biometricLockOn": "Minta sidik jari atau wajah setiap app dibuka",
+  "biometricLockOn": "Minta sidik jari atau wajah saat app dibuka atau kembali setelah beberapa saat",
   "biometricLockOff": "Langsung terbuka ke dashboard",
   "biometricLockUnavailable": "Belum ada sidik jari atau face unlock di perangkat ini.",
   "riskMapTitle": "Peta Risiko Timeframe",

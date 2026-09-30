@@ -97,6 +97,9 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
           return;
         }
 
+        // Kunci biometrik jika app terlalu lama di background.
+        context.read<AuthProvider>().lockIfBackgroundedTooLong();
+
         // Aktifkan kembali notification SSE.
         context.read<NotificationsProvider>().setRealtimeEnabled(true);
 
@@ -120,6 +123,12 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
 
         if (!mounted) {
           return;
+        }
+
+        // `inactive` juga muncul saat sheet biometrik tampil, jadi hanya
+        // `paused` yang dihitung sebagai benar-benar masuk background.
+        if (state == AppLifecycleState.paused) {
+          unawaited(context.read<AuthProvider>().noteAppBackgrounded());
         }
 
         // Stop live quote polling.

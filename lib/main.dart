@@ -187,6 +187,7 @@ class _TradePilotMaterialAppState extends State<_TradePilotMaterialApp> {
   bool _openingPushAction = false;
 
   AuthStatus? _previousAuthStatus;
+  bool _previousLocked = false;
 
   @override
   void initState() {
@@ -218,6 +219,13 @@ class _TradePilotMaterialAppState extends State<_TradePilotMaterialApp> {
     final previous = _previousAuthStatus;
     final current = _auth.status;
     _previousAuthStatus = current;
+
+    // Pushed routes sit above `home`, so they would cover the lock screen.
+    final locked = _auth.isLocked;
+    if (locked && !_previousLocked) {
+      _navigatorKey.currentState?.popUntil((route) => route.isFirst);
+    }
+    _previousLocked = locked;
 
     if (previous == AuthStatus.authenticated &&
         current == AuthStatus.unauthenticated) {

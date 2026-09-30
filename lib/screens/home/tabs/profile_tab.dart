@@ -153,6 +153,10 @@ class ProfileTab extends StatelessWidget {
                         ),
                         const Divider(height: 1),
                       ],
+                      const BiometricLockTile(
+                        key: Key('profile-biometric-lock'),
+                      ),
+                      const Divider(height: 1),
                       _ProfileSettingTile(
                         key: const Key('profile-privacy-security'),
                         icon: Icons.shield_outlined,

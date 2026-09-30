@@ -1340,7 +1340,7 @@
   "@biometricLock": {
     "description": "Profile setting that gates the app behind biometrics"
   },
-  "biometricLockOn": "Ask for fingerprint or face each time the app opens",
+  "biometricLockOn": "Ask for fingerprint or face when the app opens or returns after a while",
   "@biometricLockOn": {
     "description": "Subtitle when the biometric lock setting is on"
   },

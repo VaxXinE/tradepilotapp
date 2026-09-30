@@ -2657,7 +2657,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get biometricLock => 'Kunci biometrik';
 
   @override
-  String get biometricLockOn => 'Minta sidik jari atau wajah setiap app dibuka';
+  String get biometricLockOn =>
+      'Minta sidik jari atau wajah saat app dibuka atau kembali setelah beberapa saat';
 
   @override
   String get biometricLockOff => 'Langsung terbuka ke dashboard';

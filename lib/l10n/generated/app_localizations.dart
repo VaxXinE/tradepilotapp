@@ -4790,7 +4790,7 @@ abstract class AppLocalizations {
   /// Subtitle when the biometric lock setting is on
   ///
   /// In en, this message translates to:
-  /// **'Ask for fingerprint or face each time the app opens'**
+  /// **'Ask for fingerprint or face when the app opens or returns after a while'**
   String get biometricLockOn;
 
   /// Subtitle when the biometric lock setting is off

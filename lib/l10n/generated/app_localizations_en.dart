@@ -2666,7 +2666,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get biometricLockOn =>
-      'Ask for fingerprint or face each time the app opens';
+      'Ask for fingerprint or face when the app opens or returns after a while';
 
   @override
   String get biometricLockOff => 'Open straight to your dashboard';

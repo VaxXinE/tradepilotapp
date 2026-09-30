@@ -34,7 +34,7 @@ class PrivacySecurityScreen extends StatelessWidget {
     body: ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        const Card(child: _BiometricLockTile()),
+        const Card(child: BiometricLockTile()),
         const SizedBox(height: 12),
         Card(
           clipBehavior: Clip.antiAlias,
@@ -78,14 +78,14 @@ class PrivacySecurityScreen extends StatelessWidget {
   );
 }
 
-class _BiometricLockTile extends StatefulWidget {
-  const _BiometricLockTile();
+class BiometricLockTile extends StatefulWidget {
+  const BiometricLockTile({super.key});
 
   @override
-  State<_BiometricLockTile> createState() => _BiometricLockTileState();
+  State<BiometricLockTile> createState() => BiometricLockTileState();
 }
 
-class _BiometricLockTileState extends State<_BiometricLockTile> {
+class BiometricLockTileState extends State<BiometricLockTile> {
   bool? _enabled;
   bool _available = false;
   bool _saving = false;
