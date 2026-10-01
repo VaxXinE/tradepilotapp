@@ -3,70 +3,66 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:trade_pilot_api_client/src/model/instrument_request_rank.dart';
+import 'package:built_collection/built_collection.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
 
-part 'analysis_note_response.g.dart';
+part 'instrument_request_ranking.g.dart';
 
-/// Response shape for PUT /analyses/{id}/note — the persisted note body (null when cleared) and the server-stamped updatedAt.
+/// InstrumentRequestRanking
 ///
 /// Properties:
-/// * [note]
-/// * [updatedAt]
+/// * [requests]
 @BuiltValue()
-abstract class AnalysisNoteResponse
-    implements Built<AnalysisNoteResponse, AnalysisNoteResponseBuilder> {
-  @BuiltValueField(wireName: r'note')
-  String? get note;
+abstract class InstrumentRequestRanking
+    implements
+        Built<InstrumentRequestRanking, InstrumentRequestRankingBuilder> {
+  @BuiltValueField(wireName: r'requests')
+  BuiltList<InstrumentRequestRank> get requests;
 
-  @BuiltValueField(wireName: r'updatedAt')
-  DateTime? get updatedAt;
+  InstrumentRequestRanking._();
 
-  AnalysisNoteResponse._();
-
-  factory AnalysisNoteResponse([void updates(AnalysisNoteResponseBuilder b)]) =
-      _$AnalysisNoteResponse;
+  factory InstrumentRequestRanking(
+          [void updates(InstrumentRequestRankingBuilder b)]) =
+      _$InstrumentRequestRanking;
 
   @BuiltValueHook(initializeBuilder: true)
-  static void _defaults(AnalysisNoteResponseBuilder b) => b;
+  static void _defaults(InstrumentRequestRankingBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<AnalysisNoteResponse> get serializer =>
-      _$AnalysisNoteResponseSerializer();
+  static Serializer<InstrumentRequestRanking> get serializer =>
+      _$InstrumentRequestRankingSerializer();
 }
 
-class _$AnalysisNoteResponseSerializer
-    implements PrimitiveSerializer<AnalysisNoteResponse> {
+class _$InstrumentRequestRankingSerializer
+    implements PrimitiveSerializer<InstrumentRequestRanking> {
   @override
   final Iterable<Type> types = const [
-    AnalysisNoteResponse,
-    _$AnalysisNoteResponse
+    InstrumentRequestRanking,
+    _$InstrumentRequestRanking
   ];
 
   @override
-  final String wireName = r'AnalysisNoteResponse';
+  final String wireName = r'InstrumentRequestRanking';
 
   Iterable<Object?> _serializeProperties(
     Serializers serializers,
-    AnalysisNoteResponse object, {
+    InstrumentRequestRanking object, {
     FullType specifiedType = FullType.unspecified,
   }) sync* {
-    yield r'note';
+    yield r'requests';
     yield serializers.serialize(
-      object.note,
-      specifiedType: const FullType.nullable(String),
-    );
-    yield r'updatedAt';
-    yield serializers.serialize(
-      object.updatedAt,
-      specifiedType: const FullType.nullable(DateTime),
+      object.requests,
+      specifiedType:
+          const FullType(BuiltList, [FullType(InstrumentRequestRank)]),
     );
   }
 
   @override
   Object serialize(
     Serializers serializers,
-    AnalysisNoteResponse object, {
+    InstrumentRequestRanking object, {
     FullType specifiedType = FullType.unspecified,
   }) {
     return _serializeProperties(serializers, object,
@@ -79,26 +75,20 @@ class _$AnalysisNoteResponseSerializer
     Object serialized, {
     FullType specifiedType = FullType.unspecified,
     required List<Object?> serializedList,
-    required AnalysisNoteResponseBuilder result,
+    required InstrumentRequestRankingBuilder result,
     required List<Object?> unhandled,
   }) {
     for (var i = 0; i < serializedList.length; i += 2) {
       final key = serializedList[i] as String;
       final value = serializedList[i + 1];
       switch (key) {
-        case r'note':
+        case r'requests':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(String),
-          ) as String?;
-          result.note = valueDes;
-          break;
-        case r'updatedAt':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType.nullable(DateTime),
-          ) as DateTime?;
-          result.updatedAt = valueDes;
+            specifiedType:
+                const FullType(BuiltList, [FullType(InstrumentRequestRank)]),
+          ) as BuiltList<InstrumentRequestRank>;
+          result.requests.replace(valueDes);
           break;
         default:
           unhandled.add(key);
@@ -109,12 +99,12 @@ class _$AnalysisNoteResponseSerializer
   }
 
   @override
-  AnalysisNoteResponse deserialize(
+  InstrumentRequestRanking deserialize(
     Serializers serializers,
     Object serialized, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    final result = AnalysisNoteResponseBuilder();
+    final result = InstrumentRequestRankingBuilder();
     final serializedList = (serialized as Iterable<Object?>).toList();
     final unhandled = <Object?>[];
     _deserializeProperties(

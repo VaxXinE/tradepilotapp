@@ -6,91 +6,94 @@
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
 
-part 'mirror_group_stat.g.dart';
+part 'market_snapshot_candle.g.dart';
 
-/// Aggregate stats for one bucket inside a trader-mirror category (session, instrument, time-of-day, etc.).
+/// MarketSnapshotCandle
 ///
 /// Properties:
-/// * [key]
-/// * [total]
-/// * [wins]
-/// * [winRate]
-/// * [avgPnlPercent]
+/// * [date]
+/// * [open]
+/// * [high]
+/// * [low]
+/// * [close]
 @BuiltValue()
-abstract class MirrorGroupStat
-    implements Built<MirrorGroupStat, MirrorGroupStatBuilder> {
-  @BuiltValueField(wireName: r'key')
-  String get key;
+abstract class MarketSnapshotCandle
+    implements Built<MarketSnapshotCandle, MarketSnapshotCandleBuilder> {
+  @BuiltValueField(wireName: r'date')
+  DateTime get date;
 
-  @BuiltValueField(wireName: r'total')
-  int get total;
+  @BuiltValueField(wireName: r'open')
+  num get open;
 
-  @BuiltValueField(wireName: r'wins')
-  int get wins;
+  @BuiltValueField(wireName: r'high')
+  num get high;
 
-  @BuiltValueField(wireName: r'winRate')
-  num get winRate;
+  @BuiltValueField(wireName: r'low')
+  num get low;
 
-  @BuiltValueField(wireName: r'avgPnlPercent')
-  num? get avgPnlPercent;
+  @BuiltValueField(wireName: r'close')
+  num get close;
 
-  MirrorGroupStat._();
+  MarketSnapshotCandle._();
 
-  factory MirrorGroupStat([void updates(MirrorGroupStatBuilder b)]) =
-      _$MirrorGroupStat;
+  factory MarketSnapshotCandle([void updates(MarketSnapshotCandleBuilder b)]) =
+      _$MarketSnapshotCandle;
 
   @BuiltValueHook(initializeBuilder: true)
-  static void _defaults(MirrorGroupStatBuilder b) => b;
+  static void _defaults(MarketSnapshotCandleBuilder b) => b;
 
   @BuiltValueSerializer(custom: true)
-  static Serializer<MirrorGroupStat> get serializer =>
-      _$MirrorGroupStatSerializer();
+  static Serializer<MarketSnapshotCandle> get serializer =>
+      _$MarketSnapshotCandleSerializer();
 }
 
-class _$MirrorGroupStatSerializer
-    implements PrimitiveSerializer<MirrorGroupStat> {
+class _$MarketSnapshotCandleSerializer
+    implements PrimitiveSerializer<MarketSnapshotCandle> {
   @override
-  final Iterable<Type> types = const [MirrorGroupStat, _$MirrorGroupStat];
+  final Iterable<Type> types = const [
+    MarketSnapshotCandle,
+    _$MarketSnapshotCandle
+  ];
 
   @override
-  final String wireName = r'MirrorGroupStat';
+  final String wireName = r'MarketSnapshotCandle';
 
   Iterable<Object?> _serializeProperties(
     Serializers serializers,
-    MirrorGroupStat object, {
+    MarketSnapshotCandle object, {
     FullType specifiedType = FullType.unspecified,
   }) sync* {
-    yield r'key';
+    yield r'date';
     yield serializers.serialize(
-      object.key,
-      specifiedType: const FullType(String),
+      object.date,
+      specifiedType: const FullType(DateTime),
     );
-    yield r'total';
+    yield r'open';
     yield serializers.serialize(
-      object.total,
-      specifiedType: const FullType(int),
-    );
-    yield r'wins';
-    yield serializers.serialize(
-      object.wins,
-      specifiedType: const FullType(int),
-    );
-    yield r'winRate';
-    yield serializers.serialize(
-      object.winRate,
+      object.open,
       specifiedType: const FullType(num),
     );
-    yield r'avgPnlPercent';
+    yield r'high';
     yield serializers.serialize(
-      object.avgPnlPercent,
-      specifiedType: const FullType.nullable(num),
+      object.high,
+      specifiedType: const FullType(num),
+    );
+    yield r'low';
+    yield serializers.serialize(
+      object.low,
+      specifiedType: const FullType(num),
+    );
+    yield r'close';
+    yield serializers.serialize(
+      object.close,
+      specifiedType: const FullType(num),
     );
   }
 
   @override
   Object serialize(
     Serializers serializers,
-    MirrorGroupStat object, {
+    MarketSnapshotCandle object, {
     FullType specifiedType = FullType.unspecified,
   }) {
     return _serializeProperties(serializers, object,
@@ -103,47 +106,47 @@ class _$MirrorGroupStatSerializer
     Object serialized, {
     FullType specifiedType = FullType.unspecified,
     required List<Object?> serializedList,
-    required MirrorGroupStatBuilder result,
+    required MarketSnapshotCandleBuilder result,
     required List<Object?> unhandled,
   }) {
     for (var i = 0; i < serializedList.length; i += 2) {
       final key = serializedList[i] as String;
       final value = serializedList[i + 1];
       switch (key) {
-        case r'key':
+        case r'date':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(String),
-          ) as String;
-          result.key = valueDes;
+            specifiedType: const FullType(DateTime),
+          ) as DateTime;
+          result.date = valueDes;
           break;
-        case r'total':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType(int),
-          ) as int;
-          result.total = valueDes;
-          break;
-        case r'wins':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType(int),
-          ) as int;
-          result.wins = valueDes;
-          break;
-        case r'winRate':
+        case r'open':
           final valueDes = serializers.deserialize(
             value,
             specifiedType: const FullType(num),
           ) as num;
-          result.winRate = valueDes;
+          result.open = valueDes;
           break;
-        case r'avgPnlPercent':
+        case r'high':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(num),
-          ) as num?;
-          result.avgPnlPercent = valueDes;
+            specifiedType: const FullType(num),
+          ) as num;
+          result.high = valueDes;
+          break;
+        case r'low':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(num),
+          ) as num;
+          result.low = valueDes;
+          break;
+        case r'close':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(num),
+          ) as num;
+          result.close = valueDes;
           break;
         default:
           unhandled.add(key);
@@ -154,12 +157,12 @@ class _$MirrorGroupStatSerializer
   }
 
   @override
-  MirrorGroupStat deserialize(
+  MarketSnapshotCandle deserialize(
     Serializers serializers,
     Object serialized, {
     FullType specifiedType = FullType.unspecified,
   }) {
-    final result = MirrorGroupStatBuilder();
+    final result = MarketSnapshotCandleBuilder();
     final serializedList = (serialized as Iterable<Object?>).toList();
     final unhandled = <Object?>[];
     _deserializeProperties(

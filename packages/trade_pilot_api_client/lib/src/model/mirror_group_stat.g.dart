@@ -16,7 +16,7 @@ class _$MirrorGroupStat extends MirrorGroupStat {
   @override
   final num winRate;
   @override
-  final num avgPnlPercent;
+  final num? avgPnlPercent;
 
   factory _$MirrorGroupStat([void Function(MirrorGroupStatBuilder)? updates]) =>
       (MirrorGroupStatBuilder()..update(updates))._build();
@@ -26,7 +26,7 @@ class _$MirrorGroupStat extends MirrorGroupStat {
       required this.total,
       required this.wins,
       required this.winRate,
-      required this.avgPnlPercent})
+      this.avgPnlPercent})
       : super._();
   @override
   MirrorGroupStat rebuild(void Function(MirrorGroupStatBuilder) updates) =>
@@ -136,8 +136,7 @@ class MirrorGroupStatBuilder
               wins, r'MirrorGroupStat', 'wins'),
           winRate: BuiltValueNullFieldError.checkNotNull(
               winRate, r'MirrorGroupStat', 'winRate'),
-          avgPnlPercent: BuiltValueNullFieldError.checkNotNull(
-              avgPnlPercent, r'MirrorGroupStat', 'avgPnlPercent'),
+          avgPnlPercent: avgPnlPercent,
         );
     replace(_$result);
     return _$result;

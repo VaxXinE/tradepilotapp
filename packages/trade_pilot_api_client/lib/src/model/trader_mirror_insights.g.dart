@@ -8,7 +8,7 @@ part of 'trader_mirror_insights.dart';
 
 class _$TraderMirrorInsights extends TraderMirrorInsights {
   @override
-  final int windowDays;
+  final int? windowDays;
   @override
   final int totalResolved;
   @override
@@ -29,7 +29,7 @@ class _$TraderMirrorInsights extends TraderMirrorInsights {
       (TraderMirrorInsightsBuilder()..update(updates))._build();
 
   _$TraderMirrorInsights._(
-      {required this.windowDays,
+      {this.windowDays,
       required this.totalResolved,
       required this.overallGated,
       required this.sessions,
@@ -175,8 +175,7 @@ class TraderMirrorInsightsBuilder
     try {
       _$result = _$v ??
           _$TraderMirrorInsights._(
-            windowDays: BuiltValueNullFieldError.checkNotNull(
-                windowDays, r'TraderMirrorInsights', 'windowDays'),
+            windowDays: windowDays,
             totalResolved: BuiltValueNullFieldError.checkNotNull(
                 totalResolved, r'TraderMirrorInsights', 'totalResolved'),
             overallGated: BuiltValueNullFieldError.checkNotNull(

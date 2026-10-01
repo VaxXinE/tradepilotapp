@@ -24,7 +24,7 @@ part 'trader_mirror_insights.g.dart';
 abstract class TraderMirrorInsights
     implements Built<TraderMirrorInsights, TraderMirrorInsightsBuilder> {
   @BuiltValueField(wireName: r'windowDays')
-  int get windowDays;
+  int? get windowDays;
 
   @BuiltValueField(wireName: r'totalResolved')
   int get totalResolved;
@@ -79,7 +79,7 @@ class _$TraderMirrorInsightsSerializer
     yield r'windowDays';
     yield serializers.serialize(
       object.windowDays,
-      specifiedType: const FullType(int),
+      specifiedType: const FullType.nullable(int),
     );
     yield r'totalResolved';
     yield serializers.serialize(
@@ -144,8 +144,8 @@ class _$TraderMirrorInsightsSerializer
         case r'windowDays':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(int),
-          ) as int;
+            specifiedType: const FullType.nullable(int),
+          ) as int?;
           result.windowDays = valueDes;
           break;
         case r'totalResolved':

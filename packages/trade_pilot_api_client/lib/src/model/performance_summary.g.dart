@@ -72,7 +72,7 @@ class _$PerformanceSummary extends PerformanceSummary {
   @override
   final DateTime generatedAt;
   @override
-  final DateTime windowStart;
+  final DateTime? windowStart;
   @override
   final PerformanceMinSamples minSamples;
   @override
@@ -97,7 +97,7 @@ class _$PerformanceSummary extends PerformanceSummary {
   _$PerformanceSummary._(
       {required this.windowDays,
       required this.generatedAt,
-      required this.windowStart,
+      this.windowStart,
       required this.minSamples,
       required this.overall,
       required this.banner,
@@ -277,8 +277,7 @@ class PerformanceSummaryBuilder
                 windowDays, r'PerformanceSummary', 'windowDays'),
             generatedAt: BuiltValueNullFieldError.checkNotNull(
                 generatedAt, r'PerformanceSummary', 'generatedAt'),
-            windowStart: BuiltValueNullFieldError.checkNotNull(
-                windowStart, r'PerformanceSummary', 'windowStart'),
+            windowStart: windowStart,
             minSamples: minSamples.build(),
             overall: overall.build(),
             banner: banner.build(),

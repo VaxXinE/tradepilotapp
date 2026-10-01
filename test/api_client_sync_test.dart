@@ -74,6 +74,87 @@ void main() {
     expect(event?.forecast, isNull);
   });
 
+  test(
+    'analysis keeps a market snapshot whose source feed was unavailable',
+    () {
+      // The server persists `sourceFetchedAt` / `priceAtAnalysis` as null when
+      // no upstream candles were retrieved. That must not break the analysis.
+      final analysis = standardSerializers.deserializeWith(
+        Analysis.serializer,
+        {
+          'id': 1,
+          'userId': 1,
+          'instrument': 'EUR/USD',
+          'timeframe': '1h',
+          'mode': 'pro',
+          'validUntil': '2026-09-08T12:00:00.000Z',
+          'createdAt': '2026-09-08T10:00:00.000Z',
+          'marketSnapshot': {
+            'instrument': 'EUR/USD',
+            'timeframe': '1h',
+            'capturedAt': '2026-09-08T10:00:00.000Z',
+            'sourceFetchedAt': null,
+            'candles': <Object>[],
+            'priceAtAnalysis': null,
+            'sourceStatus': 'feed_unavailable',
+          },
+        },
+      );
+
+      final snapshot = analysis?.marketSnapshot;
+      expect(snapshot, isNotNull);
+      expect(snapshot!.sourceFetchedAt, isNull);
+      expect(snapshot.priceAtAnalysis, isNull);
+      expect(
+        snapshot.sourceStatus,
+        MarketSnapshotSourceStatusEnum.feedUnavailable,
+      );
+    },
+  );
+
+  test('responses the server can send with null are readable', () {
+    // Each of these is nullable in the OpenAPI spec but was generated as
+    // required, which made the whole response fail to deserialize.
+    final cleared = standardSerializers.deserializeWith(
+      AnalysisNoteResponse.serializer,
+      {'note': null, 'updatedAt': null},
+    );
+    expect(cleared, isNotNull);
+    expect(cleared!.note, isNull);
+
+    final stat = standardSerializers
+        .deserializeWith(MirrorGroupStat.serializer, {
+          'key': 'London',
+          'total': 3,
+          'wins': 1,
+          'losses': 2,
+          'winRate': 0.33,
+          'avgPnlPercent': null,
+        });
+    expect(stat, isNotNull);
+    expect(stat!.avgPnlPercent, isNull);
+  });
+
+  test('instrument requests use the documented contract', () {
+    final client = TradePilotClient(baseUrl: 'https://example.com/api');
+    expect(client.analyses.submitInstrumentRequest, isNotNull);
+    expect(client.admin.getAdminInstrumentRequests, isNotNull);
+
+    final body = InstrumentRequestInput((builder) => builder..code = 'NAS100');
+    expect(
+      standardSerializers.serializeWith(
+        InstrumentRequestInput.serializer,
+        body,
+      ),
+      {'code': 'NAS100'},
+    );
+    final receipt = standardSerializers.deserializeWith(
+      InstrumentRequestReceipt.serializer,
+      {'code': 'NAS100', 'recorded': true},
+    );
+    expect(receipt?.recorded, isTrue);
+  });
+
   test('vendored client exposes new APIs and notification fields', () {
     final client = TradePilotClient(baseUrl: 'https://example.com/api');
 

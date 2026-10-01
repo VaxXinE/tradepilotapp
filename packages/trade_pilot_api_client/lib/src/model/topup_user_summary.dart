@@ -40,7 +40,7 @@ abstract class TopupUserSummary
   int get requestCount;
 
   @BuiltValueField(wireName: r'lastApprovedAt')
-  DateTime get lastApprovedAt;
+  DateTime? get lastApprovedAt;
 
   TopupUserSummary._();
 
@@ -101,7 +101,7 @@ class _$TopupUserSummarySerializer
     yield r'lastApprovedAt';
     yield serializers.serialize(
       object.lastApprovedAt,
-      specifiedType: const FullType(DateTime),
+      specifiedType: const FullType.nullable(DateTime),
     );
   }
 
@@ -173,8 +173,8 @@ class _$TopupUserSummarySerializer
         case r'lastApprovedAt':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(DateTime),
-          ) as DateTime;
+            specifiedType: const FullType.nullable(DateTime),
+          ) as DateTime?;
           result.lastApprovedAt = valueDes;
           break;
         default:

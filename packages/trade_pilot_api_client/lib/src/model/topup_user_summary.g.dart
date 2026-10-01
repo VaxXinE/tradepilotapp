@@ -20,7 +20,7 @@ class _$TopupUserSummary extends TopupUserSummary {
   @override
   final int requestCount;
   @override
-  final DateTime lastApprovedAt;
+  final DateTime? lastApprovedAt;
 
   factory _$TopupUserSummary(
           [void Function(TopupUserSummaryBuilder)? updates]) =>
@@ -33,7 +33,7 @@ class _$TopupUserSummary extends TopupUserSummary {
       required this.totalAmountRupiah,
       required this.totalCreditsGranted,
       required this.requestCount,
-      required this.lastApprovedAt})
+      this.lastApprovedAt})
       : super._();
   @override
   TopupUserSummary rebuild(void Function(TopupUserSummaryBuilder) updates) =>
@@ -167,8 +167,7 @@ class TopupUserSummaryBuilder
               totalCreditsGranted, r'TopupUserSummary', 'totalCreditsGranted'),
           requestCount: BuiltValueNullFieldError.checkNotNull(
               requestCount, r'TopupUserSummary', 'requestCount'),
-          lastApprovedAt: BuiltValueNullFieldError.checkNotNull(
-              lastApprovedAt, r'TopupUserSummary', 'lastApprovedAt'),
+          lastApprovedAt: lastApprovedAt,
         );
     replace(_$result);
     return _$result;
