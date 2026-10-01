@@ -548,6 +548,7 @@ class _MindsetModuleScreenState extends State<_MindsetModuleScreen> {
   bool _isStarting = false;
   bool _isCompleting = false;
   bool _completed = false;
+  bool _startFailed = false;
 
   @override
   void initState() {
@@ -565,7 +566,12 @@ class _MindsetModuleScreenState extends State<_MindsetModuleScreen> {
   }
 
   Future<void> _startEvidence() async {
-    setState(() => _isStarting = true);
+    _timer?.cancel();
+    setState(() {
+      _isStarting = true;
+      _startFailed = false;
+      _evidence = null;
+    });
     try {
       final response = await context
           .read<AuthProvider>()
@@ -585,10 +591,31 @@ class _MindsetModuleScreenState extends State<_MindsetModuleScreen> {
         if (mounted) setState(() {});
       });
     } catch (_) {
-      // Artikel tetap bisa dibaca ketika XP sudah pernah diklaim/tidak tersedia.
+      // The article stays readable; the reader can retry claiming its XP.
+      if (mounted) setState(() => _startFailed = true);
     } finally {
       if (mounted) setState(() => _isStarting = false);
     }
+  }
+
+  int get _remainingSeconds {
+    final evidence = _evidence;
+    if (evidence == null) return 0;
+    final ms = evidence.minimumCompleteAt
+        .difference(DateTime.now())
+        .inMilliseconds;
+    return ms <= 0 ? 0 : (ms / 1000).ceil();
+  }
+
+  /// Why the button is not ready yet (web `completionStatus`).
+  String? _completionStatus(BuildContext context) {
+    if (_completed) return null;
+    final l10n = context.l10n;
+    if (_startFailed) return l10n.completionStartFailed;
+    if (_evidence == null) return l10n.completionPreparing;
+    if (_isCompleting) return l10n.completionSaving;
+    final remaining = _remainingSeconds;
+    return remaining > 0 ? l10n.completionWait('$remaining') : null;
   }
 
   Future<void> _complete() async {
@@ -743,12 +770,23 @@ class _MindsetModuleScreenState extends State<_MindsetModuleScreen> {
                       : context.l10n.guideComplete,
                 ),
               ),
-              if (!_canComplete && !_completed) ...[
+              if (_completionStatus(context) case final status?) ...[
                 const SizedBox(height: 8),
                 Text(
-                  context.l10n.guideReading,
+                  status,
+                  key: const ValueKey('guide-completion-status'),
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+              if (_startFailed && !_completed) ...[
+                const SizedBox(height: 4),
+                Center(
+                  child: TextButton(
+                    key: const ValueKey('guide-completion-retry'),
+                    onPressed: _isStarting ? null : _startEvidence,
+                    child: Text(context.l10n.tryAgain),
+                  ),
                 ),
               ],
             ],
