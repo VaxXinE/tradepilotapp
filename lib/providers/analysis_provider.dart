@@ -43,6 +43,8 @@ class AnalysisQuotaLimit {
 /// - silent background revalidation
 /// - timeout recovery
 /// - isolasi cache antar-user
+enum AlertFailure { unsupported, retryable }
+
 class AnalysisProvider extends ChangeNotifier {
   AnalysisProvider(this._authProvider) {
     _activeUserId = _currentAuthenticatedUserId;
@@ -1178,10 +1180,16 @@ class AnalysisProvider extends ChangeNotifier {
     }
   }
 
+  /// Why the last [setAnalysisAlerts] call failed. `unsupported` is the
+  /// server's 422 (instrument not on the live feed / no usable levels), which
+  /// retrying cannot fix; anything else (503, network) may succeed later.
+  AlertFailure? lastAlertFailure;
+
   Future<AlertStatus?> setAnalysisAlerts(
     int id, {
     required bool enabled,
   }) async {
+    lastAlertFailure = null;
     if (_authProvider.status != AuthStatus.authenticated) return null;
     final epoch = _sessionEpoch;
 
@@ -1190,7 +1198,11 @@ class AnalysisProvider extends ChangeNotifier {
           ? await _client.analyses.armAnalysisAlerts(id: id)
           : await _client.analyses.cancelAnalysisAlerts(id: id);
       return _isSessionCurrent(epoch) ? response.data : null;
-    } catch (_) {
+    } catch (error) {
+      lastAlertFailure =
+          error is DioException && error.response?.statusCode == 422
+          ? AlertFailure.unsupported
+          : AlertFailure.retryable;
       return null;
     }
   }
@@ -1270,10 +1282,12 @@ class AnalysisProvider extends ChangeNotifier {
         return null;
       }
 
-      final normalized = saved.note.trim();
+      // Clearing a note makes the server answer `note: null, updatedAt: null`.
+      final savedNote = saved.note;
+      final normalized = savedNote?.trim() ?? '';
       final updated = _toBuildableAnalysis(analysis).rebuild(
         (builder) => builder
-          ..userNote = normalized.isEmpty ? null : saved.note
+          ..userNote = normalized.isEmpty ? null : savedNote
           ..userNoteUpdatedAt = normalized.isEmpty ? null : saved.updatedAt
           ..hasNote = normalized.isNotEmpty,
       );

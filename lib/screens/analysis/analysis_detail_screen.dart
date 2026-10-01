@@ -14,6 +14,8 @@ import 'package:share_plus/share_plus.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/market/analysis_instruments.dart';
+import '../notifications/notifications_screen.dart';
 import '../../core/theme/app_colors.dart';
 import '../../l10n/l10n.dart';
 import '../../models/market_models.dart';
@@ -22,7 +24,11 @@ import '../../providers/auth_provider.dart';
 import '../../providers/credit_provider.dart';
 import '../../providers/market_provider.dart';
 import '../../providers/progression_provider.dart';
+import '../../services/adaptive_plan_share.dart';
 import '../../services/export_watermark.dart';
+import '../../core/analysis/adaptive_position_plan.dart';
+import '../../widgets/adaptive_plan_common.dart';
+import '../../widgets/adaptive_plan_result.dart';
 import '../../services/native_push_service.dart';
 import '../../widgets/adaptive_position_plan_card.dart';
 import '../../widgets/analysis_levels_chart.dart';
@@ -308,7 +314,11 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
 
   Future<void> _reanalyze([String? timeframe]) async {
     final analysis = _analysis;
-    if (analysis == null || _reanalyzing) return;
+    if (analysis == null ||
+        _reanalyzing ||
+        !isVerifiedAnalysisInstrument(analysis.instrument)) {
+      return;
+    }
     final auth = context.read<AuthProvider>();
     final selected = timeframe ?? analysis.timeframe;
     setState(() {
@@ -332,8 +342,13 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
         await showAnalysisQuotaDialog(context, limit);
         return;
       }
+      // The server explains why (unverified price data, unsupported code, ...).
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.analysisCreateFailed)),
+        SnackBar(
+          content: Text(
+            analysisProvider.errorMessage ?? context.l10n.analysisCreateFailed,
+          ),
+        ),
       );
       return;
     }
@@ -388,6 +403,139 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
       if (!mounted || _reanalyzing || _selectedTimeframe != timeframe) return;
       unawaited(_reanalyze(timeframe));
     });
+  }
+
+  /// Copies or saves one Adaptive side as a watermarked summary image. Only
+  /// the saved analysis time and the plan's own numbers go into it.
+  Future<void> _shareAdaptiveSummary(
+    Analysis analysis,
+    String action,
+    AdaptiveSidePlan plan,
+    AdaptiveCalculation calculation,
+  ) async {
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    void notify(String message) => messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+    final locale = Localizations.localeOf(context).toString();
+    final fmt = AdaptiveFormat.of(context);
+    final stamp = DateFormat.yMMMd(locale).add_Hm();
+    final rec = calculation.recommendation;
+    final actionable =
+        rec.valid &&
+        rec.evaluationFor(plan.side).status == AdaptiveSideStatus.viable &&
+        rec.result.sideOf(plan.side) != null;
+    final budget = calculation.budgetFor(plan.side);
+    final rule = calculation.rule;
+    try {
+      if (plan.layers.isEmpty) throw StateError('Adaptive plan unavailable');
+      final data = AdaptivePlanShareData(
+        title: l10n.adaptiveShareSummaryTitle,
+        instrument: analysis.instrument,
+        timeframe: analysis.timeframe,
+        analyzedAt:
+            '${l10n.chartShareAnalyzed}: ${stamp.format(analysis.createdAt.toLocal())}',
+        generatedLabel:
+            '${l10n.chartShareMade}: ${stamp.format(DateTime.now())}',
+        sideLabel: plan.side == 'buy'
+            ? l10n.priceRiseScenario
+            : l10n.priceFallScenario,
+        status: actionable
+            ? l10n.planReadyToReview
+            : l10n.conditionalScenarioNotActionable,
+        actionable: actionable,
+        statusDetail: actionable
+            ? l10n.objectiveScenario
+            : l10n.referenceNumbersOnly,
+        account: rule == null
+            ? ''
+            : adaptiveTierLabel(context, rule.accountTier),
+        style: l10n.adaptiveRiskStyleActive(
+          adaptiveRiskStyleLabel(context, calculation.style),
+        ),
+        positionsTitle: l10n.entryLotPerPosition,
+        positions: [
+          for (final layer in plan.layers)
+            (
+              label:
+                  '${l10n.adaptiveLevel} ${layer.level + 1} · ${layer.level == 0 ? l10n.initialEntry : l10n.additionalPosition}',
+              value:
+                  '${fmt.number(layer.price, 4)} · ${fmt.number(layer.lot)} ${l10n.adaptiveLot}',
+            ),
+        ],
+        metrics: [
+          (
+            label: l10n.adaptiveSnapshotTotalLots,
+            value: '${fmt.number(plan.totalLots)} ${l10n.adaptiveLot}',
+            detail: null,
+          ),
+          (
+            label: l10n.oneFinalStopLoss,
+            value: fmt.number(plan.stopLoss, 4),
+            detail: null,
+          ),
+          (
+            label: l10n.estimatedMaximumLoss,
+            value: fmt.money(plan.estimatedLoss),
+            detail: null,
+          ),
+          if (budget != null) ...[
+            (
+              label: l10n.usableRiskBudget,
+              value: fmt.money(budget.usableRiskBudget),
+              detail: l10n.adaptiveRiskBudgetRate(
+                fmt.number(budget.riskUtilizationRate * 100, 0),
+              ),
+            ),
+            (
+              label: l10n.reservedLossCeiling,
+              value: fmt.money(budget.unusedRiskBuffer),
+              detail: null,
+            ),
+          ],
+          (
+            label: l10n.adaptiveMarginRequired,
+            value: fmt.money(plan.marginRequired),
+            detail: null,
+          ),
+          if (plan.takeProfit1 != null)
+            (
+              label: l10n.takeProfit1,
+              value: fmt.number(plan.takeProfit1, 4),
+              detail:
+                  '${l10n.adaptiveTpProfit}: ${fmt.profit(plan.profitToTp1)}',
+            ),
+          if (plan.takeProfit2 != null)
+            (
+              label: l10n.takeProfit2,
+              value: fmt.number(plan.takeProfit2, 4),
+              detail:
+                  '${l10n.adaptiveTpProfit}: ${fmt.profit(plan.profitToTp2)}',
+            ),
+        ],
+        notes: [l10n.adaptiveShareSummaryWarning],
+      );
+      final png = await watermarkPng(
+        await renderAdaptivePlanSharePng(data),
+        attribution: exportAttribution(
+          instrument: analysis.instrument,
+          timeframe: analysis.timeframe,
+          analysisId: analysis.id,
+        ),
+      );
+      if (action == 'copy') {
+        await _reasoningClipboard.invokeMethod<void>('copyImage', png);
+        notify(l10n.adaptiveShareSummaryCopied);
+      } else {
+        final stem =
+            'tradepilot-adaptive-${analysis.instrument.replaceAll(RegExp(r'[^A-Za-z0-9]'), '')}-${plan.side}-${analysis.timeframe}';
+        await Gal.putImageBytes(png, name: stem);
+        notify(l10n.adaptiveShareSummaryDownloaded);
+      }
+    } catch (_) {
+      notify(l10n.adaptiveShareSummaryFailed);
+    }
   }
 
   Future<void> _refreshFundamentals() async {
@@ -555,9 +703,14 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
         setState(() => _alertBusy = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              push.errorMessage ??
-                  context.l10n.alertNeedsNotificationPermission,
+            content: Text(push.errorMessage ?? context.l10n.alertsNoPush),
+            action: SnackBarAction(
+              label: context.l10n.alertsEnableNotifications,
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const NotificationsScreen(),
+                ),
+              ),
             ),
           ),
         );
@@ -579,9 +732,11 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            enabled
-                ? context.l10n.alertEnableFailed
-                : context.l10n.alertDisableFailed,
+            !enabled
+                ? context.l10n.alertDisableFailed
+                : analysisProvider.lastAlertFailure == AlertFailure.unsupported
+                ? context.l10n.alertsArmError
+                : context.l10n.alertsRetryError,
           ),
         ),
       );
@@ -920,6 +1075,8 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
           AdaptivePositionPlanCard(
             analysis: analysis,
             candles: _candles,
+            onShareSummary: (action, plan, calculation) =>
+                _shareAdaptiveSummary(analysis, action, plan, calculation),
             onLearn: () => _openGuide(
               ProgressionEvidenceStartInputGuideIdEnum.adaptivePositionPlan,
             ),
@@ -1590,6 +1747,9 @@ class _DetailTimeframeCard extends StatelessWidget {
     final remaining = analysis.validUntil.difference(DateTime.now());
     final hours = remaining.isNegative ? 0 : math.max(1, remaining.inHours);
     final outcome = _outcomeBadgeMeta(context, analysis.outcomeStatus);
+    // Older analyses can carry an instrument that is no longer verified; their
+    // saved result stays readable but cannot be submitted again.
+    final canReanalyze = isVerifiedAnalysisInstrument(analysis.instrument);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1668,7 +1828,9 @@ class _DetailTimeframeCard extends StatelessWidget {
                               key: Key('timeframe-option-$timeframe'),
                               timeframe: timeframe,
                               selected: (selected ?? current) == timeframe,
-                              onTap: loading ? null : () => onSelect(timeframe),
+                              onTap: loading || !canReanalyze
+                                  ? null
+                                  : () => onSelect(timeframe),
                             ),
                           ),
                         if (onOpenRiskMap != null)
@@ -1698,7 +1860,12 @@ class _DetailTimeframeCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  context.l10n.changeTimeframeDescription,
+                  canReanalyze
+                      ? context.l10n.changeTimeframeDescription
+                      : context.l10n.instrumentLegacyUnsupported,
+                  key: canReanalyze
+                      ? null
+                      : const Key('legacy-instrument-unsupported'),
                   style: TextStyle(color: muted, fontSize: 12, height: 1.4),
                 ),
                 if (loading) ...[
@@ -2063,10 +2230,11 @@ class _HeaderCard extends StatelessWidget {
                 _StatusChip(label: analysis.timeframe, color: muted),
               ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              context.l10n.forTimeframe(analysis.timeframe),
-              style: TextStyle(color: muted, fontSize: 12),
+            const SizedBox(height: 8),
+            AdaptiveInfoNote(
+              context.l10n.biasRiskDisclaimer,
+              key: const ValueKey('bias-risk-disclaimer'),
+              fontSize: 11.5,
             ),
             const SizedBox(height: 10),
             SizedBox(
@@ -2130,7 +2298,7 @@ class _HeaderCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      context.l10n.risk,
+                      context.l10n.riskTitle,
                       style: TextStyle(color: muted, fontSize: 12),
                     ),
                     const SizedBox(height: 3),
@@ -2147,7 +2315,13 @@ class _HeaderCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
+            AdaptiveInfoNote(
+              context.l10n.riskOverallNote,
+              key: const ValueKey('risk-overall-note'),
+              fontSize: 11.5,
+            ),
+            const SizedBox(height: 10),
             TextButton.icon(
               onPressed: onLearn,
               icon: const Icon(Icons.menu_book_outlined, size: 18),
@@ -2755,8 +2929,16 @@ class _DirectionalGaugePainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 18
       ..strokeCap = StrokeCap.round
+      // Saturated at both ends so the extremes read as unambiguously
+      // bearish / bullish (web: deep red -> vivid green, not pastel).
       ..shader = const LinearGradient(
-        colors: [Color(0xFFFF8FA3), Color(0xFFFFE082), Color(0xFF6EE7B7)],
+        colors: [
+          Color(0xFFB91C1C),
+          Color(0xFFF97316),
+          Color(0xFFFACC15),
+          Color(0xFF4ADE80),
+          Color(0xFF15803D),
+        ],
       ).createShader(rect);
     canvas.drawArc(rect, math.pi, math.pi, false, gauge);
 
@@ -4639,7 +4821,7 @@ class _OpportunityRiskCard extends StatelessWidget {
         if (analysis.risk?.trim().isNotEmpty == true)
           _InfoPanel(
             key: const ValueKey('analysis-risk'),
-            title: context.l10n.risk,
+            title: context.l10n.riskTitle,
             body: analysis.risk!,
             color: Theme.of(context).colorScheme.primary,
             icon: Icons.shield_outlined,
@@ -5163,6 +5345,42 @@ class _SideCard extends StatefulWidget {
 class _SideCardState extends State<_SideCard> {
   bool _showRationale = false;
 
+  static final _unavailablePattern = RegExp(
+    r'^(?:n/a|na|—|-)$',
+    caseSensitive: false,
+  );
+  static final _waitingWords = RegExp(
+    r'\b(menunggu|tunggu|belum|pending|await|wait for|not available)\b',
+    caseSensitive: false,
+  );
+  static final _riskRewardPattern = RegExp(r'\b1:\d+(?:\.\d+)?\b');
+
+  bool _isUnavailable(String raw) => _unavailablePattern.hasMatch(raw.trim());
+
+  /// A side whose levels are not usable yet (n/a, no digits, "wait for ..."
+  /// or no R:R). It shows a placeholder instead of the raw text and cannot be
+  /// copied as if it were an entry plan.
+  bool get _pending {
+    final side = widget.side;
+    final fields = [
+      side.entryZone,
+      side.stopLoss,
+      side.takeProfit1,
+      side.takeProfit2,
+    ];
+    return fields.any(
+          (raw) =>
+              _isUnavailable(raw) ||
+              !RegExp(r'\d').hasMatch(raw) ||
+              _waitingWords.hasMatch(raw),
+        ) ||
+        _isUnavailable(side.riskRewardRatio) ||
+        !_riskRewardPattern.hasMatch(side.riskRewardRatio);
+  }
+
+  String _shown(String raw, String replacement) =>
+      _isUnavailable(raw) ? replacement : raw;
+
   Future<void> _copyLevels() async {
     final l10n = context.l10n;
     final text = [
@@ -5240,28 +5458,57 @@ class _SideCardState extends State<_SideCard> {
                   ],
                 ),
                 const SizedBox(height: 10),
+                if (_pending) ...[
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text(
+                      '${context.l10n.fastPlanWaitTitle} ${context.l10n.fastPlanEntryPending}',
+                      key: ValueKey('trade-plan-${widget.label}-pending'),
+                      style: TextStyle(
+                        color: context.adaptiveAmber,
+                        fontSize: 12,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
                 _PlanLevelRow(
                   label: context.l10n.entryZone,
-                  value: widget.side.entryZone,
+                  value: _shown(
+                    widget.side.entryZone,
+                    context.l10n.fastPlanEntryPending,
+                  ),
                 ),
                 _PlanLevelRow(
                   label: 'Stop Loss',
-                  value: widget.side.stopLoss,
+                  value: _shown(
+                    widget.side.stopLoss,
+                    context.l10n.fastPlanSlPending,
+                  ),
                   valueColor: Theme.of(context).colorScheme.error,
                 ),
                 _PlanLevelRow(
                   label: context.l10n.takeProfit1,
-                  value: widget.side.takeProfit1,
+                  value: _shown(
+                    widget.side.takeProfit1,
+                    context.l10n.fastPlanTp1Pending,
+                  ),
                   valueColor: widget.color,
                 ),
                 _PlanLevelRow(
                   label: context.l10n.takeProfit2,
-                  value: widget.side.takeProfit2,
+                  value: _shown(
+                    widget.side.takeProfit2,
+                    context.l10n.fastPlanTp2Pending,
+                  ),
                   valueColor: widget.color,
                 ),
                 _PlanLevelRow(
                   label: context.l10n.riskReward,
-                  value: widget.side.riskRewardRatio,
+                  value: _shown(
+                    widget.side.riskRewardRatio,
+                    context.l10n.fastPlanRrPending,
+                  ),
                 ),
                 const Divider(height: 16),
                 Wrap(
@@ -5284,13 +5531,14 @@ class _SideCardState extends State<_SideCard> {
                       ),
                       label: Text(context.l10n.rationale),
                     ),
-                    TextButton.icon(
-                      key: ValueKey('copy-${widget.label}-levels'),
-                      onPressed: _copyLevels,
-                      style: TextButton.styleFrom(foregroundColor: muted),
-                      icon: const Icon(Icons.copy_rounded, size: 18),
-                      label: Text(context.l10n.copyLevels),
-                    ),
+                    if (!_pending)
+                      TextButton.icon(
+                        key: ValueKey('copy-${widget.label}-levels'),
+                        onPressed: _copyLevels,
+                        style: TextButton.styleFrom(foregroundColor: muted),
+                        icon: const Icon(Icons.copy_rounded, size: 18),
+                        label: Text(context.l10n.copyLevels),
+                      ),
                   ],
                 ),
                 if (_showRationale) ...[

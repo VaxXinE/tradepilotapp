@@ -177,6 +177,58 @@ void main() {
     expect(find.text('Position Size Recommendation'), findsNothing);
   });
 
+  testWidgets('a trade plan side without usable levels shows a pending note', (
+    tester,
+  ) async {
+    final plan = TradePlan(
+      (b) => b
+        ..preferredSide = TradePlanPreferredSideEnum.wait
+        ..buy.replace(
+          TradeSide(
+            (s) => s
+              ..entryZone = 'n/a'
+              ..stopLoss = '—'
+              ..takeProfit1 = 'Menunggu konfirmasi'
+              ..takeProfit2 = 'n/a'
+              ..riskRewardRatio = 'n/a'
+              ..rationale = 'No setup yet',
+          ),
+        )
+        ..sell.replace(_tradeSide('4420')),
+    );
+    await _pumpDetail(
+      tester,
+      _analysis(AnalysisModeEnum.beginner, tradePlan: plan),
+    );
+    await _reveal(
+      tester,
+      find.byKey(const ValueKey('suggested-levels-card')),
+      find.byType(Scrollable).first,
+    );
+
+    // Unavailable levels show a placeholder, never the raw "n/a".
+    expect(find.text('Wait for a confirmed candle close'), findsWidgets);
+    expect(find.text('n/a'), findsNothing);
+    expect(find.textContaining('No entry yet.'), findsOneWidget);
+    // Only the side with real levels can be copied.
+    expect(find.text('Copy levels'), findsOneWidget);
+  });
+
+  testWidgets('bias and overall risk are explained as separate measures', (
+    tester,
+  ) async {
+    await _pumpDetail(
+      tester,
+      _analysis(AnalysisModeEnum.pro, opportunity: 'Up', risk: 'Gap risk.'),
+    );
+
+    expect(find.byKey(const ValueKey('bias-risk-disclaimer')), findsOneWidget);
+    expect(find.textContaining('not a risk level'), findsOneWidget);
+    expect(find.byKey(const ValueKey('risk-overall-note')), findsOneWidget);
+    expect(find.textContaining('can differ from Compare Risk'), findsOneWidget);
+    expect(find.text('Overall Risk'), findsWidgets);
+  });
+
   testWidgets('adaptive details opens as a scrollable modal', (tester) async {
     await _pumpDetail(
       tester,
@@ -884,7 +936,8 @@ Future<void> _reveal(
     await tester.pump();
   }
   expect(target, findsOneWidget);
-  await tester.ensureVisible(target);
+  // Centre it: a target aligned to the very top edge can sit under the app bar.
+  await Scrollable.ensureVisible(tester.element(target), alignment: .4);
   await tester.pumpAndSettle();
 }
 
