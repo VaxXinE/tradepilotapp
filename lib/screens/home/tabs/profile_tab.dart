@@ -12,6 +12,7 @@ import '../../../providers/auth_provider.dart';
 import '../../../providers/credit_provider.dart';
 import '../../../providers/progression_provider.dart';
 import '../../../services/native_push_service.dart';
+import '../../../services/web_handoff.dart';
 import '../../../widgets/app_footer.dart';
 import '../../../widgets/progression/progression_emblem.dart';
 import '../../notifications/notifications_screen.dart';
@@ -71,10 +72,13 @@ class ProfileTab extends StatelessWidget {
   Future<void> _openTopUp(BuildContext context) async {
     var opened = false;
     try {
-      opened = await launchUrl(
-        Uri.https('tradepilot.id', '/topup'),
-        mode: LaunchMode.externalApplication,
+      // Signs the browser in with a one-time code so the user does not have
+      // to log in again; falls back to the plain page if that is unavailable.
+      final target = await WebHandoff.resolve(
+        context.read<AuthProvider>().client,
+        '/topup',
       );
+      opened = await launchUrl(target, mode: LaunchMode.externalApplication);
     } catch (_) {
       // Native browser channel can fail when no compatible app is available.
     }

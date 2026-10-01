@@ -211,6 +211,8 @@ import 'package:trade_pilot_api_client/src/model/users_list.dart';
 import 'package:trade_pilot_api_client/src/model/verify_security_answer_body.dart';
 import 'package:trade_pilot_api_client/src/model/watchlist.dart';
 import 'package:trade_pilot_api_client/src/model/watchlist_item.dart';
+import 'package:trade_pilot_api_client/src/model/web_handoff_body.dart';
+import 'package:trade_pilot_api_client/src/model/web_handoff_response.dart';
 
 part 'serializers.g.dart';
 
@@ -415,6 +417,8 @@ part 'serializers.g.dart';
   VerifySecurityAnswerBody,
   Watchlist,
   WatchlistItem,
+  WebHandoffBody,
+  WebHandoffResponse,
 ])
 Serializers serializers = (_$serializers.toBuilder()
       ..addBuilderFactory(
