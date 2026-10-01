@@ -8,6 +8,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/market_provider.dart';
 import '../../providers/notifications_provider.dart';
 import '../../providers/progression_provider.dart';
+import '../../widgets/progression/level_up_watcher.dart';
 import '../../providers/watchlist_provider.dart';
 import '../../core/theme/theme_controller.dart';
 import '../../l10n/l10n.dart';
@@ -391,7 +392,13 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     final enabled = !theme.isDarkMode;
     await theme.setDarkMode(enabled);
     if (!mounted) return;
-    await context.read<AuthProvider>().updateTheme(enabled);
+    final messenger = ScaffoldMessenger.of(context);
+    final failedMessage = context.l10n.themeUpdateFailed;
+    final saved = await context.read<AuthProvider>().updateTheme(enabled);
+    if (saved) return;
+    // Same as the web: restore the previous display and say it was not saved.
+    await theme.setDarkMode(!enabled);
+    messenger.showSnackBar(SnackBar(content: Text(failedMessage)));
   }
 
   void _openAnalyzeFromHistory(String instrument, String timeframe) {
@@ -469,50 +476,56 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       const ProfileTab(),
     ];
 
-    return Scaffold(
-      body: Column(
-        children: [
-          TradePilotAppHeader(
-            displayName: user?.displayName ?? l10n.trader,
-            avatarUrl: user?.avatarUrl,
-            unreadCount: notifications.unreadCount,
-            languageButton: const LanguageMenuButton(),
-            isDarkMode: themeController.isDarkMode,
-            onToggleTheme: _toggleTheme,
-            onOpenNotifications: _openNotifications,
-            onOpenProfile: () => _onTabSelected(4),
-            onOpenHome: () => _onTabSelected(0),
-            profileActive: _index == 4,
-            onBack: _navIds.contains(_index) ? null : () => _onTabSelected(1),
-            notificationsLabel: l10n.notifications,
-            profileLabel: l10n.profile,
-            themeLabel: l10n.darkTheme,
-            logoLabel: l10n.tradePilotLogo,
-            backLabel: l10n.back,
-          ),
-          LiveMarketTicker(quotes: market.quotes.values),
-          Expanded(
-            child: IndexedStack(index: _index, children: tabs),
-          ),
-        ],
-      ),
-      bottomNavigationBar: AppBottomNav(
-        activeId: _index,
-        onSelected: _onTabSelected,
-        items: [
-          AppNavItem(id: 0, icon: Icons.home_rounded, label: l10n.dashboard),
-          AppNavItem(
-            id: 1,
-            icon: Icons.trending_up_rounded,
-            label: l10n.analysis,
-          ),
-          AppNavItem(id: 2, icon: Icons.schedule_rounded, label: l10n.history),
-          AppNavItem(
-            id: 3,
-            icon: Icons.menu_book_rounded,
-            label: l10n.guideNavLabel,
-          ),
-        ],
+    return ProgressionLevelUpWatcher(
+      child: Scaffold(
+        body: Column(
+          children: [
+            TradePilotAppHeader(
+              displayName: user?.displayName ?? l10n.trader,
+              avatarUrl: user?.avatarUrl,
+              unreadCount: notifications.unreadCount,
+              languageButton: const LanguageMenuButton(),
+              isDarkMode: themeController.isDarkMode,
+              onToggleTheme: _toggleTheme,
+              onOpenNotifications: _openNotifications,
+              onOpenProfile: () => _onTabSelected(4),
+              onOpenHome: () => _onTabSelected(0),
+              profileActive: _index == 4,
+              onBack: _navIds.contains(_index) ? null : () => _onTabSelected(1),
+              notificationsLabel: l10n.notifications,
+              profileLabel: l10n.profile,
+              themeLabel: l10n.darkTheme,
+              logoLabel: l10n.tradePilotLogo,
+              backLabel: l10n.back,
+            ),
+            LiveMarketTicker(quotes: market.quotes.values),
+            Expanded(
+              child: IndexedStack(index: _index, children: tabs),
+            ),
+          ],
+        ),
+        bottomNavigationBar: AppBottomNav(
+          activeId: _index,
+          onSelected: _onTabSelected,
+          items: [
+            AppNavItem(id: 0, icon: Icons.home_rounded, label: l10n.dashboard),
+            AppNavItem(
+              id: 1,
+              icon: Icons.trending_up_rounded,
+              label: l10n.analysis,
+            ),
+            AppNavItem(
+              id: 2,
+              icon: Icons.schedule_rounded,
+              label: l10n.history,
+            ),
+            AppNavItem(
+              id: 3,
+              icon: Icons.menu_book_rounded,
+              label: l10n.guideNavLabel,
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -153,81 +153,184 @@ class _ProgressionHero extends StatelessWidget {
         ),
         border: Border.all(color: const Color(0x66F5C219)),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          ProgressionEmblem(
-            level: summary.level,
-            masteryLevel: summary.masteryLevel,
-            size: 88,
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  rank,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                  ),
+          Row(
+            children: [
+              ProgressionEmblem(
+                level: summary.level,
+                masteryLevel: summary.masteryLevel,
+                size: 88,
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      rank,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    Text(
+                      summary.masteryLevel > 0
+                          ? context.l10n.progressionMastery(
+                              summary.masteryLevel,
+                            )
+                          : context.l10n.progressionLevel(summary.level),
+                      style: const TextStyle(
+                        color: Color(0xFFF5C219),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '${summary.totalXp} XP',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 11,
+                          ),
+                        ),
+                        Text(
+                          '${summary.nextLevelXp} XP',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 5),
+                    LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 7,
+                      borderRadius: BorderRadius.circular(99),
+                      backgroundColor: Colors.white12,
+                      color: const Color(0xFFF5C219),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        _Streak(
+                          label: context.l10n.progressionCurrentStreak,
+                          value: summary.currentStreak,
+                        ),
+                        const SizedBox(width: 12),
+                        _Streak(
+                          label: context.l10n.progressionLongestStreak,
+                          value: summary.longestStreak,
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                Text(
-                  summary.masteryLevel > 0
-                      ? context.l10n.progressionMastery(summary.masteryLevel)
-                      : context.l10n.progressionLevel(summary.level),
+              ),
+            ],
+          ),
+          if (summary.nextLevelXp > summary.totalXp) ...[
+            const SizedBox(height: 14),
+            _LevelUpHelp(remainingXp: summary.nextLevelXp - summary.totalXp),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// What earns XP, with the daily caps (web `progression-level-up-help`).
+class _LevelUpHelp extends StatelessWidget {
+  const _LevelUpHelp({required this.remainingXp});
+  final int remainingXp;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final ways = <(String, String)>[
+      (l10n.levelUpJournal, l10n.levelUpDailyCap('2', '20')),
+      (l10n.levelUpEvaluation, l10n.levelUpDailyCap('3', '12')),
+      (l10n.levelUpChecklist, l10n.levelUpDailyCap('3', '8')),
+      (l10n.levelUpGuide, l10n.levelUpDailyCap('2', '15')),
+      (l10n.levelUpWait, l10n.levelUpDailyCap('2', '15')),
+      (l10n.levelUpStreak, l10n.levelUpPerDay('10')),
+    ];
+    // Material (not a decorated Container) so the ExpansionTile's ink shows.
+    return Material(
+      key: const ValueKey('progression-level-up-help'),
+      color: Colors.black26,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: const BorderSide(color: Colors.white12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.levelUpHint(
+                  NumberFormat.decimalPattern(
+                    Localizations.localeOf(context).toString(),
+                  ).format(remainingXp),
+                ),
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                  height: 1.4,
+                ),
+              ),
+              ExpansionTile(
+                tilePadding: EdgeInsets.zero,
+                childrenPadding: const EdgeInsets.only(bottom: 10),
+                iconColor: const Color(0xFFF5C219),
+                collapsedIconColor: const Color(0xFFF5C219),
+                title: Text(
+                  l10n.levelUpWaysLabel,
                   style: const TextStyle(
                     color: Color(0xFFF5C219),
-                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '${summary.totalXp} XP',
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 11,
+                expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final way in ways)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(
+                              text: way.$1,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            TextSpan(text: ' — ${way.$2}'),
+                          ],
+                        ),
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                          height: 1.4,
+                        ),
                       ),
                     ),
-                    Text(
-                      '${summary.nextLevelXp} XP',
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 5),
-                LinearProgressIndicator(
-                  value: progress,
-                  minHeight: 7,
-                  borderRadius: BorderRadius.circular(99),
-                  backgroundColor: Colors.white12,
-                  color: const Color(0xFFF5C219),
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    _Streak(
-                      label: context.l10n.progressionCurrentStreak,
-                      value: summary.currentStreak,
-                    ),
-                    const SizedBox(width: 12),
-                    _Streak(
-                      label: context.l10n.progressionLongestStreak,
-                      value: summary.longestStreak,
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
