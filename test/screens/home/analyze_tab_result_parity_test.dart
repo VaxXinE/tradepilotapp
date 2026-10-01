@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
@@ -82,10 +83,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('an unknown instrument becomes a request that is not available', (
-    tester,
-  ) async {
-    await _pumpAnalyzeTab(tester);
+  testWidgets('an unknown instrument is recorded as a request', (tester) async {
+    final adapter = _RequestAdapter();
+    await _pumpAnalyzeTab(tester, adapter: adapter);
 
     await tester.tap(find.byKey(const Key('custom-instrument-field')));
     await tester.pumpAndSettle();
@@ -104,7 +104,11 @@ void main() {
     await tester.tap(find.byKey(const Key('other-instrument-request-button')));
     await tester.pumpAndSettle();
 
+    expect(adapter.requests, [
+      {'code': 'BTC/USDH'},
+    ]);
     expect(find.text('BTC/USDH is not available'), findsOneWidget);
+    expect(find.textContaining('does not use analysis quota'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('instrument-unavailable-close')));
     await tester.pumpAndSettle();
@@ -115,6 +119,90 @@ void main() {
       findsOneWidget,
     );
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a failed request can be retried', (tester) async {
+    final adapter = _RequestAdapter(failFirst: true);
+    await _pumpAnalyzeTab(tester, adapter: adapter);
+
+    await tester.tap(find.byKey(const Key('custom-instrument-field')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('other-instrument-search-field')),
+      'NAS100',
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('other-instrument-request-button')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Could not submit the instrument request. Please try again.'),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const Key('instrument-request-retry')));
+    await tester.pumpAndSettle();
+
+    expect(adapter.requests, hasLength(2));
+    expect(find.text('NAS100 is not available'), findsOneWidget);
+  });
+
+  testWidgets('a verified alias selects the instrument without a request', (
+    tester,
+  ) async {
+    final adapter = _RequestAdapter();
+    await _pumpAnalyzeTab(tester, adapter: adapter);
+
+    await tester.tap(find.byKey(const Key('custom-instrument-field')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('other-instrument-search-field')),
+      'cable',
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('other-instrument-GBP/USD')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('other-instrument-request-button')),
+      findsNothing,
+    );
+
+    await tester.testTextInput.receiveAction(TextInputAction.search);
+    await tester.pumpAndSettle();
+
+    expect(adapter.requests, isEmpty);
+    expect(find.text('GBP/USD'), findsWidgets);
+  });
+
+  testWidgets('only verified instruments are offered in the picker', (
+    tester,
+  ) async {
+    await _pumpAnalyzeTab(tester);
+
+    await tester.tap(find.byKey(const Key('custom-instrument-field')));
+    await tester.pumpAndSettle();
+
+    for (final code in ['EUR/USD', 'GBP/USD', 'AUD/USD', 'USD/JPY']) {
+      expect(find.byKey(ValueKey('other-instrument-$code')), findsOneWidget);
+    }
+    expect(
+      find.byKey(const ValueKey('other-instrument-BTC/USD')),
+      findsNothing,
+    );
+
+    await tester.enterText(
+      find.byKey(const Key('other-instrument-search-field')),
+      'btc',
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('other-instrument-BTC/USD')),
+      findsNothing,
+    );
+    expect(find.text('Request BTC'), findsOneWidget);
   });
 
   testWidgets('the analysis form remains visible above the result', (
@@ -244,13 +332,14 @@ Future<_FakeAnalysisProvider> _pumpAnalyzeTab(
   WidgetTester tester, {
   VoidCallback? onNewAnalysis,
   bool concurrentFailure = false,
+  HttpClientAdapter? adapter,
 }) async {
   SharedPreferences.setMockInitialValues({});
   final preferences = await SharedPreferences.getInstance();
 
   final auth = AuthProvider();
   await tester.runAsync(() => Future<void>.delayed(Duration.zero));
-  auth.client.dio.httpClientAdapter = _OfflineAdapter();
+  auth.client.dio.httpClientAdapter = adapter ?? _OfflineAdapter();
 
   final analysisProvider = _FakeAnalysisProvider(
     auth,
@@ -313,6 +402,40 @@ Future<_FakeAnalysisProvider> _pumpAnalyzeTab(
   );
   await tester.pumpAndSettle();
   return analysisProvider;
+}
+
+/// Merekam `POST /instrument-requests`; sisanya gagal seperti state offline.
+class _RequestAdapter implements HttpClientAdapter {
+  _RequestAdapter({this.failFirst = false});
+
+  final bool failFirst;
+  final List<Object?> requests = [];
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    if (options.path == '/instrument-requests') {
+      requests.add(options.data);
+      if (failFirst && requests.length == 1) {
+        return ResponseBody.fromString('', 500);
+      }
+      final code = (options.data as Map)['code'];
+      return ResponseBody.fromString(
+        jsonEncode({'code': code, 'recorded': true}),
+        201,
+        headers: {
+          Headers.contentTypeHeader: [Headers.jsonContentType],
+        },
+      );
+    }
+    return ResponseBody.fromString('', 404);
+  }
+
+  @override
+  void close({bool force = false}) {}
 }
 
 /// Semua panggilan jaringan gagal supaya tab jatuh ke state offline yang stabil.

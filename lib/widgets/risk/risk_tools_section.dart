@@ -6,8 +6,20 @@ import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
 import '../../l10n/l10n.dart';
 import '../../providers/auth_provider.dart';
+import '../adaptive_plan_common.dart';
 
-const _supportedInstruments = {'XAU/USD', 'BRENT', 'HSI', 'NIKKEI'};
+/// Same eight instruments the server's risk map accepts (the four core ones
+/// plus the verified FX pairs).
+const _supportedInstruments = {
+  'XAU/USD',
+  'BRENT',
+  'HSI',
+  'NIKKEI',
+  'EUR/USD',
+  'GBP/USD',
+  'AUD/USD',
+  'USD/JPY',
+};
 
 bool supportsRiskMap(String instrument) =>
     _supportedInstruments.contains(instrument.trim().toUpperCase());
@@ -128,13 +140,7 @@ class _RiskMapCardState extends State<RiskMapCard> {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      context.l10n.riskMapDescription,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        height: 1.4,
-                      ),
-                    ),
+                    AdaptiveInfoNote(context.l10n.riskMapDescription),
                   ],
                 ),
               ),
