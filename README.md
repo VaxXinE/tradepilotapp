@@ -1,41 +1,109 @@
-# Trade Pilot — Flutter App
+# Trade Pilot — Aplikasi Mobile
 
-Aplikasi mobile Flutter untuk **Trade Pilot** (AI Trading Assistant), dibangun
-mengikuti desain & fitur web app di repo
-[`Trade-Pilot`](https://github.com/aisgbizdev/Trade-Pilot) branch `prod`
-(`artifacts/ai-trading`), dan mengonsumsi backend `artifacts/api-server` lewat
-API client Dart yang di-vendor dari `lib/api-client-dart`.
+Aplikasi Flutter (Android & iOS) untuk **Trade Pilot / TradePilot.id**, asisten
+analisis pasar berbasis AI. Aplikasi ini adalah pendamping mobile dari web app
+dan memakai backend yang sama. Web app adalah sumber kebenaran: perilaku, angka,
+dan alur di sini harus mengikuti web.
 
-## Setup
+- Bundle ID: `id.tradepilot.app`
+- Versi saat ini: `1.0.5+7` (lihat `pubspec.yaml`)
+- Bahasa UI: Indonesia dan Inggris
+- Bukan broker. Aplikasi tidak membuka, menutup, atau mengelola posisi;
+  semua hasil adalah bahan pertimbangan, bukan instruksi trading.
+
+## Sumber dan sinkronisasi dengan web
+
+| | |
+|---|---|
+| Repo web | `Trade-Pilot` (frontend `artifacts/ai-trading`, backend `artifacts/api-server`) |
+| Sinkron terakhir | branch `merge-devv-psr` @ `3f627cb` |
+| API base URL | `https://tradepilot.id/api` (default) |
+
+Yang dipakai bersama web:
+
+- **API client Dart** di `packages/trade_pilot_api_client`, di-vendor dari
+  `lib/api-client-dart` repo web (sudah ter-generate, tidak perlu
+  `build_runner`). Kalau spec OpenAPI web berubah, salin ulang folder itu dan
+  format dengan `dart format --language-version=2.18`.
+- **Aturan Adaptive Plan** di `lib/core/analysis/`, port dari
+  `adaptive-position-plan.ts`. Angkanya diverifikasi terhadap engine web asli
+  (lihat bagian Pengujian).
+- **Teks UI** di `lib/l10n/app_en.arb` dan `app_id.arb`, disamakan dengan
+  `locales/en.ts` dan `id.ts` di web.
+
+Saat menyinkronkan, mulai dari commit terakhir di atas:
+`git log 3f627cb..origin/merge-devv-psr` di repo web, lalu ikuti perubahan
+kontrak API (server), teks, dan logika yang tampil di mobile.
+
+## Fitur
+
+**Akun**
+- Login/daftar email, Google Sign-In, Sign in with Apple, lupa password,
+  onboarding pertama kali.
+- Sesi disimpan di secure storage; kunci biometrik saat kembali dari background
+  (bisa dimatikan di Profil).
+- Edit profil, ganti password, ganti pertanyaan keamanan, privasi & keamanan,
+  hapus akun.
+
+**Analisis**
+- Analisis baru hanya untuk **8 instrumen terverifikasi**: XAU/USD, BRENT, HSI,
+  NIKKEI, EUR/USD, GBP/USD, AUD/USD, USD/JPY, dengan 8 timeframe (1m sampai 1W).
+  Kode lain bisa **diminta** lewat dialog "Instrumen lain"; permintaan hanya
+  dicatat dan tidak memakai kuota.
+- Detail analisis: bias, confidence, skenario, kondisi invalidasi, Standard
+  Plan (Buy/Sell), chart level dengan share (salin/simpan/bagikan), konteks
+  fundamental (berita & kalender), indikator teknikal, peta risiko timeframe,
+  alert harga per level, catatan pribadi, jurnal, dan feedback.
+- **Adaptive Plan**: simulasi entry, lot, dan risiko dari analisis tersimpan
+  untuk tier akun Micro/Mini/Regular dan tiga gaya risiko. Memakai snapshot
+  candle yang tersimpan di analisis, menolak analisis kedaluwarsa, menjelaskan
+  kenapa entry terblokir (dana atau batas rugi), dan bisa dibagikan sebagai
+  gambar atau dicetak sebagai PDF. Semua ekspor diberi watermark TradePilot.id.
+- Kuota gratis dan dialog kuota. Top-up tidak ada di mobile; menu Kredit
+  Analisis membuka halaman `/topup` di browser dan memakai handoff sesi satu
+  kali pakai (`POST /auth/web-handoff`) agar pengguna tidak perlu login ulang.
+  Kalau backend menolak, dibuka halaman biasa.
+
+**Pendukung**
+- Dashboard (ringkasan, watchlist, harga live, berita, kalender), riwayat dengan
+  filter dan preset, performa, analitik, jurnal trading, Trader Mirror,
+  ringkasan harian.
+- Price alert, notifikasi (inbox dan preferensi), push native lewat Firebase
+  Cloud Messaging.
+- Progression: XP, level, achievement, dialog naik level, dan checklist
+  pra-analisis.
+- Pusat Panduan dan Mindset (konten di `assets/guide_*.json`); membaca panduan
+  memberi XP setelah jeda baca minimum dari server.
+
+## Menjalankan
+
+Prasyarat: Flutter stabil dengan Dart `^3.10.4`.
 
 ```bash
 flutter pub get
-```
-
-### Konfigurasi Base URL API
-
-Default base URL sudah diarahkan ke domain production Trade-Pilot:
-**`https://tradepilot.id/api`** (dikonfirmasi dari dashboard Replit →
-Deployments → "AI Trading Assistant"). Sesuai "Production Routing" di
-`replit.md`: `ai-trading` di-serve statis di `/`, `api-server` di-serve di
-`/api/*` — satu domain yang sama.
-
-Kalau butuh arahkan ke environment lain (dev/staging/lokal), override lewat
-`--dart-define` saat run/build:
-
-```bash
-flutter run --dart-define=API_BASE_URL=https://<domain-lain>/api
-```
-
-Kalau testing ke backend lokal via HTTP (bukan HTTPS), tambahkan exception
-App Transport Security di `ios/Runner/Info.plist` dan
-`android:usesCleartextTraffic="true"` di `AndroidManifest.xml` (khusus dev,
-jangan dipakai di build production).
-
-### Menjalankan
-
-```bash
 flutter run
+```
+
+Override environment dengan `--dart-define`:
+
+| Variabel | Fungsi |
+|---|---|
+| `API_BASE_URL` | Backend lain (dev/staging/lokal), mis. `https://<domain>/api` |
+| `SHOW_SPONSOR` | Menampilkan kartu sponsor |
+| `SHOW_NEWSMAKER` | Menampilkan elemen Newsmaker |
+
+Backend lokal lewat HTTP butuh pengecualian ATS di
+`ios/Runner/Info.plist` dan `android:usesCleartextTraffic="true"`. Hanya untuk
+development, jangan masuk build produksi.
+
+Firebase dikonfigurasi lewat `firebase.json`,
+`android/app/google-services.json`, dan `ios/Runner/GoogleService-Info.plist`.
+Update kode lewat Shorebird (`shorebird.yaml`).
+
+Teks UI dihasilkan dari ARB. Setelah mengubah `app_en.arb` atau `app_id.arb`:
+
+```bash
+flutter gen-l10n
 ```
 
 ## Struktur
@@ -43,81 +111,49 @@ flutter run
 ```
 lib/
   core/
-    api/            # konfigurasi base URL
-    storage/         # secure storage token & user
-    theme/            # warna + ThemeData (brand hitam+emas, selaras web app)
-  providers/          # state management (Provider/ChangeNotifier)
-    auth_provider.dart
-    analysis_provider.dart
-    notifications_provider.dart
-  screens/
-    auth/             # login, register, lupa password (3-step)
-    home/
-      home_shell.dart # bottom nav 4 tab
-      tabs/            # dashboard, analyze, history, profile
-    analysis/          # detail analisis + trade plan + feedback
-    notifications/
-    profile/           # ganti password
-  widgets/             # komponen reusable (analysis card, error banner)
+    analysis/      # engine Adaptive Plan + perbandingan tier akun
+    market/        # instrumen terverifikasi, sesi pasar, konteks & ringkasan teknikal
+    api/ storage/ theme/ localization/ preferences/ analytics/ history/ mindset/
+  l10n/            # ARB (en, id) dan kode hasil generate
+  models/          # model tampilan (market, filter riwayat, notifikasi)
+  providers/       # state (Provider/ChangeNotifier): auth, analysis, market,
+                   # credit, notifications, price alert, progression, watchlist
+  repositories/    # akses API per domain
+  services/        # push native, telemetri, PDF Adaptive, gambar ringkasan
+                   # plan, watermark ekspor
+  screens/         # auth, home (dashboard/analisis/riwayat/profil), analysis,
+                   # journal, performance, analytics, mindset, progression, dll.
+  widgets/         # komponen reusable, termasuk kartu Adaptive Plan
 packages/
-  trade_pilot_api_client/  # API client Dart (di-vendor dari Trade-Pilot repo,
-                            # lib/api-client-dart — sudah generated, tidak perlu
-                            # build_runner)
+  trade_pilot_api_client/   # API client Dart (vendored dari repo web)
+assets/                     # panduan (JSON), font Inter, ikon
+test/                       # mencerminkan struktur lib/
 ```
 
-## Fitur yang sudah diimplementasikan
+## Pengujian
 
-- Autentikasi: login, register (dengan pertanyaan keamanan + mode
-  Pemula/Pro), lupa password 3-langkah, session token tersimpan aman
-  (`flutter_secure_storage`), auto-restore sesi saat app dibuka.
-- Dashboard: statistik ringkas, kuota analisis (per jam/hari), daftar
-  analisis terbaru.
-- Analisis AI: form pilih instrumen (Forex/Crypto/Futures) + timeframe +
-  catatan tambahan, submit ke AI, redirect ke halaman detail.
-- Detail analisis: bias (bullish/bearish/netral), confidence bar, skenario
-  utama & alternatif, kondisi invalidasi, **rencana trading lengkap**
-  (entry/stop-loss/TP1/TP2/risk-reward untuk sisi Buy & Sell), feedback
-  (membantu / kurang membantu).
-- Riwayat analisis dengan infinite scroll.
-- Notifikasi: daftar, tandai dibaca (satu/semua).
-- Profil: toggle mode Pemula/Pro, ganti password, lihat pertanyaan
-  keamanan, logout.
+```bash
+flutter analyze
+flutter test
+```
 
-## Belum diimplementasikan (fitur lanjutan web app)
+Beberapa pengujian penting:
 
-Web app (`artifacts/ai-trading`) juga punya halaman-halaman berikut yang
-**belum** dibuatkan versi Flutter-nya — silakan lanjutkan sesuai prioritas:
+- `test/core/adaptive_reference_test.dart` memutar ulang 220 kasus acak yang
+  hasilnya dihasilkan oleh engine TypeScript web asli (waktu dibekukan),
+  disimpan di `test/fixtures/adaptive_reference.json.gz`. Port Dart harus
+  menghasilkan angka dan keputusan yang sama. Kalau logika Adaptive di web
+  berubah, buat ulang fixture dengan menjalankan engine web memakai
+  `node --experimental-strip-types`.
+- `test/api_client_sync_test.dart` menjaga kontrak API client, termasuk field
+  yang boleh null dari server.
 
-- Analytics/Personal Analytics (grafik `recharts` → bisa pakai `fl_chart`,
-  sudah ditambahkan sebagai dependency tapi belum dipakai)
-- Trade Journal (`journal.tsx`)
-- Trader Mirror (`mirror.tsx`)
-- Daily Summary (`daily-summary.tsx`)
-- Performance (`performance.tsx`)
-- My Alerts / Price Alerts (`my-alerts.tsx`)
-- Mindset (`mindset.tsx`)
-- Admin panel (`admin.tsx`, `admin-users.tsx`, `admin-feedback.tsx`) — ini
-  khusus role admin/super_admin, biasanya tidak perlu di app mobile end-user
-- Web Push Notifications (VAPID) — mobile biasanya pakai FCM/APNs, ini butuh
-  desain ulang terpisah dari implementasi web push
-- Watchlist widget di dashboard, live prices, news/calendar widget
+## Catatan
 
-Semua endpoint untuk fitur-fitur di atas **sudah tersedia** di
-`packages/trade_pilot_api_client` (cek `AdminApi`, `TradeJournalApi`,
-`TraderMirrorApi`, `DailySummaryApi`, `PerformanceApi`,
-`UserPriceAlertsApi`, `WatchlistApi`, dst) — tinggal dibuatkan provider +
-screen-nya mengikuti pola yang sudah ada di `lib/providers/` dan
-`lib/screens/`.
-
-## Catatan penting
-
-- Kode ini ditulis manual tanpa akses Flutter SDK di lingkungan pembuatannya
-  (sandbox tidak punya Flutter toolchain), jadi **belum pernah di-compile
-  atau di-`flutter analyze`**. Jalankan `flutter pub get` lalu
-  `flutter analyze` / `flutter run` setelah pull untuk menangkap kemungkinan
-  typo atau ketidakcocokan API kecil sebelum lanjut development.
-- `packages/trade_pilot_api_client` di-vendor (bukan git submodule) supaya
-  self-contained. Kalau `Trade-Pilot` (branch `prod`) meng-update OpenAPI
-  spec / API client-nya, salin ulang folder
-  `lib/api-client-dart` dari repo itu ke `packages/trade_pilot_api_client`
-  di sini.
+- `flutter_secure_storage` sengaja dipin ke `^10.3.1`. Jangan loncat ke 11:
+  versi itu menghapus backend lama sehingga token sesi yang sudah tersimpan
+  tidak bisa dibaca.
+- File `.g.dart` di `packages/trade_pilot_api_client` sesekali perlu ditambal
+  manual (mis. `MarketSnapshot` yang bisa null). Generate ulang dari OpenAPI akan
+  menimpanya, jadi cek `test/api_client_sync_test.dart` setelah update.
+- Dokumen internal (`docs/`, `anti-slop/`) tidak dilacak di git.
