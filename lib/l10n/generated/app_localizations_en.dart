@@ -234,7 +234,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get changeTimeframeDescription =>
-      'Same instrument, different timeframe — tap to create a new analysis without leaving this page.';
+      'Choosing another timeframe immediately starts a new analysis for this instrument.';
 
   @override
   String get analysisUsesFreeQuota => 'Source: free analysis quota';
@@ -2690,7 +2690,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get riskMapDescription =>
-      'Compare technical risk across timeframes to find the best setup window.';
+      'This comparison scores technical risk only. The risk in an analysis result can differ due to other factors.';
 
   @override
   String get riskMapLoading => 'Scanning timeframes...';
@@ -4072,7 +4072,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get riskStyleConservative => 'Conservative';
 
   @override
-  String get riskStyleBalanced => 'Balanced';
+  String get riskStyleBalanced => 'Moderate';
 
   @override
   String get riskStyleAggressive => 'Aggressive';
@@ -4088,7 +4088,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adaptiveCopyManualContext =>
-      'Use this as manual planning context, not an execution instruction.';
+      'This plan is manual and conditional — confirm the current chart and fundamental risk before entry or adding a layer. Not an automated order.';
 
   @override
   String get notRecommended => 'Not recommended';
@@ -4213,4 +4213,1059 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clear => 'Clear';
+
+  @override
+  String get adaptiveAccountMicro => 'Micro';
+
+  @override
+  String get adaptiveAccountMicroDesc => 'Minimum 0.01 lot · \$10 margin';
+
+  @override
+  String get adaptiveAccountMini => 'Mini';
+
+  @override
+  String get adaptiveAccountMiniDesc => 'Minimum 0.10 lot · \$100 margin';
+
+  @override
+  String adaptiveAccountOpeningMinimum(String amount) {
+    return 'The minimum to open a Micro account is $amount. A lower amount may still be free margin in an account that is already active.';
+  }
+
+  @override
+  String get adaptiveAccountRegular => 'Regular';
+
+  @override
+  String get adaptiveAccountRegularDesc => 'Minimum 1.00 lot · \$1,000 margin';
+
+  @override
+  String adaptiveAccountRule(
+    String amount,
+    String lot,
+    String maximum,
+    String size,
+    String tier,
+    String unit,
+  ) {
+    return '$tier: a minimum $lot lot requires $amount margin. Maximum $maximum lot applies to each position, while the complete plan may total more when margin and Stop Loss risk allow it. Contract size is $size $unit for one minimum-size position.';
+  }
+
+  @override
+  String adaptiveAccountRuleUncapped(
+    String amount,
+    String lot,
+    String size,
+    String tier,
+    String unit,
+  ) {
+    return '$tier: a minimum $lot lot requires $amount margin. Adaptive imposes no per-position maximum for Regular; verified broker limits, free funds and Stop Loss risk still apply. Contract size is $size $unit for one minimum-size position.';
+  }
+
+  @override
+  String get adaptiveAccountTitle => 'Fixed account rules profile';
+
+  @override
+  String get adaptiveAlternativeAvailableShort =>
+      'Alternative available for review; Standard Plan stays unchanged.';
+
+  @override
+  String adaptiveAlternativeBasis(
+    String entry,
+    String loss,
+    String lot,
+    String margin,
+    String profit,
+    String rr,
+    String side,
+    String stop,
+    String target,
+  ) {
+    return 'Only when the saved stop looks unsuitable: independent chart swing entry, stop and target for $side. One minimum-size position, $lot lot; entry $entry, SL $stop, target $target (RR $rr). Day margin $margin, estimated SL loss $loss, gross target profit $profit. Confirm the current chart and fundamental risks before trading.';
+  }
+
+  @override
+  String get adaptiveAlternativeNoLevels =>
+      'No fully supported alternative can be calculated from the current chart, account limits and direction. Run a fresh analysis rather than moving only the Stop Loss or target.';
+
+  @override
+  String get adaptiveAlternativeTitle => 'Adaptive Scenario (alternative)';
+
+  @override
+  String get adaptiveAlternativeUnavailableShort =>
+      'No alternative yet — run a fresh analysis, don\'t move the stop or target.';
+
+  @override
+  String get adaptiveAlternativeUnchanged =>
+      'Separate review scenario only. The Standard Plan is unchanged and no order is placed.';
+
+  @override
+  String get adaptiveAnalysisBasis =>
+      'Primary basis: the saved analysis shown above—its analysis-time entry zone, one final Stop Loss, targets, bias, confidence, technical counts, market condition, and fundamental snapshot.';
+
+  @override
+  String get adaptiveAnalysisExpired =>
+      'This saved analysis has expired. Run a new analysis before making an Adaptive recommendation.';
+
+  @override
+  String get adaptiveBlockedBoth =>
+      'The minimum lot exceeds your loss limit and needs more broker funds. Changing just one input may not be enough.';
+
+  @override
+  String get adaptiveBlockedBothNext =>
+      'Only if you accept the extra risk and actually have more broker funds, edit both inputs and recalculate. Otherwise wait for another setup. Never move the stop; neither change guarantees entry.';
+
+  @override
+  String get adaptiveBlockedDismiss => 'Wait for another setup';
+
+  @override
+  String get adaptiveBlockedEditFunds => 'Edit broker funds';
+
+  @override
+  String get adaptiveBlockedEditLoss => 'Edit loss limit';
+
+  @override
+  String get adaptiveBlockedFunds =>
+      'The available broker funds do not cover the minimum position through its stop.';
+
+  @override
+  String get adaptiveBlockedFundsGap => 'Funds short';
+
+  @override
+  String get adaptiveBlockedFundsNext =>
+      'Update the funds actually available in your broker account, then recalculate. Otherwise wait for another setup. This is about broker funds, not TradePilot analysis credits.';
+
+  @override
+  String get adaptiveBlockedRisk =>
+      'The minimum lot exceeds your loss limit. More broker funds alone will not fix this.';
+
+  @override
+  String get adaptiveBlockedRiskGap => 'Over loss limit';
+
+  @override
+  String get adaptiveBlockedRiskNext =>
+      'If you knowingly accept a higher loss limit, edit it and recalculate. Otherwise wait for a lower-risk setup. Do not move the stop; a new limit does not guarantee entry.';
+
+  @override
+  String get adaptiveBlockedTitle => 'Why can\'t I enter?';
+
+  @override
+  String get adaptiveCandleSourceTime => 'Analysis candle snapshot fetched';
+
+  @override
+  String adaptiveCapacityNone(String tier) {
+    return 'These funds do not cover the minimum transaction margin for the $tier profile.';
+  }
+
+  @override
+  String get adaptiveChartCandidatesLoading =>
+      'Reading current chart swing levels…';
+
+  @override
+  String get adaptiveChartConfirmation =>
+      'Current chart: swing levels inside the saved entry-to-SL path may become separate layer candidates. They confirm or offer an alternative checkpoint; they never silently replace the saved analysis levels.';
+
+  @override
+  String adaptiveCompareBoth(String funds, String risk) {
+    return 'Risk exceeds your loss limit by $risk and funds are short by $funds. Skip; funds alone are not enough.';
+  }
+
+  @override
+  String get adaptiveCompareConflict =>
+      'Market signals conflict. Skip this setup; changing accounts or adding funds cannot fix direction.';
+
+  @override
+  String get adaptiveCompareFinancialNoAlternative =>
+      'The minimum contract is blocked by this account\'s limits, not a missing AI analysis. Do not move the saved stop or target to force an entry.';
+
+  @override
+  String adaptiveCompareFunds(String funds) {
+    return 'Funds at stop are short by $funds. Skip; recalculate only if broker funds change.';
+  }
+
+  @override
+  String get adaptiveCompareLimited =>
+      'Minimum-lot risk exceeds your style target, though below the hard loss limit. Do not enter.';
+
+  @override
+  String get adaptiveCompareLimitedBadge => 'Limited option only';
+
+  @override
+  String adaptiveCompareLimitedNext(String target) {
+    return 'Wait for a setup with minimum-lot risk at most $target; do not move the stop.';
+  }
+
+  @override
+  String get adaptiveCompareNoCredit =>
+      'Calculated locally from this saved analysis, broker rule and fresh candles. No additional AI credit is used.';
+
+  @override
+  String adaptiveCompareRisk(String risk) {
+    return 'Minimum-lot risk exceeds your hard loss limit by $risk. Skip; adding funds cannot fix this.';
+  }
+
+  @override
+  String get adaptiveCompareSkip => 'SKIP';
+
+  @override
+  String get adaptiveCompareUnavailable =>
+      'Minimum-position data is incomplete. Wait and check market data.';
+
+  @override
+  String get adaptiveCompareWait => 'WAIT';
+
+  @override
+  String get adaptiveConditionalAdditionalFunds =>
+      'Additional free funds needed';
+
+  @override
+  String get adaptiveConditionalAdditionalLoss =>
+      'Additional loss budget needed';
+
+  @override
+  String get adaptiveConditionalHelp =>
+      'This candidate is blocked only by the entered funds or loss limit. It is not part of the active plan; reconsider it only after adjusting those inputs and confirming the chart and saved analysis again.';
+
+  @override
+  String get adaptiveConditionalManual =>
+      'Still manual: price moving against the position alone is not a trigger.';
+
+  @override
+  String get adaptiveConditionalOverviewHelp =>
+      'The analysis does not support an entry now. Select Buy or Sell to review its levels, lot size, margin, and risk as a conditional scenario, not an order instruction.';
+
+  @override
+  String get adaptiveConditionalTitle => 'Conditional financial plan';
+
+  @override
+  String get adaptiveConditionalTotalFunds => 'Total funds needed at final SL';
+
+  @override
+  String get adaptiveConditionalTotalRisk => 'Total risk at final SL';
+
+  @override
+  String adaptiveContextFundamental(
+    String events,
+    String highImpact,
+    String news,
+  ) {
+    return 'Fundamental snapshot: $news news items, $events economic events, $highImpact high-impact.';
+  }
+
+  @override
+  String get adaptiveContextFundamentalUnavailable =>
+      'The fundamental snapshot is unavailable for this analysis.';
+
+  @override
+  String get adaptiveContextMissing => 'Context unavailable';
+
+  @override
+  String adaptiveContextTechnical(String buy, String neutral, String sell) {
+    return 'Technical snapshot: $buy support up, $sell support down, $neutral neutral.';
+  }
+
+  @override
+  String get adaptiveContractMicroAssumption =>
+      'Micro is an assumed 1/10 of Mini, including USD 0.50/point for indices; it is not an official broker rule. Mini and Regular values come from the supplied broker table.';
+
+  @override
+  String adaptiveContractMinimumBasis(String lot) {
+    return 'Additional contracts scale with the tier lot size: position lot ÷ $lot minimum lot. The contract size is not multiplied by the lot again.';
+  }
+
+  @override
+  String get adaptiveContractTableTitle =>
+      'Contract value by account tier (for one minimum-size position)';
+
+  @override
+  String get adaptiveContractTier => 'Tier';
+
+  @override
+  String get adaptiveContractValue => 'Contract value';
+
+  @override
+  String get adaptiveCopy => 'Copy Adaptive Plan';
+
+  @override
+  String get adaptiveCopyBlocked => 'Copy unavailable';
+
+  @override
+  String get adaptiveCopyFailed => 'Copy failed';
+
+  @override
+  String get adaptiveCopySuccess => 'Copied';
+
+  @override
+  String get adaptiveCopyTitle => 'TradePilot.id — Adaptive Plan';
+
+  @override
+  String get adaptiveDecisionTitle => 'Adaptive decision';
+
+  @override
+  String get adaptiveDirectionHelp =>
+      'Buy and Sell use separate saved-plan levels. Choose the direction you want to inspect; no order is placed automatically.';
+
+  @override
+  String adaptiveDirectionUnavailable(String side) {
+    return '$side is unavailable because this saved analysis does not provide a complete entry and final Stop Loss for that direction.';
+  }
+
+  @override
+  String get adaptiveDisclaimer =>
+      'Buy/Sell scenarios are for review, not instructions to take a position. This is not a profit guarantee or automatic order. TradePilot.id does not execute trades; check current data and decide for yourself.';
+
+  @override
+  String get adaptiveExternalLiquidation =>
+      'Spread, price gaps, execution differences, tax, and broker rules can still add risk. This plan does not calculate overnight holding.';
+
+  @override
+  String get adaptiveFillUncertain =>
+      'Only filled entries count. These are gross estimates at the displayed levels, not guaranteed fills or net returns; spread, fees, slippage and early liquidation can change the outcome.';
+
+  @override
+  String adaptiveFillValues(
+    String loss,
+    String lossPercent,
+    String lots,
+    String margin,
+    String positions,
+    String profit,
+    String profitPercent,
+  ) {
+    return '$positions positions · $lots lots · $margin margin · $loss at SL ($lossPercent% of free funds) · $profit gross at TP2 ($profitPercent% of free funds)';
+  }
+
+  @override
+  String get adaptiveGuideChartCaption =>
+      'The chart uses candles up to analysis time and levels from the saved Standard Plan. Adaptive\'s decision is explained separately below; this is not a live price.';
+
+  @override
+  String get adaptiveGuideChartScenario => 'Analysis scenario';
+
+  @override
+  String get adaptiveGuideChartUnavailable =>
+      'A chart from this analysis time is unavailable. The guide can still be printed without substituting today\'s chart.';
+
+  @override
+  String get adaptiveGuideDirectionTitle => 'Adaptive scenario under review';
+
+  @override
+  String get adaptiveGuideDisclaimer =>
+      'TradePilot.id is a market analysis tool, not a broker — we do not open, close, or manage your positions. This report summarizes findings and Buy/Sell scenarios based on data available when the analysis was made; it is not a call to trade, not a profit guarantee, and not an automatic order. Markets can change at any time — check current conditions and decide for yourself before acting.';
+
+  @override
+  String get adaptiveGuideDisclaimerTitle => 'Important note';
+
+  @override
+  String get adaptiveGuideNoPlan =>
+      'Adaptive has not calculated a plan for this analysis. Neither Buy nor Sell can be presented as ready yet.';
+
+  @override
+  String adaptiveGuideOpening(String instrument, String timeframe) {
+    return 'A summary of $instrument on the $timeframe timeframe at analysis time, and the basis for the Adaptive plan\'s decision.';
+  }
+
+  @override
+  String get adaptiveGuidePreparing =>
+      'Preparing the guide and analysis chart…';
+
+  @override
+  String adaptiveGuideReviewStatus(String side) {
+    return '$side scenario for review, not an entry instruction';
+  }
+
+  @override
+  String get adaptiveGuideStoresNote =>
+      'The TradePilot.id app will be available on the Play Store and App Store after its release is complete.';
+
+  @override
+  String get adaptiveGuideTitle => 'Analysis Report & Adaptive Position Plan';
+
+  @override
+  String get adaptiveGuideVisitTitle => 'Continue at TradePilot.id';
+
+  @override
+  String get adaptiveIfAllFilled => 'If all entries fill';
+
+  @override
+  String get adaptiveInsightsTitle => 'Plan details';
+
+  @override
+  String get adaptiveInvalidDescription =>
+      'No approved side currently has a safe plan. Review each side\'s status and minimum-lot figures below; diagnostic numbers are not valid entry plans. Change financial inputs only when independently affordable and acceptable, or wait/skip.';
+
+  @override
+  String get adaptiveInvalidTitle => 'No safe plan yet';
+
+  @override
+  String adaptiveInvalidationCue(String count) {
+    return '$count invalidation rules';
+  }
+
+  @override
+  String get adaptiveLayerCheckpoint =>
+      'Manual checkpoint: add only if the current chart confirms this level and the saved scenario is still valid.';
+
+  @override
+  String get adaptiveLayerExceedsFunds => 'Exceeds available funds';
+
+  @override
+  String get adaptiveLayerPlanTitle => 'Manual position ladder';
+
+  @override
+  String adaptiveLayerShortfall(String amount) {
+    return 'Shortfall: $amount';
+  }
+
+  @override
+  String get adaptiveLevel => 'Position';
+
+  @override
+  String get adaptiveLot => 'lot';
+
+  @override
+  String get adaptiveMarginRequired => 'Margin used';
+
+  @override
+  String adaptiveMinimumActionBoth(String funds, String loss) {
+    return 'Only if independently affordable and acceptable: free funds would need to rise by $funds and the hard loss limit by $loss, then recalculate. Otherwise wait or skip.';
+  }
+
+  @override
+  String adaptiveMinimumActionFunds(String amount) {
+    return 'Only if those funds are genuinely available: enter at least $amount more free funds and recalculate. Otherwise wait or skip; this is not an entry instruction.';
+  }
+
+  @override
+  String adaptiveMinimumActionLoss(String amount) {
+    return 'Only if you independently accept the greater risk: increase the hard loss limit by at least $amount and recalculate. Otherwise wait or skip.';
+  }
+
+  @override
+  String get adaptiveMinimumActionReanalysis =>
+      'Next action: wait for a fresh, complete analysis; changing funds cannot resolve an analysis guardrail.';
+
+  @override
+  String get adaptiveMinimumBlockerAnalysis =>
+      'The saved analysis does not support a new position under current conditions.';
+
+  @override
+  String adaptiveMinimumBlockerBoth(String budget, String funds, String risk) {
+    return 'Minimum lot exceeds both limits: $funds additional free funds are needed and the SL loss ($risk) is above the effective budget ($budget).';
+  }
+
+  @override
+  String get adaptiveMinimumBlockerDirection =>
+      'The saved technical snapshot conflicts with market direction; financial inputs cannot override this guardrail.';
+
+  @override
+  String adaptiveMinimumBlockerMargin(String amount) {
+    return 'The minimum position needs $amount more free funds to cover day margin plus loss at the saved SL.';
+  }
+
+  @override
+  String adaptiveMinimumBlockerRisk(String budget, String risk) {
+    return 'Minimum-lot loss ($risk) exceeds the effective loss budget ($budget).';
+  }
+
+  @override
+  String adaptiveMinimumNumbers(
+    String budget,
+    String margin,
+    String risk,
+    String total,
+  ) {
+    return 'Minimum-lot day margin: $margin · loss at the saved final SL: $risk · effective loss budget: $budget · free funds needed at SL: $total.';
+  }
+
+  @override
+  String adaptiveMinimumTier(String lot, String tier) {
+    return 'Account tier: $tier · tier minimum: $lot lot.';
+  }
+
+  @override
+  String adaptiveNextBlocked(String position, String reason) {
+    return 'Position $position not included: $reason';
+  }
+
+  @override
+  String adaptiveNextFunds(
+    String amount,
+    String lot,
+    String position,
+    String price,
+  ) {
+    return 'Position $position · $price · $lot lot: about $amount more free broker funds needed to review.';
+  }
+
+  @override
+  String get adaptiveNextFundsNotEnough =>
+      'More funds alone will not clear the loss limit.';
+
+  @override
+  String get adaptiveNextFundsNote =>
+      'Not in the current plan. If those broker funds are actually available, update trading capital above and recalculate; recheck the chart and risk. This is not a TradePilot analysis-credit top-up.';
+
+  @override
+  String get adaptiveNoFixedCap => 'no Adaptive cap';
+
+  @override
+  String get adaptivePositionSingular => 'position';
+
+  @override
+  String get adaptivePostureEntryOnly =>
+      'Based on the saved conditions, only an initial entry is worth considering. Hold off on extra layers until a fresh analysis gives a clearer view.';
+
+  @override
+  String get adaptivePostureNotRecommended =>
+      'The main signals do not agree. Avoid adding layers until a fresh analysis gives a clearer direction.';
+
+  @override
+  String get adaptivePostureScalingAllowed =>
+      'The saved analysis leaves room to add positions, but each layer needs fresh confirmation. A move against the position alone is not a reason to enter.';
+
+  @override
+  String get adaptiveReady =>
+      'Enter your trading capital and loss limit. The calculation uses these values directly.';
+
+  @override
+  String get adaptiveReasonContextUnavailable =>
+      'The analysis context is incomplete, so the system does not recommend extra layers.';
+
+  @override
+  String get adaptiveReasonDirectionalConflict =>
+      'Market bias and the technical snapshot conflict. The layered plan is rejected to avoid adding lots in an unclear condition.';
+
+  @override
+  String get adaptiveReasonFundamentalClear =>
+      'There is no major fundamental catalyst in this analysis snapshot.';
+
+  @override
+  String adaptiveReasonFundamentalHighImpact(String count) {
+    return 'There are $count high-impact economic events. This reduces additions and requires a fresh check before every remaining checkpoint.';
+  }
+
+  @override
+  String adaptiveReasonFundamentalPresent(String events, String news) {
+    return '$news news items and $events economic events are considered as context, without inventing a direction not stated by the analysis.';
+  }
+
+  @override
+  String get adaptiveReasonFundamentalUnavailable =>
+      'Fundamental context is unavailable, so the system does not guess direction from news.';
+
+  @override
+  String get adaptiveReasonHighRisk =>
+      'The saved analysis marks risk as high. This reduces checkpoint density and size, but does not override the selected plan style by itself.';
+
+  @override
+  String adaptiveReasonLowConfidence(String confidence) {
+    return 'Analysis confidence only reaches $confidence%. This reduces position additions while the hard margin and Stop Loss limits remain unchanged.';
+  }
+
+  @override
+  String get adaptiveReasonNeutralBias =>
+      'The saved bias is neutral. The Standard Plan\'s preferred side may still be reviewed, but with fewer or smaller additions.';
+
+  @override
+  String get adaptiveReasonRangeSupportsScaling =>
+      'A ranging market can allow controlled layering, provided the stop level remains respected.';
+
+  @override
+  String adaptiveReasonShortTimeframe(String timeframe) {
+    return 'The $timeframe timeframe is very short and more exposed to price noise, so fewer and smaller checkpoints are considered.';
+  }
+
+  @override
+  String get adaptiveReasonStagedAddCondition =>
+      'Every extra layer needs all manual checks: its level is reachable, the analysis remains aligned, invalidation has not occurred, and there is no new fundamental risk requiring review. Price moving against the position alone is not enough.';
+
+  @override
+  String get adaptiveReasonTechnicalMixed =>
+      'Technical signals are mixed. Fewer or smaller additions are considered and every checkpoint needs fresh chart confirmation.';
+
+  @override
+  String adaptiveReasonTechnicalSupportsBuy(String buy, String sell) {
+    return 'The technical snapshot favors up ($buy vs $sell), supporting the Buy confirmation.';
+  }
+
+  @override
+  String adaptiveReasonTechnicalSupportsSell(String buy, String sell) {
+    return 'The technical snapshot favors down ($sell vs $buy), supporting the Sell confirmation.';
+  }
+
+  @override
+  String get adaptiveReasonTechnicalUnavailable =>
+      'A technical snapshot is unavailable for this timeframe, so it is not treated as support for scaling.';
+
+  @override
+  String get adaptiveReasonTrendFavorsBuy =>
+      'The bias and market condition favor the rise scenario. Extra layers are considered for Buy only.';
+
+  @override
+  String get adaptiveReasonTrendFavorsSell =>
+      'The bias and market condition favor the fall scenario. Extra layers are considered for Sell only.';
+
+  @override
+  String get adaptiveReasonTrendOpposesBuy =>
+      'The Buy scenario opposes the main direction, so it receives no extra layers.';
+
+  @override
+  String get adaptiveReasonTrendOpposesSell =>
+      'The Sell scenario opposes the main direction, so it receives no extra layers.';
+
+  @override
+  String get adaptiveReasonVolatileMarket =>
+      'The saved analysis marks the market as volatile. Checkpoints are spaced and sized more cautiously instead of being removed automatically.';
+
+  @override
+  String get adaptiveReasoningTitle => 'Why this plan was chosen';
+
+  @override
+  String get adaptiveRefreshRules => 'Retry trading rules';
+
+  @override
+  String get adaptiveRejectedAnalysis =>
+      'The saved analysis and current plan style do not support this deeper checkpoint.';
+
+  @override
+  String get adaptiveRejectedBadge => 'Not included';
+
+  @override
+  String get adaptiveRejectedHelp =>
+      'These levels are shown for transparency only. They are not part of the recommended exposure.';
+
+  @override
+  String get adaptiveRejectedLoss =>
+      'Including this checkpoint would exceed the hard cumulative-loss ceiling at the one final Stop Loss.';
+
+  @override
+  String get adaptiveRejectedMargin =>
+      'Including this checkpoint would need more free funds to cover day margin and loss at the final Stop Loss.';
+
+  @override
+  String get adaptiveRejectedTier =>
+      'This individual position would exceed the selected account tier\'s per-position lot cap.';
+
+  @override
+  String get adaptiveRejectedTitle => 'Candidate layers not included';
+
+  @override
+  String adaptiveRiskBudgetRate(String rate) {
+    return '$rate% of loss ceiling after guardrails';
+  }
+
+  @override
+  String adaptiveRiskStyleActive(String style) {
+    return '$style style';
+  }
+
+  @override
+  String adaptiveRiskStyleAggressiveDesc(String maximum) {
+    return 'May use up to 100% of the loss ceiling with a larger initial allocation; the $maximum-lot per-position maximum still applies.';
+  }
+
+  @override
+  String get adaptiveRiskStyleAggressiveDescUncapped =>
+      'May use up to 100% of the loss ceiling with a larger initial allocation; free funds and Stop Loss risk still limit the position.';
+
+  @override
+  String get adaptiveRiskStyleBalanced => 'Moderate';
+
+  @override
+  String get adaptiveRiskStyleBalancedDesc =>
+      'Uses at most 75% of the loss ceiling with a moderate allocation across the complete plan.';
+
+  @override
+  String get adaptiveRiskStyleConservativeDesc =>
+      'Uses at most 50% of the loss ceiling, with a smaller initial allocation and more layer reserve.';
+
+  @override
+  String get adaptiveRulesError =>
+      'No position recommendation is available: TP Standard Trading Rules for this instrument could not be loaded or are incomplete. Do not estimate margin, contract size, or minimum movement yourself.';
+
+  @override
+  String get adaptiveRulesLoading => 'Preparing standard margin rules…';
+
+  @override
+  String get adaptiveScenariosReviewHelp =>
+      'These calculations explain the blocked or wait state; they are not an instruction to enter. Use the reasons above and make the final decision yourself.';
+
+  @override
+  String get adaptiveShareAudienceNote =>
+      'Lot size, margin, and loss limits follow this account\'s own inputs — they don\'t automatically apply to another account.';
+
+  @override
+  String get adaptiveShareFailed =>
+      'Couldn\'t share the Adaptive details. Please try again.';
+
+  @override
+  String adaptiveShareInvalidation(String count) {
+    return '$count invalidation conditions from the saved analysis. See the details below.';
+  }
+
+  @override
+  String get adaptiveShareSnapshotNote =>
+      'This report captures market conditions at analysis time, not live prices — check current conditions before acting.';
+
+  @override
+  String get adaptiveShareSummaryCopied => 'Plan image copied';
+
+  @override
+  String get adaptiveShareSummaryCopy => 'Copy plan image';
+
+  @override
+  String get adaptiveShareSummaryDownloaded => 'Plan PNG downloaded';
+
+  @override
+  String get adaptiveShareSummaryFailed =>
+      'Plan image could not be created. Try again.';
+
+  @override
+  String get adaptiveShareSummaryMenu => 'Share plan';
+
+  @override
+  String adaptiveSideBlocked(String side) {
+    return '$side is not safe at the broker minimum lot.';
+  }
+
+  @override
+  String adaptiveSideConditional(String side) {
+    return '$side can be calculated, but the analysis has not confirmed an entry direction. Review its conditional scenario below.';
+  }
+
+  @override
+  String get adaptiveSideEntryOnly =>
+      'This scenario is for the initial entry only; no extra layers are recommended.';
+
+  @override
+  String adaptiveSideNotAligned(String side) {
+    return '$side is not aligned with the main analysis yet; this scenario is for review, not entry now.';
+  }
+
+  @override
+  String adaptiveSideReady(String side) {
+    return '$side is viable under the selected account tier and safety limits.';
+  }
+
+  @override
+  String adaptiveSideUnavailable(String side) {
+    return '$side cannot be evaluated because the saved entry or Stop Loss is incomplete.';
+  }
+
+  @override
+  String get adaptiveSnapshotLayers => 'positions';
+
+  @override
+  String get adaptiveSnapshotLevelsOnly =>
+      'Using saved Standard Plan levels; no usable candle snapshot is available from this analysis.';
+
+  @override
+  String get adaptiveSnapshotLevelsOnlyDetail =>
+      'Older analyses may have no candle snapshot; an unavailable or failed feed may also leave one unusable. Adaptive can still size saved levels, but cannot confirm candle-based swings or volatility. Run a new analysis to capture those inputs together.';
+
+  @override
+  String get adaptiveSnapshotTotalLots => 'Total planned lots';
+
+  @override
+  String get adaptiveSnapshotUnavailable =>
+      'No safe figures can be calculated from the saved entry, Stop Loss, trading rules and available risk or funds. Review the side status above; do not use this as an entry.';
+
+  @override
+  String adaptiveStageAddReason(
+    String basis,
+    String distance,
+    String level,
+    String lot,
+    String price,
+    String risk,
+  ) {
+    return 'Manual checkpoint for position $level at $price. Basis: $basis. Use only if the current chart confirms the saved scenario, invalidation has not occurred, and no new fundamental risk needs review. An adverse move alone is not a trigger. This $lot-lot size follows the selected profile, remains within the per-position cap, is $distance from entry, and adds about $risk loss at the final SL.';
+  }
+
+  @override
+  String get adaptiveStageBasisEntryEdge =>
+      'the adverse edge of the saved analysis entry zone';
+
+  @override
+  String adaptiveStageBasisRiskCheckpoint(String progress) {
+    return 'a current-chart swing at $progress% of the saved entry-to-SL path';
+  }
+
+  @override
+  String get adaptiveStageInitialReason => 'Entry from the Standard Plan.';
+
+  @override
+  String get adaptiveStepAdd =>
+      'Before any extra layer, confirm its level is reachable, the analysis still aligns, invalidation is clear, and there is no new fundamental risk to review. Price moving against the position alone is not a reason to add.';
+
+  @override
+  String get adaptiveStepChoose =>
+      'Choose only one scenario—up or down—based on your own decision.';
+
+  @override
+  String get adaptiveStepEntry =>
+      'Enter at the entry point from the analysis plan.';
+
+  @override
+  String get adaptiveStepStop =>
+      'Cut the position if price reaches the Cut Loss / SL. Do not move this point to hold a losing trade.';
+
+  @override
+  String get adaptiveStopRisk => 'Cumulative loss at SL';
+
+  @override
+  String get adaptiveTpProfit => 'Estimated profit';
+
+  @override
+  String get adaptiveUnusedReasonLevels =>
+      'The saved entry zone and chart do not provide more distinct, meaningful entry prices. The plan will not split one price into extra tickets.';
+
+  @override
+  String get adaptiveUnusedReasonMargin =>
+      'Free funds must cover both margin and loss at SL; adding lots here would exceed that combined limit.';
+
+  @override
+  String get adaptiveUnusedReasonPolicy =>
+      'The selected style or market caution reserves part of the loss ceiling. This ceiling is not a target to spend.';
+
+  @override
+  String get adaptiveUnusedReasonTier =>
+      'The selected account\'s per-position lot limit restricts this plan. Changing account tiers is never automatic.';
+
+  @override
+  String adaptiveVolatilityObserved(String count, String range) {
+    return 'Typical candle range: $range across $count selected-timeframe candles; this is context, not a mandatory Stop Loss distance.';
+  }
+
+  @override
+  String adaptiveVolatilityTight(String distance, String side) {
+    return 'The $side Standard Plan\'s $distance stop distance is smaller than that typical candle range. Review its structure before entering; the saved Stop Loss remains unchanged.';
+  }
+
+  @override
+  String adaptiveVolatilityTightShort(String side) {
+    return '$side stop is tighter than the candle range — review price structure before entry.';
+  }
+
+  @override
+  String adaptiveVolatilityTitle(String timeframe) {
+    return 'Observed volatility at $timeframe';
+  }
+
+  @override
+  String get adaptiveVolatilityUnavailable =>
+      'Comparable candle data is unavailable. Do not assume this stop distance fits the chosen timeframe.';
+
+  @override
+  String get adaptiveVolatilityUnavailableShort =>
+      'Comparable candle data unavailable — stop distance is unconfirmed.';
+
+  @override
+  String get biasTitle => 'Directional Bias';
+
+  @override
+  String chartShareAccessibleLevels(String levels) {
+    return 'Standard Plan levels drawn: $levels.';
+  }
+
+  @override
+  String get chartShareAccessibleNoLevels =>
+      'No Standard Plan levels are drawn.';
+
+  @override
+  String chartShareAccessibleRange(String count, String end, String start) {
+    return 'Historical candles from $start to $end ($count candles).';
+  }
+
+  @override
+  String get chartShareAnalyzed => 'Analyzed';
+
+  @override
+  String get chartShareMade => 'Image created';
+
+  @override
+  String get chartShareSourceNote =>
+      'Historical candles fetched when this image was created, limited to before the analysis. Levels and bias are from the saved analysis, not a live quote.';
+
+  @override
+  String get chartShareTitle => 'Analysis chart';
+
+  @override
+  String get chartShareWait => 'WAIT — review Buy & Sell';
+
+  @override
+  String get chartShareWarning =>
+      'Levels are references, not entry instructions. Check entry conditions, risks, invalidation and current market conditions before acting.';
+
+  @override
+  String get citationsLabel => 'Sources cited:';
+
+  @override
+  String get tradePlanEntry => 'Entry';
+
+  @override
+  String get tradePlanSl => 'Stop Loss';
+
+  @override
+  String get instrumentPickerHint =>
+      'Choose an available code or enter a new one.';
+
+  @override
+  String get instrumentRequestSending => 'Sending request…';
+
+  @override
+  String get instrumentRequestError =>
+      'Could not submit the instrument request. Please try again.';
+
+  @override
+  String get instrumentNoMatch =>
+      'No verified instrument matches this search. Analysis is limited to the verified choices shown here.';
+
+  @override
+  String get instrumentSourceLimitations =>
+      'Only the four core instruments and four verified FX pairs are selectable for new analysis. Provider coverage and available price/history sources can be limited; requests do not guarantee support.';
+
+  @override
+  String get instrumentRequestNoCredit =>
+      'Submitting this request does not use analysis quota or credits. Coverage depends on verified market data sources and may remain unavailable.';
+
+  @override
+  String get instrumentLegacyUnsupported =>
+      'This older analysis uses an instrument that is no longer selectable. Its saved result remains available to read, but it cannot be submitted again.';
+
+  @override
+  String get instrumentNotVerifiedTitle => 'Instrument not verified';
+
+  @override
+  String get instrumentNotVerifiedDesc =>
+      'Choose one of the verified instruments before starting a new analysis.';
+
+  @override
+  String get loadingBtn => 'Processing';
+
+  @override
+  String levelUpTitle(String n) {
+    return 'Congratulations! You reached Level $n!';
+  }
+
+  @override
+  String get levelUpDescription =>
+      'Your discipline is growing. Keep building steady habits.';
+
+  @override
+  String get levelUpCloseLabel => 'Close level-up celebration';
+
+  @override
+  String get levelUpWaysLabel => 'How to level up';
+
+  @override
+  String levelUpHint(String xp) {
+    return 'Small, consistent actions earn XP. You need $xp XP for the next level.';
+  }
+
+  @override
+  String get levelUpJournal => 'Write a short journal reflection';
+
+  @override
+  String get levelUpEvaluation => 'Evaluate an analysis without adding a note';
+
+  @override
+  String get levelUpChecklist => 'Complete the pre-analysis checklist';
+
+  @override
+  String get levelUpGuide => 'Finish a guide article';
+
+  @override
+  String get levelUpWait => 'Choose to wait when risk is high';
+
+  @override
+  String get levelUpStreak => 'Keep your daily streak';
+
+  @override
+  String levelUpDailyCap(String cap, String xp) {
+    return '$xp XP · up to $cap/day';
+  }
+
+  @override
+  String levelUpPerDay(String xp) {
+    return '$xp XP/day';
+  }
+
+  @override
+  String get completionPreparing => 'Preparing reading progress…';
+
+  @override
+  String completionWait(String seconds) {
+    return 'Keep reading — this button unlocks in $seconds seconds.';
+  }
+
+  @override
+  String get completionSaving => 'Saving reading progress…';
+
+  @override
+  String get completionStartFailed =>
+      'Couldn\'t prepare reading progress. Please try again.';
+
+  @override
+  String get alertsArmError =>
+      'Alerts can\'t be armed: this instrument is not supported by the live feed or the analysis has no usable levels. Notification settings aren\'t the cause.';
+
+  @override
+  String get alertsRetryError =>
+      'Couldn\'t arm alerts because the service is temporarily unavailable. Try again.';
+
+  @override
+  String get alertsNoPush =>
+      'Push notifications aren\'t enabled for this account. Enable them in Notifications to receive price alerts.';
+
+  @override
+  String get alertsEnableNotifications => 'Enable notifications';
+
+  @override
+  String get fastPlanWaitTitle => 'No entry yet.';
+
+  @override
+  String get fastPlanEntryPending => 'Wait for a confirmed candle close';
+
+  @override
+  String get fastPlanSlPending => 'Set after the confirmation swing forms';
+
+  @override
+  String get fastPlanTp1Pending => 'Use the next market structure';
+
+  @override
+  String get fastPlanTp2Pending => 'Reassess after TP1';
+
+  @override
+  String get fastPlanRrPending => 'Calculate after entry and stop form';
+
+  @override
+  String get adaptiveShareSummaryTitle => 'Adaptive Plan summary';
+
+  @override
+  String get adaptiveShareSummaryWarning =>
+      'A reference from the saved analysis, not an order. Check entry conditions, risks, invalidation, and current market conditions before acting.';
+
+  @override
+  String get biasRiskDisclaimer =>
+      'The bias shows a directional tendency from the available data, not a risk level.';
+
+  @override
+  String get riskTitle => 'Overall Risk';
+
+  @override
+  String get riskOverallNote =>
+      'Covers technicals and news/calendar where available; can differ from Compare Risk.';
+
+  @override
+  String traderMirrorCoverageAll(int resolved) {
+    return 'Covering all history · $resolved completed evaluations';
+  }
+
+  @override
+  String get themeUpdateFailed => 'Couldn\'t save theme. Display restored.';
+
+  @override
+  String summaryPending(String n) {
+    return '$n still pending';
+  }
 }

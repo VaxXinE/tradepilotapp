@@ -234,7 +234,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get changeTimeframeDescription =>
-      'Instrumen sama, timeframe berbeda — ketuk untuk buat analisis baru tanpa keluar dari halaman ini.';
+      'Memilih timeframe lain langsung memulai analisis baru untuk instrumen ini.';
 
   @override
   String get analysisUsesFreeQuota => 'Sumber: kuota analisis gratis';
@@ -2683,7 +2683,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get riskMapDescription =>
-      'Bandingkan risiko teknikal antar-timeframe untuk menemukan jendela setup terbaik.';
+      'Perbandingan ini menilai risiko teknikal saja. Risiko hasil analisis dapat berbeda karena faktor lain.';
 
   @override
   String get riskMapLoading => 'Memindai timeframe...';
@@ -4058,7 +4058,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get riskStyleConservative => 'Conservative';
 
   @override
-  String get riskStyleBalanced => 'Balanced';
+  String get riskStyleBalanced => 'Moderat';
 
   @override
   String get riskStyleAggressive => 'Aggressive';
@@ -4074,7 +4074,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get adaptiveCopyManualContext =>
-      'Gunakan sebagai konteks perencanaan manual, bukan instruksi eksekusi.';
+      'Rencana ini bersifat manual dan bersyarat — konfirmasi chart terkini dan risiko fundamental sebelum entry atau menambah layer. Bukan order otomatis.';
 
   @override
   String get notRecommended => 'Tidak direkomendasikan';
@@ -4198,4 +4198,1062 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get clear => 'Hapus';
+
+  @override
+  String get adaptiveAccountMicro => 'Micro';
+
+  @override
+  String get adaptiveAccountMicroDesc => 'Minimum 0,01 lot · margin \$10';
+
+  @override
+  String get adaptiveAccountMini => 'Mini';
+
+  @override
+  String get adaptiveAccountMiniDesc => 'Minimum 0,10 lot · margin \$100';
+
+  @override
+  String adaptiveAccountOpeningMinimum(String amount) {
+    return 'Minimum untuk membuka akun Micro adalah $amount. Dana yang lebih kecil tetap dapat menjadi free margin jika akun sudah aktif.';
+  }
+
+  @override
+  String get adaptiveAccountRegular => 'Regular';
+
+  @override
+  String get adaptiveAccountRegularDesc => 'Minimum 1,00 lot · margin \$1.000';
+
+  @override
+  String adaptiveAccountRule(
+    String amount,
+    String lot,
+    String maximum,
+    String size,
+    String tier,
+    String unit,
+  ) {
+    return '$tier: minimum $lot lot membutuhkan margin $amount. Maksimum $maximum lot berlaku untuk setiap posisi, sedangkan total seluruh rencana boleh lebih besar jika margin dan risiko Stop Loss mengizinkan. Contract size $size $unit untuk satu posisi minimum.';
+  }
+
+  @override
+  String adaptiveAccountRuleUncapped(
+    String amount,
+    String lot,
+    String size,
+    String tier,
+    String unit,
+  ) {
+    return '$tier: minimum $lot lot membutuhkan margin $amount. Adaptive tidak memasang batas lot per posisi buatan untuk Regular; aturan broker yang terverifikasi, dana bebas, dan risiko Stop Loss tetap berlaku. Contract size $size $unit untuk satu posisi minimum.';
+  }
+
+  @override
+  String get adaptiveAccountTitle => 'Tipe akun';
+
+  @override
+  String get adaptiveAlternativeAvailableShort =>
+      'Alternatif tersedia untuk ditinjau; Standard Plan tetap.';
+
+  @override
+  String adaptiveAlternativeBasis(
+    String entry,
+    String loss,
+    String lot,
+    String margin,
+    String profit,
+    String rr,
+    String side,
+    String stop,
+    String target,
+  ) {
+    return 'Hanya jika SL tersimpan tampak kurang sesuai: Entry, SL, dan target dari swing chart yang berdiri sendiri untuk $side. Satu posisi lot minimum $lot; Entry $entry, SL $stop, target $target (RR $rr). Margin day $margin, estimasi rugi di SL $loss, profit bruto di target $profit. Konfirmasi chart terkini dan risiko fundamental sebelum trading.';
+  }
+
+  @override
+  String get adaptiveAlternativeNoLevels =>
+      'Alternatif lengkap belum didukung oleh chart, batas akun, dan arah saat ini. Jalankan analisis baru alih-alih hanya menggeser SL atau target.';
+
+  @override
+  String get adaptiveAlternativeTitle => 'Skenario Adaptive (alternatif)';
+
+  @override
+  String get adaptiveAlternativeUnavailableShort =>
+      'Alternatif belum tersedia — jalankan analisis baru, jangan geser SL/target.';
+
+  @override
+  String get adaptiveAlternativeUnchanged =>
+      'Skenario terpisah untuk ditinjau saja. Standard Plan tidak diubah dan tidak ada order yang dikirim.';
+
+  @override
+  String get adaptiveAnalysisBasis =>
+      'Plan memakai analisis di atas: zona Entry, satu Stop Loss final, target, bias, confidence, sinyal teknikal, kondisi market, dan snapshot fundamental.';
+
+  @override
+  String get adaptiveAnalysisExpired =>
+      'Analisis tersimpan sudah kedaluwarsa. Jalankan analisis baru sebelum membuat rekomendasi Adaptive.';
+
+  @override
+  String get adaptiveBlockedBoth =>
+      'Risiko lot minimum melewati batas rugi dan dana broker kurang. Mengubah satu input saja belum tentu cukup.';
+
+  @override
+  String get adaptiveBlockedBothNext =>
+      'Hanya jika siap menanggung rugi lebih besar dan dana broker benar-benar bertambah, ubah kedua input lalu hitung ulang. Jika tidak, tunggu setup lain. Jangan geser stop; perubahan itu belum menjamin entry.';
+
+  @override
+  String get adaptiveBlockedDismiss => 'Tunggu setup lain';
+
+  @override
+  String get adaptiveBlockedEditFunds => 'Ubah dana broker';
+
+  @override
+  String get adaptiveBlockedEditLoss => 'Ubah batas rugi';
+
+  @override
+  String get adaptiveBlockedFunds =>
+      'Dana broker yang tersedia belum cukup untuk posisi minimum hingga stop.';
+
+  @override
+  String get adaptiveBlockedFundsGap => 'Dana kurang';
+
+  @override
+  String get adaptiveBlockedFundsNext =>
+      'Perbarui dana yang benar-benar tersedia di akun broker, lalu hitung ulang. Jika tidak, tunggu setup lain. Ini soal dana broker, bukan kredit analisis TradePilot.';
+
+  @override
+  String get adaptiveBlockedRisk =>
+      'Risiko lot minimum melewati batas rugimu. Menambah dana broker saja tidak mengatasinya.';
+
+  @override
+  String get adaptiveBlockedRiskGap => 'Melewati batas rugi';
+
+  @override
+  String get adaptiveBlockedRiskNext =>
+      'Jika sadar dan siap menanggung rugi lebih besar, ubah batas rugi lalu hitung ulang. Jika tidak, tunggu setup dengan risiko lebih kecil. Jangan geser stop; batas baru belum menjamin entry.';
+
+  @override
+  String get adaptiveBlockedTitle => 'Kenapa belum bisa entry?';
+
+  @override
+  String get adaptiveCandleSourceTime => 'Snapshot candle analisis diambil';
+
+  @override
+  String adaptiveCapacityNone(String tier) {
+    return 'Dana ini belum memenuhi margin transaksi minimum untuk profil $tier.';
+  }
+
+  @override
+  String get adaptiveChartCandidatesLoading =>
+      'Membaca level swing chart terkini…';
+
+  @override
+  String get adaptiveChartConfirmation =>
+      'Swing level terbaru di antara Entry dan Stop Loss dapat menjadi kandidat layer. Level ini hanya checkpoint tambahan dan tidak mengganti level analisis.';
+
+  @override
+  String adaptiveCompareBoth(String funds, String risk) {
+    return 'Risiko melewati batas rugi sebesar $risk dan dana kurang $funds. Lewati; tambah dana saja tidak cukup.';
+  }
+
+  @override
+  String get adaptiveCompareConflict =>
+      'Sinyal pasar bertentangan. Lewati setup ini; ganti akun atau tambah dana tidak mengubah arah.';
+
+  @override
+  String get adaptiveCompareFinancialNoAlternative =>
+      'Kontrak minimum terhalang batas akun ini, bukan karena kurang analisis AI. Jangan geser stop atau target tersimpan untuk memaksa entry.';
+
+  @override
+  String adaptiveCompareFunds(String funds) {
+    return 'Dana hingga stop kurang $funds. Lewati; hitung ulang hanya jika dana broker berubah.';
+  }
+
+  @override
+  String get adaptiveCompareLimited =>
+      'Risiko lot minimum melewati target gaya, meski masih di bawah batas rugi. Jangan entry.';
+
+  @override
+  String get adaptiveCompareLimitedBadge => 'Hanya opsi terbatas';
+
+  @override
+  String adaptiveCompareLimitedNext(String target) {
+    return 'Tunggu setup lain dengan risiko lot minimum maksimal $target; jangan geser stop.';
+  }
+
+  @override
+  String get adaptiveCompareNoCredit =>
+      'Dihitung lokal dari analisis tersimpan, aturan broker, dan candle terkini. Tidak memakai kredit AI tambahan.';
+
+  @override
+  String adaptiveCompareRisk(String risk) {
+    return 'Risiko lot minimum melewati batas rugi sebesar $risk. Lewati; tambah dana tidak mengatasinya.';
+  }
+
+  @override
+  String get adaptiveCompareSkip => 'LEWATI';
+
+  @override
+  String get adaptiveCompareUnavailable =>
+      'Data posisi minimum belum lengkap. Tunggu dan periksa data pasar.';
+
+  @override
+  String get adaptiveCompareWait => 'TUNGGU';
+
+  @override
+  String get adaptiveConditionalAdditionalFunds =>
+      'Tambahan dana bebas yang dibutuhkan';
+
+  @override
+  String get adaptiveConditionalAdditionalLoss =>
+      'Tambahan batas rugi yang dibutuhkan';
+
+  @override
+  String get adaptiveConditionalHelp =>
+      'Kandidat ini hanya terblokir oleh dana atau batas rugi yang dimasukkan. Kandidat belum menjadi bagian dari rencana aktif; tinjau ulang hanya setelah input disesuaikan dan chart serta analisis tersimpan dikonfirmasi lagi.';
+
+  @override
+  String get adaptiveConditionalManual =>
+      'Tetap manual: harga bergerak melawan posisi saja bukan pemicu.';
+
+  @override
+  String get adaptiveConditionalOverviewHelp =>
+      'Analisis belum mendukung entry sekarang. Pilih Buy atau Sell untuk meninjau level, lot, margin, dan risikonya sebagai skenario bersyarat, bukan instruksi order.';
+
+  @override
+  String get adaptiveConditionalTitle => 'Rencana finansial bersyarat';
+
+  @override
+  String get adaptiveConditionalTotalFunds =>
+      'Total dana yang dibutuhkan di SL final';
+
+  @override
+  String get adaptiveConditionalTotalRisk => 'Total risiko di SL final';
+
+  @override
+  String adaptiveContextFundamental(
+    String events,
+    String highImpact,
+    String news,
+  ) {
+    return 'Snapshot fundamental: $news berita, $events agenda ekonomi, $highImpact berdampak tinggi.';
+  }
+
+  @override
+  String get adaptiveContextFundamentalUnavailable =>
+      'Snapshot fundamental tidak tersedia untuk analisis ini.';
+
+  @override
+  String get adaptiveContextMissing => 'Konteks belum tersedia';
+
+  @override
+  String adaptiveContextTechnical(String buy, String neutral, String sell) {
+    return 'Snapshot teknikal: $buy mendukung naik, $sell mendukung turun, $neutral netral.';
+  }
+
+  @override
+  String get adaptiveContractMicroAssumption =>
+      'Micro adalah asumsi 1/10 Mini, termasuk USD 0,50/poin untuk indeks; bukan aturan resmi broker. Nilai Mini dan Regular berasal dari tabel broker yang diberikan.';
+
+  @override
+  String adaptiveContractMinimumBasis(String lot) {
+    return 'Kontrak tambahan mengikuti ukuran lot tier: lot posisi ÷ lot minimum $lot. Contract size tidak dikalikan lot sekali lagi.';
+  }
+
+  @override
+  String get adaptiveContractTableTitle =>
+      'Nilai kontrak per tier akun (untuk satu posisi minimum)';
+
+  @override
+  String get adaptiveContractTier => 'Tier';
+
+  @override
+  String get adaptiveContractValue => 'Nilai kontrak';
+
+  @override
+  String get adaptiveCopy => 'Salin Adaptive Plan';
+
+  @override
+  String get adaptiveCopyBlocked => 'Penyalinan tidak tersedia';
+
+  @override
+  String get adaptiveCopyFailed => 'Gagal menyalin';
+
+  @override
+  String get adaptiveCopySuccess => 'Berhasil disalin';
+
+  @override
+  String get adaptiveCopyTitle => 'TradePilot.id — Adaptive Plan';
+
+  @override
+  String get adaptiveDecisionTitle => 'Keputusan Adaptive';
+
+  @override
+  String get adaptiveDirectionHelp =>
+      'Buy dan Sell memakai level dari rencana tersimpan masing-masing. Pilih arah yang ingin diperiksa; tidak ada order yang dijalankan otomatis.';
+
+  @override
+  String adaptiveDirectionUnavailable(String side) {
+    return '$side tidak tersedia karena analisis tersimpan belum menyediakan entry dan Stop Loss final yang lengkap untuk arah tersebut.';
+  }
+
+  @override
+  String get adaptiveDisclaimer =>
+      'Skenario Buy/Sell adalah bahan pertimbangan, bukan perintah posisi, bukan jaminan profit atau order otomatis. TradePilot.id tidak mengeksekusi transaksi; cek data terbaru dan putuskan sendiri.';
+
+  @override
+  String get adaptiveExternalLiquidation =>
+      'Spread, gap harga, selisih eksekusi, pajak, dan aturan broker tetap dapat menambah risiko. Rencana ini tidak menghitung posisi overnight.';
+
+  @override
+  String get adaptiveFillUncertain =>
+      'Hanya entry yang terisi yang dihitung. Ini estimasi bruto pada level tertera, bukan jaminan fill atau hasil bersih; spread, biaya, slippage, dan likuidasi lebih awal dapat mengubah hasil.';
+
+  @override
+  String adaptiveFillValues(
+    String loss,
+    String lossPercent,
+    String lots,
+    String margin,
+    String positions,
+    String profit,
+    String profitPercent,
+  ) {
+    return '$positions posisi · $lots lot · margin $margin · rugi di SL $loss ($lossPercent% dari dana bebas) · profit bruto TP2 $profit ($profitPercent% dari dana bebas)';
+  }
+
+  @override
+  String get adaptiveGuideChartCaption =>
+      'Grafik memakai candle historis hingga waktu analisis dan level Standard Plan yang tersimpan. Keputusan Adaptive dijelaskan terpisah di bawah; ini bukan harga live.';
+
+  @override
+  String get adaptiveGuideChartScenario => 'Skenario analisis';
+
+  @override
+  String get adaptiveGuideChartUnavailable =>
+      'Grafik pada waktu analisis ini tidak tersedia. Panduan tetap bisa dicetak tanpa menggantinya dengan grafik hari ini.';
+
+  @override
+  String get adaptiveGuideDirectionTitle => 'Skenario Adaptive yang ditinjau';
+
+  @override
+  String get adaptiveGuideDisclaimer =>
+      'TradePilot.id adalah alat analisis pasar, bukan broker — kami tidak membuka, menutup, atau mengelola posisi Anda. Laporan ini merangkum temuan dan skenario Buy/Sell berdasarkan data saat analisis dibuat; bukan ajakan bertransaksi, bukan jaminan profit, dan bukan order otomatis. Pasar dapat berubah sewaktu-waktu — periksa kondisi terkini dan ambil keputusan sendiri sebelum bertindak.';
+
+  @override
+  String get adaptiveGuideDisclaimerTitle => 'Catatan penting';
+
+  @override
+  String get adaptiveGuideNoPlan =>
+      'Plan Adaptive belum dihitung untuk analisis ini. Belum ada arah Buy atau Sell yang bisa disebut siap.';
+
+  @override
+  String adaptiveGuideOpening(String instrument, String timeframe) {
+    return 'Ringkasan kondisi $instrument pada timeframe $timeframe saat analisis dibuat, beserta dasar keputusan plan Adaptive.';
+  }
+
+  @override
+  String get adaptiveGuidePreparing =>
+      'Menyiapkan panduan dan grafik analisis…';
+
+  @override
+  String adaptiveGuideReviewStatus(String side) {
+    return 'Skenario $side untuk ditinjau, bukan instruksi entry';
+  }
+
+  @override
+  String get adaptiveGuideStoresNote =>
+      'Aplikasi TradePilot.id akan tersedia di Play Store dan App Store setelah proses rilis selesai.';
+
+  @override
+  String get adaptiveGuideTitle => 'Laporan Analisis & Rencana Posisi Adaptive';
+
+  @override
+  String get adaptiveGuideVisitTitle => 'Lanjutkan di TradePilot.id';
+
+  @override
+  String get adaptiveIfAllFilled => 'Jika semua entry terisi';
+
+  @override
+  String get adaptiveInsightsTitle => 'Detail plan';
+
+  @override
+  String get adaptiveInvalidDescription =>
+      'Belum ada sisi yang memiliki plan aman dan disetujui. Periksa status dan angka lot minimum tiap sisi di bawah; angka diagnostik bukan plan entry yang valid. Ubah input finansial hanya jika terjangkau dan dapat diterima secara mandiri, atau tunggu/skip.';
+
+  @override
+  String get adaptiveInvalidTitle => 'Belum ada rencana yang aman';
+
+  @override
+  String adaptiveInvalidationCue(String count) {
+    return '$count kondisi batal';
+  }
+
+  @override
+  String get adaptiveLayerCheckpoint =>
+      'Checkpoint manual: tambah posisi hanya jika chart terbaru mengonfirmasi level ini dan setup masih valid.';
+
+  @override
+  String get adaptiveLayerExceedsFunds => 'Melebihi dana tersedia';
+
+  @override
+  String get adaptiveLayerPlanTitle => 'Plan layer manual';
+
+  @override
+  String adaptiveLayerShortfall(String amount) {
+    return 'Kekurangan: $amount';
+  }
+
+  @override
+  String get adaptiveLevel => 'Posisi';
+
+  @override
+  String get adaptiveLot => 'lot';
+
+  @override
+  String get adaptiveMarginRequired => 'Margin yang dipakai';
+
+  @override
+  String adaptiveMinimumActionBoth(String funds, String loss) {
+    return 'Hanya jika terjangkau dan dapat diterima secara mandiri: dana bebas perlu naik $funds dan batas rugi keras naik $loss, lalu hitung ulang. Jika tidak, tunggu atau skip.';
+  }
+
+  @override
+  String adaptiveMinimumActionFunds(String amount) {
+    return 'Hanya jika dana tersebut benar-benar tersedia: masukkan tambahan dana bebas minimal $amount, lalu hitung ulang. Jika tidak, tunggu atau skip; ini bukan instruksi entry.';
+  }
+
+  @override
+  String adaptiveMinimumActionLoss(String amount) {
+    return 'Hanya jika kamu menerima risiko yang lebih besar secara mandiri: naikkan batas rugi keras minimal $amount, lalu hitung ulang. Jika tidak, tunggu atau skip.';
+  }
+
+  @override
+  String get adaptiveMinimumActionReanalysis =>
+      'Langkah berikutnya: tunggu analisis baru yang lengkap; perubahan dana tidak dapat menyelesaikan guardrail analisis.';
+
+  @override
+  String get adaptiveMinimumBlockerAnalysis =>
+      'Analisis tersimpan belum mendukung posisi baru dalam kondisi saat ini.';
+
+  @override
+  String adaptiveMinimumBlockerBoth(String budget, String funds, String risk) {
+    return 'Lot minimum melampaui kedua batas: perlu tambahan dana bebas $funds dan rugi di SL ($risk) melebihi budget efektif ($budget).';
+  }
+
+  @override
+  String get adaptiveMinimumBlockerDirection =>
+      'Snapshot teknikal tersimpan bertentangan dengan arah pasar; input finansial tidak dapat melewati guardrail ini.';
+
+  @override
+  String adaptiveMinimumBlockerMargin(String amount) {
+    return 'Posisi minimum membutuhkan tambahan dana bebas $amount untuk menutup margin day dan rugi pada SL tersimpan.';
+  }
+
+  @override
+  String adaptiveMinimumBlockerRisk(String budget, String risk) {
+    return 'Rugi lot minimum ($risk) melebihi budget rugi efektif ($budget).';
+  }
+
+  @override
+  String adaptiveMinimumNumbers(
+    String budget,
+    String margin,
+    String risk,
+    String total,
+  ) {
+    return 'Margin day lot minimum: $margin · rugi pada SL final tersimpan: $risk · budget rugi efektif: $budget · dana bebas yang dibutuhkan di SL: $total.';
+  }
+
+  @override
+  String adaptiveMinimumTier(String lot, String tier) {
+    return 'Tier akun: $tier · minimum tier: $lot lot.';
+  }
+
+  @override
+  String adaptiveNextBlocked(String position, String reason) {
+    return 'Posisi $position belum masuk plan: $reason';
+  }
+
+  @override
+  String adaptiveNextFunds(
+    String amount,
+    String lot,
+    String position,
+    String price,
+  ) {
+    return 'Posisi $position · $price · $lot lot: perkiraan perlu tambahan dana bebas broker $amount untuk ditinjau.';
+  }
+
+  @override
+  String get adaptiveNextFundsNotEnough =>
+      'Tambah dana saja tidak mengatasi batas rugi.';
+
+  @override
+  String get adaptiveNextFundsNote =>
+      'Belum masuk plan saat ini. Jika dana itu benar-benar tersedia di broker, perbarui modal trading di atas dan hitung ulang; cek lagi chart dan risiko. Ini bukan top up kredit analisis TradePilot.';
+
+  @override
+  String get adaptiveNoFixedCap => 'tanpa batas buatan Adaptive';
+
+  @override
+  String get adaptivePositionSingular => 'posisi';
+
+  @override
+  String get adaptivePostureEntryOnly =>
+      'Dari kondisi yang terekam, baru entry awal yang bisa dipertimbangkan. Tunda layer tambahan sampai ada analisis baru yang lebih jelas.';
+
+  @override
+  String get adaptivePostureNotRecommended =>
+      'Sinyal utamanya belum searah. Lebih aman tidak menambah layer sampai analisis baru memberi arah yang lebih jelas.';
+
+  @override
+  String get adaptivePostureScalingAllowed =>
+      'Analisis masih memberi ruang untuk menambah posisi, tetapi setiap layer perlu konfirmasi baru. Harga yang bergerak melawan posisi saja bukan alasan untuk masuk.';
+
+  @override
+  String get adaptiveReady =>
+      'Masukkan modal trading dan batas rugi. Perhitungan memakai nilai tersebut secara langsung.';
+
+  @override
+  String get adaptiveReasonContextUnavailable =>
+      'Konteks analisis belum lengkap, sehingga sistem tidak menyarankan layer tambahan.';
+
+  @override
+  String get adaptiveReasonDirectionalConflict =>
+      'Bias pasar dan snapshot teknikal saling bertentangan. Rencana ber-layer ditolak agar tidak menambah lot dalam kondisi yang tidak jelas.';
+
+  @override
+  String get adaptiveReasonFundamentalClear =>
+      'Tidak ada katalis fundamental besar dalam snapshot analisis ini.';
+
+  @override
+  String adaptiveReasonFundamentalHighImpact(String count) {
+    return 'Ada $count agenda ekonomi berdampak tinggi. Jumlah layer dikurangi dan setiap checkpoint tersisa wajib diperiksa ulang.';
+  }
+
+  @override
+  String adaptiveReasonFundamentalPresent(String events, String news) {
+    return 'Sebanyak $news berita dan $events agenda ekonomi dipertimbangkan sebagai konteks, tanpa mengarang arah yang tidak disebutkan analisis.';
+  }
+
+  @override
+  String get adaptiveReasonFundamentalUnavailable =>
+      'Konteks fundamental tidak tersedia, sehingga sistem tidak menebak arah dari berita.';
+
+  @override
+  String get adaptiveReasonHighRisk =>
+      'Analisis tersimpan menandai risiko tinggi. Ini mengurangi kepadatan dan ukuran checkpoint, tetapi tidak otomatis membatalkan gaya rencana yang dipilih.';
+
+  @override
+  String adaptiveReasonLowConfidence(String confidence) {
+    return 'Confidence analisis hanya sampai $confidence%. Penambahan posisi dikurangi, sedangkan batas keras margin dan Stop Loss tetap berlaku.';
+  }
+
+  @override
+  String get adaptiveReasonNeutralBias =>
+      'Bias tersimpan netral. Sisi pilihan Standard Plan masih dapat ditinjau, tetapi dengan layer lebih sedikit atau lebih kecil.';
+
+  @override
+  String get adaptiveReasonRangeSupportsScaling =>
+      'Market ranging masih memberi ruang untuk layer terkontrol selama Stop Loss tetap dipatuhi.';
+
+  @override
+  String adaptiveReasonShortTimeframe(String timeframe) {
+    return 'Timeframe $timeframe sangat singkat dan lebih mudah terkena noise harga, sehingga checkpoint dipertimbangkan lebih sedikit dan lebih kecil.';
+  }
+
+  @override
+  String get adaptiveReasonStagedAddCondition =>
+      'Sebelum tambah layer, cek level sudah tersentuh, setup masih valid, belum ada invalidation, dan tidak ada risiko fundamental baru. Harga bergerak melawan posisi saja bukan alasan untuk entry.';
+
+  @override
+  String get adaptiveReasonTechnicalMixed =>
+      'Sinyal teknikal bercampur. Layer dipertimbangkan lebih sedikit atau lebih kecil dan setiap checkpoint perlu konfirmasi chart terbaru.';
+
+  @override
+  String adaptiveReasonTechnicalSupportsBuy(String buy, String sell) {
+    return 'Snapshot teknikal lebih mendukung naik ($buy vs $sell), sehingga konfirmasi mengarah ke Buy.';
+  }
+
+  @override
+  String adaptiveReasonTechnicalSupportsSell(String buy, String sell) {
+    return 'Snapshot teknikal lebih mendukung turun ($sell vs $buy), sehingga konfirmasi mengarah ke Sell.';
+  }
+
+  @override
+  String get adaptiveReasonTechnicalUnavailable =>
+      'Snapshot teknikal tidak tersedia untuk timeframe ini, sehingga sistem tidak menganggapnya sebagai dukungan scaling.';
+
+  @override
+  String get adaptiveReasonTrendFavorsBuy =>
+      'Bias dan kondisi pasar lebih mendukung skenario naik. Layer tambahan hanya dipertimbangkan untuk sisi Buy.';
+
+  @override
+  String get adaptiveReasonTrendFavorsSell =>
+      'Bias dan kondisi pasar lebih mendukung skenario turun. Layer tambahan hanya dipertimbangkan untuk sisi Sell.';
+
+  @override
+  String get adaptiveReasonTrendOpposesBuy =>
+      'Skenario Buy berlawanan dengan arah utama, sehingga tidak mendapat layer tambahan.';
+
+  @override
+  String get adaptiveReasonTrendOpposesSell =>
+      'Skenario Sell berlawanan dengan arah utama, sehingga tidak mendapat layer tambahan.';
+
+  @override
+  String get adaptiveReasonVolatileMarket =>
+      'Analisis tersimpan menandai pasar volatil. Checkpoint dibuat lebih hati-hati, bukan otomatis dihapus semua.';
+
+  @override
+  String get adaptiveReasoningTitle => 'Kenapa plan ini dipilih';
+
+  @override
+  String get adaptiveRefreshRules => 'Coba lagi aturan trading';
+
+  @override
+  String get adaptiveRejectedAnalysis =>
+      'Analisis tersimpan dan gaya rencana saat ini tidak mendukung checkpoint sedalam ini.';
+
+  @override
+  String get adaptiveRejectedBadge => 'Tidak dipakai';
+
+  @override
+  String get adaptiveRejectedHelp =>
+      'Level ini ditampilkan agar hitungannya transparan, tetapi tidak masuk plan yang disarankan.';
+
+  @override
+  String get adaptiveRejectedLoss =>
+      'Checkpoint ini akan melewati batas keras akumulasi rugi pada satu Stop Loss final.';
+
+  @override
+  String get adaptiveRejectedMargin =>
+      'Checkpoint ini membutuhkan dana bebas lebih untuk menutup margin day dan rugi di Stop Loss final.';
+
+  @override
+  String get adaptiveRejectedTier =>
+      'Posisi ini sendiri akan melewati batas lot per posisi pada tier akun yang dipilih.';
+
+  @override
+  String get adaptiveRejectedTitle => 'Kandidat layer yang tidak dipakai';
+
+  @override
+  String adaptiveRiskBudgetRate(String rate) {
+    return '$rate% dari batas rugi setelah guardrail';
+  }
+
+  @override
+  String adaptiveRiskStyleActive(String style) {
+    return 'Gaya $style';
+  }
+
+  @override
+  String adaptiveRiskStyleAggressiveDesc(String maximum) {
+    return 'Dapat memakai sampai 100% batas rugi dan memberi porsi initial lebih besar; maksimum $maximum lot per posisi tetap berlaku.';
+  }
+
+  @override
+  String get adaptiveRiskStyleAggressiveDescUncapped =>
+      'Dapat memakai sampai 100% batas rugi dan memberi porsi initial lebih besar; dana bebas dan risiko Stop Loss tetap membatasi posisi.';
+
+  @override
+  String get adaptiveRiskStyleBalanced => 'Moderat';
+
+  @override
+  String get adaptiveRiskStyleBalancedDesc =>
+      'Memakai maksimal 75% batas rugi dengan pembagian moderat untuk seluruh layer.';
+
+  @override
+  String get adaptiveRiskStyleConservativeDesc =>
+      'Memakai maksimal 50% batas rugi, dengan initial lebih kecil dan cadangan layer lebih besar.';
+
+  @override
+  String get adaptiveRulesError =>
+      'Rekomendasi posisi tidak tersedia: TP Standard Trading Rules untuk instrumen ini tidak dapat dimuat atau belum lengkap. Jangan memperkirakan margin, ukuran kontrak, atau minimum pergerakan sendiri.';
+
+  @override
+  String get adaptiveRulesLoading => 'Menyiapkan aturan margin standar…';
+
+  @override
+  String get adaptiveScenariosReviewHelp =>
+      'Status di bawah menunjukkan apakah setup masih menunggu atau terblokir, bukan instruksi Entry. Keputusan akhir tetap di tangan kamu.';
+
+  @override
+  String get adaptiveShareAudienceNote =>
+      'Angka lot, margin, dan batas rugi mengikuti input akun ini — tidak berlaku otomatis untuk akun lain.';
+
+  @override
+  String get adaptiveShareFailed =>
+      'Gagal membagikan detail Adaptive. Coba lagi.';
+
+  @override
+  String adaptiveShareInvalidation(String count) {
+    return '$count kondisi pembatalan dari analisis tersimpan. Rinciannya ada di bawah.';
+  }
+
+  @override
+  String get adaptiveShareSnapshotNote =>
+      'Laporan ini mencatat kondisi pasar saat analisis dibuat, bukan harga live — periksa kondisi terkini sebelum bertindak.';
+
+  @override
+  String get adaptiveShareSummaryCopied => 'Gambar plan disalin';
+
+  @override
+  String get adaptiveShareSummaryCopy => 'Salin gambar plan';
+
+  @override
+  String get adaptiveShareSummaryDownloaded => 'PNG plan diunduh';
+
+  @override
+  String get adaptiveShareSummaryFailed =>
+      'Gambar plan tidak dapat dibuat. Coba lagi.';
+
+  @override
+  String get adaptiveShareSummaryMenu => 'Bagikan plan';
+
+  @override
+  String adaptiveSideBlocked(String side) {
+    return '$side belum aman pada lot minimum broker.';
+  }
+
+  @override
+  String adaptiveSideConditional(String side) {
+    return '$side dapat dihitung, tetapi arah entry belum dikonfirmasi analisis. Lihat skenario bersyaratnya di bawah.';
+  }
+
+  @override
+  String get adaptiveSideEntryOnly =>
+      'Skenario ini hanya untuk entry awal; tidak ada layer tambahan yang direkomendasikan.';
+
+  @override
+  String adaptiveSideNotAligned(String side) {
+    return '$side belum searah dengan analisis utama; skenarionya hanya untuk dipantau, bukan entry sekarang.';
+  }
+
+  @override
+  String adaptiveSideReady(String side) {
+    return 'Skenario $side layak berdasarkan tier akun dan batas keselamatan yang dipilih.';
+  }
+
+  @override
+  String adaptiveSideUnavailable(String side) {
+    return '$side tidak dapat dinilai karena Entry atau Stop Loss tersimpan belum lengkap.';
+  }
+
+  @override
+  String get adaptiveSnapshotLayers => 'posisi';
+
+  @override
+  String get adaptiveSnapshotLevelsOnly =>
+      'Memakai level Standard Plan tersimpan; snapshot candle yang layak tidak tersedia dari analisis ini.';
+
+  @override
+  String get adaptiveSnapshotLevelsOnlyDetail =>
+      'Analisis lama mungkin tidak menyimpan snapshot candle; feed yang gagal juga bisa membuatnya tidak layak. Adaptive tetap bisa menghitung dari level tersimpan, tetapi tidak bisa mengonfirmasi swing dan volatilitas dari candle. Jalankan analisis baru untuk menangkap dasar datanya bersama.';
+
+  @override
+  String get adaptiveSnapshotTotalLots => 'Total lot rencana';
+
+  @override
+  String get adaptiveSnapshotUnavailable =>
+      'Angka aman belum bisa dihitung dari Entry, Stop Loss, aturan trading, serta batas risiko atau dana saat ini. Cek status sisi di atas; jangan gunakan ini sebagai sinyal Entry.';
+
+  @override
+  String adaptiveStageAddReason(
+    String basis,
+    String distance,
+    String level,
+    String lot,
+    String price,
+    String risk,
+  ) {
+    return 'Checkpoint manual untuk posisi $level di $price. Dasar: $basis. Gunakan hanya jika chart terkini mengonfirmasi skenario tersimpan, invalidation belum terjadi, dan tidak ada risiko fundamental baru. Harga melawan posisi saja bukan pemicu. Ukuran $lot lot mengikuti pola pilihan, tetap dalam batas per posisi, berjarak $distance dari entry, dan menambah sekitar $risk rugi pada SL final.';
+  }
+
+  @override
+  String get adaptiveStageBasisEntryEdge =>
+      'tepi berlawanan dari zona entry analisis tersimpan';
+
+  @override
+  String adaptiveStageBasisRiskCheckpoint(String progress) {
+    return 'level swing chart terkini pada $progress% jalur entry menuju SL tersimpan';
+  }
+
+  @override
+  String get adaptiveStageInitialReason => 'Entry dari Standard Plan.';
+
+  @override
+  String get adaptiveStepAdd =>
+      'Sebelum tambah layer, pastikan harga sudah menyentuh level, setup masih valid, belum ada invalidation, dan tidak ada risiko fundamental baru. Harga bergerak melawan posisi saja bukan alasan menambah.';
+
+  @override
+  String get adaptiveStepChoose =>
+      'Pilih satu skenario saja—naik atau turun—sesuai keputusan kamu.';
+
+  @override
+  String get adaptiveStepEntry =>
+      'Entry di level yang tercantum pada trade plan.';
+
+  @override
+  String get adaptiveStepStop =>
+      'Cut loss jika harga menyentuh Cut Loss / SL. Jangan memindahkan batas ini untuk menahan rugi.';
+
+  @override
+  String get adaptiveStopRisk => 'Akumulasi rugi di SL';
+
+  @override
+  String get adaptiveTpProfit => 'Estimasi profit';
+
+  @override
+  String get adaptiveUnusedReasonLevels =>
+      'Zona entry dan chart tidak menyediakan harga tambahan yang berbeda dan bermakna. Satu harga tidak akan dipecah menjadi beberapa tiket.';
+
+  @override
+  String get adaptiveUnusedReasonMargin =>
+      'Dana bebas harus menutup margin sekaligus rugi di SL; menambah lot di sini akan melampaui batas gabungan itu.';
+
+  @override
+  String get adaptiveUnusedReasonPolicy =>
+      'Gaya yang dipilih atau kehati-hatian pasar menyisihkan sebagian plafon rugi. Plafon ini bukan target untuk dihabiskan.';
+
+  @override
+  String get adaptiveUnusedReasonTier =>
+      'Batas lot per posisi akun yang dipilih menahan rencana ini. Tipe akun tidak pernah diganti otomatis.';
+
+  @override
+  String adaptiveVolatilityObserved(String count, String range) {
+    return 'Rentang tipikal candle: $range dari $count candle timeframe terpilih; ini konteks, bukan jarak Stop Loss wajib.';
+  }
+
+  @override
+  String adaptiveVolatilityTight(String distance, String side) {
+    return 'Jarak SL Standard Plan sisi $side ($distance) lebih kecil dari rentang tipikal candle tersebut. Periksa struktur harga sebelum entry; Stop Loss tersimpan tidak diubah.';
+  }
+
+  @override
+  String adaptiveVolatilityTightShort(String side) {
+    return 'SL $side lebih dekat dari rentang candle — cek struktur harga sebelum entry.';
+  }
+
+  @override
+  String adaptiveVolatilityTitle(String timeframe) {
+    return 'Volatilitas teramati pada $timeframe';
+  }
+
+  @override
+  String get adaptiveVolatilityUnavailable =>
+      'Data candle pembanding tidak tersedia. Jangan menganggap jarak SL ini sesuai timeframe yang dipilih.';
+
+  @override
+  String get adaptiveVolatilityUnavailableShort =>
+      'Data candle pembanding tidak tersedia — jarak SL belum terkonfirmasi.';
+
+  @override
+  String get biasTitle => 'Bias Arah';
+
+  @override
+  String chartShareAccessibleLevels(String levels) {
+    return 'Level Standard Plan yang digambar: $levels.';
+  }
+
+  @override
+  String get chartShareAccessibleNoLevels =>
+      'Tidak ada level Standard Plan yang digambar.';
+
+  @override
+  String chartShareAccessibleRange(String count, String end, String start) {
+    return 'Candle historis dari $start sampai $end ($count candle).';
+  }
+
+  @override
+  String get chartShareAnalyzed => 'Dianalisis';
+
+  @override
+  String get chartShareMade => 'Gambar dibuat';
+
+  @override
+  String get chartShareSourceNote =>
+      'Candle historis diambil saat gambar dibuat dan dibatasi sebelum analisis. Level dan bias berasal dari analisis tersimpan, bukan harga live.';
+
+  @override
+  String get chartShareTitle => 'Grafik analisis';
+
+  @override
+  String get chartShareWait => 'TUNGGU — tinjau Buy & Sell';
+
+  @override
+  String get chartShareWarning =>
+      'Level hanya acuan, bukan instruksi entry. Periksa syarat entry, risiko, invalidasi, dan kondisi pasar terkini sebelum bertindak.';
+
+  @override
+  String get citationsLabel => 'Sumber yang dirujuk:';
+
+  @override
+  String get tradePlanEntry => 'Entry';
+
+  @override
+  String get tradePlanSl => 'Stop Loss';
+
+  @override
+  String get instrumentPickerHint =>
+      'Pilih kode yang tersedia atau ketik kode baru.';
+
+  @override
+  String get instrumentRequestSending => 'Mengirim permintaan…';
+
+  @override
+  String get instrumentRequestError =>
+      'Permintaan instrumen gagal dikirim. Silakan coba lagi.';
+
+  @override
+  String get instrumentNoMatch =>
+      'Tidak ada instrumen terverifikasi yang cocok. Analisis hanya tersedia untuk pilihan terverifikasi yang ditampilkan.';
+
+  @override
+  String get instrumentSourceLimitations =>
+      'Analisis baru hanya dapat memilih empat instrumen utama dan empat pasangan FX terverifikasi. Cakupan penyedia serta sumber harga/riwayat bisa terbatas; permintaan tidak menjamin dukungan.';
+
+  @override
+  String get instrumentRequestNoCredit =>
+      'Mengirim permintaan ini tidak memakai kuota analisis atau kredit. Cakupan bergantung pada sumber data pasar terverifikasi dan mungkin tetap tidak tersedia.';
+
+  @override
+  String get instrumentLegacyUnsupported =>
+      'Analisis lama ini menggunakan instrumen yang tidak lagi dapat dipilih. Hasil tersimpannya tetap bisa dibaca, tetapi tidak dapat dikirim ulang.';
+
+  @override
+  String get instrumentNotVerifiedTitle => 'Instrumen belum terverifikasi';
+
+  @override
+  String get instrumentNotVerifiedDesc =>
+      'Pilih salah satu instrumen terverifikasi sebelum memulai analisis baru.';
+
+  @override
+  String get loadingBtn => 'Memproses';
+
+  @override
+  String levelUpTitle(String n) {
+    return 'Selamat! Kamu naik ke Level $n!';
+  }
+
+  @override
+  String get levelUpDescription =>
+      'Kedisiplinanmu berkembang. Terus bangun kebiasaan yang konsisten.';
+
+  @override
+  String get levelUpCloseLabel => 'Tutup perayaan kenaikan level';
+
+  @override
+  String get levelUpWaysLabel => 'Cara naik level';
+
+  @override
+  String levelUpHint(String xp) {
+    return 'Aktivitas kecil yang konsisten memberi XP. Butuh $xp XP lagi untuk level berikutnya.';
+  }
+
+  @override
+  String get levelUpJournal => 'Tulis refleksi singkat di jurnal';
+
+  @override
+  String get levelUpEvaluation => 'Evaluasi analisis tanpa menambahkan catatan';
+
+  @override
+  String get levelUpChecklist => 'Selesaikan checklist pra-analisis';
+
+  @override
+  String get levelUpGuide => 'Selesaikan satu artikel panduan';
+
+  @override
+  String get levelUpWait => 'Pilih menunggu saat risiko tinggi';
+
+  @override
+  String get levelUpStreak => 'Jaga streak harianmu';
+
+  @override
+  String levelUpDailyCap(String cap, String xp) {
+    return '$xp XP · maksimal $cap/hari';
+  }
+
+  @override
+  String levelUpPerDay(String xp) {
+    return '$xp XP/hari';
+  }
+
+  @override
+  String get completionPreparing => 'Menyiapkan progres bacaan…';
+
+  @override
+  String completionWait(String seconds) {
+    return 'Lanjut baca dulu — tombol aktif dalam $seconds detik.';
+  }
+
+  @override
+  String get completionSaving => 'Menyimpan progres bacaan…';
+
+  @override
+  String get completionStartFailed =>
+      'Gagal menyiapkan progres bacaan. Coba lagi.';
+
+  @override
+  String get alertsArmError =>
+      'Alert belum bisa dipasang: instrumen tidak didukung feed live atau analisis tidak punya level yang layak. Pengaturan notifikasi bukan penyebabnya.';
+
+  @override
+  String get alertsRetryError =>
+      'Alert belum bisa dipasang karena layanan sedang bermasalah. Coba lagi.';
+
+  @override
+  String get alertsNoPush =>
+      'Notifikasi push belum aktif untuk akun ini. Aktifkan di menu Notifikasi agar alert harga dapat dikirim.';
+
+  @override
+  String get alertsEnableNotifications => 'Aktifkan notifikasi';
+
+  @override
+  String get fastPlanWaitTitle => 'Belum ada entry sekarang.';
+
+  @override
+  String get fastPlanEntryPending => 'Tunggu candle close terkonfirmasi';
+
+  @override
+  String get fastPlanSlPending => 'Tentukan setelah swing konfirmasi terbentuk';
+
+  @override
+  String get fastPlanTp1Pending => 'Gunakan struktur pasar berikutnya';
+
+  @override
+  String get fastPlanTp2Pending => 'Evaluasi ulang setelah TP1';
+
+  @override
+  String get fastPlanRrPending =>
+      'Hitung setelah entry dan Stop Loss terbentuk';
+
+  @override
+  String get adaptiveShareSummaryTitle => 'Ringkasan Adaptive Plan';
+
+  @override
+  String get adaptiveShareSummaryWarning =>
+      'Acuan dari analisis tersimpan, bukan order. Periksa syarat entry, risiko, kondisi batal, dan pasar terkini sebelum bertindak.';
+
+  @override
+  String get biasRiskDisclaimer =>
+      'Bias menunjukkan kecenderungan arah dari data yang tersedia, bukan tingkat risiko.';
+
+  @override
+  String get riskTitle => 'Risiko Keseluruhan';
+
+  @override
+  String get riskOverallNote =>
+      'Mencakup teknikal dan berita/kalender jika tersedia; bisa berbeda dari Compare Risk.';
+
+  @override
+  String traderMirrorCoverageAll(int resolved) {
+    return 'Mencakup seluruh riwayat · $resolved evaluasi selesai';
+  }
+
+  @override
+  String get themeUpdateFailed =>
+      'Gagal menyimpan tema. Tampilan dikembalikan.';
+
+  @override
+  String summaryPending(String n) {
+    return '$n masih menunggu';
+  }
 }
