@@ -906,7 +906,6 @@ class AdaptivePlanDetailsSheet extends StatelessWidget {
     final l10n = context.l10n;
     final fmt = AdaptiveFormat.of(context);
     final locale = Localizations.localeOf(context);
-    final rule = _rule;
     final calc = calculation;
     final rec = calc?.recommendation;
     ReportBlock? detail(String title, String? body) => adaptiveHas(body)
@@ -1033,51 +1032,9 @@ class AdaptivePlanDetailsSheet extends StatelessWidget {
             ReportBlock.paragraph(_fundamentalLine(context, rec.context)),
           ]),
         ReportSection(l10n.adaptiveGuideDirectionTitle, planBlocks),
-        ReportSection(l10n.wherePlanComesFrom, [
-          ReportBlock.paragraph(_candidateStatusText(context)),
-          ReportBlock.paragraph(l10n.adaptiveScenariosReviewHelp),
-          ReportBlock.paragraph(
-            '**${l10n.sourceLayeredPlan}**\n${l10n.adaptiveAnalysisBasis}\n'
-            '${l10n.adaptiveChartConfirmation}\n${l10n.adaptiveDirectionHelp}',
-          ),
-        ]),
-        ReportSection(l10n.adaptiveAccountTitle, [
-          ReportBlock.paragraph(switch (tier) {
-            AdaptiveAccountTier.micro => l10n.adaptiveAccountMicroDesc,
-            AdaptiveAccountTier.mini => l10n.adaptiveAccountMiniDesc,
-            AdaptiveAccountTier.regular => l10n.adaptiveAccountRegularDesc,
-          }),
-          ReportBlock.paragraph(l10n.adaptiveSupportedInstruments),
-          if (rule != null)
-            ReportBlock.paragraph(
-              rule.maximumLot == null
-                  ? l10n.adaptiveAccountRuleUncapped(
-                      fmt.money(rule.marginAtMinimumLot),
-                      fmt.number(rule.minimumLot),
-                      fmt.number(rule.contractSize),
-                      adaptiveTierLabel(context, tier),
-                      rule.contractUnit,
-                    )
-                  : l10n.adaptiveAccountRule(
-                      fmt.money(rule.marginAtMinimumLot),
-                      fmt.number(rule.minimumLot),
-                      fmt.number(rule.maximumLot),
-                      fmt.number(rule.contractSize),
-                      adaptiveTierLabel(context, tier),
-                      rule.contractUnit,
-                    ),
-            ),
-          ReportBlock.paragraph(
-            '**${l10n.tradingCapital}**\n${l10n.tradingCapitalHelp}',
-          ),
-          ReportBlock.paragraph('**${l10n.lossLimit}**\n${l10n.lossLimitHelp}'),
-        ]),
-        ReportSection(l10n.riskStyle, [
-          ReportBlock.paragraph(
-            '**${adaptiveRiskStyleLabel(context, style)}**\n'
-            '${_riskStyleDescription(context, rule)}\n${l10n.riskStyleHelp}',
-          ),
-        ]),
+        // Generic "how this works" sections (method, broker account, risk style)
+        // stay in the in-app panel only; the printed report keeps just the
+        // analysis-specific content, like the web report.
         if (rec != null && calc != null)
           ReportSection(l10n.adaptiveInsightsTitle, [
             ReportBlock.paragraph(
