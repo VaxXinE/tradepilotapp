@@ -343,12 +343,14 @@ class _OverallCard extends StatelessWidget {
               ),
               style: Theme.of(context).textTheme.labelSmall,
             ),
-            Text(
-              context.l10n.sinceDate(
-                DateFormat('d MMM yyyy').format(summary.windowStart.toLocal()),
+            // No resolved analyses yet means the server has no window start.
+            if (summary.windowStart case final start?)
+              Text(
+                context.l10n.sinceDate(
+                  DateFormat('d MMM yyyy').format(start.toLocal()),
+                ),
+                style: Theme.of(context).textTheme.labelSmall,
               ),
-              style: Theme.of(context).textTheme.labelSmall,
-            ),
           ],
         ),
       ),

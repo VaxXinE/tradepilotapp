@@ -192,9 +192,10 @@ class ProfileTab extends StatelessWidget {
                         key: const Key('profile-analysis-credits'),
                         icon: Icons.account_balance_wallet_outlined,
                         title: l10n.profileAnalysisCredits,
+                        // An unreadable balance must not look like a zero balance.
                         badge: credits.isLoadingBalance
                             ? '…'
-                            : '${credits.balance ?? 0}',
+                            : credits.balance?.toString() ?? '—',
                         onTap: () => unawaited(_openTopUp(context)),
                       ),
                     ],

@@ -138,10 +138,15 @@ class _TraderMirrorScreenState extends State<TraderMirrorScreen> {
                       ),
                     const SizedBox(height: 18),
                     Text(
-                      context.l10n.traderMirrorCoverage(
-                        data.insights.windowDays,
-                        data.insights.totalResolved,
-                      ),
+                      // The server sends no window for a lifetime reading.
+                      data.insights.windowDays == null
+                          ? context.l10n.traderMirrorCoverageAll(
+                              data.insights.totalResolved,
+                            )
+                          : context.l10n.traderMirrorCoverage(
+                              data.insights.windowDays!,
+                              data.insights.totalResolved,
+                            ),
                       style: const TextStyle(fontWeight: FontWeight.w800),
                     ),
                     const SizedBox(height: 8),

@@ -291,7 +291,7 @@ class _DashboardTabState extends State<DashboardTab> {
               // bawahnya. Variasi rhythm ini disengaja, bukan seragam.
               const SizedBox(height: 8),
               if (_outcomes case final outcomes?) ...[
-                _OutcomeSummaryCard(outcomes: outcomes),
+                OutcomeSummaryCard(outcomes: outcomes),
                 const SizedBox(height: 8),
               ] else if (_outcomesLoadFailed) ...[
                 _DashboardLoadErrorCard(
@@ -927,8 +927,9 @@ class _EmptyWatchlist extends StatelessWidget {
 // STATS
 // =============================================================================
 
-class _OutcomeSummaryCard extends StatelessWidget {
-  const _OutcomeSummaryCard({required this.outcomes});
+/// Win/loss accuracy of past analyses (public so it can be widget-tested).
+class OutcomeSummaryCard extends StatelessWidget {
+  const OutcomeSummaryCard({super.key, required this.outcomes});
 
   final AnalysisOutcomesSummary outcomes;
 
@@ -999,6 +1000,20 @@ class _OutcomeSummaryCard extends StatelessWidget {
               context.l10n.resolvedSample(outcomes.scored),
               style: Theme.of(context).textTheme.bodySmall,
             ),
+            if (outcomes.pending > 0 || outcomes.invalidated > 0)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  [
+                    if (outcomes.pending > 0)
+                      context.l10n.summaryPending('${outcomes.pending}'),
+                    if (outcomes.invalidated > 0)
+                      '${context.l10n.outcomeInvalidatedLabel}: ${outcomes.invalidated}',
+                  ].join(' · '),
+                  key: const ValueKey('dashboard-outcome-open'),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
           ],
         ),
       ),
