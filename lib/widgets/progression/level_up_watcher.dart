@@ -62,40 +62,45 @@ class _LevelUpDialog extends StatelessWidget {
       insetPadding: const EdgeInsets.symmetric(horizontal: 24),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Align(
-              alignment: Alignment.centerRight,
-              child: IconButton(
-                tooltip: l10n.levelUpCloseLabel,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Align(
+                alignment: Alignment.centerRight,
+                child: IconButton(
+                  tooltip: l10n.levelUpCloseLabel,
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close_rounded),
+                ),
+              ),
+              ProgressionEmblem(level: level, masteryLevel: 0, size: 112),
+              const SizedBox(height: 18),
+              Text(
+                l10n.levelUpTitle('$level'),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                l10n.levelUpDescription,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 20),
+              FilledButton(
+                key: const ValueKey('progression-level-up-continue'),
                 onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.close_rounded),
+                child: Text(l10n.continueLabel),
               ),
-            ),
-            ProgressionEmblem(level: level, masteryLevel: 0, size: 112),
-            const SizedBox(height: 18),
-            Text(
-              l10n.levelUpTitle('$level'),
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              l10n.levelUpDescription,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 20),
-            FilledButton(
-              key: const ValueKey('progression-level-up-continue'),
-              onPressed: () => Navigator.pop(context),
-              child: Text(l10n.continueLabel),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

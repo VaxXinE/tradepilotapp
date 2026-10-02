@@ -56,9 +56,16 @@ class _ProgressionScreenState extends State<ProgressionScreen> {
             ? _LoadState(progression: progression)
             : Column(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                    child: _ProgressionHero(summary: summary),
+                  // On short screens (or with large text) the hero scrolls inside
+                  // a capped area instead of pushing the tabs off screen.
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.sizeOf(context).height * 0.45,
+                    ),
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                      child: _ProgressionHero(summary: summary),
+                    ),
                   ),
                   TabBar(
                     tabs: [
@@ -161,9 +168,11 @@ class _ProgressionHero extends StatelessWidget {
               ProgressionEmblem(
                 level: summary.level,
                 masteryLevel: summary.masteryLevel,
-                size: 88,
+                // Smaller emblem on very narrow phones so the text column
+                // beside it keeps enough room.
+                size: MediaQuery.sizeOf(context).width < 340 ? 64 : 88,
               ),
-              const SizedBox(width: 16),
+              SizedBox(width: MediaQuery.sizeOf(context).width < 340 ? 10 : 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -188,8 +197,9 @@ class _ProgressionHero extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      spacing: 8,
                       children: [
                         Text(
                           '${summary.totalXp} XP',
@@ -216,13 +226,14 @@ class _ProgressionHero extends StatelessWidget {
                       color: const Color(0xFFF5C219),
                     ),
                     const SizedBox(height: 10),
-                    Row(
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 6,
                       children: [
                         _Streak(
                           label: context.l10n.progressionCurrentStreak,
                           value: summary.currentStreak,
                         ),
-                        const SizedBox(width: 12),
                         _Streak(
                           label: context.l10n.progressionLongestStreak,
                           value: summary.longestStreak,
@@ -342,25 +353,22 @@ class _Streak extends StatelessWidget {
   final int value;
 
   @override
-  Widget build(BuildContext context) => Expanded(
-    child: Row(
-      children: [
-        const Icon(
-          Icons.local_fire_department_rounded,
-          size: 16,
-          color: Color(0xFFF59E0B),
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      const Icon(
+        Icons.local_fire_department_rounded,
+        size: 16,
+        color: Color(0xFFF59E0B),
+      ),
+      const SizedBox(width: 4),
+      Flexible(
+        child: Text(
+          '$value · $label',
+          style: const TextStyle(color: Colors.white70, fontSize: 10),
         ),
-        const SizedBox(width: 4),
-        Flexible(
-          child: Text(
-            '$value · $label',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: Colors.white70, fontSize: 10),
-          ),
-        ),
-      ],
-    ),
+      ),
+    ],
   );
 }
 
@@ -476,8 +484,13 @@ class _SectionHeader extends StatelessWidget {
       children: [
         Icon(icon, size: 19, color: Theme.of(context).colorScheme.primary),
         const SizedBox(width: 8),
-        Text(title, style: const TextStyle(fontWeight: FontWeight.w900)),
-        const Spacer(),
+        Expanded(
+          child: Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.w900),
+          ),
+        ),
+        const SizedBox(width: 8),
         if (trailing != null)
           Text(trailing!, style: Theme.of(context).textTheme.bodySmall),
       ],
