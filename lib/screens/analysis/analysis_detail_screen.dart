@@ -3499,13 +3499,22 @@ class _EvidenceSummary extends StatelessWidget {
 // MARKET SNAPSHOT
 // =============================================================================
 
-class _MarketSnapshotCard extends StatelessWidget {
+class _MarketSnapshotCard extends StatefulWidget {
   const _MarketSnapshotCard({super.key, required this.analysis});
 
   final Analysis analysis;
 
   @override
+  State<_MarketSnapshotCard> createState() => _MarketSnapshotCardState();
+}
+
+class _MarketSnapshotCardState extends State<_MarketSnapshotCard> {
+  /// The explanatory sentence stays hidden until the user taps the (i) icon.
+  bool _showSummary = false;
+
+  @override
   Widget build(BuildContext context) {
+    final analysis = widget.analysis;
     final bullish = analysis.techBuyCount ?? 0;
     final bearish = analysis.techSellCount ?? 0;
     final neutral = analysis.techNeutralCount ?? 0;
@@ -3626,16 +3635,41 @@ class _MarketSnapshotCard extends StatelessWidget {
                   ],
                 ),
               ),
+              IconButton(
+                key: const ValueKey('market-summary-info'),
+                tooltip: context.l10n.marketContextSummaryTitle,
+                isSelected: _showSummary,
+                onPressed: () => setState(() => _showSummary = !_showSummary),
+                icon: const Icon(Icons.info_outline_rounded),
+                selectedIcon: const Icon(Icons.info_rounded),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                style: IconButton.styleFrom(
+                  foregroundColor: _showSummary
+                      ? accent
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                  minimumSize: const Size(40, 40),
+                  padding: EdgeInsets.zero,
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 14),
-          Text(
-            summary,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface,
-              height: 1.55,
-              fontSize: 13.5,
-            ),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 180),
+            alignment: Alignment.topCenter,
+            child: _showSummary
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 14),
+                    child: Text(
+                      summary,
+                      key: const ValueKey('market-summary-text'),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        height: 1.55,
+                        fontSize: 13.5,
+                      ),
+                    ),
+                  )
+                : const SizedBox(width: double.infinity),
           ),
         ],
       ),

@@ -189,9 +189,22 @@ void main() {
     expect(find.text('MARKET CONTEXT SUMMARY'), findsOneWidget);
     expect(find.text('Leaning Bearish'), findsOneWidget);
     expect(find.text('(SELL)'), findsOneWidget);
+    // The explanation is hidden until the (i) icon is tapped.
+    expect(
+      find.textContaining('8 of 11 indicators are leaning bearish'),
+      findsNothing,
+    );
+    await tester.tap(find.byKey(const ValueKey('market-summary-info')));
+    await tester.pumpAndSettle();
     expect(
       find.textContaining('8 of 11 indicators are leaning bearish'),
       findsOneWidget,
+    );
+    await tester.tap(find.byKey(const ValueKey('market-summary-info')));
+    await tester.pumpAndSettle();
+    expect(
+      find.textContaining('8 of 11 indicators are leaning bearish'),
+      findsNothing,
     );
   });
 
