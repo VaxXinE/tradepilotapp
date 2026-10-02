@@ -232,6 +232,14 @@ class _TradePilotMaterialAppState extends State<_TradePilotMaterialApp> {
       _navigatorKey.currentState?.popUntil((route) => route.isFirst);
     }
 
+    // First launch: Welcome pushes Login (and Login pushes Register) on top of
+    // `home`. Signing in swaps `home` to the dashboard underneath, so without
+    // this the login form stays on screen over a session that already exists.
+    if (previous != AuthStatus.authenticated &&
+        current == AuthStatus.authenticated) {
+      _navigatorKey.currentState?.popUntil((route) => route.isFirst);
+    }
+
     if (current == AuthStatus.authenticated && !_auth.isLocked) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         unawaited(_openPendingPushAction());
