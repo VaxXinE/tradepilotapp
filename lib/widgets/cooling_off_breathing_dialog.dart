@@ -71,38 +71,43 @@ class _CoolingOffBreathingDialogState extends State<CoolingOffBreathingDialog> {
 
     return AlertDialog(
       title: Text(context.l10n.coolingOffBreathingTitle),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(body),
-          const SizedBox(height: 24),
-          SizedBox(
-            height: 132,
-            child: Center(
-              child: AnimatedContainer(
-                key: const ValueKey('breathing-orb'),
-                duration: const Duration(seconds: _phaseSeconds),
-                curve: Curves.easeInOut,
-                width: size,
-                height: size,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: const Color(0xFFFBBF24).withValues(alpha: .22),
-                  border: Border.all(color: const Color(0xFFF59E0B), width: 2),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(body),
+            const SizedBox(height: 24),
+            SizedBox(
+              height: 132,
+              child: Center(
+                child: AnimatedContainer(
+                  key: const ValueKey('breathing-orb'),
+                  duration: const Duration(seconds: _phaseSeconds),
+                  curve: Curves.easeInOut,
+                  width: size,
+                  height: size,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFFFBBF24).withValues(alpha: .22),
+                    border: Border.all(
+                      color: const Color(0xFFF59E0B),
+                      width: 2,
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Semantics(
-            liveRegion: true,
-            child: Text(
-              '$phaseLabel · $_secondsLeft',
-              key: const ValueKey('breathing-phase'),
-              style: const TextStyle(fontWeight: FontWeight.w700),
+            const SizedBox(height: 8),
+            Semantics(
+              liveRegion: true,
+              child: Text(
+                '$phaseLabel · $_secondsLeft',
+                key: const ValueKey('breathing-phase'),
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       actions: [
         OutlinedButton(

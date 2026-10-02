@@ -34,32 +34,36 @@ Future<void> showAnalysisQuotaDialog(
     context: context,
     builder: (dialogContext) => AlertDialog(
       title: Text(title),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(message),
-          if (used != null && quotaLimit != null && quotaLimit > 0) ...[
-            const SizedBox(height: 16),
-            LinearProgressIndicator(
-              value: (used / quotaLimit).clamp(0, 1).toDouble(),
-            ),
-            const SizedBox(height: 6),
-            Text(l10n.analysisQuotaUsage(used, quotaLimit)),
-          ],
-          if (retryAfter != null) ...[
-            const SizedBox(height: 12),
-            Text(
-              l10n.analysisRetryAfter(
-                retryAfter.inSeconds < 60
-                    ? l10n.analysisSeconds(retryAfter.inSeconds)
-                    : l10n.analysisMinutes((retryAfter.inSeconds / 60).ceil()),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(message),
+            if (used != null && quotaLimit != null && quotaLimit > 0) ...[
+              const SizedBox(height: 16),
+              LinearProgressIndicator(
+                value: (used / quotaLimit).clamp(0, 1).toDouble(),
               ),
-            ),
+              const SizedBox(height: 6),
+              Text(l10n.analysisQuotaUsage(used, quotaLimit)),
+            ],
+            if (retryAfter != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                l10n.analysisRetryAfter(
+                  retryAfter.inSeconds < 60
+                      ? l10n.analysisSeconds(retryAfter.inSeconds)
+                      : l10n.analysisMinutes(
+                          (retryAfter.inSeconds / 60).ceil(),
+                        ),
+                ),
+              ),
+            ],
+            // Pembelian credit sengaja tidak ditawarkan dari aplikasi mobile.
+            // Aktifkan kembali hanya lewat flow billing mobile yang disetujui.
           ],
-          // Pembelian credit sengaja tidak ditawarkan dari aplikasi mobile.
-          // Aktifkan kembali hanya lewat flow billing mobile yang disetujui.
-        ],
+        ),
       ),
       actions: [
         TextButton(
