@@ -248,12 +248,24 @@ class _TradeJournalScreenState extends State<TradeJournalScreen> {
       appBar: AppBar(
         title: Text(context.l10n.tradeJournal),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const TraderMirrorScreen()),
+          // Icon only on narrow screens or with large text, so the title and
+          // the add button keep their room.
+          if (MediaQuery.sizeOf(context).width < 400 ||
+              MediaQuery.textScalerOf(context).scale(1) > 1.2)
+            IconButton(
+              tooltip: context.l10n.traderMirror,
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const TraderMirrorScreen()),
+              ),
+              icon: const Icon(Icons.insights_rounded),
+            )
+          else
+            TextButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const TraderMirrorScreen()),
+              ),
+              child: Text(context.l10n.traderMirror),
             ),
-            child: Text(context.l10n.traderMirror),
-          ),
           IconButton(
             tooltip: context.l10n.addJournal,
             onPressed: _mutating ? null : () => _openForm(),
@@ -323,6 +335,7 @@ class _TradeJournalScreenState extends State<TradeJournalScreen> {
                         if (_stats case final stats?)
                           _JournalStatsCard(stats: stats),
                         DropdownButtonFormField<String?>(
+                          isExpanded: true,
                           initialValue: _outcomeFilter,
                           decoration: InputDecoration(
                             labelText: context.l10n.journalOutcomeFilter,
@@ -520,6 +533,7 @@ class _JournalDialogState extends State<_JournalDialog> {
                     : null,
               ),
               DropdownButtonFormField<String>(
+                isExpanded: true,
                 initialValue: _side,
                 decoration: InputDecoration(labelText: context.l10n.side),
                 items: [
@@ -535,6 +549,7 @@ class _JournalDialogState extends State<_JournalDialog> {
                 onChanged: (value) => _side = value!,
               ),
               DropdownButtonFormField<String>(
+                isExpanded: true,
                 initialValue: _outcome,
                 decoration: InputDecoration(
                   labelText: context.l10n.retrospectiveStatus,

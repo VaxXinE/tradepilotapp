@@ -777,6 +777,7 @@ class _QuietHoursSettings extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: DropdownButtonFormField<String>(
+              isExpanded: true,
               initialValue: prefs.notificationTimezone,
               decoration: InputDecoration(
                 labelText: l10n.notificationTimezone,
@@ -828,6 +829,7 @@ class _HourDropdown extends StatelessWidget {
     final normalized = '${hour.toString().padLeft(2, '0')}:00';
 
     return DropdownButtonFormField<String>(
+      isExpanded: true,
       initialValue: normalized,
       decoration: InputDecoration(labelText: label),
       items: List.generate(24, (index) {
