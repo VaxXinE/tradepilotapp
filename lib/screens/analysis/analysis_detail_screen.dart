@@ -3,7 +3,8 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
-import 'package:dio/dio.dart';
+// Dipakai hanya oleh pemuatan jurnal yang disembunyikan.
+// import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -32,12 +33,13 @@ import '../../widgets/adaptive_plan_result.dart';
 import '../../services/native_push_service.dart';
 import '../../widgets/adaptive_position_plan_card.dart';
 import '../../widgets/analysis_levels_chart.dart';
-import '../../widgets/analysis_note_card.dart';
+// Catatan & jurnal disembunyikan sementara.
+// import '../../widgets/analysis_note_card.dart';
 import '../../widgets/analysis_quota_dialog.dart';
 import '../../widgets/error_banner.dart';
 import '../../widgets/product_state_view.dart';
 import '../../widgets/risk/risk_tools_section.dart';
-import '../journal/trade_journal_screen.dart';
+// import '../journal/trade_journal_screen.dart';
 import '../mindset/mindset_screen.dart';
 
 const _analysisTimeframes = ['1m', '5m', '15m', '30m', '1h', '4h', '1D', '1W'];
@@ -115,14 +117,14 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
   bool _refreshingFundamentals = false;
   bool _alertStatusLoading = true;
   bool _alertBusy = false;
-  bool _journalLoading = true;
+  // bool _journalLoading = true;
   String? _selectedTimeframe;
 
   String? _marketError;
   String? _alertError;
-  String? _journalError;
+  // String? _journalError;
   AlertStatus? _alertStatus;
-  JournalEntry? _journalEntry;
+  // JournalEntry? _journalEntry;
 
   Timer? _pollTimer;
 
@@ -145,7 +147,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
           unawaited(telemetry.pageView('/analyses/${widget.analysisId}'));
         }
         unawaited(_loadAlertStatus());
-        unawaited(_loadJournalEntry());
+        // unawaited(_loadJournalEntry());
       }
     });
 
@@ -619,7 +621,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
   }
 
   Future<void> _refresh() async {
-    await Future.wait([_load(), _loadAlertStatus(), _loadJournalEntry()]);
+    await Future.wait([_load(), _loadAlertStatus()]);
 
     final analysis = _analysis;
 
@@ -628,45 +630,46 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
     }
   }
 
-  Future<void> _loadJournalEntry() async {
-    if (!mounted) return;
-    setState(() {
-      _journalLoading = true;
-      _journalError = null;
-    });
-    try {
-      final response = await context
-          .read<AuthProvider>()
-          .client
-          .tradeJournal
-          .getJournalEntryForAnalysis(analysisId: widget.analysisId);
-      if (!mounted) return;
-      setState(() => _journalEntry = response.data);
-    } on DioException catch (error) {
-      if (!mounted) return;
-      if (error.response?.statusCode == 404) {
-        setState(() => _journalEntry = null);
-      } else {
-        setState(() => _journalError = context.l10n.journalCheckFailed);
-      }
-    } catch (_) {
-      if (mounted) {
-        setState(() => _journalError = context.l10n.journalCheckFailed);
-      }
-    } finally {
-      if (mounted) setState(() => _journalLoading = false);
-    }
-  }
-
-  Future<void> _openJournal(Analysis analysis) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) =>
-            TradeJournalScreen(analysis: analysis, initialEntry: _journalEntry),
-      ),
-    );
-    if (mounted) await _loadJournalEntry();
-  }
+  // Catatan & jurnal disembunyikan sementara.
+  // Future<void> _loadJournalEntry() async {
+  //   if (!mounted) return;
+  //   setState(() {
+  //     _journalLoading = true;
+  //     _journalError = null;
+  //   });
+  //   try {
+  //     final response = await context
+  //         .read<AuthProvider>()
+  //         .client
+  //         .tradeJournal
+  //         .getJournalEntryForAnalysis(analysisId: widget.analysisId);
+  //     if (!mounted) return;
+  //     setState(() => _journalEntry = response.data);
+  //   } on DioException catch (error) {
+  //     if (!mounted) return;
+  //     if (error.response?.statusCode == 404) {
+  //       setState(() => _journalEntry = null);
+  //     } else {
+  //       setState(() => _journalError = context.l10n.journalCheckFailed);
+  //     }
+  //   } catch (_) {
+  //     if (mounted) {
+  //       setState(() => _journalError = context.l10n.journalCheckFailed);
+  //     }
+  //   } finally {
+  //     if (mounted) setState(() => _journalLoading = false);
+  //   }
+  // }
+  //
+  // Future<void> _openJournal(Analysis analysis) async {
+  //   await Navigator.of(context).push(
+  //     MaterialPageRoute(
+  //       builder: (_) =>
+  //           TradeJournalScreen(analysis: analysis, initialEntry: _journalEntry),
+  //     ),
+  //   );
+  //   if (mounted) await _loadJournalEntry();
+  // }
 
   // ===========================================================================
   // ANALYSIS LEVEL ALERTS
@@ -877,35 +880,36 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
     );
   }
 
-  Future<bool> _saveNote(String note) async {
-    final current = _analysis;
-    if (current == null) return false;
-    final provider = context.read<AnalysisProvider>();
-    final updated = await provider.saveAnalysisNote(
-      analysis: current,
-      note: note,
-    );
-    if (!mounted) return false;
-    if (updated != null) {
-      setState(() => _analysis = updated);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            updated.hasNote == true
-                ? context.l10n.noteSaved
-                : context.l10n.noteDeleted,
-          ),
-        ),
-      );
-      return true;
-    }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(provider.errorMessage ?? context.l10n.noteSaveFailed),
-      ),
-    );
-    return false;
-  }
+  // Catatan pribadi disembunyikan sementara.
+  // Future<bool> _saveNote(String note) async {
+  //   final current = _analysis;
+  //   if (current == null) return false;
+  //   final provider = context.read<AnalysisProvider>();
+  //   final updated = await provider.saveAnalysisNote(
+  //     analysis: current,
+  //     note: note,
+  //   );
+  //   if (!mounted) return false;
+  //   if (updated != null) {
+  //     setState(() => _analysis = updated);
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(
+  //         content: Text(
+  //           updated.hasNote == true
+  //               ? context.l10n.noteSaved
+  //               : context.l10n.noteDeleted,
+  //         ),
+  //       ),
+  //     );
+  //     return true;
+  //   }
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     SnackBar(
+  //       content: Text(provider.errorMessage ?? context.l10n.noteSaveFailed),
+  //     ),
+  //   );
+  //   return false;
+  // }
 
   // ===========================================================================
   // BUILD
@@ -1197,36 +1201,36 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
           ),
         ],
 
-        const SizedBox(height: 14),
-        Text(
-          context.l10n.notesAndJournal,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          context.l10n.notesAndJournalDescription,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: muted),
-        ),
-        const SizedBox(height: 10),
-
-        _AnalysisJournalCard(
-          entry: _journalEntry,
-          loading: _journalLoading,
-          error: _journalError,
-          onOpen: () => _openJournal(analysis),
-          onRetry: _loadJournalEntry,
-        ),
-
-        const SizedBox(height: 14),
-
-        Consumer<AnalysisProvider>(
-          builder: (context, provider, _) => AnalysisNoteCard(
-            note: analysis.userNote,
-            isSaving: provider.isSavingNote(analysis.id),
-            onSave: _saveNote,
-          ),
-        ),
-
+        // Catatan & jurnal disembunyikan sementara.
+        // const SizedBox(height: 14),
+        // Text(
+        //   context.l10n.notesAndJournal,
+        //   style: Theme.of(context).textTheme.titleMedium,
+        // ),
+        // const SizedBox(height: 4),
+        // Text(
+        //   context.l10n.notesAndJournalDescription,
+        //   style: Theme.of(context).textTheme.bodySmall?.copyWith(color: muted),
+        // ),
+        // const SizedBox(height: 10),
+        //
+        // _AnalysisJournalCard(
+        //   entry: _journalEntry,
+        //   loading: _journalLoading,
+        //   error: _journalError,
+        //   onOpen: () => _openJournal(analysis),
+        //   onRetry: _loadJournalEntry,
+        // ),
+        //
+        // const SizedBox(height: 14),
+        //
+        // Consumer<AnalysisProvider>(
+        //   builder: (context, provider, _) => AnalysisNoteCard(
+        //     note: analysis.userNote,
+        //     isSaving: provider.isSavingNote(analysis.id),
+        //     onSave: _saveNote,
+        //   ),
+        // ),
         const SizedBox(height: 14),
         ExpansionTile(
           key: const ValueKey('analysis-guides'),
@@ -1451,64 +1455,65 @@ class _AnalysisSectionHeading extends StatelessWidget {
   );
 }
 
-class _AnalysisJournalCard extends StatelessWidget {
-  const _AnalysisJournalCard({
-    required this.entry,
-    required this.loading,
-    required this.error,
-    required this.onOpen,
-    required this.onRetry,
-  });
-
-  final JournalEntry? entry;
-  final bool loading;
-  final String? error;
-  final VoidCallback onOpen;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    final journal = entry;
-    return Card(
-      child: ListTile(
-        leading: const Icon(Icons.menu_book_outlined),
-        title: Text(
-          journal == null
-              ? context.l10n.journalCreateForTrade
-              : context.l10n.journalEntryForTrade,
-          style: const TextStyle(fontWeight: FontWeight.w800),
-        ),
-        subtitle: loading
-            ? const Padding(
-                padding: EdgeInsets.only(top: 8),
-                child: LinearProgressIndicator(),
-              )
-            : error != null
-            ? Text(error!)
-            : journal == null
-            ? Text(context.l10n.journalReflectionHint)
-            : Text(
-                [
-                  journal.side.name.toUpperCase(),
-                  journal.outcome.name,
-                  if (journal.mood?.trim().isNotEmpty == true) journal.mood!,
-                  if (journal.note?.trim().isNotEmpty == true) journal.note!,
-                ].join(' · '),
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-              ),
-        trailing: error != null
-            ? IconButton(
-                tooltip: context.l10n.tryAgain,
-                onPressed: onRetry,
-                icon: const Icon(Icons.refresh_rounded),
-              )
-            : const Icon(Icons.chevron_right_rounded),
-        onTap: loading || error != null ? null : onOpen,
-      ),
-    );
-  }
-}
+// Catatan & jurnal disembunyikan sementara.
+// class _AnalysisJournalCard extends StatelessWidget {
+//   const _AnalysisJournalCard({
+//     required this.entry,
+//     required this.loading,
+//     required this.error,
+//     required this.onOpen,
+//     required this.onRetry,
+//   });
+//
+//   final JournalEntry? entry;
+//   final bool loading;
+//   final String? error;
+//   final VoidCallback onOpen;
+//   final VoidCallback onRetry;
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     final journal = entry;
+//     return Card(
+//       child: ListTile(
+//         leading: const Icon(Icons.menu_book_outlined),
+//         title: Text(
+//           journal == null
+//               ? context.l10n.journalCreateForTrade
+//               : context.l10n.journalEntryForTrade,
+//           style: const TextStyle(fontWeight: FontWeight.w800),
+//         ),
+//         subtitle: loading
+//             ? const Padding(
+//                 padding: EdgeInsets.only(top: 8),
+//                 child: LinearProgressIndicator(),
+//               )
+//             : error != null
+//             ? Text(error!)
+//             : journal == null
+//             ? Text(context.l10n.journalReflectionHint)
+//             : Text(
+//                 [
+//                   journal.side.name.toUpperCase(),
+//                   journal.outcome.name,
+//                   if (journal.mood?.trim().isNotEmpty == true) journal.mood!,
+//                   if (journal.note?.trim().isNotEmpty == true) journal.note!,
+//                 ].join(' · '),
+//                 maxLines: 3,
+//                 overflow: TextOverflow.ellipsis,
+//               ),
+//         trailing: error != null
+//             ? IconButton(
+//                 tooltip: context.l10n.tryAgain,
+//                 onPressed: onRetry,
+//                 icon: const Icon(Icons.refresh_rounded),
+//               )
+//             : const Icon(Icons.chevron_right_rounded),
+//         onTap: loading || error != null ? null : onOpen,
+//       ),
+//     );
+//   }
+// }
 
 // =============================================================================
 // ANALYSIS LEVEL ALERTS

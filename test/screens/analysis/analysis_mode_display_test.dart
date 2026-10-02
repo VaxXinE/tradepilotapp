@@ -528,11 +528,12 @@ void main() {
           .position
           .pixels;
 
-      await _reveal(tester, find.text('Notes & journal'), scrollable);
-      final toolsOffset = tester
-          .state<ScrollableState>(scrollable)
-          .position
-          .pixels;
+      // Catatan & jurnal disembunyikan sementara.
+      // await _reveal(tester, find.text('Notes & journal'), scrollable);
+      // final toolsOffset = tester
+      //     .state<ScrollableState>(scrollable)
+      //     .position
+      //     .pixels;
 
       expect(levelsOffset, greaterThan(chartOffset));
       expect(fundamentalOffset, greaterThan(levelsOffset));
@@ -540,7 +541,7 @@ void main() {
       expect(adaptiveOffset, greaterThan(marketOffset));
       expect(technicalOffset, greaterThan(adaptiveOffset));
       expect(alertsOffset, greaterThan(technicalOffset));
-      expect(toolsOffset, greaterThan(alertsOffset));
+      // expect(toolsOffset, greaterThan(alertsOffset));
     },
   );
 
@@ -844,33 +845,34 @@ void main() {
     expect(find.text('Monitored'), findsOneWidget);
   });
 
-  testWidgets('analysis detail shows the journal linked by the server', (
-    tester,
-  ) async {
-    await _pumpDetail(
-      tester,
-      _analysis(AnalysisModeEnum.beginner),
-      journal: {
-        'id': 7,
-        'analysisId': 1,
-        'instrument': 'XAU/USD',
-        'side': 'sell',
-        'outcome': 'win',
-        'mood': 'calm',
-        'note': 'Entry sesuai rencana',
-        'tradedAt': '2026-09-08T08:00:00.000Z',
-        'createdAt': '2026-09-08T08:00:00.000Z',
-        'updatedAt': '2026-09-08T08:00:00.000Z',
-      },
-    );
-
-    await tester.scrollUntilVisible(
-      find.text('My trade journal'),
-      500,
-      scrollable: find.byType(Scrollable).first,
-    );
-    expect(find.textContaining('Entry sesuai rencana'), findsOneWidget);
-  });
+  // Catatan & jurnal disembunyikan sementara.
+  // testWidgets('analysis detail shows the journal linked by the server', (
+  //   tester,
+  // ) async {
+  //   await _pumpDetail(
+  //     tester,
+  //     _analysis(AnalysisModeEnum.beginner),
+  //     journal: {
+  //       'id': 7,
+  //       'analysisId': 1,
+  //       'instrument': 'XAU/USD',
+  //       'side': 'sell',
+  //       'outcome': 'win',
+  //       'mood': 'calm',
+  //       'note': 'Entry sesuai rencana',
+  //       'tradedAt': '2026-09-08T08:00:00.000Z',
+  //       'createdAt': '2026-09-08T08:00:00.000Z',
+  //       'updatedAt': '2026-09-08T08:00:00.000Z',
+  //     },
+  //   );
+  //
+  //   await tester.scrollUntilVisible(
+  //     find.text('My trade journal'),
+  //     500,
+  //     scrollable: find.byType(Scrollable).first,
+  //   );
+  //   expect(find.textContaining('Entry sesuai rencana'), findsOneWidget);
+  // });
 
   testWidgets(
     'timeframe switch auto-triggers a new analysis after a short debounce, '
