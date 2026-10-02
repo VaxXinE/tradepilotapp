@@ -237,11 +237,13 @@ class _MindsetScreenState extends State<MindsetScreen> {
                   color: colors.primary,
                 ),
                 const SizedBox(width: 7),
-                Text(
-                  l10n.guideQuickStart,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
+                Flexible(
+                  child: Text(
+                    l10n.guideQuickStart,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -705,13 +707,15 @@ class _MindsetModuleScreenState extends State<_MindsetModuleScreen> {
                       size: 14,
                     ),
                     const SizedBox(width: 6),
-                    Text(
-                      _guideCategoryName(module.category, id).toUpperCase(),
-                      style: TextStyle(
-                        color: colors.primary,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.8,
+                    Flexible(
+                      child: Text(
+                        _guideCategoryName(module.category, id).toUpperCase(),
+                        style: TextStyle(
+                          color: colors.primary,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.8,
+                        ),
                       ),
                     ),
                   ],

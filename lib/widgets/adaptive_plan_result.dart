@@ -1217,17 +1217,16 @@ class _EntryRow extends StatelessWidget {
     final fmt = AdaptiveFormat.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 7),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Wrap(
+        alignment: WrapAlignment.spaceBetween,
+        spacing: 10,
+        runSpacing: 4,
         children: [
-          Expanded(
-            child: Text(
-              '${l10n.adaptiveLevel} ${layer.level + 1} · '
-              '${layer.level == 0 ? l10n.initialEntry : l10n.additionalPosition}',
-              style: const TextStyle(fontWeight: FontWeight.w700),
-            ),
+          Text(
+            '${l10n.adaptiveLevel} ${layer.level + 1} · '
+            '${layer.level == 0 ? l10n.initialEntry : l10n.additionalPosition}',
+            style: const TextStyle(fontWeight: FontWeight.w700),
           ),
-          const SizedBox(width: 10),
           Text(
             '${fmt.number(layer.price, 4)} · ${fmt.number(layer.lot)} ${l10n.adaptiveLot}',
             textAlign: TextAlign.right,

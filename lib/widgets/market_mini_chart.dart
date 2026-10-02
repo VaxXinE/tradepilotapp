@@ -335,26 +335,31 @@ class _CandlestickPlotState extends State<CandlestickPlot> {
             right: railWidth + 8,
             bottom: 0,
             height: axisHeight,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _AxisLabel(
-                  candles.first.date,
-                  showTime: showTimeAxis,
-                  showDate: spansDays,
-                ),
-                _AxisLabel(
-                  candles[candles.length ~/ 2].date,
-                  showTime: showTimeAxis,
-                  showDate: spansDays,
-                ),
-                _AxisLabel(
-                  candles.last.date,
-                  showTime: showTimeAxis,
-                  showDate: spansDays,
-                  isLive: widget.isLive,
-                ),
-              ],
+            // The axis has a fixed height and tiny labels by design; keep them
+            // from growing with the system font size and colliding.
+            child: MediaQuery.withClampedTextScaling(
+              maxScaleFactor: 1.2,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _AxisLabel(
+                    candles.first.date,
+                    showTime: showTimeAxis,
+                    showDate: spansDays,
+                  ),
+                  _AxisLabel(
+                    candles[candles.length ~/ 2].date,
+                    showTime: showTimeAxis,
+                    showDate: spansDays,
+                  ),
+                  _AxisLabel(
+                    candles.last.date,
+                    showTime: showTimeAxis,
+                    showDate: spansDays,
+                    isLive: widget.isLive,
+                  ),
+                ],
+              ),
             ),
           ),
           if (_selectedIndex case final selected?) ...[
@@ -472,12 +477,16 @@ class _LevelBadge extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 3),
-            Text(
-              price,
-              style: TextStyle(
-                color: colors.onSurface,
-                fontSize: 8.5,
-                fontWeight: FontWeight.w800,
+            Flexible(
+              child: Text(
+                price,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: colors.onSurface,
+                  fontSize: 8.5,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
           ],

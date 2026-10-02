@@ -28,7 +28,7 @@ class EconomicEventTile extends StatelessWidget {
       children: [
         Row(
           children: [
-            ImpactLevelBadge(level: event.impactLevel),
+            Flexible(child: ImpactLevelBadge(level: event.impactLevel)),
             const Spacer(),
             event.currency.toUpperCase() == 'USD'
                 ? const _UsFlag()

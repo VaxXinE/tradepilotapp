@@ -1600,13 +1600,14 @@ class _AnalysisAlertsCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             if (error != null)
-              Row(
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
                 children: [
-                  Expanded(
-                    child: Text(
-                      error!,
-                      style: TextStyle(color: colors.error, fontSize: 11),
-                    ),
+                  Text(
+                    error!,
+                    style: TextStyle(color: colors.error, fontSize: 11),
                   ),
                   TextButton(
                     onPressed: onRetry,
@@ -1641,26 +1642,35 @@ class _AnalysisAlertsCard extends StatelessWidget {
                       for (final row in status!.levels)
                         Padding(
                           padding: const EdgeInsets.only(top: 8),
-                          child: Row(
+                          child: Wrap(
+                            alignment: WrapAlignment.spaceBetween,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 8,
+                            runSpacing: 4,
                             children: [
-                              Expanded(
-                                child: Text(
-                                  '${_alertLevelLabel(row.level)} · ${row.side.name.toUpperCase()}',
-                                  style: const TextStyle(
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
                               Text(
-                                '@ ${row.price}',
+                                '${_alertLevelLabel(row.level)} · ${row.side.name.toUpperCase()}',
                                 style: const TextStyle(
                                   fontSize: 11.5,
-                                  fontFeatures: [FontFeature.tabularFigures()],
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              _AlertStatusBadge(row: row),
+                              Wrap(
+                                spacing: 8,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                children: [
+                                  Text(
+                                    '@ ${row.price}',
+                                    style: const TextStyle(
+                                      fontSize: 11.5,
+                                      fontFeatures: [
+                                        FontFeature.tabularFigures(),
+                                      ],
+                                    ),
+                                  ),
+                                  _AlertStatusBadge(row: row),
+                                ],
+                              ),
                             ],
                           ),
                         ),
@@ -1780,18 +1790,27 @@ class _DetailTimeframeCard extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 10),
-        Row(
+        Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 8,
+          runSpacing: 6,
           children: [
-            Icon(Icons.schedule_rounded, color: colors.tertiary, size: 18),
-            const SizedBox(width: 7),
-            Expanded(
-              child: Text(
-                context.l10n.relevantForHours(hours),
-                style: TextStyle(
-                  color: colors.tertiary,
-                  fontWeight: FontWeight.w700,
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.schedule_rounded, color: colors.tertiary, size: 18),
+                const SizedBox(width: 7),
+                Flexible(
+                  child: Text(
+                    context.l10n.relevantForHours(hours),
+                    style: TextStyle(
+                      color: colors.tertiary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
             if (outcome != null)
               _StatusChip(
@@ -3344,11 +3363,13 @@ class _BeginnerMeaningCard extends StatelessWidget {
             children: [
               Icon(Icons.school_outlined, size: 19),
               SizedBox(width: 8),
-              Text(
-                context.l10n.whatDoesItMean,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w900,
+              Expanded(
+                child: Text(
+                  context.l10n.whatDoesItMean,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ),
             ],
@@ -4703,29 +4724,23 @@ class _SignalSummary extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final heading = Text(
+          // Heading and badge sit side by side when they fit and stack when
+          // they do not (narrow phone, large text, long raw signal).
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 6,
+            children: [
+              Text(
                 title,
                 style: const TextStyle(
                   fontSize: 11.5,
                   fontWeight: FontWeight.w800,
                 ),
-              );
-              if (MediaQuery.textScalerOf(context).scale(1) > 1.3) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [heading, const SizedBox(height: 6), signalBadge],
-                );
-              }
-              return Row(
-                children: [
-                  Expanded(child: heading),
-                  const SizedBox(width: 8),
-                  signalBadge,
-                ],
-              );
-            },
+              ),
+              signalBadge,
+            ],
           ),
           const SizedBox(height: 8),
           _SignalScaleBar(buy: buy, neutral: neutral, sell: sell),

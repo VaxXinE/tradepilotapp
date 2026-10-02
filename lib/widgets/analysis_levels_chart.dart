@@ -287,20 +287,26 @@ class _ScenarioTabs extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _ScenarioTab(
-            label: context.l10n.buy,
-            active: selected == ChartLevelScenario.buy,
-            onTap: () => onSelected(ChartLevelScenario.buy),
+          Flexible(
+            child: _ScenarioTab(
+              label: context.l10n.buy,
+              active: selected == ChartLevelScenario.buy,
+              onTap: () => onSelected(ChartLevelScenario.buy),
+            ),
           ),
-          _ScenarioTab(
-            label: context.l10n.sell,
-            active: selected == ChartLevelScenario.sell,
-            onTap: () => onSelected(ChartLevelScenario.sell),
+          Flexible(
+            child: _ScenarioTab(
+              label: context.l10n.sell,
+              active: selected == ChartLevelScenario.sell,
+              onTap: () => onSelected(ChartLevelScenario.sell),
+            ),
           ),
-          _ScenarioTab(
-            label: context.l10n.chartScenarioBoth,
-            active: selected == ChartLevelScenario.both,
-            onTap: () => onSelected(ChartLevelScenario.both),
+          Flexible(
+            child: _ScenarioTab(
+              label: context.l10n.chartScenarioBoth,
+              active: selected == ChartLevelScenario.both,
+              onTap: () => onSelected(ChartLevelScenario.both),
+            ),
           ),
         ],
       ),

@@ -101,9 +101,11 @@ class EconomicCalendarCard extends StatelessWidget {
                   children: [
                     Icon(Icons.swipe_vertical_rounded, size: 15, color: muted),
                     const SizedBox(width: 6),
-                    Text(
-                      l10n.scrollForMore,
-                      style: TextStyle(color: muted, fontSize: 11),
+                    Flexible(
+                      child: Text(
+                        l10n.scrollForMore,
+                        style: TextStyle(color: muted, fontSize: 11),
+                      ),
                     ),
                   ],
                 ),

@@ -649,17 +649,21 @@ class _ThemeSegmentedControl extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _ThemeSegment(
-            icon: Icons.light_mode_outlined,
-            label: context.l10n.lightMode,
-            selected: !isDarkMode,
-            onTap: enabled && isDarkMode ? () => onSelected(false) : null,
+          Flexible(
+            child: _ThemeSegment(
+              icon: Icons.light_mode_outlined,
+              label: context.l10n.lightMode,
+              selected: !isDarkMode,
+              onTap: enabled && isDarkMode ? () => onSelected(false) : null,
+            ),
           ),
-          _ThemeSegment(
-            icon: Icons.dark_mode_outlined,
-            label: context.l10n.darkMode,
-            selected: isDarkMode,
-            onTap: enabled && !isDarkMode ? () => onSelected(true) : null,
+          Flexible(
+            child: _ThemeSegment(
+              icon: Icons.dark_mode_outlined,
+              label: context.l10n.darkMode,
+              selected: isDarkMode,
+              onTap: enabled && !isDarkMode ? () => onSelected(true) : null,
+            ),
           ),
         ],
       ),
@@ -705,12 +709,18 @@ class _ThemeSegment extends StatelessWidget {
                 color: selected ? colors.onPrimary : colors.onSurfaceVariant,
               ),
               const SizedBox(width: 7),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: selected ? colors.onPrimary : colors.onSurfaceVariant,
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: selected
+                        ? colors.onPrimary
+                        : colors.onSurfaceVariant,
+                  ),
                 ),
               ),
             ],

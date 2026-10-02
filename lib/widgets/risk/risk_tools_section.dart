@@ -286,7 +286,10 @@ class _RiskRow extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Text(
                 timeframe,
@@ -294,7 +297,6 @@ class _RiskRow extends StatelessWidget {
                   context,
                 ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
               ),
-              const SizedBox(width: 8),
               _RiskBadge(
                 text: unavailable
                     ? context.l10n.riskUnavailable

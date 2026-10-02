@@ -1576,21 +1576,31 @@ class _MarketSessionInfoCard extends StatelessWidget {
                 style: TextStyle(color: colors.onSurfaceVariant),
               ),
               const SizedBox(height: 10),
-              for (var index = 0; index < sessions.length; index += 2)
+              // Two sessions per row only when both fit; otherwise one per row.
+              for (
+                var index = 0;
+                index < sessions.length;
+                index += MediaQuery.sizeOf(context).width < 400 ? 1 : 2
+              )
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Row(
                     children: [
-                      for (final item in sessions.skip(index).take(2)) ...[
+                      for (final item
+                          in sessions
+                              .skip(index)
+                              .take(
+                                MediaQuery.sizeOf(context).width < 400 ? 1 : 2,
+                              )) ...[
                         Expanded(
-                          child: Row(
+                          child: Wrap(
+                            alignment: WrapAlignment.spaceBetween,
+                            spacing: 8,
                             children: [
-                              Expanded(
-                                child: Text(
-                                  item.$1,
-                                  style: TextStyle(
-                                    color: colors.onSurfaceVariant,
-                                  ),
+                              Text(
+                                item.$1,
+                                style: TextStyle(
+                                  color: colors.onSurfaceVariant,
                                 ),
                               ),
                               Text(
@@ -1602,7 +1612,8 @@ class _MarketSessionInfoCard extends StatelessWidget {
                             ],
                           ),
                         ),
-                        if (item != sessions.skip(index).take(2).last)
+                        if (MediaQuery.sizeOf(context).width >= 400 &&
+                            item != sessions.skip(index).take(2).last)
                           const SizedBox(width: 16),
                       ],
                     ],
@@ -2387,52 +2398,56 @@ class _InstrumentRequestDialogState extends State<_InstrumentRequestDialog> {
         insetPadding: const EdgeInsets.symmetric(horizontal: 14),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                key: const Key('instrument-unavailable-title'),
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 10),
-              if (sending)
-                const LinearProgressIndicator()
-              else if (_status == _RequestStatus.success) ...[
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Text(
-                  l10n.instrumentNotAvailableBody,
-                  style: TextStyle(color: muted, height: 1.6, fontSize: 14),
+                  title,
+                  key: const Key('instrument-unavailable-title'),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.instrumentRequestNoCredit,
-                  style: TextStyle(color: muted, height: 1.5, fontSize: 12.5),
+                const SizedBox(height: 10),
+                if (sending)
+                  const LinearProgressIndicator()
+                else if (_status == _RequestStatus.success) ...[
+                  Text(
+                    l10n.instrumentNotAvailableBody,
+                    style: TextStyle(color: muted, height: 1.6, fontSize: 14),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.instrumentRequestNoCredit,
+                    style: TextStyle(color: muted, height: 1.5, fontSize: 12.5),
+                  ),
+                ],
+                const SizedBox(height: 18),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Wrap(
+                    spacing: 8,
+                    children: [
+                      if (_status == _RequestStatus.error)
+                        OutlinedButton(
+                          key: const Key('instrument-request-retry'),
+                          onPressed: _send,
+                          child: Text(l10n.tryAgain),
+                        ),
+                      FilledButton(
+                        key: const Key('instrument-unavailable-close'),
+                        onPressed: sending
+                            ? null
+                            : () => Navigator.pop(context),
+                        child: Text(l10n.close),
+                      ),
+                    ],
+                  ),
                 ),
               ],
-              const SizedBox(height: 18),
-              Align(
-                alignment: Alignment.centerRight,
-                child: Wrap(
-                  spacing: 8,
-                  children: [
-                    if (_status == _RequestStatus.error)
-                      OutlinedButton(
-                        key: const Key('instrument-request-retry'),
-                        onPressed: _send,
-                        child: Text(l10n.tryAgain),
-                      ),
-                    FilledButton(
-                      key: const Key('instrument-unavailable-close'),
-                      onPressed: sending ? null : () => Navigator.pop(context),
-                      child: Text(l10n.close),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -2654,6 +2669,18 @@ class _AnalyzeHeader extends StatelessWidget {
     );
 
     if (onNewAnalysis == null) {
+      // One row normally; wrap the chips under the title only when the text
+      // is scaled up a lot or the phone is very narrow.
+      if (MediaQuery.textScalerOf(context).scale(1) > 1.3 ||
+          MediaQuery.sizeOf(context).width < 340) {
+        return Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 6,
+          runSpacing: 6,
+          children: [titleWidget, ...status],
+        );
+      }
       return Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
