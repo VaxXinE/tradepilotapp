@@ -1088,7 +1088,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
           Card(
             child: ExpansionTile(
               key: const ValueKey('analysis-technical-indicators'),
-              initiallyExpanded: true,
+              initiallyExpanded: false,
               leading: Icon(
                 Icons.analytics_outlined,
                 color: Theme.of(context).colorScheme.primary,
@@ -4492,7 +4492,7 @@ class _TechnicalIndicatorsCard extends StatelessWidget {
           const Divider(height: 28),
           ExpansionTile(
             key: const ValueKey('oscillator-indicators'),
-            initiallyExpanded: true,
+            initiallyExpanded: false,
             tilePadding: EdgeInsets.zero,
             childrenPadding: EdgeInsets.zero,
             shape: const Border(),
@@ -4541,7 +4541,7 @@ class _TechnicalIndicatorsCard extends StatelessWidget {
             const Divider(height: 28),
             ExpansionTile(
               key: const ValueKey('moving-average-indicators'),
-              initiallyExpanded: true,
+              initiallyExpanded: false,
               tilePadding: EdgeInsets.zero,
               childrenPadding: EdgeInsets.zero,
               shape: const Border(),

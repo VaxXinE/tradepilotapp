@@ -49,6 +49,10 @@ void main() {
       find.byKey(const ValueKey('analysis-technical-indicators')),
       find.byType(Scrollable).first,
     );
+    // Closed by default; its content only exists once the user opens it.
+    expect(find.byKey(const ValueKey('signal-scale-bar')), findsNothing);
+    await tester.tap(find.text('Technical indicators'));
+    await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('signal-scale-bar')), findsNWidgets(5));
     final segments = find.descendant(
       of: find.byKey(const ValueKey('signal-scale-bar')),
@@ -60,10 +64,19 @@ void main() {
     }
     expect(
       find.byKey(const ValueKey('indicator-signal-RSI (14)')),
+      findsNothing,
+    );
+    await _reveal(
+      tester,
+      find.text('Oscillator · 1h'),
+      find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('Oscillator · 1h'));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('indicator-signal-RSI (14)')),
       findsOneWidget,
     );
-    await tester.ensureVisible(find.text('Oscillator · 1h'));
-    await tester.pumpAndSettle();
     final buyDot = tester.widget<Container>(
       find.byKey(const ValueKey('indicator-signal-RSI (14)')),
     );
@@ -75,7 +88,12 @@ void main() {
       (sellDot.decoration! as BoxDecoration).color,
       AppColors.bearishLight,
     );
-    await tester.ensureVisible(find.text('Moving Averages'));
+    await _reveal(
+      tester,
+      find.text('Moving Averages'),
+      find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('Moving Averages'));
     await tester.pumpAndSettle();
     expect(
       find.byKey(const ValueKey('indicator-signal-EMA (9)')),
