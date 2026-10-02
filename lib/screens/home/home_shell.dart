@@ -16,7 +16,8 @@ import '../../widgets/app_shell_chrome.dart';
 import '../../widgets/language_menu_button.dart';
 import '../notifications/notifications_screen.dart';
 import 'tabs/analyze_tab.dart';
-import 'tabs/dashboard_tab.dart';
+// Dashboard disembunyikan sementara.
+// import 'tabs/dashboard_tab.dart';
 import 'tabs/history_tab.dart';
 import 'tabs/profile_tab.dart';
 import '../mindset/mindset_screen.dart';
@@ -34,9 +35,10 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
 
   /// Indeks view yang punya tab pada navigasi bawah. Profil (4) tetap tanpa
   /// tab dan dibuka lewat avatar header, sama seperti web.
-  static const _navIds = {0, 1, 2, 3};
+  static const _navIds = {1, 2, 3};
 
-  int _index = 0;
+  // Dashboard (0) disembunyikan; aplikasi dibuka di tab Analisis (1).
+  int _index = 1;
   int _analyzeTabRevision = 0;
 
   Timer? _analysisSyncTimer;
@@ -63,7 +65,9 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
 
       context.read<NotificationsProvider>().setRealtimeEnabled(true);
 
-      unawaited(context.read<AuthProvider>().telemetry.pageView(_tabPaths[0]));
+      unawaited(
+        context.read<AuthProvider>().telemetry.pageView(_tabPaths[_index]),
+      );
 
       // Initial sync tab.
       _syncCurrentTab(showLoading: true);
@@ -363,23 +367,23 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   // DASHBOARD NAVIGATION
   // ===========================================================================
 
-  void _openAnalyzeFromDashboard(String? instrument) {
-    if (!mounted) {
-      return;
-    }
-
-    if (instrument != null) {
-      final market = context.read<MarketProvider>();
-
-      unawaited(market.selectInstrument(instrument));
-    }
-
-    _openNewAnalysis();
-  }
-
-  void _openHistoryFromDashboard() {
-    _onTabSelected(2);
-  }
+  // void _openAnalyzeFromDashboard(String? instrument) {
+  //   if (!mounted) {
+  //     return;
+  //   }
+  //
+  //   if (instrument != null) {
+  //     final market = context.read<MarketProvider>();
+  //
+  //     unawaited(market.selectInstrument(instrument));
+  //   }
+  //
+  //   _openNewAnalysis();
+  // }
+  //
+  // void _openHistoryFromDashboard() {
+  //   _onTabSelected(2);
+  // }
 
   void _openNotifications() {
     Navigator.of(
@@ -460,10 +464,13 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     final themeController = context.watch<ThemeController>();
     final user = auth.user;
     final tabs = [
-      DashboardTab(
-        onOpenAnalyze: _openAnalyzeFromDashboard,
-        onOpenHistory: _openHistoryFromDashboard,
-      ),
+      // Dashboard disembunyikan sementara. Slot 0 dibiarkan kosong supaya
+      // indeks tab lain tidak bergeser.
+      // DashboardTab(
+      //   onOpenAnalyze: _openAnalyzeFromDashboard,
+      //   onOpenHistory: _openHistoryFromDashboard,
+      // ),
+      const SizedBox.shrink(),
       AnalyzeTab(
         key: ValueKey(_analyzeTabRevision),
         onNewAnalysis: _openNewAnalysis,
@@ -489,7 +496,8 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
               onToggleTheme: _toggleTheme,
               onOpenNotifications: _openNotifications,
               onOpenProfile: () => _onTabSelected(4),
-              onOpenHome: () => _onTabSelected(0),
+              onOpenHome: () =>
+                  _onTabSelected(1), // dashboard (0) disembunyikan
               profileActive: _index == 4,
               onBack: _navIds.contains(_index) ? null : () => _onTabSelected(1),
               notificationsLabel: l10n.notifications,
@@ -508,7 +516,8 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
           activeId: _index,
           onSelected: _onTabSelected,
           items: [
-            AppNavItem(id: 0, icon: Icons.home_rounded, label: l10n.dashboard),
+            // Dashboard disembunyikan sementara.
+            // AppNavItem(id: 0, icon: Icons.home_rounded, label: l10n.dashboard),
             AppNavItem(
               id: 1,
               icon: Icons.trending_up_rounded,
