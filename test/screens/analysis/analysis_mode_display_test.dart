@@ -121,6 +121,25 @@ void main() {
     expect(find.byTooltip('Reanalyze'), findsNothing);
   });
 
+  testWidgets('risk meter sits above the confidence range like the web', (
+    tester,
+  ) async {
+    await _pumpDetail(tester, _analysis(AnalysisModeEnum.beginner));
+
+    final meter = find.byKey(const ValueKey('analysis-risk-bars'));
+    await tester.scrollUntilVisible(
+      meter,
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(meter, findsOneWidget);
+    expect(
+      find.descendant(of: meter, matching: find.byType(Expanded)),
+      findsNWidgets(3),
+    );
+    expect(tester.widget<Semantics>(meter).properties.label, 'Medium Risk');
+  });
+
   testWidgets('header uses the resolved analysis outcome', (tester) async {
     await _pumpDetail(
       tester,

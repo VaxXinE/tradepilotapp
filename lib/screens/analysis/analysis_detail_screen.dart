@@ -2194,6 +2194,11 @@ class _HeaderCard extends StatelessWidget {
         : risk.contains('low') || risk.contains('rendah')
         ? context.l10n.riskLowLabel
         : context.l10n.riskModerateLabel;
+    final riskBars = risk.contains('high') || risk.contains('tinggi')
+        ? 3
+        : risk.contains('low') || risk.contains('rendah')
+        ? 1
+        : 2;
 
     return Card(
       key: const ValueKey('analysis-result-header'),
@@ -2332,6 +2337,8 @@ class _HeaderCard extends StatelessWidget {
                 alignment: Alignment.centerLeft,
               ),
             ),
+            // Same two bars as the web: risk level on top, AI confidence below.
+            _RiskLevelBars(level: riskBars, semanticLabel: riskLabel),
             _ConfidenceRange(
               minimum: confidenceMin / 100,
               maximum: confidenceMax / 100,
@@ -2861,6 +2868,57 @@ class _ReasoningParagraph extends StatelessWidget {
   );
 }
 
+/// Track color for the risk and confidence meters. The plain muted surface is
+/// almost the same as the card in dark mode, so the range looked like it was
+/// floating; a light tint of the text color keeps it visible in both themes.
+Color _meterTrackColor(BuildContext context) {
+  final colors = Theme.of(context).colorScheme;
+  return Color.alphaBlend(
+    colors.onSurface.withValues(alpha: .10),
+    colors.surfaceContainerHighest,
+  );
+}
+
+/// Three-segment risk meter shown above the confidence range, as on the web:
+/// 1 green = low, 2 yellow = moderate, 3 red = high; unused segments are muted.
+class _RiskLevelBars extends StatelessWidget {
+  const _RiskLevelBars({required this.level, required this.semanticLabel});
+
+  final int level;
+  final String semanticLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final filled = switch (level) {
+      1 => const Color(0xFF22C55E),
+      2 => const Color(0xFFEAB308),
+      _ => const Color(0xFFEF4444),
+    };
+    final empty = _meterTrackColor(context);
+    return Semantics(
+      key: const ValueKey('analysis-risk-bars'),
+      label: semanticLabel,
+      excludeSemantics: true,
+      child: Row(
+        children: [
+          for (var n = 1; n <= 3; n++) ...[
+            if (n > 1) const SizedBox(width: 4),
+            Expanded(
+              child: Container(
+                height: 8,
+                decoration: BoxDecoration(
+                  color: n <= level ? filled : empty,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 class _ConfidenceRange extends StatelessWidget {
   const _ConfidenceRange({required this.minimum, required this.maximum});
 
@@ -2882,9 +2940,7 @@ class _ConfidenceRange extends StatelessWidget {
                 Container(
                   height: 8,
                   decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.surfaceContainerHighest,
+                    color: _meterTrackColor(context),
                     borderRadius: BorderRadius.circular(999),
                   ),
                 ),
