@@ -61,6 +61,10 @@ class TradePilotAppHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    // Very narrow phones (about 300dp and below): slimmer tap boxes and side
+    // padding so back, logo, language, theme, avatar and bell all fit.
+    final compact = MediaQuery.sizeOf(context).width < 340;
+    final box = compact ? 40.0 : 44.0;
 
     return Material(
       color: colors.surface.withValues(alpha: 0.96),
@@ -68,7 +72,7 @@ class TradePilotAppHeader extends StatelessWidget {
         bottom: false,
         child: Container(
           height: 56,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          padding: EdgeInsets.symmetric(horizontal: compact ? 2 : 12),
           decoration: BoxDecoration(
             border: Border(bottom: BorderSide(color: colors.outlineVariant)),
           ),
@@ -79,10 +83,7 @@ class TradePilotAppHeader extends StatelessWidget {
                   key: const Key('app-header-back'),
                   tooltip: backLabel,
                   onPressed: onBack,
-                  constraints: const BoxConstraints.tightFor(
-                    width: 44,
-                    height: 44,
-                  ),
+                  constraints: BoxConstraints.tightFor(width: box, height: box),
                   icon: const Icon(Icons.chevron_left_rounded, size: 24),
                 ),
               InkWell(
@@ -90,7 +91,7 @@ class TradePilotAppHeader extends StatelessWidget {
                 onTap: onOpenHome,
                 borderRadius: BorderRadius.circular(8),
                 child: SizedBox.square(
-                  dimension: 44,
+                  dimension: box,
                   child: Center(
                     child: Semantics(
                       label: logoLabel,
@@ -136,10 +137,7 @@ class TradePilotAppHeader extends StatelessWidget {
               IconButton(
                 tooltip: themeLabel,
                 onPressed: onToggleTheme,
-                constraints: const BoxConstraints.tightFor(
-                  width: 44,
-                  height: 44,
-                ),
+                constraints: BoxConstraints.tightFor(width: box, height: box),
                 icon: Icon(
                   isDarkMode
                       ? Icons.light_mode_rounded
@@ -157,7 +155,7 @@ class TradePilotAppHeader extends StatelessWidget {
                   onTap: onOpenProfile,
                   customBorder: const CircleBorder(),
                   child: SizedBox.square(
-                    dimension: 44,
+                    dimension: box,
                     child: Center(
                       child: _ProfileAvatar(
                         displayName: displayName,
@@ -171,10 +169,7 @@ class TradePilotAppHeader extends StatelessWidget {
               IconButton(
                 tooltip: notificationsLabel,
                 onPressed: onOpenNotifications,
-                constraints: const BoxConstraints.tightFor(
-                  width: 44,
-                  height: 44,
-                ),
+                constraints: BoxConstraints.tightFor(width: box, height: box),
                 icon: Badge(
                   isLabelVisible: unreadCount > 0,
                   label: Text(unreadCount > 9 ? '9+' : '$unreadCount'),

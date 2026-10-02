@@ -19,7 +19,10 @@ void main() {
 
     await tester.pumpWidget(
       MediaQuery(
-        data: const MediaQueryData(textScaler: TextScaler.linear(1.3)),
+        data: const MediaQueryData(
+          size: Size(360, 800),
+          textScaler: TextScaler.linear(1.3),
+        ),
         child: MaterialApp(
           theme: AppTheme.light,
           home: Scaffold(
