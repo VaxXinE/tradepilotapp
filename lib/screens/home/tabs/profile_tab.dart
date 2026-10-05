@@ -74,10 +74,17 @@ class ProfileTab extends StatelessWidget {
     try {
       // Signs the browser in with a one-time code so the user does not have
       // to log in again; falls back to the plain page if that is unavailable.
+      final auth = context.read<AuthProvider>();
+      final credits = context.read<CreditProvider>();
+      // `source=app` asks the web page to send the user back to the app once
+      // the payment is done. A backend that does not know it yet rejects it,
+      // and the plain handoff for /topup is used instead.
       final target = await WebHandoff.resolve(
-        context.read<AuthProvider>().client,
-        '/topup',
+        auth.client,
+        '/topup?source=app',
+        fallbackPaths: const ['/topup'],
       );
+      credits.markTopupStarted();
       opened = await launchUrl(target, mode: LaunchMode.externalApplication);
     } catch (_) {
       // Native browser channel can fail when no compatible app is available.

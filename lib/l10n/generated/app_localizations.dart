@@ -9068,6 +9068,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{n} still pending'**
   String summaryPending(String n);
+
+  /// No description provided for @topupReturnSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment successful! Credits have been added to your balance.'**
+  String get topupReturnSuccess;
+
+  /// No description provided for @topupReturnProcessing.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment is being processed. Your balance will update automatically once it\'s done.'**
+  String get topupReturnProcessing;
+
+  /// No description provided for @topupReturnCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment cancelled.'**
+  String get topupReturnCancelled;
+
+  /// No description provided for @topupReturnFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment failed. Try again or contact support.'**
+  String get topupReturnFailed;
 }
 
 class _AppLocalizationsDelegate

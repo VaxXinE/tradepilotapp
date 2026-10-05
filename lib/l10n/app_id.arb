@@ -2182,5 +2182,9 @@
   "@traderMirrorCoverageAll": {"placeholders": {"resolved": {"type": "int"}}},
   "themeUpdateFailed": "Gagal menyimpan tema. Tampilan dikembalikan.",
   "summaryPending": "{n} masih menunggu",
-  "@summaryPending": {"placeholders": {"n": {"type": "String"}}}
+  "@summaryPending": {"placeholders": {"n": {"type": "String"}}},
+  "topupReturnSuccess": "Pembayaran berhasil! Kredit sudah ditambahkan ke saldo kamu.",
+  "topupReturnProcessing": "Pembayaran sedang diproses. Saldo kamu akan update otomatis begitu selesai.",
+  "topupReturnCancelled": "Pembayaran dibatalkan.",
+  "topupReturnFailed": "Pembayaran gagal. Coba lagi atau hubungi support."
 }

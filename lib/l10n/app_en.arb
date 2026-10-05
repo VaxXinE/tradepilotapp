@@ -2366,5 +2366,9 @@
   "@traderMirrorCoverageAll": {"placeholders": {"resolved": {"type": "int"}}},
   "themeUpdateFailed": "Couldn't save theme. Display restored.",
   "summaryPending": "{n} still pending",
-  "@summaryPending": {"placeholders": {"n": {"type": "String"}}}
+  "@summaryPending": {"placeholders": {"n": {"type": "String"}}},
+  "topupReturnSuccess": "Payment successful! Credits have been added to your balance.",
+  "topupReturnProcessing": "Payment is being processed. Your balance will update automatically once it's done.",
+  "topupReturnCancelled": "Payment cancelled.",
+  "topupReturnFailed": "Payment failed. Try again or contact support."
 }

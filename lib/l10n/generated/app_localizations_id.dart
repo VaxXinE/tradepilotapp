@@ -5256,4 +5256,19 @@ class AppLocalizationsId extends AppLocalizations {
   String summaryPending(String n) {
     return '$n masih menunggu';
   }
+
+  @override
+  String get topupReturnSuccess =>
+      'Pembayaran berhasil! Kredit sudah ditambahkan ke saldo kamu.';
+
+  @override
+  String get topupReturnProcessing =>
+      'Pembayaran sedang diproses. Saldo kamu akan update otomatis begitu selesai.';
+
+  @override
+  String get topupReturnCancelled => 'Pembayaran dibatalkan.';
+
+  @override
+  String get topupReturnFailed =>
+      'Pembayaran gagal. Coba lagi atau hubungi support.';
 }

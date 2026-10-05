@@ -96,7 +96,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Analysis Credits'));
     await tester.pumpAndSettle();
-    expect(launcher.launchedUrls, ['https://tradepilot.id/topup']);
+    expect(launcher.launchedUrls, ['https://tradepilot.id/topup?source=app']);
   });
 
   testWidgets('account deletion requires confirmation and clears session', (

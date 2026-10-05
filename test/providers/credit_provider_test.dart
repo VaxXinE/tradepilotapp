@@ -41,6 +41,34 @@ void main() {
     );
   });
 
+  test('resume refresh only runs while a top-up is in progress', () async {
+    final (provider, adapter) = await _provider();
+    await provider.loadBalance();
+    adapter.requests.clear();
+
+    await provider.refreshIfAwaitingTopup();
+    expect(adapter.requests, isEmpty);
+    expect(provider.isAwaitingTopup, isFalse);
+
+    provider.markTopupStarted();
+    expect(provider.isAwaitingTopup, isTrue);
+
+    // Paid but the balance has not moved yet: keep watching.
+    await provider.refreshIfAwaitingTopup();
+    expect(adapter.requests, hasLength(1));
+    expect(provider.isAwaitingTopup, isTrue);
+
+    // Credits arrived: the balance updates and watching stops.
+    adapter.balance = 25;
+    await provider.refreshIfAwaitingTopup();
+    expect(provider.balance, 25);
+    expect(provider.isAwaitingTopup, isFalse);
+
+    adapter.requests.clear();
+    await provider.refreshIfAwaitingTopup();
+    expect(adapter.requests, isEmpty);
+  });
+
   test('does not leak backend internals when balance fails', () async {
     final (provider, adapter) = await _provider();
     adapter.failBalance = true;
@@ -82,6 +110,7 @@ Future<(CreditProvider, _CreditAdapter)> _provider() async {
 class _CreditAdapter implements HttpClientAdapter {
   final List<RequestOptions> requests = [];
   bool failBalance = false;
+  int balance = 10;
 
   @override
   Future<ResponseBody> fetch(
@@ -93,7 +122,7 @@ class _CreditAdapter implements HttpClientAdapter {
     if (failBalance) {
       return _json({'error': 'SQL connection details'}, 500);
     }
-    return _json({'balance': 10}, 200);
+    return _json({'balance': balance}, 200);
   }
 
   ResponseBody _json(Object body, int status) => ResponseBody.fromString(

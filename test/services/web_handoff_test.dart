@@ -33,6 +33,40 @@ class _Adapter implements HttpClientAdapter {
   void close({bool force = false}) {}
 }
 
+/// Accepts a handoff only for one `next` value and records every request.
+class _SelectiveAdapter extends _Adapter {
+  _SelectiveAdapter({required this.acceptedNext}) : super(201, const {});
+
+  final String acceptedNext;
+  final List<String> nextValues = [];
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    final next = (options.data as Map)['next'] as String;
+    nextValues.add(next);
+    final ok = next == acceptedNext;
+    return ResponseBody.fromString(
+      jsonEncode(
+        ok
+            ? {
+                'url':
+                    'https://tradepilot.id/api/auth/web-handoff/consume?code=abc',
+                'expiresIn': 60,
+              }
+            : {'error': 'unsupported'},
+      ),
+      ok ? 201 : 400,
+      headers: {
+        Headers.contentTypeHeader: [Headers.jsonContentType],
+      },
+    );
+  }
+}
+
 TradePilotClient _client(_Adapter adapter) {
   final client = TradePilotClient(
     baseUrl: 'https://tradepilot.id/api',
@@ -85,6 +119,42 @@ void main() {
         );
         expect(uri.toString(), 'https://tradepilot.id/topup', reason: url);
       }
+    },
+  );
+
+  test('keeps the query of the requested page in the plain url', () {
+    expect(
+      WebHandoff.plainUri('/topup?source=app', baseUrl: base).toString(),
+      'https://tradepilot.id/topup?source=app',
+    );
+  });
+
+  test(
+    'falls back to the next path when the backend rejects the first',
+    () async {
+      final adapter = _SelectiveAdapter(acceptedNext: '/topup');
+      final uri = await WebHandoff.resolve(
+        _client(adapter),
+        '/topup?source=app',
+        fallbackPaths: const ['/topup'],
+        baseUrl: base,
+      );
+
+      expect(adapter.nextValues, ['/topup?source=app', '/topup']);
+      expect(uri.toString(), contains('/auth/web-handoff/consume?code=abc'));
+    },
+  );
+
+  test(
+    'opens the plain page of the first path when every handoff fails',
+    () async {
+      final uri = await WebHandoff.resolve(
+        _client(_Adapter(400, {'error': 'no'})),
+        '/topup?source=app',
+        fallbackPaths: const ['/topup'],
+        baseUrl: base,
+      );
+      expect(uri.toString(), 'https://tradepilot.id/topup?source=app');
     },
   );
 
