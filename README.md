@@ -16,7 +16,7 @@ dan alur di sini harus mengikuti web.
 | | |
 |---|---|
 | Repo web | `Trade-Pilot` (frontend `artifacts/ai-trading`, backend `artifacts/api-server`) |
-| Sinkron terakhir | branch `merge-devv-psr` @ `3f627cb` |
+| Sinkron terakhir | branch `merge-devv-psr` @ `c00bc38` |
 | API base URL | `https://tradepilot.id/api` (default) |
 
 Yang dipakai bersama web:
@@ -32,7 +32,7 @@ Yang dipakai bersama web:
   `locales/en.ts` dan `id.ts` di web.
 
 Saat menyinkronkan, mulai dari commit terakhir di atas:
-`git log 3f627cb..origin/merge-devv-psr` di repo web, lalu ikuti perubahan
+`git log c00bc38..origin/merge-devv-psr` di repo web, lalu ikuti perubahan
 kontrak API (server), teks, dan logika yang tampil di mobile.
 
 ## Fitur
