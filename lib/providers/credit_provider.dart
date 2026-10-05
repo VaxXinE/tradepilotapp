@@ -25,6 +25,13 @@ class CreditProvider extends ChangeNotifier {
   int _sessionEpoch = 0;
   int _balanceRequestId = 0;
 
+  /// Set when the user was sent to the browser to pay. While it is set, coming
+  /// back to the app refreshes the balance so a finished payment shows up even
+  /// if the automatic return link did not fire.
+  DateTime? _topupStartedAt;
+  int? _balanceAtTopupStart;
+  static const _topupWatchWindow = Duration(minutes: 90);
+
   int? get balance => _balance;
   bool get hasBalance => _balance != null;
   bool get isLoadingBalance => _isLoadingBalance;
@@ -69,6 +76,41 @@ class CreditProvider extends ChangeNotifier {
     }
   }
 
+  bool get isAwaitingTopup {
+    final started = _topupStartedAt;
+    if (started == null) return false;
+    if (DateTime.now().difference(started) > _topupWatchWindow) {
+      _topupStartedAt = null;
+      _balanceAtTopupStart = null;
+      return false;
+    }
+    return true;
+  }
+
+  /// Call right before opening the web top-up page.
+  void markTopupStarted() {
+    _topupStartedAt = DateTime.now();
+    _balanceAtTopupStart = _balance;
+  }
+
+  /// Refreshes the balance after the browser part of a top-up. Stops watching
+  /// once the balance has gone up.
+  Future<void> refreshAfterTopupReturn() async {
+    await loadBalance(silent: true);
+    final before = _balanceAtTopupStart;
+    final now = _balance;
+    if (before != null && now != null && now > before) {
+      _topupStartedAt = null;
+      _balanceAtTopupStart = null;
+    }
+  }
+
+  /// On app resume: refreshes only while a top-up is in progress.
+  Future<void> refreshIfAwaitingTopup() async {
+    if (!isAwaitingTopup) return;
+    await refreshAfterTopupReturn();
+  }
+
   void reset() {
     _invalidateRequests();
     _clearState();
@@ -92,6 +134,8 @@ class CreditProvider extends ChangeNotifier {
   }
 
   void _clearState() {
+    _topupStartedAt = null;
+    _balanceAtTopupStart = null;
     _balance = null;
     _isLoadingBalance = false;
     _balanceError = null;

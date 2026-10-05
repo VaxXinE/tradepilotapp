@@ -5268,4 +5268,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String summaryPending(String n) {
     return '$n still pending';
   }
+
+  @override
+  String get topupReturnSuccess =>
+      'Payment successful! Credits have been added to your balance.';
+
+  @override
+  String get topupReturnProcessing =>
+      'Payment is being processed. Your balance will update automatically once it\'s done.';
+
+  @override
+  String get topupReturnCancelled => 'Payment cancelled.';
+
+  @override
+  String get topupReturnFailed =>
+      'Payment failed. Try again or contact support.';
 }

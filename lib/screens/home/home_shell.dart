@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../providers/analysis_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/credit_provider.dart';
 import '../../providers/market_provider.dart';
 import '../../providers/notifications_provider.dart';
 import '../../providers/progression_provider.dart';
@@ -110,6 +111,10 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
 
         // Refresh tab yang sedang aktif.
         _syncCurrentTab();
+
+        // Pulang dari halaman top-up di browser: baca ulang saldo kalau
+        // pembayaran masih ditunggu.
+        unawaited(context.read<CreditProvider>().refreshIfAwaitingTopup());
 
         // Restart analysis polling.
         _startAnalysisPolling();

@@ -14,6 +14,7 @@ import 'core/theme/app_theme.dart';
 import 'core/theme/theme_controller.dart';
 import 'core/localization/locale_controller.dart';
 import 'core/preferences/mental_checklist_controller.dart';
+import 'core/topup/topup_return_link.dart';
 import 'firebase_options.dart';
 import 'l10n/app_messages.dart';
 import 'l10n/l10n.dart';
@@ -37,6 +38,7 @@ import 'screens/notifications/notifications_screen.dart';
 import 'screens/price_alert/price_alert_list_screen.dart';
 import 'screens/splash_screen.dart';
 import 'services/native_push_service.dart';
+import 'services/topup_return_service.dart';
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -179,8 +181,12 @@ class _TradePilotMaterialAppState extends State<_TradePilotMaterialApp> {
   late final Upgrader _upgrader;
 
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  final GlobalKey<ScaffoldMessengerState> _messengerKey =
+      GlobalKey<ScaffoldMessengerState>();
 
   late final AuthProvider _auth;
+  late final TopupReturnService _topupReturn;
+  TopupReturnLink? _pendingTopupReturn;
   late final NativePushService _nativePush;
   StreamSubscription<NotificationAction>? _pushActionSubscription;
   NotificationAction? _pendingPushAction;
@@ -200,6 +206,15 @@ class _TradePilotMaterialAppState extends State<_TradePilotMaterialApp> {
     _auth.addListener(_handleAuthStatusChanged);
     _pushActionSubscription = _nativePush.actions.listen(_handlePushAction);
     unawaited(_nativePush.initialize());
+    _topupReturn = TopupReturnService(
+      onReturn: (link) {
+        _pendingTopupReturn = link;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _openPendingTopupReturn();
+        });
+      },
+    );
+    unawaited(_topupReturn.start());
 
     if (defaultTargetPlatform == TargetPlatform.android) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _updateAndroid());
@@ -243,8 +258,38 @@ class _TradePilotMaterialAppState extends State<_TradePilotMaterialApp> {
     if (current == AuthStatus.authenticated && !_auth.isLocked) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         unawaited(_openPendingPushAction());
+        _openPendingTopupReturn();
       });
     }
+  }
+
+  /// The web top-up page sent the user back (`id.tradepilot.app://topup/...`).
+  /// Shows the outcome and re-reads the balance from the server; the link
+  /// itself is never trusted for an amount. Waits while signed out or locked.
+  void _openPendingTopupReturn() {
+    final link = _pendingTopupReturn;
+    if (!mounted ||
+        link == null ||
+        _auth.status != AuthStatus.authenticated ||
+        _auth.isLocked) {
+      return;
+    }
+    _pendingTopupReturn = null;
+
+    // Close whatever is open so the user lands on the main screen.
+    _navigatorKey.currentState?.popUntil((route) => route.isFirst);
+    unawaited(context.read<CreditProvider>().refreshAfterTopupReturn());
+
+    final l10n = AppMessages.l10n;
+    final message = switch (link.status) {
+      TopupReturnStatus.approved => l10n.topupReturnSuccess,
+      TopupReturnStatus.processing => l10n.topupReturnProcessing,
+      TopupReturnStatus.cancelled => l10n.topupReturnCancelled,
+      TopupReturnStatus.failed => l10n.topupReturnFailed,
+    };
+    _messengerKey.currentState
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 
   void _handlePushAction(NotificationAction action) {
@@ -331,6 +376,7 @@ class _TradePilotMaterialAppState extends State<_TradePilotMaterialApp> {
   void dispose() {
     _auth.removeListener(_handleAuthStatusChanged);
     unawaited(_pushActionSubscription?.cancel());
+    unawaited(_topupReturn.dispose());
     _upgrader.dispose();
     super.dispose();
   }
@@ -342,6 +388,7 @@ class _TradePilotMaterialAppState extends State<_TradePilotMaterialApp> {
 
     return MaterialApp(
       navigatorKey: _navigatorKey,
+      scaffoldMessengerKey: _messengerKey,
       onGenerateTitle: (context) => context.l10n.appTitle,
       debugShowCheckedModeBanner: false,
       locale: locale.locale,
