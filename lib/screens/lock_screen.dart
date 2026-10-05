@@ -79,9 +79,10 @@ class _LockScreenState extends State<LockScreen> {
   }
 
   Future<void> _signOut() async {
-    await context.read<NativePushService?>()?.unregister();
-    if (!mounted) return;
-    await context.read<AuthProvider>().logout();
+    final push = context.read<NativePushService?>();
+    final auth = context.read<AuthProvider>();
+    await push?.unregisterForLogout();
+    await auth.logout();
   }
 
   @override

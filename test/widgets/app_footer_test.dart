@@ -49,6 +49,35 @@ void main() {
     }
   });
 
+  testWidgets('footer links share rows instead of one line each', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      localizedTestApp(
+        theme: AppTheme.dark,
+        home: const Scaffold(body: SingleChildScrollView(child: AppFooter())),
+      ),
+    );
+
+    // Each link is only as wide as its text. Filling the whole row (the old
+    // behaviour) forced one link per line and made the footer very tall.
+    final footerWidth = tester
+        .getSize(find.byKey(const Key('app-footer')))
+        .width;
+    for (final label in ['Support', 'Delete Account']) {
+      final target = find.ancestor(
+        of: find.text(label),
+        matching: find.byType(InkWell),
+      );
+      expect(tester.getSize(target).width, lessThan(footerWidth / 2));
+    }
+  });
+
   testWidgets('footer stays readable at a larger text scale', (tester) async {
     tester.view.physicalSize = const Size(360, 800);
     tester.view.devicePixelRatio = 1;

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -10,6 +12,7 @@ import 'package:tradepilotapp/l10n/l10n.dart';
 import 'package:tradepilotapp/providers/auth_provider.dart';
 import 'package:tradepilotapp/screens/lock_screen.dart';
 import 'package:tradepilotapp/screens/splash_screen.dart';
+import 'package:tradepilotapp/services/native_push_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -102,6 +105,30 @@ void main() {
     expect(auth.status, AuthStatus.unauthenticated);
   });
 
+  testWidgets('signing out works even when push cleanup throws or hangs', (
+    tester,
+  ) async {
+    for (final hangs in [false, true]) {
+      final auth = await _lockedSession(tester);
+      await tester.pumpWidget(
+        _app(
+          auth,
+          LockScreen(
+            localAuthentication: _FakeLocalAuthentication(result: false),
+          ),
+          push: _BrokenPush(auth, hangs: hangs),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('lock-sign-out-button')));
+      await tester.pump(const Duration(seconds: 6));
+      await tester.pumpAndSettle();
+
+      expect(auth.status, AuthStatus.unauthenticated, reason: 'hangs: $hangs');
+    }
+  });
+
   testWidgets('splash routes an authenticated but locked session to the lock '
       'screen', (tester) async {
     final auth = await _lockedSession(tester);
@@ -155,9 +182,13 @@ Future<void> _pumpLockScreen(
   );
 }
 
-Widget _app(AuthProvider auth, Widget home) {
-  return ChangeNotifierProvider<AuthProvider>.value(
-    value: auth,
+Widget _app(AuthProvider auth, Widget home, {NativePushService? push}) {
+  return MultiProvider(
+    providers: [
+      ChangeNotifierProvider<AuthProvider>.value(value: auth),
+      if (push != null)
+        ChangeNotifierProvider<NativePushService>.value(value: push),
+    ],
     child: MaterialApp(
       theme: AppTheme.light,
       locale: const Locale('en'),
@@ -171,6 +202,19 @@ Widget _app(AuthProvider auth, Widget home) {
       home: home,
     ),
   );
+}
+
+/// A push service whose cleanup misbehaves the way Firebase can on some devices.
+class _BrokenPush extends NativePushService {
+  _BrokenPush(super.auth, {required this.hangs});
+
+  final bool hangs;
+
+  @override
+  Future<void> unregister() async {
+    if (hangs) await Completer<void>().future;
+    throw StateError('push cleanup failed');
+  }
 }
 
 class _FakeLocalAuthentication extends LocalAuthentication {

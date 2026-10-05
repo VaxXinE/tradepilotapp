@@ -112,6 +112,7 @@ class AppFooter extends StatelessWidget {
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(minHeight: 44),
                     child: Center(
+                      widthFactor: 1,
                       child: Text(
                         'SOLID PRIME',
                         style: TextStyle(
@@ -154,7 +155,10 @@ class _FooterLink extends StatelessWidget {
     borderRadius: BorderRadius.circular(6),
     child: ConstrainedBox(
       constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+      // widthFactor: 1 keeps the link as wide as its text. A plain Center
+      // fills the whole row, which made every link take a line of its own.
       child: Center(
+        widthFactor: 1,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 2),
           child: Text(

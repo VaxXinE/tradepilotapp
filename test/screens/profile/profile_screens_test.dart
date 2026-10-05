@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +15,7 @@ import 'package:tradepilotapp/l10n/l10n.dart';
 import 'package:tradepilotapp/providers/auth_provider.dart';
 import 'package:tradepilotapp/providers/credit_provider.dart';
 import 'package:tradepilotapp/providers/progression_provider.dart';
+import 'package:tradepilotapp/services/native_push_service.dart';
 import 'package:tradepilotapp/repositories/topup_repository.dart';
 import 'package:tradepilotapp/screens/home/tabs/profile_tab.dart';
 import 'package:tradepilotapp/screens/profile/change_password_screen.dart';
@@ -227,6 +229,96 @@ void main() {
     expect(auth.user, isNull);
   });
 
+  testWidgets('logout still works when push cleanup throws', (tester) async {
+    final auth = AuthProvider();
+    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+    _authenticate(auth);
+    auth.client.dio.httpClientAdapter = _LogoutAdapter();
+    final theme = ThemeController(await SharedPreferences.getInstance());
+    final locale = LocaleController(await SharedPreferences.getInstance());
+    final checklist = MentalChecklistController(
+      await SharedPreferences.getInstance(),
+    );
+    final progression = ProgressionProvider(auth);
+    addTearDown(progression.dispose);
+    final credit = CreditProvider(auth, TopupRepository(auth.client));
+    final push = _BrokenPush(auth, hangs: false);
+    addTearDown(credit.dispose);
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: auth),
+          ChangeNotifierProvider.value(value: theme),
+          ChangeNotifierProvider.value(value: locale),
+          ChangeNotifierProvider.value(value: checklist),
+          ChangeNotifierProvider.value(value: progression),
+          ChangeNotifierProvider.value(value: credit),
+          ChangeNotifierProvider<NativePushService>.value(value: push),
+        ],
+        child: const _LocalizedApp(home: ProfileTab()),
+      ),
+    );
+    final logoutButton = find.widgetWithText(OutlinedButton, 'Sign Out');
+    await tester.ensureVisible(logoutButton);
+    await tester.pump();
+    await tester.tap(logoutButton);
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextButton, 'Sign Out'));
+    // Past the best-effort cleanup limit, in case the push call never ends.
+    await tester.pump(const Duration(seconds: 6));
+    await tester.pumpAndSettle();
+
+    expect(auth.status, AuthStatus.unauthenticated);
+    expect(auth.user, isNull);
+  });
+
+  testWidgets('logout still works when push cleanup never finishes', (
+    tester,
+  ) async {
+    final auth = AuthProvider();
+    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+    _authenticate(auth);
+    auth.client.dio.httpClientAdapter = _LogoutAdapter();
+    final theme = ThemeController(await SharedPreferences.getInstance());
+    final locale = LocaleController(await SharedPreferences.getInstance());
+    final checklist = MentalChecklistController(
+      await SharedPreferences.getInstance(),
+    );
+    final progression = ProgressionProvider(auth);
+    addTearDown(progression.dispose);
+    final credit = CreditProvider(auth, TopupRepository(auth.client));
+    final push = _BrokenPush(auth, hangs: true);
+    addTearDown(credit.dispose);
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: auth),
+          ChangeNotifierProvider.value(value: theme),
+          ChangeNotifierProvider.value(value: locale),
+          ChangeNotifierProvider.value(value: checklist),
+          ChangeNotifierProvider.value(value: progression),
+          ChangeNotifierProvider.value(value: credit),
+          ChangeNotifierProvider<NativePushService>.value(value: push),
+        ],
+        child: const _LocalizedApp(home: ProfileTab()),
+      ),
+    );
+    final logoutButton = find.widgetWithText(OutlinedButton, 'Sign Out');
+    await tester.ensureVisible(logoutButton);
+    await tester.pump();
+    await tester.tap(logoutButton);
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextButton, 'Sign Out'));
+    // Past the best-effort cleanup limit, in case the push call never ends.
+    await tester.pump(const Duration(seconds: 6));
+    await tester.pumpAndSettle();
+
+    expect(auth.status, AuthStatus.unauthenticated);
+    expect(auth.user, isNull);
+  });
+
   testWidgets('profile remains readable at 200% text scaling', (tester) async {
     await tester.binding.setSurfaceSize(const Size(440, 956));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -260,6 +352,19 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
   });
+}
+
+/// A push service whose cleanup misbehaves the way Firebase can on some devices.
+class _BrokenPush extends NativePushService {
+  _BrokenPush(super.auth, {required this.hangs});
+
+  final bool hangs;
+
+  @override
+  Future<void> unregister() async {
+    if (hangs) await Completer<void>().future;
+    throw StateError('push cleanup failed');
+  }
 }
 
 class _RecordingUrlLauncher extends UrlLauncherPlatform {

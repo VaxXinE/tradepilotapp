@@ -61,8 +61,12 @@ class ProfileTab extends StatelessWidget {
       ),
     );
     if (confirmed != true || !context.mounted) return;
-    await context.read<NativePushService?>()?.unregister();
-    if (context.mounted) await context.read<AuthProvider>().logout();
+    // Read both before awaiting: signing out must not depend on this screen
+    // still being mounted, nor on push cleanup succeeding.
+    final push = context.read<NativePushService?>();
+    final auth = context.read<AuthProvider>();
+    await push?.unregisterForLogout();
+    await auth.logout();
   }
 
   void _push(BuildContext context, Widget screen) {

@@ -10,6 +10,7 @@ import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
 import '../models/notification_action.dart';
 import '../providers/auth_provider.dart';
+import '../core/async/best_effort.dart';
 import '../l10n/app_messages.dart';
 
 class NativePushService extends ChangeNotifier {
@@ -341,6 +342,11 @@ class NativePushService extends ChangeNotifier {
       return false;
     }
   }
+
+  /// Unregisters this device before signing out, without ever blocking the
+  /// sign-out: Firebase can throw or stall (no Play Services, bad network, a
+  /// registration stuck in flight), and a user must always be able to leave.
+  Future<void> unregisterForLogout() => runBestEffort(unregister);
 
   Future<void> unregister() async {
     await initialize();

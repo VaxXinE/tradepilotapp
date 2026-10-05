@@ -6,7 +6,7 @@ dan memakai backend yang sama. Web app adalah sumber kebenaran: perilaku, angka,
 dan alur di sini harus mengikuti web.
 
 - Bundle ID: `id.tradepilot.app`
-- Versi saat ini: `1.0.6+8` (lihat `pubspec.yaml`)
+- Versi saat ini: `1.0.10+12` (lihat `pubspec.yaml`)
 - Bahasa UI: Indonesia dan Inggris
 - Bukan broker. Aplikasi tidak membuka, menutup, atau mengelola posisi;
   semua hasil adalah bahan pertimbangan, bukan instruksi trading.
