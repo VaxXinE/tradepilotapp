@@ -5271,4 +5271,10 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get topupReturnFailed =>
       'Pembayaran gagal. Coba lagi atau hubungi support.';
+
+  @override
+  String get quotaCredit => 'Sisa kredit';
+
+  @override
+  String get quotaCreditShort => ' kredit';
 }

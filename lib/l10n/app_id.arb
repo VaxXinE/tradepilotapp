@@ -2186,5 +2186,7 @@
   "topupReturnSuccess": "Pembayaran berhasil! Kredit sudah ditambahkan ke saldo kamu.",
   "topupReturnProcessing": "Pembayaran sedang diproses. Saldo kamu akan update otomatis begitu selesai.",
   "topupReturnCancelled": "Pembayaran dibatalkan.",
-  "topupReturnFailed": "Pembayaran gagal. Coba lagi atau hubungi support."
+  "topupReturnFailed": "Pembayaran gagal. Coba lagi atau hubungi support.",
+  "quotaCredit": "Sisa kredit",
+  "quotaCreditShort": " kredit"
 }

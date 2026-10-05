@@ -845,6 +845,41 @@ void main() {
     expect(find.text('Monitored'), findsOneWidget);
   });
 
+  testWidgets('alert levels and summary stay hidden while alerts are off', (
+    tester,
+  ) async {
+    final alerts = AlertStatus(
+      (builder) => builder
+        ..enabled = false
+        ..armedCount = 0
+        ..levels.add(
+          AlertLevelRow(
+            (row) => row
+              ..level = AlertLevelRowLevelEnum.entry
+              ..side = AlertLevelRowSideEnum.buy
+              ..price = '4410'
+              ..direction = AlertLevelRowDirectionEnum.above,
+          ),
+        ),
+    );
+    await _pumpDetail(
+      tester,
+      _analysis(AnalysisModeEnum.pro, tradePlan: _tradePlan()),
+      alertStatus: alerts,
+    );
+
+    final card = find.byKey(const ValueKey('analysis-level-alert-card'));
+    await _reveal(tester, card, find.byType(Scrollable).first);
+
+    expect(
+      find.byKey(const ValueKey('analysis-level-alert-switch')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('analysis-alert-levels')), findsNothing);
+    expect(find.text('Alerts: OFF'), findsNothing);
+    expect(find.text('@ 4410'), findsNothing);
+  });
+
   // Catatan & jurnal disembunyikan sementara.
   // testWidgets('analysis detail shows the journal linked by the server', (
   //   tester,

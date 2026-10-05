@@ -9092,6 +9092,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Payment failed. Try again or contact support.'**
   String get topupReturnFailed;
+
+  /// No description provided for @quotaCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Credits remaining'**
+  String get quotaCredit;
+
+  /// No description provided for @quotaCreditShort.
+  ///
+  /// In en, this message translates to:
+  /// **' credits'**
+  String get quotaCreditShort;
 }
 
 class _AppLocalizationsDelegate

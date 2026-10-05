@@ -49,6 +49,44 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('quota chip shows credits once the free allowance is used up', (
+    tester,
+  ) async {
+    await _pumpAnalyzeTab(tester, freeRemaining: 0, creditBalance: 12);
+
+    final chip = find.byKey(const Key('analyze-quota-chip'));
+    expect(
+      find.descendant(of: chip, matching: find.text('12 credits')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: chip, matching: find.text('0 free')),
+      findsNothing,
+    );
+  });
+
+  testWidgets('quota chip stays on free while any remain, and warns at zero', (
+    tester,
+  ) async {
+    await _pumpAnalyzeTab(tester, freeRemaining: 2, creditBalance: 50);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('analyze-quota-chip')),
+        matching: find.text('2 free'),
+      ),
+      findsOneWidget,
+    );
+
+    await _pumpAnalyzeTab(tester, freeRemaining: 0, creditBalance: 0);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('analyze-quota-chip')),
+        matching: find.text('0 free'),
+      ),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('market session pill opens the contextual popover', (
     tester,
   ) async {
@@ -333,6 +371,8 @@ Future<_FakeAnalysisProvider> _pumpAnalyzeTab(
   VoidCallback? onNewAnalysis,
   bool concurrentFailure = false,
   HttpClientAdapter? adapter,
+  int freeRemaining = 13,
+  int creditBalance = 0,
 }) async {
   SharedPreferences.setMockInitialValues({});
   final preferences = await SharedPreferences.getInstance();
@@ -366,9 +406,9 @@ Future<_FakeAnalysisProvider> _pumpAnalyzeTab(
     (builder) => builder
       ..unlimited = false
       ..daily.limit = 20
-      ..daily.used = 7
-      ..daily.remaining = 13
-      ..credits.balance = 0,
+      ..daily.used = 20 - freeRemaining
+      ..daily.remaining = freeRemaining
+      ..credits.balance = creditBalance,
   );
   final creditProvider = CreditProvider(auth, TopupRepository(auth.client));
   final checklist = MentalChecklistController(preferences);

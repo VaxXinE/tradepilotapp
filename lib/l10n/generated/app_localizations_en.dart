@@ -5283,4 +5283,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get topupReturnFailed =>
       'Payment failed. Try again or contact support.';
+
+  @override
+  String get quotaCredit => 'Credits remaining';
+
+  @override
+  String get quotaCreditShort => ' credits';
 }

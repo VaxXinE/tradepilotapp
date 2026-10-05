@@ -2370,5 +2370,7 @@
   "topupReturnSuccess": "Payment successful! Credits have been added to your balance.",
   "topupReturnProcessing": "Payment is being processed. Your balance will update automatically once it's done.",
   "topupReturnCancelled": "Payment cancelled.",
-  "topupReturnFailed": "Payment failed. Try again or contact support."
+  "topupReturnFailed": "Payment failed. Try again or contact support.",
+  "quotaCredit": "Credits remaining",
+  "quotaCreditShort": " credits"
 }

@@ -2803,12 +2803,28 @@ class _QuotaChip extends StatelessWidget {
     final l10n = context.l10n;
     final colors = Theme.of(context).colorScheme;
     final daily = quota.daily;
+    final credits = quota.credits.balance;
+    // The free allowance is used first; once it is gone the backend falls back
+    // to paid credits. A user who topped up can still analyze, so the chip
+    // shows the credits instead of an alarming "0 free" (same as the web).
+    final usingCredits = daily.remaining == 0 && credits > 0;
+    final blocked = daily.remaining == 0 && credits <= 0;
+    final value = usingCredits ? credits : daily.remaining;
+    final suffix = usingCredits ? l10n.quotaCreditShort : l10n.quotaDayShort;
+    final tooltip = usingCredits
+        ? '${l10n.quotaCredit}: $credits'
+        : '${l10n.quotaDay}: ${daily.remaining}/${daily.limit}';
 
     final (background, border, foreground) = switch (daily.remaining) {
-      0 => (
+      _ when blocked => (
         colors.error.withValues(alpha: 0.1),
         colors.error.withValues(alpha: 0.4),
         colors.error,
+      ),
+      0 => (
+        colors.primary.withValues(alpha: 0.1),
+        colors.primary.withValues(alpha: 0.3),
+        colors.primary,
       ),
       final remaining when remaining <= 3 => (
         const Color(0xFFF59E0B).withValues(alpha: 0.1),
@@ -2825,7 +2841,7 @@ class _QuotaChip extends StatelessWidget {
     };
 
     return Tooltip(
-      message: '${l10n.quotaDay}: ${daily.remaining}/${daily.limit}',
+      message: tooltip,
       child: Container(
         key: const Key('analyze-quota-chip'),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -2835,7 +2851,7 @@ class _QuotaChip extends StatelessWidget {
           border: Border.all(color: border),
         ),
         child: Text(
-          '${daily.remaining}${l10n.quotaDayShort}',
+          '$value$suffix',
           style: TextStyle(
             fontSize: 10,
             fontWeight: FontWeight.w600,

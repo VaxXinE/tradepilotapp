@@ -1598,7 +1598,9 @@ class _AnalysisAlertsCard extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 12),
+            // Like the web: the summary and the level list only appear once the
+            // alerts are switched on.
+            if (error != null || enabled) const SizedBox(height: 12),
             if (error != null)
               Wrap(
                 alignment: WrapAlignment.spaceBetween,
@@ -1615,7 +1617,7 @@ class _AnalysisAlertsCard extends StatelessWidget {
                   ),
                 ],
               )
-            else ...[
+            else if (enabled) ...[
               if (status?.levels.isNotEmpty == true)
                 Theme(
                   data: Theme.of(
