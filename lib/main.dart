@@ -14,6 +14,7 @@ import 'core/theme/app_theme.dart';
 import 'core/theme/theme_controller.dart';
 import 'core/localization/locale_controller.dart';
 import 'core/preferences/mental_checklist_controller.dart';
+import 'core/topup/topup_return_controller.dart';
 import 'core/topup/topup_return_link.dart';
 import 'firebase_options.dart';
 import 'l10n/app_messages.dart';
@@ -38,7 +39,6 @@ import 'screens/notifications/notifications_screen.dart';
 import 'screens/price_alert/price_alert_list_screen.dart';
 import 'screens/splash_screen.dart';
 import 'services/native_push_service.dart';
-import 'services/topup_return_service.dart';
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -77,6 +77,9 @@ class TradePilotApp extends StatelessWidget {
         // AUTH
         // =====================================================================
         ChangeNotifierProvider<AuthProvider>(create: (_) => AuthProvider()),
+        ChangeNotifierProvider<TopupReturnController>(
+          create: (_) => TopupReturnController(),
+        ),
 
         ChangeNotifierProxyProvider<AuthProvider, NativePushService>(
           create: (context) => NativePushService(context.read<AuthProvider>()),
@@ -185,8 +188,7 @@ class _TradePilotMaterialAppState extends State<_TradePilotMaterialApp> {
       GlobalKey<ScaffoldMessengerState>();
 
   late final AuthProvider _auth;
-  late final TopupReturnService _topupReturn;
-  TopupReturnLink? _pendingTopupReturn;
+  late final TopupReturnController _topupReturn;
   late final NativePushService _nativePush;
   StreamSubscription<NotificationAction>? _pushActionSubscription;
   NotificationAction? _pendingPushAction;
@@ -206,15 +208,8 @@ class _TradePilotMaterialAppState extends State<_TradePilotMaterialApp> {
     _auth.addListener(_handleAuthStatusChanged);
     _pushActionSubscription = _nativePush.actions.listen(_handlePushAction);
     unawaited(_nativePush.initialize());
-    _topupReturn = TopupReturnService(
-      onReturn: (link) {
-        _pendingTopupReturn = link;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _openPendingTopupReturn();
-        });
-      },
-    );
-    unawaited(_topupReturn.start());
+    _topupReturn = context.read<TopupReturnController>()
+      ..addListener(_onTopupReturnReported);
 
     if (defaultTargetPlatform == TargetPlatform.android) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _updateAndroid());
@@ -266,15 +261,20 @@ class _TradePilotMaterialAppState extends State<_TradePilotMaterialApp> {
   /// The web top-up page sent the user back (`id.tradepilot.app://topup/...`).
   /// Shows the outcome and re-reads the balance from the server; the link
   /// itself is never trusted for an amount. Waits while signed out or locked.
+  void _onTopupReturnReported() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _openPendingTopupReturn();
+    });
+  }
+
   void _openPendingTopupReturn() {
-    final link = _pendingTopupReturn;
     if (!mounted ||
-        link == null ||
+        _topupReturn.pending == null ||
         _auth.status != AuthStatus.authenticated ||
         _auth.isLocked) {
       return;
     }
-    _pendingTopupReturn = null;
+    final link = _topupReturn.take()!;
 
     // Close whatever is open so the user lands on the main screen.
     _navigatorKey.currentState?.popUntil((route) => route.isFirst);
@@ -376,7 +376,7 @@ class _TradePilotMaterialAppState extends State<_TradePilotMaterialApp> {
   void dispose() {
     _auth.removeListener(_handleAuthStatusChanged);
     unawaited(_pushActionSubscription?.cancel());
-    unawaited(_topupReturn.dispose());
+    _topupReturn.removeListener(_onTopupReturnReported);
     _upgrader.dispose();
     super.dispose();
   }

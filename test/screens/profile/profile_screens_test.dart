@@ -8,7 +8,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
+import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:tradepilotapp/core/theme/theme_controller.dart';
+import 'package:tradepilotapp/core/topup/topup_return_controller.dart';
+import 'package:tradepilotapp/core/topup/topup_return_link.dart';
 import 'package:tradepilotapp/core/localization/locale_controller.dart';
 import 'package:tradepilotapp/core/preferences/mental_checklist_controller.dart';
 import 'package:tradepilotapp/l10n/l10n.dart';
@@ -70,8 +73,19 @@ void main() {
           ChangeNotifierProvider.value(value: checklist),
           ChangeNotifierProvider.value(value: progression),
           ChangeNotifierProvider.value(value: credit),
+          ChangeNotifierProvider(create: (_) => TopupReturnController()),
         ],
-        child: const _LocalizedApp(home: ProfileTab()),
+        child: _LocalizedApp(
+          home: ProfileTab(
+            // No in-app browser in tests: fall back to the system browser.
+            authenticate:
+                ({
+                  required url,
+                  required callbackUrlScheme,
+                  options = const FlutterWebAuth2Options(),
+                }) async => throw MissingPluginException(),
+          ),
+        ),
       ),
     );
 
@@ -99,6 +113,42 @@ void main() {
     await tester.tap(find.text('Analysis Credits'));
     await tester.pumpAndSettle();
     expect(launcher.launchedUrls, ['https://tradepilot.id/topup?source=app']);
+  });
+
+  testWidgets('top-up opens in an in-app tab and reports the returned link', (
+    tester,
+  ) async {
+    final h = await _pumpProfileForTopup(
+      tester,
+      authenticate:
+          ({
+            required url,
+            required callbackUrlScheme,
+            options = const FlutterWebAuth2Options(),
+          }) async => 'id.tradepilot.app://topup/result?status=approved&id=5',
+    );
+
+    expect(h.controller.pending?.status, TopupReturnStatus.approved);
+    expect(h.controller.pending?.topupId, 5);
+    expect(h.launcher.launchedUrls, isEmpty, reason: 'no system browser');
+    expect(h.credit.isAwaitingTopup, isTrue);
+  });
+
+  testWidgets('closing the top-up tab checks the balance without leaving', (
+    tester,
+  ) async {
+    final h = await _pumpProfileForTopup(
+      tester,
+      authenticate:
+          ({
+            required url,
+            required callbackUrlScheme,
+            options = const FlutterWebAuth2Options(),
+          }) async => throw PlatformException(code: 'CANCELED'),
+    );
+
+    expect(h.controller.pending, isNull);
+    expect(h.launcher.launchedUrls, isEmpty);
   });
 
   testWidgets('account deletion requires confirmation and clears session', (
@@ -365,6 +415,57 @@ class _BrokenPush extends NativePushService {
     if (hangs) await Completer<void>().future;
     throw StateError('push cleanup failed');
   }
+}
+
+class _TopupHarness {
+  _TopupHarness(this.controller, this.credit, this.launcher);
+  final TopupReturnController controller;
+  final CreditProvider credit;
+  final _RecordingUrlLauncher launcher;
+}
+
+Future<_TopupHarness> _pumpProfileForTopup(
+  WidgetTester tester, {
+  required InAppBrowserAuthenticate authenticate,
+}) async {
+  final auth = AuthProvider();
+  await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+  _authenticate(auth);
+  final prefs = await SharedPreferences.getInstance();
+  final progression = ProgressionProvider(auth);
+  addTearDown(progression.dispose);
+  final credit = CreditProvider(auth, TopupRepository(auth.client));
+  addTearDown(credit.dispose);
+  final controller = TopupReturnController();
+  addTearDown(controller.dispose);
+  final originalLauncher = UrlLauncherPlatform.instance;
+  final launcher = _RecordingUrlLauncher();
+  UrlLauncherPlatform.instance = launcher;
+  addTearDown(() => UrlLauncherPlatform.instance = originalLauncher);
+
+  await tester.pumpWidget(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: auth),
+        ChangeNotifierProvider(create: (_) => ThemeController(prefs)),
+        ChangeNotifierProvider(create: (_) => LocaleController(prefs)),
+        ChangeNotifierProvider(create: (_) => MentalChecklistController(prefs)),
+        ChangeNotifierProvider.value(value: progression),
+        ChangeNotifierProvider.value(value: credit),
+        ChangeNotifierProvider.value(value: controller),
+      ],
+      child: _LocalizedApp(home: ProfileTab(authenticate: authenticate)),
+    ),
+  );
+  await tester.scrollUntilVisible(
+    find.text('Analysis Credits'),
+    300,
+    scrollable: find.byType(Scrollable).first,
+  );
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Analysis Credits'));
+  await tester.pumpAndSettle();
+  return _TopupHarness(controller, credit, launcher);
 }
 
 class _RecordingUrlLauncher extends UrlLauncherPlatform {

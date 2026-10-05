@@ -41,14 +41,6 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            <!-- Web top-up page sends the user back here after paying:
-                 id.tradepilot.app://topup/result?status=...&id=... -->
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="id.tradepilot.app" android:host="topup" />
-            </intent-filter>
         </activity>
         <activity
             android:name="com.linusu.flutter_web_auth_2.CallbackActivity"
@@ -58,7 +50,11 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+                <!-- OAuth: id.tradepilot.app://auth/callback
+                     Top-up: id.tradepilot.app://topup/result?status=...&id=...
+                     Both end an in-app browser tab opened with flutter_web_auth_2. -->
                 <data android:scheme="id.tradepilot.app" android:host="auth" />
+                <data android:host="topup" />
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
