@@ -6,6 +6,7 @@ import '../../core/analytics/analysis_analytics.dart';
 import '../../providers/analysis_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../l10n/l10n.dart';
+import '../../widgets/product_state_view.dart';
 import '../../widgets/responsive_page.dart';
 
 class AnalyticsScreen extends StatefulWidget {
@@ -78,15 +79,17 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             Text(context.l10n.analyticsDisclaimer),
             const SizedBox(height: 14),
             if (_loading && _server == null)
-              const Center(child: CircularProgressIndicator())
+              ProductStateView(
+                kind: ProductStateKind.loading,
+                title: context.l10n.analyticsActivitySummary,
+                message: context.l10n.analyticsDisclaimer,
+              )
             else if (_error != null && _server == null) ...[
-              Text(_error!),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton(
-                  onPressed: _load,
-                  child: Text(context.l10n.tryAgain),
-                ),
+              ProductStateView(
+                kind: ProductStateKind.error,
+                title: _error!,
+                actionLabel: context.l10n.tryAgain,
+                onAction: _load,
               ),
             ] else if (_server case final data?) ...[
               _MetricGrid(

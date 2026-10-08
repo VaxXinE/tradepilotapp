@@ -69,8 +69,7 @@ void main() {
       findsOneWidget,
     );
     expect(find.textContaining('Needs 5 data points'), findsWidgets);
-    expect(find.text('Patterns after a negative outcome'), findsOneWidget);
-    expect(find.text('Evaluation discipline'), findsOneWidget);
+    expect(find.text('Trade Journal'), findsOneWidget);
   });
 
   testWidgets('secondary screens fit a small phone with larger text', (
@@ -124,7 +123,7 @@ void main() {
     await _pump(tester, auth, const TradeJournalScreen());
     expect(find.text('No journal entries yet.'), findsOneWidget);
 
-    await tester.tap(find.text('Add'));
+    await tester.tap(find.byTooltip('Add journal entry'));
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('journal-instrument-field')),

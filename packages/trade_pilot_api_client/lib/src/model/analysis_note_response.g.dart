@@ -8,16 +8,15 @@ part of 'analysis_note_response.dart';
 
 class _$AnalysisNoteResponse extends AnalysisNoteResponse {
   @override
-  final String note;
+  final String? note;
   @override
-  final DateTime updatedAt;
+  final DateTime? updatedAt;
 
   factory _$AnalysisNoteResponse(
           [void Function(AnalysisNoteResponseBuilder)? updates]) =>
       (AnalysisNoteResponseBuilder()..update(updates))._build();
 
-  _$AnalysisNoteResponse._({required this.note, required this.updatedAt})
-      : super._();
+  _$AnalysisNoteResponse._({this.note, this.updatedAt}) : super._();
   @override
   AnalysisNoteResponse rebuild(
           void Function(AnalysisNoteResponseBuilder) updates) =>
@@ -95,10 +94,8 @@ class AnalysisNoteResponseBuilder
   _$AnalysisNoteResponse _build() {
     final _$result = _$v ??
         _$AnalysisNoteResponse._(
-          note: BuiltValueNullFieldError.checkNotNull(
-              note, r'AnalysisNoteResponse', 'note'),
-          updatedAt: BuiltValueNullFieldError.checkNotNull(
-              updatedAt, r'AnalysisNoteResponse', 'updatedAt'),
+          note: note,
+          updatedAt: updatedAt,
         );
     replace(_$result);
     return _$result;

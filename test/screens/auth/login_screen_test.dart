@@ -37,19 +37,62 @@ void main() {
 
     expect(
       tester.getSize(find.byKey(const Key('login-brand-mark'))),
-      const Size(56, 56),
+      const Size(68, 68),
     );
     expect(find.text('Welcome Back'), findsOneWidget);
     expect(find.byKey(const Key('google-sign-in-button')), findsOneWidget);
     expect(find.byKey(const Key('apple-sign-in-button')), findsNothing);
+    expect(find.byKey(const Key('facebook-sign-in-button')), findsNothing);
+    expect(find.byKey(const Key('tiktok-sign-in-button')), findsNothing);
+
+    await tester.ensureVisible(find.byTooltip('Show password'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Show password'));
+    await tester.pump();
+    expect(
+      tester.widget<EditableText>(find.byType(EditableText).at(1)).obscureText,
+      isFalse,
+    );
 
     await tester.ensureVisible(find.text('Sign In to Dashboard'));
     await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('remember-me-checkbox')));
+    await tester.pump();
+    expect(
+      tester
+          .widget<Checkbox>(find.byKey(const Key('remember-me-checkbox')))
+          .value,
+      isTrue,
+    );
     await tester.tap(find.text('Sign In to Dashboard'));
     await tester.pump();
 
     expect(find.text('Enter a valid email address'), findsOneWidget);
     expect(find.text('Password is required'), findsOneWidget);
+  });
+
+  testWidgets('auth redesign stays usable on narrow dark screens', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+    await _pumpAuthScreen(tester, const LoginScreen(), theme: AppTheme.dark);
+
+    expect(find.byIcon(Icons.alternate_email_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.lock_outline_rounded), findsOneWidget);
+    await tester.ensureVisible(find.text('Sign In to Dashboard'));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+
+    await _pumpAuthScreen(tester, const RegisterScreen(), theme: AppTheme.dark);
+    await tester.ensureVisible(find.byIcon(Icons.gps_fixed_rounded));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('login exposes Sign in with Apple only on iOS', (tester) async {
@@ -61,21 +104,42 @@ void main() {
 
       expect(find.byKey(const Key('google-sign-in-button')), findsOneWidget);
       expect(find.byKey(const Key('apple-sign-in-button')), findsOneWidget);
+      expect(find.byKey(const Key('facebook-sign-in-button')), findsNothing);
+      expect(find.byKey(const Key('tiktok-sign-in-button')), findsNothing);
       expect(find.text('Continue with Apple'), findsOneWidget);
     } finally {
       debugDefaultTargetPlatformOverride = null;
     }
   });
 
+  testWidgets('login secondary actions reach recovery and registration', (
+    tester,
+  ) async {
+    await _pumpAuthScreen(tester, const LoginScreen());
+    await tester.ensureVisible(find.text('Forgot password?'));
+    await tester.tap(find.text('Forgot password?'));
+    await tester.pumpAndSettle();
+    expect(find.byType(ForgotPasswordScreen), findsOneWidget);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Register free'));
+    await tester.tap(find.text('Register free'));
+    await tester.pumpAndSettle();
+    expect(find.byType(RegisterScreen), findsOneWidget);
+  });
+
   testWidgets('login hides Sign in with Apple on Android', (tester) async {
-    // Apple mewajibkan tombolnya hanya muncul di platform Apple; di Android
-    // tombol Google tetap satu-satunya opsi sosial.
+    // Apple hanya muncul di platform Apple. Provider yang belum siap tetap
+    // disembunyikan.
     debugDefaultTargetPlatformOverride = TargetPlatform.android;
     try {
       await _pumpAuthScreen(tester, const LoginScreen());
 
       expect(find.byKey(const Key('google-sign-in-button')), findsOneWidget);
       expect(find.byKey(const Key('apple-sign-in-button')), findsNothing);
+      expect(find.byKey(const Key('facebook-sign-in-button')), findsNothing);
+      expect(find.byKey(const Key('tiktok-sign-in-button')), findsNothing);
       expect(find.text('Continue with Apple'), findsNothing);
     } finally {
       debugDefaultTargetPlatformOverride = null;
@@ -105,9 +169,7 @@ void main() {
     expect(find.text('trader@example.com'), findsOneWidget);
     expect(
       tester
-          .widget<CheckboxListTile>(
-            find.byKey(const Key('remember-me-checkbox')),
-          )
+          .widget<Checkbox>(find.byKey(const Key('remember-me-checkbox')))
           .value,
       isTrue,
     );
@@ -143,10 +205,22 @@ void main() {
   ) async {
     await _pumpAuthScreen(tester, const RegisterScreen());
 
+    expect(
+      tester.getSize(find.byKey(const Key('register-brand-mark'))),
+      const Size(64, 64),
+    );
     expect(find.byKey(const Key('register-google-button')), findsOneWidget);
+    expect(find.byKey(const Key('register-facebook-button')), findsNothing);
+    expect(find.byKey(const Key('register-tiktok-button')), findsNothing);
     expect(find.byType(TextFormField), findsNothing);
     expect(find.text('Beginner'), findsNothing);
     expect(find.text('Security Question'), findsNothing);
+    expect(find.text('Market insight, not blind signals'), findsOneWidget);
+    expect(
+      find.text('Start your first analysis in a few steps'),
+      findsOneWidget,
+    );
+    expect(find.text("Know exactly when you're wrong"), findsOneWidget);
   });
 
   testWidgets('forgot password explains progress and reports invalid email', (
@@ -164,7 +238,11 @@ void main() {
   });
 }
 
-Future<void> _pumpAuthScreen(WidgetTester tester, Widget screen) async {
+Future<void> _pumpAuthScreen(
+  WidgetTester tester,
+  Widget screen, {
+  ThemeData? theme,
+}) async {
   SharedPreferences.setMockInitialValues({});
   final preferences = await SharedPreferences.getInstance();
   return tester.pumpWidget(
@@ -174,7 +252,7 @@ Future<void> _pumpAuthScreen(WidgetTester tester, Widget screen) async {
         ChangeNotifierProvider(create: (_) => LocaleController(preferences)),
       ],
       child: MaterialApp(
-        theme: AppTheme.light,
+        theme: theme ?? AppTheme.light,
         locale: const Locale('en'),
         localizationsDelegates: const [
           AppLocalizations.delegate,

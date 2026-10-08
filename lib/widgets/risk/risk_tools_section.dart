@@ -6,8 +6,20 @@ import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
 import '../../l10n/l10n.dart';
 import '../../providers/auth_provider.dart';
+import '../adaptive_plan_common.dart';
 
-const _supportedInstruments = {'XAU/USD', 'BRENT', 'HSI', 'NIKKEI'};
+/// Same eight instruments the server's risk map accepts (the four core ones
+/// plus the verified FX pairs).
+const _supportedInstruments = {
+  'XAU/USD',
+  'BRENT',
+  'HSI',
+  'NIKKEI',
+  'EUR/USD',
+  'GBP/USD',
+  'AUD/USD',
+  'USD/JPY',
+};
 
 bool supportsRiskMap(String instrument) =>
     _supportedInstruments.contains(instrument.trim().toUpperCase());
@@ -50,6 +62,7 @@ class RiskMapCard extends StatefulWidget {
     required this.selectedTimeframe,
     required this.onSelectTimeframe,
     this.initiallyExpanded = false,
+    this.sheetMode = false,
     super.key,
   });
 
@@ -57,6 +70,7 @@ class RiskMapCard extends StatefulWidget {
   final String selectedTimeframe;
   final ValueChanged<String> onSelectTimeframe;
   final bool initiallyExpanded;
+  final bool sheetMode;
 
   @override
   State<RiskMapCard> createState() => _RiskMapCardState();
@@ -98,28 +112,69 @@ class _RiskMapCardState extends State<RiskMapCard> {
   }
 
   @override
-  Widget build(BuildContext context) => Card(
-    clipBehavior: Clip.antiAlias,
-    child: ExpansionTile(
-      initiallyExpanded: widget.initiallyExpanded,
-      leading: const Icon(Icons.monitor_heart_outlined),
-      title: Text(
-        context.l10n.riskMapTitle,
-        style: const TextStyle(fontWeight: FontWeight.w800),
-      ),
-      subtitle: Text(context.l10n.riskMapDescription),
-      onExpansionChanged: (open) {
-        if (open && _map == null) unawaited(_load());
-      },
-      children: [
-        const Divider(height: 1),
-        Padding(
-          padding: const EdgeInsets.all(14),
-          child: _riskContent(context),
+  Widget build(BuildContext context) {
+    if (widget.sheetMode) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Icon, title and close share the first row; the note below uses the
+          // full width instead of a narrow column beside the close button.
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.monitor_heart_outlined,
+                color: Theme.of(context).colorScheme.primary,
+                size: 22,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  context.l10n.riskMapTitle,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                tooltip: context.l10n.close,
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.close_rounded),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          AdaptiveInfoNote(context.l10n.riskMapDescription),
+          const SizedBox(height: 24),
+          _riskContent(context),
+        ],
+      );
+    }
+
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: ExpansionTile(
+        initiallyExpanded: widget.initiallyExpanded,
+        leading: const Icon(Icons.monitor_heart_outlined),
+        title: Text(
+          context.l10n.riskMapTitle,
+          style: const TextStyle(fontWeight: FontWeight.w800),
         ),
-      ],
-    ),
-  );
+        subtitle: Text(context.l10n.riskMapDescription),
+        onExpansionChanged: (open) {
+          if (open && _map == null) unawaited(_load());
+        },
+        children: [
+          const Divider(height: 1),
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: _riskContent(context),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -148,6 +203,11 @@ class _RiskMapCardState extends State<RiskMapCard> {
                 ? const Color(0xFFF59E0B).withValues(alpha: .10)
                 : Theme.of(context).colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: overallWait
+                  ? const Color(0xFFF59E0B).withValues(alpha: .45)
+                  : Theme.of(context).colorScheme.outlineVariant,
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -217,55 +277,56 @@ class _RiskRow extends StatelessWidget {
               : color.withValues(alpha: .35),
         ),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      timeframe,
-                      style: const TextStyle(fontWeight: FontWeight.w900),
-                    ),
-                    const SizedBox(width: 8),
-                    _RiskBadge(
-                      text: unavailable
-                          ? context.l10n.riskUnavailable
-                          : _riskLabel(context, risk.riskCategory),
-                      color: color,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  unavailable
-                      ? context.l10n.riskUnavailable
-                      : '${risk.riskScore}/100 · ${_recommendation(context, risk.recommendation)}',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                if (!unavailable && risk.reasonCodes.isNotEmpty) ...[
-                  const SizedBox(height: 3),
-                  Text(
-                    risk.reasonCodes
-                        .map((code) => _reason(context, code))
-                        .join(' · '),
-                    style: Theme.of(context).textTheme.labelSmall,
-                  ),
-                ],
-              ],
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text(
+                timeframe,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+              ),
+              _RiskBadge(
+                text: unavailable
+                    ? context.l10n.riskUnavailable
+                    : _riskLabel(context, risk.riskCategory),
+                color: color,
+              ),
+            ],
+          ),
+          const SizedBox(height: 5),
+          Text(
+            unavailable
+                ? context.l10n.riskUnavailable
+                : '${risk.riskScore}/100 · ${_recommendation(context, risk.recommendation)}',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
-          if (!unavailable)
-            TextButton(
+          if (!unavailable) ...[
+            const SizedBox(height: 16),
+            FilledButton(
               onPressed: selected ? null : () => onSelected(timeframe),
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(7),
+                ),
+              ),
               child: Text(
                 selected
                     ? context.l10n.riskSelected
                     : context.l10n.useTimeframe(timeframe),
               ),
             ),
+          ],
         ],
       ),
     );
@@ -509,7 +570,7 @@ class _RiskBadge extends StatelessWidget {
     padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
     decoration: BoxDecoration(
       color: color.withValues(alpha: .12),
-      borderRadius: BorderRadius.circular(99),
+      borderRadius: BorderRadius.circular(4),
     ),
     child: Text(
       text,
@@ -531,7 +592,7 @@ class _LoadingLabel extends StatelessWidget {
         child: CircularProgressIndicator(strokeWidth: 2),
       ),
       const SizedBox(width: 10),
-      Text(text),
+      Flexible(child: Text(text, textAlign: TextAlign.center)),
     ],
   );
 }
@@ -619,39 +680,6 @@ String _overallReason(BuildContext context, String code) {
           : 'High risk or conflicting signals are present; waiting is the most defensive choice.',
     _ => context.l10n.riskMapDescription,
   };
-}
-
-String _reason(BuildContext context, String code) {
-  final id = Localizations.localeOf(context).languageCode == 'id';
-  const labels = {
-    'SIGNAL_CONFLICT': [
-      'Technical signals conflict',
-      'Sinyal teknikal bertentangan',
-    ],
-    'EXTENDED_MOMENTUM': [
-      'Price movement is extended',
-      'Pergerakan harga sudah memanjang',
-    ],
-    'RSI_EXTREME': ['RSI is at an extreme', 'RSI berada di area ekstrem'],
-    'HIGH_VOLATILITY': [
-      'Relative volatility is high',
-      'Volatilitas relatif tinggi',
-    ],
-    'SIGNALS_RELATIVELY_ALIGNED': [
-      'Signals are relatively aligned',
-      'Sinyal relatif selaras',
-    ],
-    'DATA_UNAVAILABLE': [
-      'Market data is unavailable',
-      'Data pasar belum tersedia',
-    ],
-    'DATA_STALE': ['Market data is stale', 'Data pasar sudah usang'],
-    'INSUFFICIENT_HISTORY': [
-      'Price history is insufficient',
-      'Riwayat harga belum cukup',
-    ],
-  };
-  return labels[code]?[id ? 1 : 0] ?? code.replaceAll('_', ' ').toLowerCase();
 }
 
 String _contractUnit(StandardTradingRuleInstrumentContractUnitEnum unit) =>

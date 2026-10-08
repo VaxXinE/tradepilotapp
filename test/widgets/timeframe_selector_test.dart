@@ -21,8 +21,13 @@ void main() {
     );
     expect(
       tester
-          .widget<ChoiceChip>(find.byKey(const ValueKey('timeframe-1h')))
-          .onSelected,
+          .widget<InkWell>(
+            find.descendant(
+              of: find.byKey(const ValueKey('timeframe-1h')),
+              matching: find.byType(InkWell),
+            ),
+          )
+          .onTap,
       isNotNull,
     );
     await tester.tap(find.byKey(const ValueKey('timeframe-4h')));

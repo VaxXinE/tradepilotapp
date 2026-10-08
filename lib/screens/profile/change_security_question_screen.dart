@@ -78,6 +78,7 @@ class _ChangeSecurityQuestionScreenState
                 children: [
                   ErrorBanner(message: auth.profileError),
                   DropdownButtonFormField<String>(
+                    isExpanded: true,
                     initialValue: _question,
                     decoration: InputDecoration(
                       labelText: l10n.securityQuestion,

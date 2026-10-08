@@ -32,7 +32,7 @@ abstract class MirrorGroupStat
   num get winRate;
 
   @BuiltValueField(wireName: r'avgPnlPercent')
-  num get avgPnlPercent;
+  num? get avgPnlPercent;
 
   MirrorGroupStat._();
 
@@ -83,7 +83,7 @@ class _$MirrorGroupStatSerializer
     yield r'avgPnlPercent';
     yield serializers.serialize(
       object.avgPnlPercent,
-      specifiedType: const FullType(num),
+      specifiedType: const FullType.nullable(num),
     );
   }
 
@@ -141,8 +141,8 @@ class _$MirrorGroupStatSerializer
         case r'avgPnlPercent':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(num),
-          ) as num;
+            specifiedType: const FullType.nullable(num),
+          ) as num?;
           result.avgPnlPercent = valueDes;
           break;
         default:

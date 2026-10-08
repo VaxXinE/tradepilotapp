@@ -10,6 +10,7 @@ import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
 import '../models/notification_action.dart';
 import '../providers/auth_provider.dart';
+import '../core/async/best_effort.dart';
 import '../l10n/app_messages.dart';
 
 class NativePushService extends ChangeNotifier {
@@ -20,8 +21,8 @@ class NativePushService extends ChangeNotifier {
 
   static const _channel = AndroidNotificationChannel(
     'trade_pilot_alerts',
-    'Trade Pilot Alerts',
-    description: 'Trading alerts and important Trade Pilot notifications.',
+    'TradePilot Alerts',
+    description: 'Trading alerts and important TradePilot notifications.',
     importance: Importance.high,
   );
 
@@ -53,6 +54,11 @@ class NativePushService extends ChangeNotifier {
 
   int? get _currentUserId =>
       _auth.status == AuthStatus.authenticated ? _auth.user?.id : null;
+
+  /// What the toggle shows. The server preference defaults to on for every
+  /// account, so it only counts once the OS permission is actually granted;
+  /// otherwise the switch would read "on" before the user was ever asked.
+  bool get isActive => isEnabled && _permissionGranted;
 
   bool get _permissionGranted =>
       authorizationStatus == AuthorizationStatus.authorized ||
@@ -107,6 +113,17 @@ class NativePushService extends ChangeNotifier {
       _emitPayload(launchDetails?.notificationResponse?.payload);
     }
 
+    // iOS never shows a local notification while the app is in the
+    // foreground (firebase_messaging owns the notification-center delegate and
+    // answers "no presentation"), so let iOS present the FCM banner itself.
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      await _messaging.setForegroundNotificationPresentationOptions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+    }
+
     _foregroundSubscription = FirebaseMessaging.onMessage.listen(
       _showForegroundNotification,
     );
@@ -155,7 +172,7 @@ class NativePushService extends ChangeNotifier {
         return false;
       }
       if (!await _setEnabledPreference(true)) return false;
-      return syncToken();
+      return await syncToken();
     } catch (_) {
       errorMessage = AppMessages.l10n.errPushEnableFailed;
       return false;
@@ -342,6 +359,11 @@ class NativePushService extends ChangeNotifier {
     }
   }
 
+  /// Unregisters this device before signing out, without ever blocking the
+  /// sign-out: Firebase can throw or stall (no Play Services, bad network, a
+  /// registration stuck in flight), and a user must always be able to leave.
+  Future<void> unregisterForLogout() => runBestEffort(unregister);
+
   Future<void> unregister() async {
     await initialize();
     if (Firebase.apps.isEmpty) return;
@@ -406,19 +428,22 @@ class NativePushService extends ChangeNotifier {
 
   Future<void> _showForegroundNotification(RemoteMessage message) async {
     _markMessageReceived();
+    // On iOS the system already presents the FCM banner (see _initialize);
+    // showing a local one as well would duplicate it.
+    if (defaultTargetPlatform == TargetPlatform.iOS) return;
     final notification = message.notification;
     if (notification == null) return;
     await _localNotifications.show(
       id: message.messageId?.hashCode ?? message.hashCode,
-      title: notification.title ?? 'Trade Pilot',
+      title: notification.title ?? 'TradePilot.id',
       body: notification.body ?? '',
       payload: jsonEncode(message.data),
       notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
           'trade_pilot_alerts',
-          'Trade Pilot Alerts',
+          'TradePilot Alerts',
           channelDescription:
-              'Trading alerts and important Trade Pilot notifications.',
+              'Trading alerts and important TradePilot notifications.',
           importance: Importance.high,
           priority: Priority.high,
         ),

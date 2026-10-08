@@ -7,19 +7,37 @@ import 'package:provider/provider.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
 import '../core/analysis/adaptive_position_plan.dart';
+import '../core/analysis/adaptive_tier_comparison.dart';
+import '../l10n/l10n.dart';
 import '../models/market_models.dart';
 import '../providers/auth_provider.dart';
-import '../l10n/l10n.dart';
+import 'adaptive_plan_common.dart';
+import 'adaptive_plan_details_sheet.dart';
+import 'adaptive_plan_result.dart';
 
 class AdaptivePositionPlanCard extends StatefulWidget {
   const AdaptivePositionPlanCard({
     required this.analysis,
     required this.candles,
+    required this.onLearn,
+    this.onShareSummary,
     super.key,
   });
 
   final Analysis analysis;
+
+  /// Live candles for the chart shown inside the details sheet. The Adaptive
+  /// calculation itself only ever uses the analysis' saved market snapshot.
   final List<MarketCandle> candles;
+  final VoidCallback onLearn;
+
+  /// Copy / save one side's plan summary as an image.
+  final Future<void> Function(
+    String action,
+    AdaptiveSidePlan plan,
+    AdaptiveCalculation calculation,
+  )?
+  onShareSummary;
 
   @override
   State<AdaptivePositionPlanCard> createState() =>
@@ -29,19 +47,76 @@ class AdaptivePositionPlanCard extends StatefulWidget {
 class _AdaptivePositionPlanCardState extends State<AdaptivePositionPlanCard> {
   final _margin = TextEditingController();
   final _loss = TextEditingController();
+  final _marginFocus = FocusNode();
+  final _lossFocus = FocusNode();
   StandardTradingRuleInstrument? _rule;
   AdaptiveAccountTier _tier = AdaptiveAccountTier.mini;
   AdaptiveRiskStyle _style = AdaptiveRiskStyle.conservative;
-  AdaptiveRecommendation? _recommendation;
+  AdaptiveCalculation? _calculation;
   bool _loading = false;
   String? _loadError;
-  String _activeSide = 'buy';
+  Timer? _expiryTimer;
+
+  late _SnapshotInput _snapshot = _SnapshotInput.from(widget.analysis);
+
+  @override
+  void initState() {
+    super.initState();
+    _margin.addListener(_onMoneyChanged);
+    _loss.addListener(_onMoneyChanged);
+    _scheduleExpiry();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(_loadRule());
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant AdaptivePositionPlanCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.analysis.id != widget.analysis.id ||
+        oldWidget.analysis.marketSnapshot != widget.analysis.marketSnapshot ||
+        oldWidget.analysis.validUntil != widget.analysis.validUntil) {
+      _snapshot = _SnapshotInput.from(widget.analysis);
+      _calculation = null;
+      _scheduleExpiry();
+    }
+  }
 
   @override
   void dispose() {
+    _expiryTimer?.cancel();
+    _margin.removeListener(_onMoneyChanged);
+    _loss.removeListener(_onMoneyChanged);
     _margin.dispose();
     _loss.dispose();
+    _marginFocus.dispose();
+    _lossFocus.dispose();
     super.dispose();
+  }
+
+  bool get _expired => !widget.analysis.validUntil.isAfter(DateTime.now());
+
+  /// A saved plan must vanish the moment its analysis stops being valid.
+  void _scheduleExpiry() {
+    _expiryTimer?.cancel();
+    final remaining = widget.analysis.validUntil.difference(DateTime.now());
+    if (remaining <= Duration.zero) return;
+    // Timer durations are capped so a far-future validity cannot overflow.
+    final wait = remaining > const Duration(days: 30)
+        ? const Duration(days: 30)
+        : remaining;
+    _expiryTimer = Timer(wait, () {
+      if (!mounted) return;
+      if (_expired) {
+        setState(() => _calculation = null);
+      } else {
+        _scheduleExpiry();
+      }
+    });
+  }
+
+  void _onMoneyChanged() {
+    if (mounted) setState(() => _calculation = null);
   }
 
   Future<void> _loadRule() async {
@@ -70,434 +145,615 @@ class _AdaptivePositionPlanCardState extends State<AdaptivePositionPlanCard> {
     }
   }
 
-  void _calculate() {
-    final rule = _rule;
-    if (rule == null) return;
-    final movement = RegExp(
-      r'\d+(?:\.\d+)?',
-    ).firstMatch(rule.minimumPriceMovement)?.group(0);
-    final candidates = adaptiveChartCandidates(
-      widget.candles,
-      widget.analysis.tradePlan!,
-      double.tryParse(movement ?? '') ?? .01,
-    );
-    final result = buildAdaptiveRecommendation(
-      analysis: widget.analysis,
-      standardRule: rule,
-      availableMargin: _number(_margin.text),
-      maximumLoss: _number(_loss.text),
+  AdaptiveRule? get _selectedRule =>
+      adaptiveMarketRule(widget.analysis.instrument, _rule, _tier);
+
+  AdaptiveAnalysisContext get _context =>
+      AdaptiveAnalysisContext.fromAnalysis(widget.analysis);
+
+  Map<String, List<double>> _candidates(AdaptiveRule rule) =>
+      adaptiveChartCandidates(
+        _snapshot.candles,
+        widget.analysis.tradePlan!,
+        rule.minMovement,
+      );
+
+  Future<void> _calculate() async {
+    final rule = _selectedRule;
+    final tradePlan = widget.analysis.tradePlan;
+    if (rule == null || tradePlan == null || _expired) return;
+    final funds = _number(_margin.text);
+    final loss = _number(_loss.text);
+    final checkpoints = _candidates(rule);
+    final now = DateTime.now();
+    final recommendation = buildAdaptiveRecommendation(
+      instrument: widget.analysis.instrument,
+      tradePlan: tradePlan,
+      availableMargin: funds,
+      maximumLoss: loss,
       existingExposure: 0,
+      standardRule: _rule,
+      context: _context,
+      checkpointPrices: checkpoints,
+      candles: _snapshot.candles,
       accountTier: _tier,
       riskStyle: _style,
-      checkpointPrices: candidates,
+      now: now,
     );
-    setState(() {
-      _recommendation = result;
-      if (result.preferredSide == 'sell') _activeSide = 'sell';
-      if (result.preferredSide == 'buy') _activeSide = 'buy';
-    });
+    final tiers = compareAdaptiveAccountTiers(
+      instrument: widget.analysis.instrument,
+      tradePlan: tradePlan,
+      availableMargin: funds,
+      maximumLoss: loss,
+      existingExposure: 0,
+      standardRule: _rule,
+      context: _context,
+      checkpointPrices: checkpoints,
+      candles: _snapshot.candles,
+      riskStyle: _style,
+      now: now,
+    );
+    final calculation = AdaptiveCalculation(
+      recommendation: recommendation,
+      tiers: tiers,
+      tier: _tier,
+      style: _style,
+      availableFunds: funds ?? 0,
+      maximumLoss: loss ?? 0,
+    );
+    setState(() => _calculation = calculation);
+    final block = calculation.financialBlock;
+    if (block != null) {
+      final edit = await showAdaptiveFinancialBlockDialog(context, block);
+      if (!mounted) return;
+      if (edit == AdaptiveBlockedEdit.loss) _lossFocus.requestFocus();
+      if (edit == AdaptiveBlockedEdit.funds) _marginFocus.requestFocus();
+    }
   }
+
+  Future<void> _showDetails() => showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => AdaptivePlanDetailsSheet(
+      analysis: widget.analysis,
+      candles: widget.candles,
+      standardRule: _rule,
+      tier: _tier,
+      style: _style,
+      calculation: _expired ? null : _calculation,
+      expired: _expired,
+      snapshotCandleCount: _snapshot.candles.length,
+      snapshotCandidates: _selectedRule == null
+          ? const {'buy': [], 'sell': []}
+          : _candidates(_selectedRule!),
+      snapshotBasisIsLevelsOnly: _snapshot.candles.isEmpty,
+      onLearn: widget.onLearn,
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
-    if (!supportsAdaptivePositionPlan(widget.analysis.instrument) ||
+    if (!isAdaptivePositionInstrument(widget.analysis.instrument) ||
         widget.analysis.tradePlan == null) {
       return const SizedBox.shrink();
     }
     return Card(
       clipBehavior: Clip.antiAlias,
-      child: ExpansionTile(
-        leading: const Icon(Icons.calculate_outlined),
-        title: Text(
-          context.l10n.positionSizeRecommendation,
-          style: const TextStyle(fontWeight: FontWeight.w800),
-        ),
-        subtitle: Text(context.l10n.adaptivePlanIntro),
-        onExpansionChanged: (open) {
-          if (open) unawaited(_loadRule());
-        },
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Padding(
+            padding: const EdgeInsets.all(18),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.calculate_outlined,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 22,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.l10n.adaptiveTradingPlan,
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        context.l10n.adaptiveTradingPlanSubtitle,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
           const Divider(height: 1),
-          Padding(padding: const EdgeInsets.all(14), child: _content()),
+          Padding(padding: const EdgeInsets.all(18), child: _content()),
         ],
       ),
     );
   }
 
   Widget _content() {
+    final l10n = context.l10n;
+    final muted = Theme.of(context).colorScheme.onSurfaceVariant;
     if (_loading) {
-      return const Padding(
-        padding: EdgeInsets.all(16),
-        child: Center(child: CircularProgressIndicator()),
+      return Column(
+        children: [
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+          Text(l10n.adaptiveRulesLoading, style: TextStyle(color: muted)),
+          const SizedBox(height: 12),
+          _detailsTile(),
+        ],
       );
     }
     if (_loadError != null || _rule == null) {
       return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(_loadError ?? context.l10n.tradingRulesUnavailable),
-          const SizedBox(height: 8),
-          OutlinedButton(
-            onPressed: _loadRule,
-            child: Text(context.l10n.tryAgain),
+          AdaptiveNotice(
+            _loadError ?? l10n.adaptiveRulesError,
+            warning: true,
+            key: const ValueKey('adaptive-plan-rules-unavailable'),
           ),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: OutlinedButton(
+              onPressed: _loadRule,
+              child: Text(l10n.adaptiveRefreshRules),
+            ),
+          ),
+          const SizedBox(height: 18),
+          _detailsTile(),
         ],
       );
     }
+    final expired = _expired;
+    final showResult = _calculation != null && !expired;
+    final fetchedAt = _snapshot.sourceFetchedAt;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _Notice(context.l10n.adaptivePlanDisclaimer),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _MoneyField(
-                controller: _margin,
-                label: context.l10n.availableTradingFunds,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _MoneyField(
-                controller: _loss,
-                label: context.l10n.maxLossLimit,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        const Text('Tier akun', style: TextStyle(fontWeight: FontWeight.w700)),
-        const SizedBox(height: 6),
-        SegmentedButton<AdaptiveAccountTier>(
-          segments: AdaptiveAccountTier.values
-              .map(
-                (tier) =>
-                    ButtonSegment(value: tier, label: Text(_title(tier.name))),
-              )
-              .toList(),
-          selected: {_tier},
-          onSelectionChanged: (value) => setState(() {
-            _tier = value.first;
-            _recommendation = null;
-          }),
-        ),
-        const SizedBox(height: 12),
-        const Text(
-          'Gaya risiko',
-          style: TextStyle(fontWeight: FontWeight.w700),
-        ),
-        const SizedBox(height: 6),
-        SegmentedButton<AdaptiveRiskStyle>(
-          segments: const [
-            ButtonSegment(
-              value: AdaptiveRiskStyle.conservative,
-              label: Text('Konservatif'),
-            ),
-            ButtonSegment(
-              value: AdaptiveRiskStyle.balanced,
-              label: Text('Seimbang'),
-            ),
-            ButtonSegment(
-              value: AdaptiveRiskStyle.aggressive,
-              label: Text('Agresif'),
-            ),
-          ],
-          selected: {_style},
-          onSelectionChanged: (value) => setState(() {
-            _style = value.first;
-            _recommendation = null;
-          }),
-        ),
-        const SizedBox(height: 14),
-        FilledButton.icon(
-          onPressed: _calculate,
-          icon: const Icon(Icons.calculate_outlined),
-          label: Text(context.l10n.buildPositionPlan),
-        ),
-        if (_recommendation != null) ...[
+        if (expired) ...[
+          AdaptiveNotice(
+            l10n.adaptiveAnalysisExpired,
+            warning: true,
+            key: const ValueKey('adaptive-analysis-expired'),
+          ),
           const SizedBox(height: 14),
-          _Result(
-            recommendation: _recommendation!,
-            instrument: widget.analysis.instrument,
-            riskStyle: _style,
-            activeSide: _activeSide,
-            onSideChanged: (side) => setState(() => _activeSide = side),
+        ] else if (_snapshot.candles.isEmpty) ...[
+          AdaptiveNotice(
+            l10n.adaptiveSnapshotLevelsOnlyDetail,
+            warning: true,
+            key: const ValueKey('adaptive-snapshot-warning'),
+          ),
+          const SizedBox(height: 14),
+        ],
+        Text(
+          l10n.fixedAccountRulesProfile,
+          style: TextStyle(color: muted, fontWeight: FontWeight.w900),
+        ),
+        const SizedBox(height: 10),
+        AdaptiveOptionRow<AdaptiveAccountTier>(
+          options: [
+            for (final tier in AdaptiveAccountTier.values)
+              (tier, adaptiveTierLabel(context, tier)),
+          ],
+          selected: _tier,
+          onSelected: (tier) => setState(() {
+            _tier = tier;
+            _calculation = null;
+          }),
+        ),
+        const SizedBox(height: 18),
+        _MoneyRow(
+          fieldKey: const ValueKey('adaptive-trading-capital'),
+          label: l10n.tradingCapital,
+          controller: _margin,
+          focusNode: _marginFocus,
+        ),
+        const SizedBox(height: 12),
+        _MoneyRow(
+          fieldKey: const ValueKey('adaptive-loss-limit'),
+          label: l10n.lossLimit,
+          controller: _loss,
+          focusNode: _lossFocus,
+        ),
+        const SizedBox(height: 20),
+        Text(
+          l10n.riskStyle.toUpperCase(),
+          style: TextStyle(color: muted, fontWeight: FontWeight.w900),
+        ),
+        const SizedBox(height: 10),
+        AdaptiveOptionRow<AdaptiveRiskStyle>(
+          options: [
+            for (final style in AdaptiveRiskStyle.values)
+              (style, adaptiveRiskStyleLabel(context, style)),
+          ],
+          selected: _style,
+          onSelected: (style) => setState(() {
+            _style = style;
+            _calculation = null;
+          }),
+        ),
+        const SizedBox(height: 20),
+        Text(
+          l10n.adaptiveIntradayOnly,
+          style: TextStyle(color: muted, height: 1.5),
+        ),
+        if (fetchedAt != null) ...[
+          const SizedBox(height: 12),
+          Text(
+            l10n.analysisCandleSnapshotFetched(
+              DateFormat.yMd().add_jms().format(fetchedAt.toLocal()),
+            ),
+            key: const ValueKey('adaptive-candle-source-time'),
+            style: TextStyle(color: muted, fontSize: 12),
           ),
         ],
-      ],
-    );
-  }
-}
-
-class _MoneyField extends StatelessWidget {
-  const _MoneyField({required this.controller, required this.label});
-  final TextEditingController controller;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) => TextField(
-    controller: controller,
-    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-    decoration: InputDecoration(labelText: label, prefixText: r'$ '),
-  );
-}
-
-class _Result extends StatelessWidget {
-  const _Result({
-    required this.recommendation,
-    required this.instrument,
-    required this.riskStyle,
-    required this.activeSide,
-    required this.onSideChanged,
-  });
-  final AdaptiveRecommendation recommendation;
-  final String instrument;
-  final AdaptiveRiskStyle riskStyle;
-  final String activeSide;
-  final ValueChanged<String> onSideChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    if (!recommendation.valid) {
-      return _Notice(recommendation.errors.join('\n'), warning: true);
-    }
-    final buy = recommendation.buy;
-    final sell = recommendation.sell;
-    final shownSide = activeSide == 'sell' && sell != null
-        ? 'sell'
-        : buy != null
-        ? 'buy'
-        : 'sell';
-    final side = shownSide == 'sell' ? sell : buy;
-    if (side == null) return const SizedBox.shrink();
-    final posture = switch (recommendation.posture) {
-      AdaptivePosture.scalingAllowed => 'Scaling diizinkan',
-      AdaptivePosture.entryOnly => 'Entry awal saja',
-      AdaptivePosture.notRecommended => context.l10n.notRecommended,
-    };
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary.withValues(alpha: .08),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.shield_outlined, size: 19),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  '$posture · risiko terpakai ${_money(recommendation.usableRisk)} '
-                  '· buffer ${_money(recommendation.unusedRisk)}',
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 10),
-        SegmentedButton<String>(
-          segments: [
-            ButtonSegment(
-              value: 'buy',
-              label: const Text('Buy'),
-              enabled: buy != null,
-            ),
-            ButtonSegment(
-              value: 'sell',
-              label: const Text('Sell'),
-              enabled: sell != null,
-            ),
-          ],
-          selected: {shownSide},
-          onSelectionChanged: (value) => onSideChanged(value.first),
-        ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 18),
         Align(
-          alignment: Alignment.centerRight,
-          child: OutlinedButton.icon(
-            onPressed: () => _copyPlan(context, side),
-            icon: const Icon(Icons.copy_rounded, size: 18),
-            label: Text(context.l10n.copyPositionPlan),
+          alignment: Alignment.centerLeft,
+          child: FilledButton.icon(
+            key: const ValueKey('create-adaptive-recommendation'),
+            onPressed: expired || _selectedRule == null ? null : _calculate,
+            icon: const Icon(Icons.shield_outlined),
+            label: Text(l10n.createRecommendation),
           ),
         ),
-        const SizedBox(height: 8),
-        _MetricGrid(side: side),
+        if (showResult) ...[
+          const SizedBox(height: 18),
+          AdaptivePlanResult(
+            calculation: _calculation!,
+            instrument: widget.analysis.instrument,
+            analysisPreferredSide:
+                widget.analysis.tradePlan?.preferredSide.name ?? 'wait',
+            onShare: widget.onShareSummary == null
+                ? null
+                : (action, plan) =>
+                      widget.onShareSummary!(action, plan, _calculation!),
+          ),
+        ],
+        const SizedBox(height: 18),
+        const Divider(),
         const SizedBox(height: 10),
-        ...side.layers.indexed.map(
-          (item) => _LayerTile(index: item.$1, layer: item.$2),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          context.l10n.adaptivePlanFootnote,
-          style: const TextStyle(fontSize: 10.5, fontStyle: FontStyle.italic),
-        ),
+        _detailsTile(),
       ],
     );
   }
 
-  Future<void> _copyPlan(BuildContext context, AdaptiveSidePlan side) async {
-    final l10n = context.l10n;
-    final style = switch (riskStyle) {
-      AdaptiveRiskStyle.conservative => l10n.riskStyleConservative,
-      AdaptiveRiskStyle.balanced => l10n.riskStyleBalanced,
-      AdaptiveRiskStyle.aggressive => l10n.riskStyleAggressive,
-    };
-    final lines = <String>[
-      l10n.positionSizeRecommendation,
-      '${l10n.instrument}: $instrument',
-      '${l10n.positionDirection}: ${side.side.toUpperCase()}',
-      '${l10n.riskStyle}: $style',
-      '',
-      ...side.layers.indexed.map(
-        (item) =>
-            '${item.$1 + 1}. ${_decimal(item.$2.price)} · '
-            '${_decimal(item.$2.lot)} lot',
-      ),
-      'SL: ${_decimal(side.stopLoss)}',
-      if (side.takeProfit1 != null) 'TP1: ${_decimal(side.takeProfit1!)}',
-      if (side.takeProfit2 != null) 'TP2: ${_decimal(side.takeProfit2!)}',
-      '${l10n.totalLots}: ${_decimal(side.totalLots)} lot',
-      '${l10n.marginRequired}: ${_money(side.marginRequired)}',
-      '${l10n.estimatedCycleLoss}: ${_money(side.estimatedLoss)}',
-      l10n.adaptiveCopyManualContext,
-    ];
-    try {
-      await Clipboard.setData(ClipboardData(text: lines.join('\n')));
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.positionPlanCopied)));
-      }
-    } catch (_) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.positionPlanCopyFailed)));
-      }
+  Widget _detailsTile() => _DetailsTile(
+    title: context.l10n.understandDetails,
+    count: adaptiveInvalidationRuleCount(
+      widget.analysis.mode == AnalysisModeEnum.pro
+          ? widget.analysis.invalidationConditions
+          : widget.analysis.failureConditions,
+    ),
+    onTap: _showDetails,
+  );
+}
+
+/// The saved market candles Adaptive may use: only a fresh snapshot for the
+/// same instrument and timeframe as the analysis (web `matchingSnapshot`).
+class _SnapshotInput {
+  const _SnapshotInput(this.candles, this.sourceFetchedAt);
+
+  factory _SnapshotInput.from(Analysis analysis) {
+    final snapshot = analysis.marketSnapshot;
+    if (snapshot == null ||
+        snapshot.instrument != analysis.instrument ||
+        snapshot.timeframe.toLowerCase() != analysis.timeframe.toLowerCase() ||
+        snapshot.sourceStatus != MarketSnapshotSourceStatusEnum.fresh ||
+        snapshot.sourceFetchedAt == null) {
+      return const _SnapshotInput([], null);
     }
-  }
-}
+    bool valid(MarketSnapshotCandle c) {
+      final open = c.open.toDouble();
+      final high = c.high.toDouble();
+      final low = c.low.toDouble();
+      final close = c.close.toDouble();
+      return high.isFinite &&
+          low.isFinite &&
+          low > 0 &&
+          high >= low &&
+          open.isFinite &&
+          open >= low &&
+          open <= high &&
+          close.isFinite &&
+          close >= low &&
+          close <= high;
+    }
 
-class _MetricGrid extends StatelessWidget {
-  const _MetricGrid({required this.side});
-  final AdaptiveSidePlan side;
-
-  @override
-  Widget build(BuildContext context) => Wrap(
-    spacing: 8,
-    runSpacing: 8,
-    children: [
-      _Metric('Entry', _decimal(side.entry)),
-      _Metric('Final SL', _decimal(side.stopLoss), color: Colors.redAccent),
-      _Metric('Total lot', _decimal(side.totalLots)),
-      _Metric('Margin', _money(side.marginRequired)),
-      _Metric(context.l10n.lossToSl, _money(side.estimatedLoss)),
-      if (side.takeProfit1 != null)
-        _Metric(
-          'TP1 / profit',
-          '${_decimal(side.takeProfit1!)}\n+${_money(side.profitToTp1)}',
-          color: Colors.green,
-        ),
-      if (side.takeProfit2 != null)
-        _Metric(
-          'TP2 / profit',
-          '${_decimal(side.takeProfit2!)}\n+${_money(side.profitToTp2)}',
-          color: Colors.green,
-        ),
-    ],
-  );
-}
-
-class _Metric extends StatelessWidget {
-  const _Metric(this.label, this.value, {this.color});
-  final String label;
-  final String value;
-  final Color? color;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    width: (MediaQuery.sizeOf(context).width - 70) / 2,
-    padding: const EdgeInsets.all(10),
-    decoration: BoxDecoration(
-      color: Theme.of(context).colorScheme.surfaceContainerHighest,
-      borderRadius: BorderRadius.circular(10),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: Theme.of(context).textTheme.labelSmall),
-        const SizedBox(height: 3),
-        Text(
-          value,
-          style: TextStyle(fontWeight: FontWeight.w800, color: color),
-        ),
-      ],
-    ),
-  );
-}
-
-class _LayerTile extends StatelessWidget {
-  const _LayerTile({required this.index, required this.layer});
-  final int index;
-  final AdaptiveLayer layer;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    margin: const EdgeInsets.only(bottom: 7),
-    padding: const EdgeInsets.all(11),
-    decoration: BoxDecoration(
-      border: Border.all(color: Theme.of(context).dividerColor),
-      borderRadius: BorderRadius.circular(11),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Posisi ${index + 1}${index == 0 ? ' · Entry awal' : ' · Checkpoint manual'}',
-          style: const TextStyle(fontWeight: FontWeight.w800),
-        ),
-        const SizedBox(height: 5),
-        Text('${_decimal(layer.price)} · ${_decimal(layer.lot)} lot'),
-        const SizedBox(height: 3),
-        Text(
-          'Kumulatif: ${_decimal(layer.cumulativeLots)} lot · '
-          'margin ${_money(layer.cumulativeMargin)} · '
-          'risiko ${_money(layer.cumulativeRisk)}',
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-      ],
-    ),
-  );
-}
-
-class _Notice extends StatelessWidget {
-  const _Notice(this.text, {this.warning = false});
-  final String text;
-  final bool warning;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = warning ? Colors.redAccent : const Color(0xFFF59E0B);
-    return Container(
-      padding: const EdgeInsets.all(11),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: .09),
-        border: Border.all(color: color.withValues(alpha: .35)),
-        borderRadius: BorderRadius.circular(11),
-      ),
-      child: Text(text, style: const TextStyle(fontSize: 11.5, height: 1.4)),
+    final candles =
+        snapshot.candles.where(valid).map(AdaptiveCandle.fromSnapshot).toList()
+          ..sort((a, b) => a.date!.compareTo(b.date!));
+    return _SnapshotInput(
+      candles,
+      candles.isEmpty ? null : snapshot.sourceFetchedAt,
     );
   }
+
+  final List<AdaptiveCandle> candles;
+  final DateTime? sourceFetchedAt;
+}
+
+int adaptiveInvalidationRuleCount(String? value) {
+  final text = value?.trim();
+  if (text == null || text.isEmpty) return 0;
+  return text
+      .split(RegExp(r'(?:\r?\n)+|[•●]\s*'))
+      .where((item) => item.trim().isNotEmpty)
+      .length;
 }
 
 double? _number(String value) =>
     double.tryParse(value.trim().replaceAll(',', '.'));
-String _title(String value) => '${value[0].toUpperCase()}${value.substring(1)}';
-String _money(double? value) => value == null
-    ? '—'
-    : NumberFormat.currency(symbol: r'$', decimalDigits: 2).format(value);
-String _decimal(double value) => NumberFormat('0.####').format(value);
+
+class _MoneyRow extends StatelessWidget {
+  const _MoneyRow({
+    required this.fieldKey,
+    required this.controller,
+    required this.label,
+    required this.focusNode,
+  });
+  final Key fieldKey;
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final field = TextField(
+      key: fieldKey,
+      controller: controller,
+      focusNode: focusNode,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      inputFormatters: [
+        FilteringTextInputFormatter.allow(RegExp(r'^\d*[.,]?\d{0,2}')),
+      ],
+      decoration: const InputDecoration(prefixText: r'$ ', hintText: '0'),
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 310 ||
+            MediaQuery.textScalerOf(context).scale(1) > 1.3) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
+              const SizedBox(height: 7),
+              field,
+            ],
+          );
+        }
+        return Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(flex: 2, child: field),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _DetailsTile extends StatelessWidget {
+  const _DetailsTile({
+    required this.title,
+    required this.count,
+    required this.onTap,
+  });
+
+  final String title;
+  final int count;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
+      ),
+      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.07),
+    ),
+    child: InkWell(
+      key: const ValueKey('adaptive-plan-details'),
+      borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+            if (count > 0) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text('$count'),
+              ),
+              const SizedBox(width: 12),
+            ],
+            Icon(
+              Icons.chevron_right_rounded,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+// ---------------------------------------------------------------------------
+// "Why can't I enter?" dialog
+// ---------------------------------------------------------------------------
+
+enum AdaptiveBlockedEdit { loss, funds }
+
+Future<AdaptiveBlockedEdit?> showAdaptiveFinancialBlockDialog(
+  BuildContext context,
+  AdaptiveFinancialBlock block,
+) => showDialog<AdaptiveBlockedEdit>(
+  context: context,
+  builder: (dialogContext) => _FinancialBlockDialog(block: block),
+);
+
+class _FinancialBlockDialog extends StatelessWidget {
+  const _FinancialBlockDialog({required this.block});
+  final AdaptiveFinancialBlock block;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final fmt = AdaptiveFormat.of(context);
+    final description = block.reason == AdaptiveTierActionReason.both
+        ? l10n.adaptiveBlockedBoth
+        : block.riskBlocked
+        ? l10n.adaptiveBlockedRisk
+        : l10n.adaptiveBlockedFunds;
+    final next = block.reason == AdaptiveTierActionReason.both
+        ? l10n.adaptiveBlockedBothNext
+        : block.riskBlocked
+        ? l10n.adaptiveBlockedRiskNext
+        : l10n.adaptiveBlockedFundsNext;
+    return AlertDialog(
+      key: const ValueKey('adaptive-blocked-dialog'),
+      title: Text(l10n.adaptiveBlockedTitle),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(description, style: const TextStyle(height: 1.45)),
+            const SizedBox(height: 14),
+            AdaptivePanel(
+              key: const ValueKey('adaptive-blocked-figures'),
+              children: [
+                if (block.riskBlocked)
+                  AdaptiveMetricRows([
+                    AdaptiveMetric(
+                      l10n.hardLossMaximum,
+                      fmt.money(block.maximumLoss, 4),
+                    ),
+                    AdaptiveMetric(
+                      l10n.minimumRiskAtStop,
+                      fmt.requiredFunds(block.riskAtStop),
+                    ),
+                    AdaptiveMetric(
+                      l10n.adaptiveBlockedRiskGap,
+                      fmt.requiredFunds(block.riskAtStop - block.maximumLoss),
+                      color: context.adaptiveAmber,
+                    ),
+                  ]),
+                if (block.riskBlocked && block.fundsBlocked)
+                  const Divider(height: 22),
+                if (block.fundsBlocked)
+                  AdaptiveMetricRows([
+                    AdaptiveMetric(
+                      l10n.tradingCapital,
+                      fmt.money(block.availableMargin, 4),
+                    ),
+                    AdaptiveMetric(
+                      l10n.brokerFundsAtStop,
+                      fmt.requiredFunds(block.fundsAtStop),
+                    ),
+                    AdaptiveMetric(
+                      l10n.adaptiveBlockedFundsGap,
+                      fmt.requiredFunds(
+                        block.fundsAtStop - block.availableMargin,
+                      ),
+                      color: context.adaptiveAmber,
+                    ),
+                  ]),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Text(
+              next,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                height: 1.45,
+              ),
+            ),
+          ],
+        ),
+      ),
+      actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+      actionsAlignment: MainAxisAlignment.center,
+      actions: [
+        SizedBox(
+          width: double.infinity,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (block.riskBlocked)
+                FilledButton(
+                  key: const ValueKey('adaptive-blocked-edit-loss'),
+                  onPressed: () =>
+                      Navigator.pop(context, AdaptiveBlockedEdit.loss),
+                  child: Text(l10n.adaptiveBlockedEditLoss),
+                ),
+              if (block.riskBlocked && block.fundsBlocked)
+                const SizedBox(height: 8),
+              if (block.fundsBlocked)
+                FilledButton(
+                  key: const ValueKey('adaptive-blocked-edit-funds'),
+                  onPressed: () =>
+                      Navigator.pop(context, AdaptiveBlockedEdit.funds),
+                  child: Text(l10n.adaptiveBlockedEditFunds),
+                ),
+              const SizedBox(height: 8),
+              OutlinedButton(
+                key: const ValueKey('adaptive-blocked-dismiss'),
+                onPressed: () => Navigator.pop(context),
+                child: Text(l10n.adaptiveBlockedDismiss),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}

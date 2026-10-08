@@ -138,6 +138,22 @@ void main() {
     expect(provider.visibleHistoryError, isNull);
   });
 
+  test(
+    'summary errors stay isolated from analysis submission errors',
+    () async {
+      final auth = await _authenticatedUser(1);
+      auth.client.dio.httpClientAdapter = _ErrorAdapter();
+      final provider = AnalysisProvider(auth)
+        ..errorMessage = 'Existing submission error';
+      addTearDown(provider.dispose);
+
+      await provider.loadSummary();
+
+      expect(provider.summaryError, isNotNull);
+      expect(provider.errorMessage, 'Existing submission error');
+    },
+  );
+
   test('history summary requests the complete server aggregate', () async {
     final auth = await _authenticatedUser(1);
     final adapter = _DeferredHistoryAdapter();
@@ -313,6 +329,22 @@ class _DeferredHistoryAdapter implements HttpClientAdapter {
       ),
     ]);
   }
+
+  @override
+  void close({bool force = false}) {}
+}
+
+class _ErrorAdapter implements HttpClientAdapter {
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) => throw DioException(
+    requestOptions: options,
+    type: DioExceptionType.connectionError,
+    message: 'offline',
+  );
 
   @override
   void close({bool force = false}) {}

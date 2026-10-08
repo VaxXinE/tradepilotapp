@@ -1,9 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
@@ -28,6 +31,11 @@ typedef AppleCredentialData = ({
   String? familyName,
 });
 typedef AppleCredentialProvider = Future<AppleCredentialData> Function();
+typedef MobileOAuthLauncher =
+    Future<String> Function({
+      required String url,
+      required String callbackScheme,
+    });
 
 /// State management untuk sesi login, setara dengan `AuthContext.tsx`
 /// pada app Expo di repo Trade-Pilot (`artifacts/mobile`).
@@ -35,9 +43,11 @@ class AuthProvider extends ChangeNotifier {
   AuthProvider({
     GoogleIdTokenProvider? googleIdTokenProvider,
     AppleCredentialProvider? appleCredentialProvider,
+    MobileOAuthLauncher? mobileOAuthLauncher,
   }) : _googleIdTokenProvider = googleIdTokenProvider ?? _requestGoogleIdToken,
        _appleCredentialProvider =
-           appleCredentialProvider ?? _requestAppleCredential {
+           appleCredentialProvider ?? _requestAppleCredential,
+       _mobileOAuthLauncher = mobileOAuthLauncher ?? _launchMobileOAuth {
     _client = TradePilotClient(
       baseUrl: ApiConfig.baseUrl,
       getToken: () async => _token,
@@ -52,6 +62,7 @@ class AuthProvider extends ChangeNotifier {
   final _storage = TokenStorage();
   final GoogleIdTokenProvider _googleIdTokenProvider;
   final AppleCredentialProvider _appleCredentialProvider;
+  final MobileOAuthLauncher _mobileOAuthLauncher;
   late final TradePilotClient _client;
   late final TelemetryService telemetry;
 
@@ -71,6 +82,9 @@ class AuthProvider extends ChangeNotifier {
   static const int maxDisplayNameLength = 100;
   static const _googleServerClientId =
       '929958103345-cbf424vgelrer7nkrr81l4iptsikuc1u.apps.googleusercontent.com';
+  static const _mobileOAuthCallbackScheme = 'id.tradepilot.app';
+  static const _mobileOAuthCallbackUri =
+      '$_mobileOAuthCallbackScheme://auth/callback';
   static Future<void>? _googleInitialization;
 
   int _sessionEpoch = 0;
@@ -217,6 +231,46 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// How long the app may stay in the background before the biometric lock
+  /// asks again. Short enough to matter on a shared phone, long enough that
+  /// switching to a banking app and back does not become a chore.
+  static const lockGracePeriod = Duration(minutes: 1);
+
+  DateTime? _backgroundedAt;
+  bool _lockEnabledAtBackground = false;
+
+  @visibleForTesting
+  DateTime Function() clock = DateTime.now;
+
+  /// Call when the app leaves the foreground. Remembers when, and whether the
+  /// lock is on, so [lockIfBackgroundedTooLong] can decide synchronously on
+  /// resume instead of flashing the dashboard while a storage read finishes.
+  Future<void> noteAppBackgrounded() async {
+    if (status != AuthStatus.authenticated || isLocked) return;
+    _backgroundedAt = clock();
+    try {
+      _lockEnabledAtBackground = await _storage.readBiometricLockEnabled();
+    } catch (_) {
+      _lockEnabledAtBackground = false;
+    }
+  }
+
+  /// Call when the app returns to the foreground.
+  void lockIfBackgroundedTooLong() {
+    final since = _backgroundedAt;
+    _backgroundedAt = null;
+    if (since == null ||
+        status != AuthStatus.authenticated ||
+        isLocked ||
+        !_lockEnabledAtBackground) {
+      return;
+    }
+    if (clock().difference(since) >= lockGracePeriod) {
+      isLocked = true;
+      notifyListeners();
+    }
+  }
+
   void unlockSession() {
     if (!isLocked) return;
     isLocked = false;
@@ -251,13 +305,18 @@ class AuthProvider extends ChangeNotifier {
       _usedGoogleSignIn = true;
       return true;
     } catch (error) {
+      // Logged before the cancellation check: Android's Credential Manager
+      // reports config problems (SHA-1, missing account) as `canceled`, which
+      // would otherwise fail silently.
+      if (kDebugMode) {
+        debugPrint(
+          error is GoogleSignInException
+              ? 'Google Sign-In failed: ${error.code.name} — '
+                    '${error.description ?? 'no description'}'
+              : 'Google Sign-In failed: $error',
+        );
+      }
       if (!_isGoogleCancellation(error)) {
-        if (kDebugMode && error is GoogleSignInException) {
-          debugPrint(
-            'Google Sign-In failed: ${error.code.name} — '
-            '${error.description ?? 'no description'}',
-          );
-        }
         errorMessage = _googleFriendlyError(error);
       }
       return false;
@@ -296,6 +355,127 @@ class AuthProvider extends ChangeNotifier {
       isBusy = false;
       notifyListeners();
     }
+  }
+
+  Future<bool> loginWithFacebook() => _loginWithMobileOAuth('facebook');
+
+  Future<bool> loginWithTikTok() => _loginWithMobileOAuth('tiktok');
+
+  Future<bool> _loginWithMobileOAuth(String provider) async {
+    isBusy = true;
+    errorMessage = null;
+    notifyListeners();
+
+    try {
+      if (kIsWeb ||
+          (defaultTargetPlatform != TargetPlatform.android &&
+              defaultTargetPlatform != TargetPlatform.iOS)) {
+        throw UnsupportedError('$provider OAuth is unavailable.');
+      }
+
+      final codeVerifier = _createPkceVerifier();
+      final challenge = base64UrlEncode(
+        sha256.convert(utf8.encode(codeVerifier)).bytes,
+      ).replaceAll('=', '');
+      final startUri =
+          Uri.parse('${ApiConfig.baseUrl}/auth/$provider/mobile/start').replace(
+            queryParameters: {
+              'redirect_uri': _mobileOAuthCallbackUri,
+              'code_challenge': challenge,
+              'code_challenge_method': 'S256',
+            },
+          );
+
+      final callbackValue = await _mobileOAuthLauncher(
+        url: startUri.toString(),
+        callbackScheme: _mobileOAuthCallbackScheme,
+      );
+      final callback = Uri.parse(callbackValue);
+      if (callback.scheme != _mobileOAuthCallbackScheme ||
+          callback.host != 'auth' ||
+          callback.path != '/callback') {
+        throw const FormatException('Unexpected OAuth callback.');
+      }
+
+      final callbackError = callback.queryParameters['error'];
+      if (callbackError == 'access_denied') return false;
+      if (callbackError != null) {
+        throw _MobileOAuthException(callbackError);
+      }
+      final code = callback.queryParameters['code'];
+      if (code == null || code.isEmpty) {
+        throw const FormatException('OAuth callback code is missing.');
+      }
+
+      final response = await _client.dio.post<Map<String, dynamic>>(
+        '/auth/mobile/exchange',
+        data: {'code': code, 'codeVerifier': codeVerifier},
+      );
+      final data = response.data;
+      if (data == null) {
+        throw StateError('Backend did not return an authentication response.');
+      }
+      final authResponse = standardSerializers.deserializeWith(
+        AuthResponse.serializer,
+        data,
+      );
+      await _applyAuthResponse(authResponse);
+      return true;
+    } catch (error) {
+      if (!_isMobileOAuthCancellation(error)) {
+        errorMessage = _mobileOAuthFriendlyError(error, provider);
+      }
+      return false;
+    } finally {
+      isBusy = false;
+      notifyListeners();
+    }
+  }
+
+  static String _createPkceVerifier() {
+    final random = Random.secure();
+    final bytes = List<int>.generate(64, (_) => random.nextInt(256));
+    return base64UrlEncode(bytes).replaceAll('=', '');
+  }
+
+  static Future<String> _launchMobileOAuth({
+    required String url,
+    required String callbackScheme,
+  }) =>
+      FlutterWebAuth2.authenticate(url: url, callbackUrlScheme: callbackScheme);
+
+  static bool _isMobileOAuthCancellation(Object error) {
+    if (error is PlatformException) {
+      final code = error.code.toLowerCase();
+      return code.contains('cancel');
+    }
+    return false;
+  }
+
+  static String _mobileOAuthFriendlyError(Object error, String provider) {
+    final name = provider == 'tiktok' ? 'TikTok' : 'Facebook';
+    if (error is UnsupportedError ||
+        error is _MobileOAuthException &&
+            error.code == 'provider_unavailable') {
+      return AppMessages.l10n.socialSignInUnavailable(name);
+    }
+    if (error is _MobileOAuthException &&
+        error.code == 'email_already_registered') {
+      return AppMessages.l10n.socialEmailAlreadyRegistered;
+    }
+    if (error is _MobileOAuthException && error.code == 'facebook_no_email') {
+      return AppMessages.l10n.socialFacebookNoEmail;
+    }
+    if (error is _MobileOAuthException && error.code == 'signup_expired') {
+      return AppMessages.l10n.socialSignupExpired;
+    }
+    if (error is DioException &&
+        (error.type == DioExceptionType.connectionError ||
+            error.type == DioExceptionType.connectionTimeout ||
+            error.type == DioExceptionType.receiveTimeout)) {
+      return AppMessages.l10n.errNoConnection;
+    }
+    return AppMessages.l10n.socialSignInFailed(name);
   }
 
   static Future<String> _requestGoogleIdToken({
@@ -1002,4 +1182,10 @@ class AuthProvider extends ChangeNotifier {
     }
     return AppMessages.l10n.errGeneric;
   }
+}
+
+class _MobileOAuthException implements Exception {
+  const _MobileOAuthException(this.code);
+
+  final String code;
 }

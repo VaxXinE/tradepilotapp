@@ -2,7 +2,7 @@ name: tradepilotapp
 description: "Trade Pilot — AI Trading Assistant (Flutter mobile app)."
 publish_to: 'none'
 
-version: 1.0.2+4
+version: 1.0.14+16
 
 environment:
   sdk: ^3.10.4
@@ -51,8 +51,13 @@ dependencies:
   image_picker: ^1.1.2
   google_sign_in: ^7.2.0
   sign_in_with_apple: ^7.0.1
+  flutter_web_auth_2: ^5.1.0
   crypto: ^3.0.7
-
+  share_plus: ^13.3.0
+  gal: ^2.3.3
+  printing: ^5.15.1
+  pdf: ^3.13.1
+  in_app_review: ^2.0.12
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -65,7 +70,9 @@ flutter:
   generate: true
   uses-material-design: true
   assets:
-    - assets/images/
+    - assets/guide_core.json
+    - assets/guide_more.json
+    - assets/images/trade_pilot_app_icon.png
     - shorebird.yaml
   fonts:
     - family: Inter

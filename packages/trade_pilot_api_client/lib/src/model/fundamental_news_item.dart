@@ -128,8 +128,9 @@ class _$FundamentalNewsItemSerializer
         case r'id':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(String),
-          ) as String;
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
+          if (valueDes == null) continue;
           result.id = valueDes;
           break;
         case r'title':
@@ -156,9 +157,8 @@ class _$FundamentalNewsItemSerializer
         case r'url':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType.nullable(String),
-          ) as String?;
-          if (valueDes == null) continue;
+            specifiedType: const FullType(String),
+          ) as String;
           result.url = valueDes;
           break;
         case r'publishedAt':

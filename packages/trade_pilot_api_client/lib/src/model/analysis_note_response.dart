@@ -17,10 +17,10 @@ part 'analysis_note_response.g.dart';
 abstract class AnalysisNoteResponse
     implements Built<AnalysisNoteResponse, AnalysisNoteResponseBuilder> {
   @BuiltValueField(wireName: r'note')
-  String get note;
+  String? get note;
 
   @BuiltValueField(wireName: r'updatedAt')
-  DateTime get updatedAt;
+  DateTime? get updatedAt;
 
   AnalysisNoteResponse._();
 
@@ -54,12 +54,12 @@ class _$AnalysisNoteResponseSerializer
     yield r'note';
     yield serializers.serialize(
       object.note,
-      specifiedType: const FullType(String),
+      specifiedType: const FullType.nullable(String),
     );
     yield r'updatedAt';
     yield serializers.serialize(
       object.updatedAt,
-      specifiedType: const FullType(DateTime),
+      specifiedType: const FullType.nullable(DateTime),
     );
   }
 
@@ -89,15 +89,15 @@ class _$AnalysisNoteResponseSerializer
         case r'note':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(String),
-          ) as String;
+            specifiedType: const FullType.nullable(String),
+          ) as String?;
           result.note = valueDes;
           break;
         case r'updatedAt':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(DateTime),
-          ) as DateTime;
+            specifiedType: const FullType.nullable(DateTime),
+          ) as DateTime?;
           result.updatedAt = valueDes;
           break;
         default:

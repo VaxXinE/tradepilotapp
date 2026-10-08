@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
-import '../../core/mindset/mindset_engine.dart';
-import '../../providers/analysis_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../l10n/l10n.dart';
+import '../../widgets/product_state_view.dart';
 import '../../widgets/responsive_page.dart';
 
 class TraderMirrorScreen extends StatefulWidget {
@@ -56,8 +55,6 @@ class _TraderMirrorScreenState extends State<TraderMirrorScreen> {
         body: Center(child: Text(context.l10n.sessionChangedReopen)),
       );
     }
-    final analysis = context.watch<AnalysisProvider>();
-    final reflections = const MindsetEngine().evaluate(analysis.history);
     final data = _data;
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.traderMirror)),
@@ -65,21 +62,26 @@ class _TraderMirrorScreenState extends State<TraderMirrorScreen> {
         onRefresh: _load,
         child: _loading && data == null
             ? ListView(
-                children: const [
-                  SizedBox(height: 240),
-                  Center(child: CircularProgressIndicator()),
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: responsivePagePadding(context),
+                children: [
+                  ProductStateView(
+                    kind: ProductStateKind.loading,
+                    title: context.l10n.traderMirror,
+                    message: context.l10n.traderMirrorDescription,
+                  ),
                 ],
               )
             : _error != null && data == null
             ? ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: responsivePagePadding(context),
                 children: [
-                  const SizedBox(height: 180),
-                  Center(child: Text(_error!)),
-                  Center(
-                    child: TextButton(
-                      onPressed: _load,
-                      child: Text(context.l10n.tryAgain),
-                    ),
+                  ProductStateView(
+                    kind: ProductStateKind.error,
+                    title: _error!,
+                    actionLabel: context.l10n.tryAgain,
+                    onAction: _load,
                   ),
                 ],
               )
@@ -89,85 +91,86 @@ class _TraderMirrorScreenState extends State<TraderMirrorScreen> {
                 children: [
                   Text(context.l10n.traderMirrorDisclaimer),
                   const SizedBox(height: 16),
-                  if (data!.highlights.isEmpty)
+                  if (data!.insights.overallGated)
                     Card(
                       child: Padding(
                         padding: const EdgeInsets.all(16),
-                        child: Text(context.l10n.traderMirrorNoHighlights),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              context.l10n.traderMirrorNoHighlights,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              context.l10n.traderMirrorGated(
+                                '${data.insights.sessions.need ?? 5}',
+                                data.insights.totalResolved,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            TextButton.icon(
+                              onPressed: () => Navigator.of(context).maybePop(),
+                              icon: const Icon(Icons.menu_book_outlined),
+                              label: Text(context.l10n.tradeJournal),
+                            ),
+                          ],
+                        ),
                       ),
                     )
-                  else
-                    ...data.highlights.map(
-                      (highlight) => Card(
-                        child: ListTile(
-                          leading: const Icon(Icons.auto_awesome_outlined),
-                          title: Text(
-                            Localizations.localeOf(context).languageCode == 'id'
-                                ? highlight.idText
-                                : highlight.en,
+                  else ...[
+                    if (data.highlights.isNotEmpty)
+                      ...data.highlights.map(
+                        (highlight) => Card(
+                          child: ListTile(
+                            leading: const Icon(Icons.auto_awesome_outlined),
+                            title: Text(
+                              Localizations.localeOf(context).languageCode ==
+                                      'id'
+                                  ? highlight.idText
+                                  : highlight.en,
+                            ),
                           ),
                         ),
                       ),
+                    const SizedBox(height: 18),
+                    Text(
+                      // The server sends no window for a lifetime reading.
+                      data.insights.windowDays == null
+                          ? context.l10n.traderMirrorCoverageAll(
+                              data.insights.totalResolved,
+                            )
+                          : context.l10n.traderMirrorCoverage(
+                              data.insights.windowDays!,
+                              data.insights.totalResolved,
+                            ),
+                      style: const TextStyle(fontWeight: FontWeight.w800),
                     ),
-                  const SizedBox(height: 18),
-                  Text(
-                    context.l10n.traderMirrorCoverage(
-                      data.insights.windowDays,
-                      data.insights.totalResolved,
+                    const SizedBox(height: 8),
+                    _GateRow(
+                      label: context.l10n.traderMirrorSessions,
+                      insight: data.insights.sessions,
                     ),
-                    style: const TextStyle(fontWeight: FontWeight.w800),
-                  ),
-                  const SizedBox(height: 8),
-                  _GateRow(
-                    label: context.l10n.traderMirrorSessions,
-                    insight: data.insights.sessions,
-                  ),
-                  _GateRow(
-                    label: context.l10n.traderMirrorInstruments,
-                    insight: data.insights.instruments,
-                  ),
-                  _GateRow(
-                    label: context.l10n.traderMirrorTiming,
-                    insight: data.insights.timing,
-                  ),
-                  _GateRow(
-                    label: context.l10n.traderMirrorPostLoss,
-                    insight: data.insights.postLoss,
-                  ),
-                  _GateRow(
-                    label: context.l10n.traderMirrorEvaluationDiscipline,
-                    insight: data.insights.exitDiscipline,
-                  ),
-                  const SizedBox(height: 22),
-                  Text(
-                    context.l10n.traderMirrorProcessReflection,
-                    style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w900,
+                    _GateRow(
+                      label: context.l10n.traderMirrorInstruments,
+                      insight: data.insights.instruments,
                     ),
-                  ),
-                  Text(
-                    context.l10n.traderMirrorBasedOn(analysis.history.length),
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                  const SizedBox(height: 8),
-                  if (reflections.isEmpty)
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Text(context.l10n.traderMirrorNeedMore),
-                      ),
-                    )
-                  else
-                    ...reflections.map(
-                      (insight) => Card(
-                        child: ListTile(
-                          leading: const Icon(Icons.self_improvement_outlined),
-                          title: Text(insight.title),
-                          subtitle: Text(insight.message),
-                        ),
-                      ),
+                    _GateRow(
+                      label: context.l10n.traderMirrorTiming,
+                      insight: data.insights.timing,
                     ),
+                    _GateRow(
+                      label: context.l10n.traderMirrorPostLoss,
+                      insight: data.insights.postLoss,
+                    ),
+                    _GateRow(
+                      label: context.l10n.traderMirrorEvaluationDiscipline,
+                      insight: data.insights.exitDiscipline,
+                    ),
+                  ],
                 ],
               ),
       ),

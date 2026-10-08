@@ -17,9 +17,7 @@ void main() {
     await tester.pumpWidget(
       localizedTestApp(
         theme: AppTheme.dark,
-        home: const Scaffold(
-          body: SingleChildScrollView(child: AppFooter()),
-        ),
+        home: const Scaffold(body: SingleChildScrollView(child: AppFooter())),
       ),
     );
 
@@ -36,6 +34,48 @@ void main() {
     expect(find.text('Terms of Service'), findsOneWidget);
     expect(find.text('Support'), findsOneWidget);
     expect(find.text('Delete Account'), findsOneWidget);
+    for (final label in [
+      'Privacy Policy',
+      'Terms of Service',
+      'Support',
+      'Delete Account',
+    ]) {
+      final target = find.ancestor(
+        of: find.text(label),
+        matching: find.byType(InkWell),
+      );
+      expect(tester.getSize(target).height, greaterThanOrEqualTo(44));
+      expect(tester.getSize(target).width, greaterThanOrEqualTo(44));
+    }
+  });
+
+  testWidgets('footer links share rows instead of one line each', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      localizedTestApp(
+        theme: AppTheme.dark,
+        home: const Scaffold(body: SingleChildScrollView(child: AppFooter())),
+      ),
+    );
+
+    // Each link is only as wide as its text. Filling the whole row (the old
+    // behaviour) forced one link per line and made the footer very tall.
+    final footerWidth = tester
+        .getSize(find.byKey(const Key('app-footer')))
+        .width;
+    for (final label in ['Support', 'Delete Account']) {
+      final target = find.ancestor(
+        of: find.text(label),
+        matching: find.byType(InkWell),
+      );
+      expect(tester.getSize(target).width, lessThan(footerWidth / 2));
+    }
   });
 
   testWidgets('footer stays readable at a larger text scale', (tester) async {
@@ -49,9 +89,7 @@ void main() {
         data: const MediaQueryData(textScaler: TextScaler.linear(1.3)),
         child: localizedTestApp(
           theme: AppTheme.light,
-          home: const Scaffold(
-            body: SingleChildScrollView(child: AppFooter()),
-          ),
+          home: const Scaffold(body: SingleChildScrollView(child: AppFooter())),
         ),
       ),
     );

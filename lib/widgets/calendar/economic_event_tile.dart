@@ -28,7 +28,7 @@ class EconomicEventTile extends StatelessWidget {
       children: [
         Row(
           children: [
-            ImpactLevelBadge(level: event.impactLevel),
+            Flexible(child: ImpactLevelBadge(level: event.impactLevel)),
             const Spacer(),
             event.currency.toUpperCase() == 'USD'
                 ? const _UsFlag()
@@ -62,7 +62,7 @@ class EconomicEventTile extends StatelessWidget {
               if (event.actual.isNotEmpty)
                 _Metric(label: context.l10n.actual, value: event.actual),
               if (event.forecast.isNotEmpty)
-                _Metric(label: 'Forecast', value: event.forecast),
+                _Metric(label: context.l10n.forecast, value: event.forecast),
               if (event.previous.isNotEmpty)
                 _Metric(label: context.l10n.previous, value: event.previous),
             ],

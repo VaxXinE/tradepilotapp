@@ -1,12 +1,22 @@
 import 'dart:async';
+import 'dart:io';
+import 'dart:math' as math;
+import 'dart:ui' as ui;
 
-import 'package:dio/dio.dart';
+// Dipakai hanya oleh pemuatan jurnal yang disembunyikan.
+// import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
+import 'package:gal/gal.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/market/analysis_instruments.dart';
+import '../notifications/notifications_screen.dart';
 import '../../core/theme/app_colors.dart';
 import '../../l10n/l10n.dart';
 import '../../models/market_models.dart';
@@ -15,18 +25,27 @@ import '../../providers/auth_provider.dart';
 import '../../providers/credit_provider.dart';
 import '../../providers/market_provider.dart';
 import '../../providers/progression_provider.dart';
+import '../../services/adaptive_plan_share.dart';
+import '../../services/export_watermark.dart';
+import '../../core/analysis/adaptive_position_plan.dart';
+import '../../widgets/adaptive_plan_common.dart';
+import '../../widgets/adaptive_plan_result.dart';
 import '../../services/native_push_service.dart';
 import '../../widgets/adaptive_position_plan_card.dart';
+import '../../services/in_app_review_service.dart';
 import '../../widgets/analysis_levels_chart.dart';
-import '../../widgets/analysis_note_card.dart';
+import '../../widgets/app_footer.dart';
+// Catatan & jurnal disembunyikan sementara.
+// import '../../widgets/analysis_note_card.dart';
 import '../../widgets/analysis_quota_dialog.dart';
 import '../../widgets/error_banner.dart';
+import '../../widgets/product_state_view.dart';
 import '../../widgets/risk/risk_tools_section.dart';
-import '../journal/trade_journal_screen.dart';
+// import '../journal/trade_journal_screen.dart';
 import '../mindset/mindset_screen.dart';
-import '../topup/topup_screen.dart';
 
 const _analysisTimeframes = ['1m', '5m', '15m', '30m', '1h', '4h', '1D', '1W'];
+const _reasoningClipboard = MethodChannel('id.tradepilot.app/clipboard');
 
 const _tradingViewSymbols = <String, String>{
   'XAU/USD': 'OANDA:XAUUSD',
@@ -100,16 +119,22 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
   bool _refreshingFundamentals = false;
   bool _alertStatusLoading = true;
   bool _alertBusy = false;
-  bool _journalLoading = true;
+  // bool _journalLoading = true;
   String? _selectedTimeframe;
 
   String? _marketError;
   String? _alertError;
-  String? _journalError;
+  // String? _journalError;
   AlertStatus? _alertStatus;
-  JournalEntry? _journalEntry;
+  // JournalEntry? _journalEntry;
 
   Timer? _pollTimer;
+
+  /// Debounce ganti timeframe, menyamai web: tap langsung memicu analisis
+  /// baru tanpa tombol konfirmasi terpisah, tapi ditunda 650ms supaya
+  /// ketuk-ketuk cepat antar timeframe cuma memicu satu request (untuk
+  /// pilihan terakhir), bukan satu request per ketukan.
+  Timer? _quickTimeframeTimer;
 
   @override
   void initState() {
@@ -124,7 +149,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
           unawaited(telemetry.pageView('/analyses/${widget.analysisId}'));
         }
         unawaited(_loadAlertStatus());
-        unawaited(_loadJournalEntry());
+        // unawaited(_loadJournalEntry());
       }
     });
 
@@ -146,6 +171,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
   void dispose() {
     _pollTimer?.cancel();
     _pollTimer = null;
+    _quickTimeframeTimer?.cancel();
     super.dispose();
   }
 
@@ -292,7 +318,11 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
 
   Future<void> _reanalyze([String? timeframe]) async {
     final analysis = _analysis;
-    if (analysis == null || _reanalyzing) return;
+    if (analysis == null ||
+        _reanalyzing ||
+        !isVerifiedAnalysisInstrument(analysis.instrument)) {
+      return;
+    }
     final auth = context.read<AuthProvider>();
     final selected = timeframe ?? analysis.timeframe;
     setState(() {
@@ -313,17 +343,16 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
     if (created == null) {
       final limit = analysisProvider.quotaLimit;
       if (limit != null) {
-        final openTopUp = await showAnalysisQuotaDialog(context, limit);
-        if (openTopUp && mounted) {
-          await Navigator.of(
-            context,
-          ).push(MaterialPageRoute(builder: (_) => const TopUpScreen()));
-          if (mounted) unawaited(analysisProvider.loadQuota());
-        }
+        await showAnalysisQuotaDialog(context, limit);
         return;
       }
+      // The server explains why (unverified price data, unsupported code, ...).
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.analysisCreateFailed)),
+        SnackBar(
+          content: Text(
+            analysisProvider.errorMessage ?? context.l10n.analysisCreateFailed,
+          ),
+        ),
       );
       return;
     }
@@ -342,6 +371,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
       );
     }
 
+    context.read<InAppReviewService?>()?.recordAnalysisCreatedSoon();
     unawaited(
       auth.telemetry.track(
         AnalyticsEventBodyEventTypeEnum.analysisCreated,
@@ -365,12 +395,152 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
     final analysis = _analysis;
     if (analysis == null || _reanalyzing) return;
 
+    _quickTimeframeTimer?.cancel();
+
     if (timeframe == analysis.timeframe) {
       setState(() => _selectedTimeframe = null);
       return;
     }
 
     setState(() => _selectedTimeframe = timeframe);
+    _quickTimeframeTimer = Timer(const Duration(milliseconds: 650), () {
+      _quickTimeframeTimer = null;
+      if (!mounted || _reanalyzing || _selectedTimeframe != timeframe) return;
+      unawaited(_reanalyze(timeframe));
+    });
+  }
+
+  /// Copies or saves one Adaptive side as a watermarked summary image. Only
+  /// the saved analysis time and the plan's own numbers go into it.
+  Future<void> _shareAdaptiveSummary(
+    Analysis analysis,
+    String action,
+    AdaptiveSidePlan plan,
+    AdaptiveCalculation calculation,
+  ) async {
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    void notify(String message) => messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+    final locale = Localizations.localeOf(context).toString();
+    final fmt = AdaptiveFormat.of(context);
+    final stamp = DateFormat.yMMMd(locale).add_Hm();
+    final rec = calculation.recommendation;
+    final actionable =
+        rec.valid &&
+        rec.evaluationFor(plan.side).status == AdaptiveSideStatus.viable &&
+        rec.result.sideOf(plan.side) != null;
+    final budget = calculation.budgetFor(plan.side);
+    final rule = calculation.rule;
+    try {
+      if (plan.layers.isEmpty) throw StateError('Adaptive plan unavailable');
+      final data = AdaptivePlanShareData(
+        title: l10n.adaptiveShareSummaryTitle,
+        instrument: analysis.instrument,
+        timeframe: analysis.timeframe,
+        analyzedAt:
+            '${l10n.chartShareAnalyzed}: ${stamp.format(analysis.createdAt.toLocal())}',
+        generatedLabel:
+            '${l10n.chartShareMade}: ${stamp.format(DateTime.now())}',
+        sideLabel: plan.side == 'buy'
+            ? l10n.priceRiseScenario
+            : l10n.priceFallScenario,
+        status: actionable
+            ? l10n.planReadyToReview
+            : l10n.conditionalScenarioNotActionable,
+        actionable: actionable,
+        statusDetail: actionable
+            ? l10n.objectiveScenario
+            : l10n.referenceNumbersOnly,
+        account: rule == null
+            ? ''
+            : adaptiveTierLabel(context, rule.accountTier),
+        style: l10n.adaptiveRiskStyleActive(
+          adaptiveRiskStyleLabel(context, calculation.style),
+        ),
+        positionsTitle: l10n.entryLotPerPosition,
+        positions: [
+          for (final layer in plan.layers)
+            (
+              label:
+                  '${l10n.adaptiveLevel} ${layer.level + 1} · ${layer.level == 0 ? l10n.initialEntry : l10n.additionalPosition}',
+              value:
+                  '${fmt.number(layer.price, 4)} · ${fmt.number(layer.lot)} ${l10n.adaptiveLot}',
+            ),
+        ],
+        metrics: [
+          (
+            label: l10n.adaptiveSnapshotTotalLots,
+            value: '${fmt.number(plan.totalLots)} ${l10n.adaptiveLot}',
+            detail: null,
+          ),
+          (
+            label: l10n.oneFinalStopLoss,
+            value: fmt.number(plan.stopLoss, 4),
+            detail: null,
+          ),
+          (
+            label: l10n.estimatedMaximumLoss,
+            value: fmt.money(plan.estimatedLoss),
+            detail: null,
+          ),
+          if (budget != null) ...[
+            (
+              label: l10n.usableRiskBudget,
+              value: fmt.money(budget.usableRiskBudget),
+              detail: l10n.adaptiveRiskBudgetRate(
+                fmt.number(budget.riskUtilizationRate * 100, 0),
+              ),
+            ),
+            (
+              label: l10n.reservedLossCeiling,
+              value: fmt.money(budget.unusedRiskBuffer),
+              detail: null,
+            ),
+          ],
+          (
+            label: l10n.adaptiveMarginRequired,
+            value: fmt.money(plan.marginRequired),
+            detail: null,
+          ),
+          if (plan.takeProfit1 != null)
+            (
+              label: l10n.takeProfit1,
+              value: fmt.number(plan.takeProfit1, 4),
+              detail:
+                  '${l10n.adaptiveTpProfit}: ${fmt.profit(plan.profitToTp1)}',
+            ),
+          if (plan.takeProfit2 != null)
+            (
+              label: l10n.takeProfit2,
+              value: fmt.number(plan.takeProfit2, 4),
+              detail:
+                  '${l10n.adaptiveTpProfit}: ${fmt.profit(plan.profitToTp2)}',
+            ),
+        ],
+        notes: [l10n.adaptiveShareSummaryWarning],
+      );
+      final png = await watermarkPng(
+        await renderAdaptivePlanSharePng(data),
+        attribution: exportAttribution(
+          instrument: analysis.instrument,
+          timeframe: analysis.timeframe,
+          analysisId: analysis.id,
+        ),
+      );
+      if (action == 'copy') {
+        await _reasoningClipboard.invokeMethod<void>('copyImage', png);
+        notify(l10n.adaptiveShareSummaryCopied);
+      } else {
+        final stem =
+            'tradepilot-adaptive-${analysis.instrument.replaceAll(RegExp(r'[^A-Za-z0-9]'), '')}-${plan.side}-${analysis.timeframe}';
+        await Gal.putImageBytes(png, name: stem);
+        notify(l10n.adaptiveShareSummaryDownloaded);
+      }
+    } catch (_) {
+      notify(l10n.adaptiveShareSummaryFailed);
+    }
   }
 
   Future<void> _refreshFundamentals() async {
@@ -403,6 +573,20 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
     }
   }
 
+  Future<void> _openFullReasoning(Analysis analysis, bool isPro) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _FullReasoningSheet(
+        analysis: analysis,
+        isPro: isPro,
+        onOpenUrl: _openExternalUrl,
+      ),
+    );
+  }
+
   void _openGuide(ProgressionEvidenceStartInputGuideIdEnum guideId) {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => MindsetScreen(initialGuideId: guideId)),
@@ -413,16 +597,21 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      showDragHandle: true,
+      useSafeArea: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
       builder: (sheetContext) => SafeArea(
         child: FractionallySizedBox(
-          heightFactor: .85,
+          heightFactor: .9,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
             child: RiskMapCard(
               instrument: analysis.instrument,
               selectedTimeframe: _selectedTimeframe ?? analysis.timeframe,
               initiallyExpanded: true,
+              sheetMode: true,
               onSelectTimeframe: (timeframe) {
                 Navigator.of(sheetContext).pop();
                 _selectTimeframe(timeframe);
@@ -435,7 +624,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
   }
 
   Future<void> _refresh() async {
-    await Future.wait([_load(), _loadAlertStatus(), _loadJournalEntry()]);
+    await Future.wait([_load(), _loadAlertStatus()]);
 
     final analysis = _analysis;
 
@@ -444,45 +633,46 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
     }
   }
 
-  Future<void> _loadJournalEntry() async {
-    if (!mounted) return;
-    setState(() {
-      _journalLoading = true;
-      _journalError = null;
-    });
-    try {
-      final response = await context
-          .read<AuthProvider>()
-          .client
-          .tradeJournal
-          .getJournalEntryForAnalysis(analysisId: widget.analysisId);
-      if (!mounted) return;
-      setState(() => _journalEntry = response.data);
-    } on DioException catch (error) {
-      if (!mounted) return;
-      if (error.response?.statusCode == 404) {
-        setState(() => _journalEntry = null);
-      } else {
-        setState(() => _journalError = context.l10n.journalCheckFailed);
-      }
-    } catch (_) {
-      if (mounted) {
-        setState(() => _journalError = context.l10n.journalCheckFailed);
-      }
-    } finally {
-      if (mounted) setState(() => _journalLoading = false);
-    }
-  }
-
-  Future<void> _openJournal(Analysis analysis) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) =>
-            TradeJournalScreen(analysis: analysis, initialEntry: _journalEntry),
-      ),
-    );
-    if (mounted) await _loadJournalEntry();
-  }
+  // Catatan & jurnal disembunyikan sementara.
+  // Future<void> _loadJournalEntry() async {
+  //   if (!mounted) return;
+  //   setState(() {
+  //     _journalLoading = true;
+  //     _journalError = null;
+  //   });
+  //   try {
+  //     final response = await context
+  //         .read<AuthProvider>()
+  //         .client
+  //         .tradeJournal
+  //         .getJournalEntryForAnalysis(analysisId: widget.analysisId);
+  //     if (!mounted) return;
+  //     setState(() => _journalEntry = response.data);
+  //   } on DioException catch (error) {
+  //     if (!mounted) return;
+  //     if (error.response?.statusCode == 404) {
+  //       setState(() => _journalEntry = null);
+  //     } else {
+  //       setState(() => _journalError = context.l10n.journalCheckFailed);
+  //     }
+  //   } catch (_) {
+  //     if (mounted) {
+  //       setState(() => _journalError = context.l10n.journalCheckFailed);
+  //     }
+  //   } finally {
+  //     if (mounted) setState(() => _journalLoading = false);
+  //   }
+  // }
+  //
+  // Future<void> _openJournal(Analysis analysis) async {
+  //   await Navigator.of(context).push(
+  //     MaterialPageRoute(
+  //       builder: (_) =>
+  //           TradeJournalScreen(analysis: analysis, initialEntry: _journalEntry),
+  //     ),
+  //   );
+  //   if (mounted) await _loadJournalEntry();
+  // }
 
   // ===========================================================================
   // ANALYSIS LEVEL ALERTS
@@ -519,9 +709,14 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
         setState(() => _alertBusy = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              push.errorMessage ??
-                  context.l10n.alertNeedsNotificationPermission,
+            content: Text(push.errorMessage ?? context.l10n.alertsNoPush),
+            action: SnackBarAction(
+              label: context.l10n.alertsEnableNotifications,
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const NotificationsScreen(),
+                ),
+              ),
             ),
           ),
         );
@@ -543,9 +738,11 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            enabled
-                ? context.l10n.alertEnableFailed
-                : context.l10n.alertDisableFailed,
+            !enabled
+                ? context.l10n.alertDisableFailed
+                : analysisProvider.lastAlertFailure == AlertFailure.unsupported
+                ? context.l10n.alertsArmError
+                : context.l10n.alertsRetryError,
           ),
         ),
       );
@@ -686,35 +883,36 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
     );
   }
 
-  Future<bool> _saveNote(String note) async {
-    final current = _analysis;
-    if (current == null) return false;
-    final provider = context.read<AnalysisProvider>();
-    final updated = await provider.saveAnalysisNote(
-      analysis: current,
-      note: note,
-    );
-    if (!mounted) return false;
-    if (updated != null) {
-      setState(() => _analysis = updated);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            updated.hasNote == true
-                ? context.l10n.noteSaved
-                : context.l10n.noteDeleted,
-          ),
-        ),
-      );
-      return true;
-    }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(provider.errorMessage ?? context.l10n.noteSaveFailed),
-      ),
-    );
-    return false;
-  }
+  // Catatan pribadi disembunyikan sementara.
+  // Future<bool> _saveNote(String note) async {
+  //   final current = _analysis;
+  //   if (current == null) return false;
+  //   final provider = context.read<AnalysisProvider>();
+  //   final updated = await provider.saveAnalysisNote(
+  //     analysis: current,
+  //     note: note,
+  //   );
+  //   if (!mounted) return false;
+  //   if (updated != null) {
+  //     setState(() => _analysis = updated);
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(
+  //         content: Text(
+  //           updated.hasNote == true
+  //               ? context.l10n.noteSaved
+  //               : context.l10n.noteDeleted,
+  //         ),
+  //       ),
+  //     );
+  //     return true;
+  //   }
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     SnackBar(
+  //       content: Text(provider.errorMessage ?? context.l10n.noteSaveFailed),
+  //     ),
+  //   );
+  //   return false;
+  // }
 
   // ===========================================================================
   // BUILD
@@ -736,10 +934,18 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
     final analysis = _analysis;
 
     if (analysis == null) {
-      final missing = Center(
-        child: Text(
-          context.l10n.analysisNotFound,
-          style: TextStyle(color: muted),
+      final missing = RefreshIndicator(
+        onRefresh: _load,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            ProductStateView(
+              kind: ProductStateKind.error,
+              title: context.l10n.analysisNotFound,
+              actionLabel: context.l10n.tryAgain,
+              onAction: () => unawaited(_load()),
+            ),
+          ],
         ),
       );
       return widget.embedded
@@ -761,26 +967,23 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
         ? (isDark ? AppColors.bearishDark : AppColors.bearishLight)
         : (isDark ? AppColors.neutralDark : AppColors.neutralLight);
 
-    final biasLabel = isPro
-        ? (isBullish
-              ? 'Bullish'
-              : isBearish
-              ? 'Bearish'
-              : 'Neutral')
-        : (isBullish
-              ? context.l10n.beginnerBullish
-              : isBearish
-              ? context.l10n.beginnerBearish
-              : context.l10n.beginnerWait);
+    final biasLabel = isBullish
+        ? context.l10n.bullishBias
+        : isBearish
+        ? context.l10n.bearishBias
+        : context.l10n.neutral;
 
     final isExpired = analysis.validUntil.isBefore(DateTime.now());
-    final mainScenario = isPro ? analysis.baseCase : analysis.mainScenario;
-    final alternativeScenario = isPro
-        ? (isBearish ? analysis.bullishScenario : analysis.bearishScenario)
-        : analysis.alternativeScenario;
-    final invalidation = isPro
-        ? analysis.invalidationConditions
-        : analysis.failureConditions;
+    // Dipakai oleh Scenarios/Opportunity/Risk/invalidation yang sekarang
+    // dinonaktifkan di bawah (lihat komentar di reading order) karena tidak
+    // ada padanannya di web.
+    // final mainScenario = isPro ? analysis.baseCase : analysis.mainScenario;
+    // final alternativeScenario = isPro
+    //     ? (isBearish ? analysis.bullishScenario : analysis.bearishScenario)
+    //     : analysis.alternativeScenario;
+    // final invalidation = isPro
+    //     ? analysis.invalidationConditions
+    //     : analysis.failureConditions;
 
     // Saat embedded, detail ini menjadi bagian dari ListView halaman Analisis,
     // jadi ia tidak boleh menggulir (atau menarik-untuk-refresh) sendiri.
@@ -790,24 +993,27 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
           ? const NeverScrollableScrollPhysics()
           : const AlwaysScrollableScrollPhysics(),
       padding: widget.embedded ? EdgeInsets.zero : const EdgeInsets.all(16),
+      // Urutan mengikuti reading order web (Aset/Timeframe -> Bias -> Sinyal
+      // -> Chart -> Saran Level -> Fundamental -> Ringkasan Konteks Pasar ->
+      // Ukuran Posisi -> Indikator Teknikal -> Alert -> panel batal/peluang/
+      // risiko/skenario/pro/eksekusi), supaya mobile terasa sama dengan web.
+      // Seksi yang cuma ada di mobile (outcome, beginner explainer, catatan
+      // konteks pengguna, jurnal, catatan, panduan) ditaruh di ekor, setelah
+      // konten inti, sebelum disclaimer & feedback penutup yang juga menutup
+      // halaman di web.
       children: [
-        _TimeframeCard(
+        _DetailTimeframeCard(
+          analysis: analysis,
           current: analysis.timeframe,
           selected: _selectedTimeframe,
           loading: _reanalyzing,
           onSelect: _selectTimeframe,
-          onAnalyze: () => _reanalyze(_selectedTimeframe),
           onOpenRiskMap: supportsRiskMap(analysis.instrument)
               ? () => _openRiskMap(analysis)
               : null,
-          usageLabel: analysisUsageLabel(
-            context,
-            context.watch<AnalysisProvider>().quota,
-          ),
         ),
 
         const SizedBox(height: 14),
-
         _HeaderCard(
           analysis: analysis,
           biasColor: biasColor,
@@ -815,12 +1021,11 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
           isExpired: isExpired,
           muted: muted,
           isPro: isPro,
+          onLearn: () => _openGuide(
+            ProgressionEvidenceStartInputGuideIdEnum.biasConfidenceValidity,
+          ),
+          onOpenReasoning: () => _openFullReasoning(analysis, isPro),
         ),
-
-        if (analysis.outcomeStatus != null) ...[
-          const SizedBox(height: 14),
-          _OutcomeCard(analysis: analysis),
-        ],
 
         const SizedBox(height: 14),
         _ChartCard(
@@ -838,60 +1043,66 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
 
         if (analysis.tradePlan != null) ...[
           const SizedBox(height: 14),
-          Text(
-            context.l10n.tradingPlanTitle,
-            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+          _TradePlanCard(
+            plan: analysis.tradePlan!,
+            isDark: isDark,
+            onLearn: () => _openGuide(
+              ProgressionEvidenceStartInputGuideIdEnum.standardPlan,
+            ),
           ),
-          const SizedBox(height: 5),
-          Text(
-            context.l10n.tradingPlanDisclaimer,
-            style: TextStyle(color: muted, fontSize: 11.5, height: 1.4),
-          ),
-          const SizedBox(height: 12),
-          _TradePlanCard(plan: analysis.tradePlan!, isDark: isDark),
         ],
 
         // Ringkasan "Bukti pasar" disembunyikan atas permintaan produk.
         // const SizedBox(height: 14),
         // _EvidenceSummary(analysis: analysis),
-        const SizedBox(height: 10),
-        Card(
-          child: ExpansionTile(
-            key: const ValueKey('analysis-market-evidence'),
-            initiallyExpanded: false,
-            leading: const Icon(Icons.query_stats_rounded),
-            title: Text(
-              context.l10n.supportingData,
-              style: const TextStyle(fontWeight: FontWeight.w800),
+        if (analysis.fundamentalContext != null) ...[
+          const SizedBox(height: 14),
+          _FundamentalSnapshotCard(
+            key: const ValueKey('analysis-fundamental-context'),
+            analysis: analysis,
+            refreshed: _fundamentalRefresh,
+            refreshing: _refreshingFundamentals,
+            onRefresh: _refreshFundamentals,
+            onLearn: () => _openGuide(
+              ProgressionEvidenceStartInputGuideIdEnum.technicalFundamental,
             ),
-            subtitle: Text(context.l10n.marketEvidenceDescription),
-            childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-            children: [
-              if (analysis.fundamentalContext != null) ...[
-                _FundamentalSnapshotCard(
-                  analysis: analysis,
-                  refreshed: _fundamentalRefresh,
-                  refreshing: _refreshingFundamentals,
-                  onRefresh: _refreshFundamentals,
-                  onOpenUrl: _openExternalUrl,
-                ),
-                const SizedBox(height: 12),
-              ],
-              _MarketSnapshotCard(analysis: analysis),
-            ],
+            onOpenUrl: _openExternalUrl,
           ),
+          const SizedBox(height: 10),
+        ],
+
+        const SizedBox(height: 14),
+        _MarketSnapshotCard(
+          key: const ValueKey('analysis-market-snapshot'),
+          analysis: analysis,
         ),
+
+        if (analysis.tradePlan != null) ...[
+          const SizedBox(height: 14),
+          AdaptivePositionPlanCard(
+            analysis: analysis,
+            candles: _candles,
+            onShareSummary: (action, plan, calculation) =>
+                _shareAdaptiveSummary(analysis, action, plan, calculation),
+            onLearn: () => _openGuide(
+              ProgressionEvidenceStartInputGuideIdEnum.adaptivePositionPlan,
+            ),
+          ),
+        ],
 
         if (_technical != null) ...[
           const SizedBox(height: 14),
           Card(
             child: ExpansionTile(
-              key: const ValueKey('analysis-technical-details'),
+              key: const ValueKey('analysis-technical-indicators'),
               initiallyExpanded: false,
-              leading: const Icon(Icons.analytics_outlined),
+              leading: Icon(
+                Icons.analytics_outlined,
+                color: Theme.of(context).colorScheme.primary,
+              ),
               title: Text(
                 context.l10n.technicalDetails,
-                style: const TextStyle(fontWeight: FontWeight.w800),
+                style: Theme.of(context).textTheme.titleSmall,
               ),
               subtitle: Text(context.l10n.technicalDetailsDescription),
               childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
@@ -900,68 +1111,12 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
                   technical: _technical!,
                   timeframe: analysis.timeframe,
                   showRawSignals: isPro,
+                  showSummary: true,
                 ),
               ],
             ),
           ),
         ],
-
-        if (analysis.tradePlan != null) ...[
-          const SizedBox(height: 14),
-          AdaptivePositionPlanCard(analysis: analysis, candles: _candles),
-        ],
-
-        if (!isPro) ...[
-          const SizedBox(height: 14),
-          _BeginnerMeaningCard(
-            analysis: analysis,
-            biasLabel: biasLabel,
-            biasColor: biasColor,
-          ),
-        ],
-
-        if (analysis.userInputContext?.trim().isNotEmpty == true) ...[
-          const SizedBox(height: 14),
-          _SectionCard(
-            title: context.l10n.providedContext,
-            body: analysis.userInputContext!,
-            icon: Icons.chat_bubble_outline,
-          ),
-        ],
-
-        if (invalidation?.trim().isNotEmpty == true) ...[
-          const SizedBox(height: 14),
-          _InfoPanel(
-            key: const ValueKey('analysis-invalidation'),
-            title: context.l10n.analysisInvalidationTitle,
-            body: invalidation!,
-            icon: Icons.report_gmailerrorred_outlined,
-            color: Theme.of(context).colorScheme.error,
-          ),
-        ],
-
-        if (analysis.opportunity?.trim().isNotEmpty == true ||
-            analysis.risk?.trim().isNotEmpty == true) ...[
-          const SizedBox(height: 14),
-          _OpportunityRiskCard(analysis: analysis),
-        ],
-
-        const SizedBox(height: 14),
-        _ScenariosCard(
-          mainScenario: mainScenario,
-          alternativeScenario: alternativeScenario,
-        ),
-
-        if (isPro &&
-            (analysis.keyDriversTechnical?.trim().isNotEmpty == true ||
-                analysis.keyDriversFundamental?.trim().isNotEmpty == true ||
-                analysis.marketContext?.trim().isNotEmpty == true)) ...[
-          const SizedBox(height: 10),
-          _ProAnalysisDetailsCard(analysis: analysis),
-        ],
-
-        const SizedBox(height: 12),
-        _ExecutionInsightCard(analysis: analysis),
 
         if (analysis.tradePlan != null) ...[
           const SizedBox(height: 14),
@@ -984,92 +1139,207 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
           ),
         ],
 
-        const SizedBox(height: 14),
-        Text(
-          context.l10n.notesAndJournal,
-          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          context.l10n.notesAndJournalDescription,
-          style: TextStyle(color: muted, fontSize: 12, height: 1.4),
-        ),
-        const SizedBox(height: 10),
+        // Invalidation, Opportunity/Risk, Scenarios, Pro details, dan
+        // Execution insight disembunyikan: tidak ada padanannya di web
+        // (dicek langsung, termasuk di dalam modal "See full reasoning"),
+        // jadi tampil di mobile saja akan memecah paritas layout dengan web.
+        // if (invalidation?.trim().isNotEmpty == true) ...[
+        //   const SizedBox(height: 14),
+        //   _InfoPanel(
+        //     key: const ValueKey('analysis-invalidation'),
+        //     title: context.l10n.analysisInvalidationTitle,
+        //     body: invalidation!,
+        //     icon: Icons.report_gmailerrorred_outlined,
+        //     color: Theme.of(context).colorScheme.error,
+        //   ),
+        // ],
+        //
+        // if (analysis.opportunity?.trim().isNotEmpty == true ||
+        //     analysis.risk?.trim().isNotEmpty == true) ...[
+        //   const SizedBox(height: 10),
+        //   _OpportunityRiskCard(analysis: analysis),
+        // ],
+        //
+        // const SizedBox(height: 14),
+        // _ScenariosCard(
+        //   mainScenario: mainScenario,
+        //   alternativeScenario: alternativeScenario,
+        // ),
+        //
+        // if (isPro &&
+        //     (analysis.keyDriversTechnical?.trim().isNotEmpty == true ||
+        //         analysis.keyDriversFundamental?.trim().isNotEmpty == true ||
+        //         analysis.marketContext?.trim().isNotEmpty == true)) ...[
+        //   const SizedBox(height: 10),
+        //   _ProAnalysisDetailsCard(analysis: analysis),
+        // ],
+        //
+        // const SizedBox(height: 12),
+        // _ExecutionInsightCard(analysis: analysis),
 
-        _AnalysisJournalCard(
-          entry: _journalEntry,
-          loading: _journalLoading,
-          error: _journalError,
-          onOpen: () => _openJournal(analysis),
-          onRetry: _loadJournalEntry,
-        ),
-
-        const SizedBox(height: 14),
-
-        Consumer<AnalysisProvider>(
-          builder: (context, provider, _) => AnalysisNoteCard(
-            note: analysis.userNote,
-            isSaving: provider.isSavingNote(analysis.id),
-            onSave: _saveNote,
+        // ---------------------------------------------------------------
+        // Seksi berikut ini spesifik mobile (belum ada di web), jadi
+        // ditaruh setelah konten inti yang urutannya menyamai web.
+        // ---------------------------------------------------------------
+        // Kartu hasil (outcome) dan penjelasan "Apa artinya?" disembunyikan:
+        // di web hasil hanya berupa badge di header dan tidak ada kartu
+        // penjelasan pemula.
+        // if (analysis.outcomeStatus != null) ...[
+        //   const SizedBox(height: 14),
+        //   _OutcomeCard(analysis: analysis),
+        // ],
+        //
+        // if (!isPro) ...[
+        //   const SizedBox(height: 14),
+        //   _BeginnerMeaningCard(
+        //     analysis: analysis,
+        //     biasLabel: biasLabel,
+        //     biasColor: biasColor,
+        //   ),
+        // ],
+        if (analysis.userInputContext?.trim().isNotEmpty == true) ...[
+          const SizedBox(height: 14),
+          _SectionCard(
+            title: context.l10n.providedContext,
+            body: analysis.userInputContext!,
+            icon: Icons.chat_bubble_outline,
           ),
-        ),
+        ],
 
-        const SizedBox(height: 14),
-        Card(
-          child: ExpansionTile(
-            key: const ValueKey('analysis-guides'),
-            leading: const Icon(Icons.menu_book_outlined),
-            title: Text(
-              context.l10n.learnAnalysisBasics,
-              style: const TextStyle(fontWeight: FontWeight.w800),
-            ),
-            childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-            children: [
-              _AnalysisGuideLink(
-                label: context.l10n.learnBiasConfidence,
-                onPressed: () => _openGuide(
-                  ProgressionEvidenceStartInputGuideIdEnum
-                      .biasConfidenceValidity,
-                ),
-              ),
-              _AnalysisGuideLink(
-                label: context.l10n.learnTechnicalFundamental,
-                onPressed: () => _openGuide(
-                  ProgressionEvidenceStartInputGuideIdEnum.technicalFundamental,
-                ),
-              ),
-              _AnalysisGuideLink(
-                onPressed: () => _openGuide(
-                  ProgressionEvidenceStartInputGuideIdEnum.standardPlan,
-                ),
-              ),
-              _AnalysisGuideLink(
-                label: context.l10n.learnAdaptivePosition,
-                onPressed: () => _openGuide(
-                  ProgressionEvidenceStartInputGuideIdEnum.adaptivePositionPlan,
-                ),
-              ),
-            ],
-          ),
-        ),
+        // Catatan & jurnal disembunyikan sementara.
+        // const SizedBox(height: 14),
+        // Text(
+        //   context.l10n.notesAndJournal,
+        //   style: Theme.of(context).textTheme.titleMedium,
+        // ),
+        // const SizedBox(height: 4),
+        // Text(
+        //   context.l10n.notesAndJournalDescription,
+        //   style: Theme.of(context).textTheme.bodySmall?.copyWith(color: muted),
+        // ),
+        // const SizedBox(height: 10),
+        //
+        // _AnalysisJournalCard(
+        //   entry: _journalEntry,
+        //   loading: _journalLoading,
+        //   error: _journalError,
+        //   onOpen: () => _openJournal(analysis),
+        //   onRetry: _loadJournalEntry,
+        // ),
+        //
+        // const SizedBox(height: 14),
+        //
+        // Consumer<AnalysisProvider>(
+        //   builder: (context, provider, _) => AnalysisNoteCard(
+        //     note: analysis.userNote,
+        //     isSaving: provider.isSavingNote(analysis.id),
+        //     onSave: _saveNote,
+        //   ),
+        // ),
+        // Daftar "Pelajari dasar-dasar analisis" disembunyikan: di web tautan
+        // panduan hanya ada di dalam tiap kartu (tombol Pelajari).
+        // const SizedBox(height: 14),
+        // ExpansionTile(
+        //   key: const ValueKey('analysis-guides'),
+        //   leading: Icon(
+        //     Icons.menu_book_outlined,
+        //     color: Theme.of(context).colorScheme.primary,
+        //   ),
+        //   title: Text(
+        //     context.l10n.learnAnalysisBasics,
+        //     style: Theme.of(context).textTheme.titleSmall,
+        //   ),
+        //   childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        //   children: [
+        //     _AnalysisGuideLink(
+        //       label: context.l10n.learnBiasConfidence,
+        //       onPressed: () => _openGuide(
+        //         ProgressionEvidenceStartInputGuideIdEnum.biasConfidenceValidity,
+        //       ),
+        //     ),
+        //     _AnalysisGuideLink(
+        //       label: context.l10n.learnTechnicalFundamental,
+        //       onPressed: () => _openGuide(
+        //         ProgressionEvidenceStartInputGuideIdEnum.technicalFundamental,
+        //       ),
+        //     ),
+        //     _AnalysisGuideLink(
+        //       onPressed: () => _openGuide(
+        //         ProgressionEvidenceStartInputGuideIdEnum.standardPlan,
+        //       ),
+        //     ),
+        //     _AnalysisGuideLink(
+        //       label: context.l10n.learnAdaptivePosition,
+        //       onPressed: () => _openGuide(
+        //         ProgressionEvidenceStartInputGuideIdEnum.adaptivePositionPlan,
+        //       ),
+        //     ),
+        //   ],
+        // ),
 
-        const SizedBox(height: 14),
-
-        Text(
-          context.l10n.analysisSafetyDisclaimer,
-          textAlign: TextAlign.center,
-          style: TextStyle(color: muted, fontSize: 10.5, height: 1.4),
-        ),
-
+        // Kotak peringatan kuning di detail analisis disembunyikan: di web
+        // peringatan hanya teks untuk pembaca layar, dan yang terlihat adalah
+        // footer halaman. Footer yang sama dipasang di akhir halaman ini.
+        // const SizedBox(height: 14),
+        //
+        // Container(
+        //   key: const ValueKey('analysis-safety-disclaimer'),
+        //   width: double.infinity,
+        //   padding: const EdgeInsets.all(14),
+        //   decoration: BoxDecoration(
+        //     color: Theme.of(
+        //       context,
+        //     ).colorScheme.primary.withValues(alpha: 0.08),
+        //     borderRadius: BorderRadius.circular(AppColors.radius),
+        //     border: Border.all(
+        //       color: Theme.of(
+        //         context,
+        //       ).colorScheme.primary.withValues(alpha: 0.4),
+        //     ),
+        //   ),
+        //   child: Row(
+        //     crossAxisAlignment: CrossAxisAlignment.start,
+        //     children: [
+        //       Icon(
+        //         Icons.warning_amber_rounded,
+        //         color: Theme.of(context).colorScheme.primary,
+        //       ),
+        //       const SizedBox(width: 10),
+        //       Expanded(
+        //         child: Column(
+        //           crossAxisAlignment: CrossAxisAlignment.start,
+        //           children: [
+        //             Text(
+        //               context.l10n.analysisSafetyDisclaimerTitle,
+        //               style: TextStyle(
+        //                 color: Theme.of(context).colorScheme.primary,
+        //                 fontWeight: FontWeight.w800,
+        //               ),
+        //             ),
+        //             const SizedBox(height: 6),
+        //             Text(
+        //               context.l10n.analysisSafetyDisclaimer,
+        //               style: TextStyle(
+        //                 color: Theme.of(context).colorScheme.primary,
+        //                 height: 1.4,
+        //               ),
+        //             ),
+        //           ],
+        //         ),
+        //       ),
+        //     ],
+        //   ),
+        // ),
         const SizedBox(height: 24),
 
-        Text(
-          context.l10n.analysisHelpfulQuestion,
-          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-        ),
-
-        const SizedBox(height: 10),
-
+        // Judul "Apakah analisis ini membantu?" disembunyikan: di web hanya
+        // ada dua tombol Berguna / Tidak Berguna tanpa judul.
+        // Text(
+        //   context.l10n.analysisHelpfulQuestion,
+        //   style: Theme.of(context).textTheme.titleSmall,
+        // ),
+        //
+        // const SizedBox(height: 10),
         LayoutBuilder(
           builder: (context, constraints) {
             final stackActions =
@@ -1106,6 +1376,8 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
           },
         ),
 
+        const SizedBox(height: 8),
+        const AppFooter(),
         const SizedBox(height: 24),
       ],
     );
@@ -1154,7 +1426,9 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
   }
 }
 
+// ignore: unused_element
 class _AnalysisGuideLink extends StatelessWidget {
+  // ignore: unused_element_parameter
   const _AnalysisGuideLink({required this.onPressed, this.label});
 
   final VoidCallback onPressed;
@@ -1171,64 +1445,89 @@ class _AnalysisGuideLink extends StatelessWidget {
   );
 }
 
-class _AnalysisJournalCard extends StatelessWidget {
-  const _AnalysisJournalCard({
-    required this.entry,
-    required this.loading,
-    required this.error,
-    required this.onOpen,
-    required this.onRetry,
-  });
+// ignore: unused_element
+class _AnalysisSectionHeading extends StatelessWidget {
+  const _AnalysisSectionHeading({required this.icon, required this.title});
 
-  final JournalEntry? entry;
-  final bool loading;
-  final String? error;
-  final VoidCallback onOpen;
-  final VoidCallback onRetry;
+  final IconData icon;
+  final String title;
 
   @override
-  Widget build(BuildContext context) {
-    final journal = entry;
-    return Card(
-      child: ListTile(
-        leading: const Icon(Icons.menu_book_outlined),
-        title: Text(
-          journal == null
-              ? context.l10n.journalCreateForTrade
-              : context.l10n.journalEntryForTrade,
-          style: const TextStyle(fontWeight: FontWeight.w800),
+  Widget build(BuildContext context) => Row(
+    children: [
+      Icon(icon, size: 19, color: Theme.of(context).colorScheme.primary),
+      const SizedBox(width: 8),
+      Expanded(
+        child: Text(
+          title,
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
         ),
-        subtitle: loading
-            ? const Padding(
-                padding: EdgeInsets.only(top: 8),
-                child: LinearProgressIndicator(),
-              )
-            : error != null
-            ? Text(error!)
-            : journal == null
-            ? Text(context.l10n.journalReflectionHint)
-            : Text(
-                [
-                  journal.side.name.toUpperCase(),
-                  journal.outcome.name,
-                  if (journal.mood?.trim().isNotEmpty == true) journal.mood!,
-                  if (journal.note?.trim().isNotEmpty == true) journal.note!,
-                ].join(' · '),
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-              ),
-        trailing: error != null
-            ? IconButton(
-                tooltip: context.l10n.tryAgain,
-                onPressed: onRetry,
-                icon: const Icon(Icons.refresh_rounded),
-              )
-            : const Icon(Icons.chevron_right_rounded),
-        onTap: loading || error != null ? null : onOpen,
       ),
-    );
-  }
+    ],
+  );
 }
+
+// Catatan & jurnal disembunyikan sementara.
+// class _AnalysisJournalCard extends StatelessWidget {
+//   const _AnalysisJournalCard({
+//     required this.entry,
+//     required this.loading,
+//     required this.error,
+//     required this.onOpen,
+//     required this.onRetry,
+//   });
+//
+//   final JournalEntry? entry;
+//   final bool loading;
+//   final String? error;
+//   final VoidCallback onOpen;
+//   final VoidCallback onRetry;
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     final journal = entry;
+//     return Card(
+//       child: ListTile(
+//         leading: const Icon(Icons.menu_book_outlined),
+//         title: Text(
+//           journal == null
+//               ? context.l10n.journalCreateForTrade
+//               : context.l10n.journalEntryForTrade,
+//           style: const TextStyle(fontWeight: FontWeight.w800),
+//         ),
+//         subtitle: loading
+//             ? const Padding(
+//                 padding: EdgeInsets.only(top: 8),
+//                 child: LinearProgressIndicator(),
+//               )
+//             : error != null
+//             ? Text(error!)
+//             : journal == null
+//             ? Text(context.l10n.journalReflectionHint)
+//             : Text(
+//                 [
+//                   journal.side.name.toUpperCase(),
+//                   journal.outcome.name,
+//                   if (journal.mood?.trim().isNotEmpty == true) journal.mood!,
+//                   if (journal.note?.trim().isNotEmpty == true) journal.note!,
+//                 ].join(' · '),
+//                 maxLines: 3,
+//                 overflow: TextOverflow.ellipsis,
+//               ),
+//         trailing: error != null
+//             ? IconButton(
+//                 tooltip: context.l10n.tryAgain,
+//                 onPressed: onRetry,
+//                 icon: const Icon(Icons.refresh_rounded),
+//               )
+//             : const Icon(Icons.chevron_right_rounded),
+//         onTap: loading || error != null ? null : onOpen,
+//       ),
+//     );
+//   }
+// }
 
 // =============================================================================
 // ANALYSIS LEVEL ALERTS
@@ -1265,8 +1564,10 @@ class _AnalysisAlertsCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Title and switch share the first row; the description below uses
+            // the full card width instead of a narrow column beside the switch.
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Icon(
                   enabled
@@ -1277,23 +1578,9 @@ class _AnalysisAlertsCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.l10n.priceLevelAlerts,
-                        style: const TextStyle(fontWeight: FontWeight.w800),
-                      ),
-                      SizedBox(height: 3),
-                      Text(
-                        context.l10n.priceLevelAlertsDescription,
-                        style: TextStyle(
-                          color: colors.onSurfaceVariant,
-                          fontSize: 11,
-                          height: 1.35,
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    context.l10n.priceLevelAlerts,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
                   ),
                 ),
                 if (loading || busy)
@@ -1313,15 +1600,27 @@ class _AnalysisAlertsCard extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 4),
+            Text(
+              context.l10n.priceLevelAlertsDescription,
+              style: TextStyle(
+                color: colors.onSurfaceVariant,
+                fontSize: 11,
+                height: 1.35,
+              ),
+            ),
+            // Like the web: the summary and the level list only appear once the
+            // alerts are switched on.
+            if (error != null || enabled) const SizedBox(height: 12),
             if (error != null)
-              Row(
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
                 children: [
-                  Expanded(
-                    child: Text(
-                      error!,
-                      style: TextStyle(color: colors.error, fontSize: 11),
-                    ),
+                  Text(
+                    error!,
+                    style: TextStyle(color: colors.error, fontSize: 11),
                   ),
                   TextButton(
                     onPressed: onRetry,
@@ -1329,7 +1628,7 @@ class _AnalysisAlertsCard extends StatelessWidget {
                   ),
                 ],
               )
-            else ...[
+            else if (enabled) ...[
               if (status?.levels.isNotEmpty == true)
                 Theme(
                   data: Theme.of(
@@ -1356,26 +1655,35 @@ class _AnalysisAlertsCard extends StatelessWidget {
                       for (final row in status!.levels)
                         Padding(
                           padding: const EdgeInsets.only(top: 8),
-                          child: Row(
+                          child: Wrap(
+                            alignment: WrapAlignment.spaceBetween,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 8,
+                            runSpacing: 4,
                             children: [
-                              Expanded(
-                                child: Text(
-                                  '${_alertLevelLabel(row.level)} · ${row.side.name.toUpperCase()}',
-                                  style: const TextStyle(
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
                               Text(
-                                '@ ${row.price}',
+                                '${_alertLevelLabel(row.level)} · ${row.side.name.toUpperCase()}',
                                 style: const TextStyle(
                                   fontSize: 11.5,
-                                  fontFeatures: [FontFeature.tabularFigures()],
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              _AlertStatusBadge(row: row),
+                              Wrap(
+                                spacing: 8,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                children: [
+                                  Text(
+                                    '@ ${row.price}',
+                                    style: const TextStyle(
+                                      fontSize: 11.5,
+                                      fontFeatures: [
+                                        FontFeature.tabularFigures(),
+                                      ],
+                                    ),
+                                  ),
+                                  _AlertStatusBadge(row: row),
+                                ],
+                              ),
                             ],
                           ),
                         ),
@@ -1442,23 +1750,239 @@ class _AlertStatusBadge extends StatelessWidget {
 // HEADER
 // =============================================================================
 
-class _TimeframeCard extends StatelessWidget {
-  const _TimeframeCard({
+class _DetailTimeframeCard extends StatelessWidget {
+  const _DetailTimeframeCard({
+    required this.analysis,
     required this.current,
     required this.selected,
     required this.loading,
     required this.onSelect,
-    required this.onAnalyze,
-    required this.usageLabel,
     this.onOpenRiskMap,
   });
 
+  final Analysis analysis;
   final String current;
   final String? selected;
   final bool loading;
   final ValueChanged<String> onSelect;
-  final VoidCallback onAnalyze;
-  final String usageLabel;
+  final VoidCallback? onOpenRiskMap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final muted = colors.onSurfaceVariant;
+    final condition = _marketConditionMeta(context, analysis.marketCondition);
+    final remaining = analysis.validUntil.difference(DateTime.now());
+    final hours = remaining.isNegative ? 0 : math.max(1, remaining.inHours);
+    final outcome = _outcomeBadgeMeta(context, analysis.outcomeStatus);
+    // Older analyses can carry an instrument that is no longer verified; their
+    // saved result stays readable but cannot be submitted again.
+    final canReanalyze = isVerifiedAnalysisInstrument(analysis.instrument);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Text(
+              analysis.instrument,
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
+            ),
+            _StatusChip(label: analysis.timeframe, color: colors.onSurface),
+            if (condition != null)
+              _StatusChip(
+                label: condition.$1,
+                color: condition.$2,
+                icon: condition.$3,
+              ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 8,
+          runSpacing: 6,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.schedule_rounded, color: colors.tertiary, size: 18),
+                const SizedBox(width: 7),
+                Flexible(
+                  child: Text(
+                    context.l10n.relevantForHours(hours),
+                    style: TextStyle(
+                      color: colors.tertiary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            if (outcome != null)
+              _StatusChip(
+                label: outcome.$1,
+                color: outcome.$2,
+                icon: outcome.$3,
+              ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          context.l10n.analysisCreatedAt(
+            DateFormat(
+              'd MMM yyyy, HH:mm',
+            ).format(analysis.createdAt.toLocal()),
+          ),
+          style: TextStyle(color: muted, fontSize: 12),
+        ),
+        const SizedBox(height: 16),
+        Card(
+          margin: EdgeInsets.zero,
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    const gap = 6.0;
+                    final width = (constraints.maxWidth - gap * 6) / 7;
+                    return Wrap(
+                      spacing: gap,
+                      runSpacing: 8,
+                      children: [
+                        for (final timeframe in _analysisTimeframes)
+                          SizedBox(
+                            width: timeframe == '1W' ? width : width,
+                            child: _TimeframeOption(
+                              key: Key('timeframe-option-$timeframe'),
+                              timeframe: timeframe,
+                              selected: (selected ?? current) == timeframe,
+                              onTap: loading || !canReanalyze
+                                  ? null
+                                  : () => onSelect(timeframe),
+                            ),
+                          ),
+                        if (onOpenRiskMap != null)
+                          SizedBox(
+                            height: 44,
+                            child: OutlinedButton.icon(
+                              key: const Key('timeframe-risk-map-button'),
+                              onPressed: loading ? null : onOpenRiskMap,
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: colors.primary,
+                                side: BorderSide(color: colors.primary),
+                                minimumSize: const Size(0, 44),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              icon: const Icon(
+                                Icons.monitor_heart_outlined,
+                                size: 19,
+                              ),
+                              label: Text(context.l10n.riskMapButton),
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  canReanalyze
+                      ? context.l10n.changeTimeframeDescription
+                      : context.l10n.instrumentLegacyUnsupported,
+                  key: canReanalyze
+                      ? null
+                      : const Key('legacy-instrument-unsupported'),
+                  style: TextStyle(color: muted, fontSize: 12, height: 1.4),
+                ),
+                if (loading) ...[
+                  const SizedBox(height: 10),
+                  const LinearProgressIndicator(),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+(String, Color, IconData)? _outcomeBadgeMeta(
+  BuildContext context,
+  AnalysisOutcomeStatusEnum? status,
+) {
+  final dark = Theme.of(context).brightness == Brightness.dark;
+  final positive = dark ? AppColors.bullishDark : AppColors.bullishLight;
+  final negative = dark ? AppColors.bearishDark : AppColors.bearishLight;
+  final neutral = Theme.of(context).colorScheme.onSurfaceVariant;
+
+  return switch (status) {
+    AnalysisOutcomeStatusEnum.pending => (
+      context.l10n.outcomePendingLabel,
+      neutral,
+      Icons.hourglass_empty_rounded,
+    ),
+    AnalysisOutcomeStatusEnum.tp1Hit => (
+      context.l10n.outcomeTp1Label,
+      positive,
+      Icons.check_circle_outline_rounded,
+    ),
+    AnalysisOutcomeStatusEnum.tp2Hit => (
+      context.l10n.outcomeTp2Label,
+      positive,
+      Icons.check_circle_outline_rounded,
+    ),
+    AnalysisOutcomeStatusEnum.slHit => (
+      context.l10n.outcomeSlLabel,
+      negative,
+      Icons.cancel_outlined,
+    ),
+    AnalysisOutcomeStatusEnum.expired => (
+      context.l10n.outcomeExpiredLabel,
+      Theme.of(context).colorScheme.primary,
+      Icons.schedule_outlined,
+    ),
+    AnalysisOutcomeStatusEnum.invalidated => (
+      context.l10n.outcomeInvalidatedLabel,
+      negative,
+      Icons.warning_amber_rounded,
+    ),
+    null => null,
+    _ => null,
+  };
+}
+
+// ignore: unused_element
+class _TimeframeCard extends StatelessWidget {
+  const _TimeframeCard({
+    required this.instrument,
+    required this.current,
+    required this.selected,
+    required this.loading,
+    required this.onSelect,
+    // ignore: unused_element_parameter
+    this.onOpenRiskMap,
+    // ignore: unused_element_parameter
+    this.onChangeInstrument,
+  });
+
+  final String instrument;
+  final String current;
+  final String? selected;
+  final bool loading;
+  final ValueChanged<String> onSelect;
+  final VoidCallback? onChangeInstrument;
 
   /// Peta risiko membandingkan timeframe satu sama lain, jadi tempatnya di
   /// kartu ini — bukan sebagai tombol lepas di dasar halaman. `null` ketika
@@ -1467,12 +1991,66 @@ class _TimeframeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     return Card(
+      margin: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final asset = Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.l10n.analysis,
+                      style: TextStyle(
+                        color: colors.primary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      instrument,
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.w900),
+                    ),
+                  ],
+                );
+                if (onChangeInstrument == null) return asset;
+
+                final action = OutlinedButton(
+                  onPressed: loading ? null : onChangeInstrument,
+                  child: Text(
+                    context.l10n.analyzeTitle,
+                    textAlign: TextAlign.center,
+                  ),
+                );
+                final stack =
+                    constraints.maxWidth < 300 ||
+                    MediaQuery.textScalerOf(context).scale(1) > 1.3;
+                if (stack) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [asset, const SizedBox(height: 10), action],
+                  );
+                }
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: asset),
+                    const SizedBox(width: 12),
+                    action,
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 14),
+            const Divider(height: 1),
+            const SizedBox(height: 14),
             Text(
               context.l10n.changeTimeframe,
               style: const TextStyle(fontWeight: FontWeight.w900),
@@ -1517,27 +2095,10 @@ class _TimeframeCard extends StatelessWidget {
                 );
               },
             ),
-            if (selected != null && selected != current) ...[
-              const SizedBox(height: 14),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  key: const Key('analyze-selected-timeframe-button'),
-                  onPressed: loading ? null : onAnalyze,
-                  icon: const Icon(Icons.auto_awesome_rounded, size: 18),
-                  label: Text(context.l10n.analyzeThisTimeframe),
-                ),
-              ),
-              const SizedBox(height: 7),
-              Text(
-                usageLabel,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
+            // Tidak ada tombol konfirmasi terpisah — menyamai web, memilih
+            // timeframe lain langsung memicu analisis baru (lihat debounce
+            // 650ms di _selectTimeframe). LinearProgressIndicator di bawah
+            // sudah cukup sebagai indikator "sedang memproses".
             if (onOpenRiskMap case final onOpenRiskMap?) ...[
               // Aksi sekunder, dipisahkan dari kontrol pemilihan di atasnya.
               const SizedBox(height: 14),
@@ -1548,8 +2109,16 @@ class _TimeframeCard extends StatelessWidget {
                 child: OutlinedButton.icon(
                   key: const Key('timeframe-risk-map-button'),
                   onPressed: loading ? null : onOpenRiskMap,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: colors.primary,
+                    side: BorderSide(color: colors.primary),
+                    minimumSize: const Size.fromHeight(48),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                   icon: const Icon(Icons.monitor_heart_outlined, size: 18),
-                  label: Text(context.l10n.riskMapTitle),
+                  label: Text(context.l10n.riskMapButton),
                 ),
               ),
             ],
@@ -1595,6 +2164,7 @@ class _TimeframeOption extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(AppColors.radiusLg),
           child: Container(
+            constraints: const BoxConstraints(minHeight: 44),
             padding: const EdgeInsets.symmetric(vertical: 10),
             alignment: Alignment.center,
             decoration: BoxDecoration(
@@ -1621,8 +2191,873 @@ class _TimeframeOption extends StatelessWidget {
   }
 }
 
+// ignore: unused_element
 class _HeaderCard extends StatelessWidget {
   const _HeaderCard({
+    required this.analysis,
+    required this.biasColor,
+    required this.biasLabel,
+    required this.isExpired,
+    required this.muted,
+    required this.isPro,
+    required this.onLearn,
+    required this.onOpenReasoning,
+  });
+
+  final Analysis analysis;
+  final Color biasColor;
+  final String biasLabel;
+  final bool isExpired;
+  final Color muted;
+  final bool isPro;
+  final VoidCallback onLearn;
+  final VoidCallback onOpenReasoning;
+
+  @override
+  Widget build(BuildContext context) {
+    final rawBias = (analysis.tradingBias ?? '').toLowerCase();
+    final gaugeValue = rawBias.contains('bear') || rawBias == 'sell'
+        ? .18
+        : rawBias.contains('bull') || rawBias == 'buy'
+        ? .82
+        : .5;
+    final confidenceMin = analysis.confidenceMin ?? 0;
+    final confidenceMax = analysis.confidenceMax ?? 0;
+    final confidenceReason =
+        (isPro ? analysis.uncertaintyNotes : analysis.whyReason)?.trim();
+    final risk = (analysis.riskLevel ?? '').toLowerCase();
+    final riskLabel = risk.contains('high') || risk.contains('tinggi')
+        ? context.l10n.riskHighLabel
+        : risk.contains('low') || risk.contains('rendah')
+        ? context.l10n.riskLowLabel
+        : context.l10n.riskModerateLabel;
+    final riskBars = risk.contains('high') || risk.contains('tinggi')
+        ? 3
+        : risk.contains('low') || risk.contains('rendah')
+        ? 1
+        : 2;
+
+    return Card(
+      key: const ValueKey('analysis-result-header'),
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              context.l10n.directionalBias,
+              style: TextStyle(
+                color: muted,
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                letterSpacing: .6,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(Icons.trending_down_rounded, color: biasColor, size: 22),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    biasLabel,
+                    style: TextStyle(
+                      color: biasColor,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+                _StatusChip(label: analysis.timeframe, color: muted),
+              ],
+            ),
+            const SizedBox(height: 8),
+            AdaptiveInfoNote(
+              context.l10n.biasRiskDisclaimer,
+              key: const ValueKey('bias-risk-disclaimer'),
+              fontSize: 11.5,
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 138,
+              width: double.infinity,
+              child: CustomPaint(painter: _DirectionalGaugePainter(gaugeValue)),
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    context.l10n.strongBearishBias,
+                    style: TextStyle(color: muted, fontSize: 10),
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    context.l10n.neutralWait,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: muted, fontSize: 10),
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    context.l10n.strongBullishBias,
+                    textAlign: TextAlign.end,
+                    style: TextStyle(color: muted, fontSize: 10),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              context.l10n.biasNotInstruction,
+              style: TextStyle(color: muted, fontSize: 12),
+            ),
+            const Divider(height: 32),
+            Wrap(
+              spacing: 24,
+              runSpacing: 14,
+              alignment: WrapAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.l10n.aiConfidence,
+                      style: TextStyle(color: muted, fontSize: 12),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      '$confidenceMin% – $confidenceMax%',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      context.l10n.riskTitle,
+                      style: TextStyle(color: muted, fontSize: 12),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      riskLabel,
+                      key: const ValueKey('analysis-risk-chip'),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            AdaptiveInfoNote(
+              context.l10n.riskOverallNote,
+              key: const ValueKey('risk-overall-note'),
+              fontSize: 11.5,
+            ),
+            const SizedBox(height: 10),
+            TextButton.icon(
+              onPressed: onLearn,
+              icon: const Icon(Icons.menu_book_outlined, size: 18),
+              label: Text(context.l10n.learn),
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.zero,
+                minimumSize: const Size(48, 48),
+                alignment: Alignment.centerLeft,
+              ),
+            ),
+            // Same two bars as the web: risk level on top, AI confidence below.
+            _RiskLevelBars(level: riskBars, semanticLabel: riskLabel),
+            _ConfidenceRange(
+              minimum: confidenceMin / 100,
+              maximum: confidenceMax / 100,
+            ),
+            if (confidenceReason?.isNotEmpty == true) ...[
+              const SizedBox(height: 16),
+              Container(
+                key: const ValueKey('analysis-confidence-reason'),
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(AppColors.radiusMd),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.l10n.whyNotHigherConfidence.toUpperCase(),
+                      style: TextStyle(
+                        color: muted,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      confidenceReason!,
+                      style: const TextStyle(height: 1.45),
+                    ),
+                    const SizedBox(height: 6),
+                    TextButton(
+                      key: const ValueKey('analysis-full-reasoning-button'),
+                      onPressed: onOpenReasoning,
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: const Size(48, 48),
+                        alignment: Alignment.centerLeft,
+                      ),
+                      child: Text(
+                        context.l10n.seeFullReasoning,
+                        style: const TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FullReasoningSheet extends StatefulWidget {
+  const _FullReasoningSheet({
+    required this.analysis,
+    required this.isPro,
+    required this.onOpenUrl,
+  });
+
+  final Analysis analysis;
+  final bool isPro;
+  final ValueChanged<String> onOpenUrl;
+
+  @override
+  State<_FullReasoningSheet> createState() => _FullReasoningSheetState();
+}
+
+class _FullReasoningSheetState extends State<_FullReasoningSheet> {
+  final _imageKey = GlobalKey();
+  bool _copyingImage = false;
+  Timer? _noticeTimer;
+  String? _notice;
+  bool _noticeIsError = false;
+
+  String? _value(String? value) {
+    final trimmed = value?.trim();
+    return trimmed?.isNotEmpty == true ? trimmed : null;
+  }
+
+  List<String> get _conditions {
+    final raw = _value(
+      widget.isPro
+          ? widget.analysis.invalidationConditions
+          : widget.analysis.failureConditions,
+    );
+    if (raw == null) return const [];
+    final parts = raw
+        .split(RegExp(r'(?:\r?\n|[•;])'))
+        .map((item) => item.replaceFirst(RegExp(r'^\s*[-*]\s*'), '').trim())
+        .where((item) => item.isNotEmpty)
+        .toList();
+    return parts.isEmpty ? [raw] : parts;
+  }
+
+  List<(String, String?)> get _citations {
+    final cited = widget.analysis.fundamentalCitations;
+    if (cited == null) return const [];
+    final news = widget.analysis.fundamentalContext?.newsItems;
+    return [
+      for (final title in cited.newsTitles)
+        (
+          title,
+          news
+              ?.where(
+                (item) =>
+                    item.title.trim().toLowerCase() ==
+                    title.trim().toLowerCase(),
+              )
+              .firstOrNull
+              ?.url,
+        ),
+      for (final event in cited.calendarEvents) (event, null),
+    ];
+  }
+
+  String _copyableText(BuildContext context) {
+    final l10n = context.l10n;
+    final reason = _value(
+      widget.isPro
+          ? widget.analysis.uncertaintyNotes
+          : widget.analysis.whyReason,
+    );
+    final technical = _value(widget.analysis.keyDriversTechnical);
+    final fundamental = _value(widget.analysis.keyDriversFundamental);
+    final risk = _value(widget.analysis.risk);
+    final sections = <String>[
+      l10n.whyNotHigherConfidence,
+      l10n.analysisBasis(widget.analysis.instrument, widget.analysis.timeframe),
+      ?reason,
+      ?technical == null ? null : '${l10n.technicalEvidence}: $technical',
+      ?fundamental == null ? null : '${l10n.newsCalendarContext}: $fundamental',
+      if (_citations.isNotEmpty)
+        '${l10n.citedSources}: ${_citations.map((item) => item.$1).join(', ')}',
+      ?risk == null ? null : '${l10n.mainRisk}: $risk',
+      if (_conditions.isNotEmpty)
+        '${l10n.reassessIf}:\n${_conditions.map((item) => '• $item').join('\n')}',
+      exportAttribution(
+        instrument: widget.analysis.instrument,
+        timeframe: widget.analysis.timeframe,
+        analysisId: widget.analysis.id,
+      ),
+    ];
+    return sections.join('\n\n');
+  }
+
+  void _showMessage(String message, {bool isError = false}) {
+    _noticeTimer?.cancel();
+    setState(() {
+      _notice = message;
+      _noticeIsError = isError;
+    });
+    _noticeTimer = Timer(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _notice = null);
+    });
+  }
+
+  Future<void> _copyText() async {
+    try {
+      await Clipboard.setData(ClipboardData(text: _copyableText(context)));
+      if (mounted) _showMessage(context.l10n.fullReasoningCopied);
+    } catch (_) {
+      if (mounted) {
+        _showMessage(context.l10n.fullReasoningCopyFailed, isError: true);
+      }
+    }
+  }
+
+  Future<void> _copyImage() async {
+    if (_copyingImage) return;
+    final pixelRatio = MediaQuery.devicePixelRatioOf(
+      context,
+    ).clamp(1, 2).toDouble();
+    setState(() => _copyingImage = true);
+    try {
+      await WidgetsBinding.instance.endOfFrame;
+      final boundary =
+          _imageKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
+      if (boundary == null) throw StateError('Reasoning image is unavailable');
+      final image = await boundary.toImage(pixelRatio: pixelRatio);
+      final data = await image.toByteData(format: ui.ImageByteFormat.png);
+      image.dispose();
+      if (data == null) throw StateError('Reasoning image encoding failed');
+      final marked = await watermarkPng(
+        data.buffer.asUint8List(),
+        attribution: exportAttribution(
+          instrument: widget.analysis.instrument,
+          timeframe: widget.analysis.timeframe,
+          analysisId: widget.analysis.id,
+        ),
+      );
+      await _reasoningClipboard.invokeMethod<void>('copyImage', marked);
+      if (mounted) _showMessage(context.l10n.reasoningImageCopied);
+    } catch (_) {
+      if (mounted) {
+        _showMessage(context.l10n.reasoningImageCopyFailed, isError: true);
+      }
+    } finally {
+      if (mounted) setState(() => _copyingImage = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _noticeTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final muted = colors.onSurfaceVariant;
+    final reason = _value(
+      widget.isPro
+          ? widget.analysis.uncertaintyNotes
+          : widget.analysis.whyReason,
+    );
+    final technical = _value(widget.analysis.keyDriversTechnical);
+    final fundamental = _value(widget.analysis.keyDriversFundamental);
+    final risk = _value(widget.analysis.risk);
+
+    return FractionallySizedBox(
+      heightFactor: .94,
+      child: Material(
+        color: colors.surface,
+        shape: RoundedRectangleBorder(
+          side: BorderSide(color: colors.outlineVariant),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Column(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(24, 18, 24, 8),
+                      child: RepaintBoundary(
+                        key: _imageKey,
+                        child: ColoredBox(
+                          color: colors.surface,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      context.l10n.whyNotHigherConfidence,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleLarge
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w900,
+                                          ),
+                                    ),
+                                  ),
+                                  IconButton(
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(),
+                                    tooltip: MaterialLocalizations.of(
+                                      context,
+                                    ).closeButtonTooltip,
+                                    icon: const Icon(Icons.close_rounded),
+                                  ),
+                                ],
+                              ),
+                              Text(
+                                context.l10n.analysisBasis(
+                                  widget.analysis.instrument,
+                                  widget.analysis.timeframe,
+                                ),
+                                style: TextStyle(color: muted),
+                              ),
+                              if (reason != null) ...[
+                                const SizedBox(height: 18),
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: colors.surfaceContainerHigh,
+                                    borderRadius: BorderRadius.circular(
+                                      AppColors.radiusMd,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    reason,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      height: 1.55,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              if (technical != null)
+                                _ReasoningParagraph(
+                                  label: context.l10n.technicalEvidence,
+                                  value: technical,
+                                ),
+                              if (fundamental != null)
+                                _ReasoningParagraph(
+                                  label: context.l10n.newsCalendarContext,
+                                  value: fundamental,
+                                ),
+                              if (_citations.isNotEmpty) ...[
+                                const SizedBox(height: 12),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  children: [
+                                    Text(
+                                      '${context.l10n.citedSources.toUpperCase()}:',
+                                      style: TextStyle(
+                                        color: muted,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                    for (final citation in _citations)
+                                      ActionChip(
+                                        avatar: const Icon(
+                                          Icons.article_outlined,
+                                          size: 16,
+                                        ),
+                                        label: ConstrainedBox(
+                                          constraints: const BoxConstraints(
+                                            maxWidth: 240,
+                                          ),
+                                          child: Text(
+                                            citation.$1,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        onPressed: citation.$2 == null
+                                            ? null
+                                            : () => widget.onOpenUrl(
+                                                citation.$2!,
+                                              ),
+                                      ),
+                                  ],
+                                ),
+                              ],
+                              if (risk != null)
+                                _ReasoningParagraph(
+                                  label: context.l10n.mainRisk,
+                                  value: risk,
+                                ),
+                              if (_conditions.isNotEmpty) ...[
+                                const SizedBox(height: 22),
+                                Text(
+                                  '${context.l10n.reassessIf}:',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                for (final condition in _conditions)
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 6),
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '• ',
+                                          style: TextStyle(color: muted),
+                                        ),
+                                        Expanded(
+                                          child: Text(
+                                            condition,
+                                            style: TextStyle(
+                                              color: muted,
+                                              height: 1.45,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+                    child: Column(
+                      children: [
+                        const Divider(),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            key: const ValueKey('copy-full-reasoning-text'),
+                            onPressed: _copyText,
+                            icon: const Icon(Icons.copy_rounded),
+                            label: Text(context.l10n.copyText),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton.icon(
+                            key: const ValueKey('copy-full-reasoning-image'),
+                            onPressed: _copyingImage ? null : _copyImage,
+                            icon: _copyingImage
+                                ? const SizedBox.square(
+                                    dimension: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.image_outlined),
+                            label: Text(context.l10n.copyImage),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: IgnorePointer(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 180),
+                  child: _notice == null
+                      ? const SizedBox.shrink()
+                      : _CopyNotice(
+                          key: ValueKey(_notice),
+                          message: _notice!,
+                          isError: _noticeIsError,
+                        ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CopyNotice extends StatelessWidget {
+  const _CopyNotice({super.key, required this.message, required this.isError});
+
+  final String message;
+  final bool isError;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final color = isError ? colors.error : colors.primary;
+    return Semantics(
+      liveRegion: true,
+      child: Material(
+        color: colors.surfaceContainerHigh,
+        elevation: 8,
+        shadowColor: Colors.black54,
+        child: Container(
+          key: const ValueKey('copy-reasoning-popup'),
+          constraints: const BoxConstraints(minHeight: 72),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: colors.outlineVariant)),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                isError ? Icons.error_outline_rounded : Icons.check_rounded,
+                color: color,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  message,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ReasoningParagraph extends StatelessWidget {
+  const _ReasoningParagraph({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(top: 22),
+    child: Text.rich(
+      TextSpan(
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          height: 1.55,
+        ),
+        children: [
+          TextSpan(
+            text: '$label: ',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          TextSpan(text: value),
+        ],
+      ),
+    ),
+  );
+}
+
+/// Track color for the risk and confidence meters. The plain muted surface is
+/// almost the same as the card in dark mode, so the range looked like it was
+/// floating; a light tint of the text color keeps it visible in both themes.
+Color _meterTrackColor(BuildContext context) {
+  final colors = Theme.of(context).colorScheme;
+  return Color.alphaBlend(
+    colors.onSurface.withValues(alpha: .10),
+    colors.surfaceContainerHighest,
+  );
+}
+
+/// Three-segment risk meter shown above the confidence range, as on the web:
+/// 1 green = low, 2 yellow = moderate, 3 red = high; unused segments are muted.
+class _RiskLevelBars extends StatelessWidget {
+  const _RiskLevelBars({required this.level, required this.semanticLabel});
+
+  final int level;
+  final String semanticLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final filled = switch (level) {
+      1 => const Color(0xFF22C55E),
+      2 => const Color(0xFFEAB308),
+      _ => const Color(0xFFEF4444),
+    };
+    final empty = _meterTrackColor(context);
+    return Semantics(
+      key: const ValueKey('analysis-risk-bars'),
+      label: semanticLabel,
+      excludeSemantics: true,
+      child: Row(
+        children: [
+          for (var n = 1; n <= 3; n++) ...[
+            if (n > 1) const SizedBox(width: 4),
+            Expanded(
+              child: Container(
+                height: 8,
+                decoration: BoxDecoration(
+                  color: n <= level ? filled : empty,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ConfidenceRange extends StatelessWidget {
+  const _ConfidenceRange({required this.minimum, required this.maximum});
+
+  final double minimum;
+  final double maximum;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    children: [
+      LayoutBuilder(
+        builder: (context, constraints) {
+          final start = minimum.clamp(0.0, 1.0);
+          final end = maximum.clamp(start, 1.0);
+          return SizedBox(
+            height: 20,
+            child: Stack(
+              alignment: Alignment.centerLeft,
+              children: [
+                Container(
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: _meterTrackColor(context),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+                Positioned(
+                  left: constraints.maxWidth * start,
+                  width: constraints.maxWidth * (end - start),
+                  child: Container(
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: const [
+          Text('0%', style: TextStyle(fontSize: 10)),
+          Text('100%', style: TextStyle(fontSize: 10)),
+        ],
+      ),
+    ],
+  );
+}
+
+class _DirectionalGaugePainter extends CustomPainter {
+  const _DirectionalGaugePainter(this.value);
+
+  final double value;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height - 12);
+    final radius = math.min(size.width / 2 - 28, size.height - 24);
+    final rect = Rect.fromCircle(center: center, radius: radius);
+    final gauge = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 18
+      ..strokeCap = StrokeCap.round
+      // Saturated at both ends so the extremes read as unambiguously
+      // bearish / bullish (web: deep red -> vivid green, not pastel).
+      ..shader = const LinearGradient(
+        colors: [
+          Color(0xFFB91C1C),
+          Color(0xFFF97316),
+          Color(0xFFFACC15),
+          Color(0xFF4ADE80),
+          Color(0xFF15803D),
+        ],
+      ).createShader(rect);
+    canvas.drawArc(rect, math.pi, math.pi, false, gauge);
+
+    final angle = math.pi + math.pi * value.clamp(0.0, 1.0);
+    final tip =
+        center + Offset(math.cos(angle), math.sin(angle)) * (radius - 18);
+    canvas.drawLine(
+      center,
+      tip,
+      Paint()
+        ..color = Colors.white
+        ..strokeWidth = 6
+        ..strokeCap = StrokeCap.round,
+    );
+    canvas.drawCircle(center, 12, Paint()..color = Colors.white);
+    canvas.drawCircle(center, 4, Paint()..color = const Color(0xFF111318));
+  }
+
+  @override
+  bool shouldRepaint(covariant _DirectionalGaugePainter oldDelegate) =>
+      oldDelegate.value != value;
+}
+
+// ignore: unused_element
+class _LegacyHeaderCard extends StatelessWidget {
+  const _LegacyHeaderCard({
     required this.analysis,
     required this.biasColor,
     required this.biasLabel,
@@ -1669,151 +3104,23 @@ class _HeaderCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Align(
-                    alignment: Alignment.topLeft,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: biasColor.withValues(alpha: 0.14),
-                        borderRadius: BorderRadius.circular(999),
-                        border: Border.all(
-                          color: biasColor.withValues(alpha: 0.38),
-                        ),
-                        boxShadow: AppColors.signalGlow(
-                          biasColor,
-                          enabled: isDark,
-                        ),
-                      ),
-                      child: Text(
-                        biasLabel,
-                        maxLines: 2,
-                        style: TextStyle(
-                          color: biasColor,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 12.5,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Align(
-                    alignment: Alignment.topRight,
-                    child: Container(
-                      key: const ValueKey('analysis-risk-chip'),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 9,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: riskColor.withValues(alpha: 0.14),
-                        borderRadius: BorderRadius.circular(999),
-                        border: Border.all(
-                          color: riskColor.withValues(alpha: 0.38),
-                        ),
-                        boxShadow: AppColors.signalGlow(
-                          riskColor,
-                          enabled: isDark,
-                        ),
-                      ),
-                      child: Text(
-                        riskLabel,
-                        maxLines: 2,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: riskColor,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 11.5,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 10),
             Wrap(
               spacing: 8,
               runSpacing: 8,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 9,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    isPro ? context.l10n.proMode : context.l10n.beginnerMode,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 12,
-                    ),
-                  ),
+                _StatusChip(label: biasLabel, color: biasColor, glow: isDark),
+                _StatusChip(
+                  key: const ValueKey('analysis-risk-chip'),
+                  label: riskLabel,
+                  color: riskColor,
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 9,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(999),
-                    border: Border.all(color: muted.withValues(alpha: 0.3)),
-                  ),
-                  child: Text(
-                    analysis.timeframe,
-                    style: TextStyle(
-                      color: muted,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
+                _StatusChip(label: analysis.timeframe, color: muted),
                 if (condition != null)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: condition.$2.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(999),
-                      border: Border.all(
-                        color: condition.$2.withValues(alpha: 0.34),
-                      ),
-                      boxShadow: AppColors.signalGlow(
-                        condition.$2,
-                        enabled: isDark,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(condition.$3, size: 16, color: condition.$2),
-                        const SizedBox(width: 6),
-                        Text(
-                          condition.$1,
-                          style: TextStyle(
-                            color: condition.$2,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ],
-                    ),
+                  _StatusChip(
+                    label: condition.$1,
+                    color: condition.$2,
+                    icon: condition.$3,
                   ),
               ],
             ),
@@ -1821,33 +3128,44 @@ class _HeaderCard extends StatelessWidget {
             if (analysis.confidenceMin != null &&
                 analysis.confidenceMax != null) ...[
               const SizedBox(height: 14),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    context.l10n.aiConfidence,
-                    style: TextStyle(color: muted, fontSize: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outlineVariant,
                   ),
-                  Text(
-                    '${analysis.confidenceMin}% – '
-                    '${analysis.confidenceMax}%',
-                    style: const TextStyle(fontWeight: FontWeight.w800),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 6),
-
-              ClipRRect(
-                borderRadius: BorderRadius.circular(999),
-                child: LinearProgressIndicator(
-                  value: ((analysis.confidenceMax ?? 0) / 100)
-                      .clamp(0, 1)
-                      .toDouble(),
-                  minHeight: 7,
-                  backgroundColor: muted.withValues(alpha: 0.12),
-                  valueColor: AlwaysStoppedAnimation(biasColor),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          context.l10n.aiConfidence,
+                          style: TextStyle(color: muted, fontSize: 12),
+                        ),
+                        Text(
+                          '${analysis.confidenceMin}% – '
+                          '${analysis.confidenceMax}%',
+                          style: const TextStyle(fontWeight: FontWeight.w900),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(999),
+                      child: LinearProgressIndicator(
+                        value: ((analysis.confidenceMax ?? 0) / 100)
+                            .clamp(0, 1)
+                            .toDouble(),
+                        minHeight: 8,
+                        backgroundColor: muted.withValues(alpha: 0.12),
+                        valueColor: AlwaysStoppedAnimation(biasColor),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -1935,6 +3253,53 @@ class _HeaderCard extends StatelessWidget {
   }
 }
 
+class _StatusChip extends StatelessWidget {
+  const _StatusChip({
+    super.key,
+    required this.label,
+    required this.color,
+    this.icon,
+    this.glow = false,
+  });
+
+  final String label;
+  final Color color;
+  final IconData? icon;
+  final bool glow;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    decoration: BoxDecoration(
+      color: color.withValues(alpha: 0.13),
+      borderRadius: BorderRadius.circular(999),
+      border: Border.all(color: color.withValues(alpha: 0.38)),
+      boxShadow: AppColors.signalGlow(color, enabled: glow),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (icon != null) ...[
+          Icon(icon, size: 15, color: color),
+          const SizedBox(width: 5),
+        ],
+        Flexible(
+          child: Text(
+            label,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: color,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
 (String, Color, IconData)? _marketConditionMeta(
   BuildContext context,
   String? value,
@@ -1969,6 +3334,7 @@ class _HeaderCard extends StatelessWidget {
 // BEGINNER EXPLANATION
 // =============================================================================
 
+// ignore: unused_element
 class _BeginnerMeaningCard extends StatelessWidget {
   const _BeginnerMeaningCard({
     required this.analysis,
@@ -2002,58 +3368,58 @@ class _BeginnerMeaningCard extends StatelessWidget {
       action = context.l10n.beginnerWaitAction;
     }
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.school_outlined, size: 19),
-                SizedBox(width: 8),
-                Text(
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.school_outlined, size: 19),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
                   context.l10n.whatDoesItMean,
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
+          ),
 
-            const SizedBox(height: 12),
+          const SizedBox(height: 12),
 
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  margin: const EdgeInsets.only(top: 5),
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: biasColor,
-                    shape: BoxShape.circle,
-                  ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                margin: const EdgeInsets.only(top: 5),
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: biasColor,
+                  shape: BoxShape.circle,
                 ),
-                const SizedBox(width: 9),
-                Expanded(
-                  child: Text(
-                    context.l10n.biasMeaning(biasLabel, direction),
-                    style: const TextStyle(fontSize: 12.5, height: 1.45),
-                  ),
+              ),
+              const SizedBox(width: 9),
+              Expanded(
+                child: Text(
+                  context.l10n.biasMeaning(biasLabel, direction),
+                  style: const TextStyle(fontSize: 12.5, height: 1.45),
                 ),
-              ],
-            ),
+              ),
+            ],
+          ),
 
-            const SizedBox(height: 10),
+          const SizedBox(height: 10),
 
-            Text(
-              action,
-              style: TextStyle(color: muted, fontSize: 12.5, height: 1.45),
-            ),
-          ],
-        ),
+          Text(
+            action,
+            style: TextStyle(color: muted, fontSize: 12.5, height: 1.45),
+          ),
+        ],
       ),
     );
   }
@@ -2173,117 +3539,178 @@ class _EvidenceSummary extends StatelessWidget {
 // MARKET SNAPSHOT
 // =============================================================================
 
-class _MarketSnapshotCard extends StatelessWidget {
-  const _MarketSnapshotCard({required this.analysis});
+class _MarketSnapshotCard extends StatefulWidget {
+  const _MarketSnapshotCard({super.key, required this.analysis});
 
   final Analysis analysis;
 
   @override
-  Widget build(BuildContext context) {
-    final muted = Theme.of(context).colorScheme.onSurfaceVariant;
-
-    final buy = analysis.techBuyCount;
-
-    final sell = analysis.techSellCount;
-
-    final neutral = analysis.techNeutralCount;
-
-    final hasCounts = buy != null || sell != null || neutral != null;
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.analytics_outlined, size: 19),
-                SizedBox(width: 8),
-                Text(
-                  context.l10n.analysisSnapshotTitle,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 5),
-
-            Text(
-              context.l10n.analysisSnapshotDescription,
-              style: TextStyle(color: muted, fontSize: 11),
-            ),
-
-            if (hasCounts) ...[
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  Expanded(
-                    child: _CountTile(
-                      label: context.l10n.buy,
-                      value: buy ?? 0,
-                      icon: Icons.north_east_rounded,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _CountTile(
-                      label: context.l10n.sell,
-                      value: sell ?? 0,
-                      icon: Icons.south_east_rounded,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _CountTile(
-                      label: context.l10n.neutral,
-                      value: neutral ?? 0,
-                      icon: Icons.remove_rounded,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
+  State<_MarketSnapshotCard> createState() => _MarketSnapshotCardState();
 }
 
-class _CountTile extends StatelessWidget {
-  const _CountTile({
-    required this.label,
-    required this.value,
-    required this.icon,
-  });
-
-  final String label;
-  final int value;
-  final IconData icon;
+class _MarketSnapshotCardState extends State<_MarketSnapshotCard> {
+  /// The explanatory sentence stays hidden until the user taps the (i) icon.
+  bool _showSummary = false;
 
   @override
   Widget build(BuildContext context) {
+    final analysis = widget.analysis;
+    final bullish = analysis.techBuyCount ?? 0;
+    final bearish = analysis.techSellCount ?? 0;
+    final neutral = analysis.techNeutralCount ?? 0;
+    final total = bullish + bearish + neutral;
+    final rawBias = (analysis.tradingBias ?? '').toLowerCase();
+    final isBullish = total > 0
+        ? bullish > bearish && bullish > neutral
+        : rawBias.contains('bull') || rawBias == 'buy';
+    final isBearish = total > 0
+        ? bearish > bullish && bearish > neutral
+        : rawBias.contains('bear') || rawBias == 'sell';
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final accent = isBullish
+        ? (dark ? AppColors.bullishDark : AppColors.bullishLight)
+        : isBearish
+        ? (dark ? AppColors.bearishDark : AppColors.bearishLight)
+        : Theme.of(context).colorScheme.primary;
+    final direction = isBullish
+        ? context.l10n.marketContextLeaningBullish
+        : isBearish
+        ? context.l10n.marketContextLeaningBearish
+        : context.l10n.marketContextLeaningNeutral;
+    final side = isBullish
+        ? context.l10n.buy.toUpperCase()
+        : isBearish
+        ? context.l10n.sell.toUpperCase()
+        : context.l10n.waitLabel.toUpperCase();
+    final summary = total == 0
+        ? (analysis.marketContext?.trim().isNotEmpty == true
+              ? analysis.marketContext!.trim()
+              : context.l10n.analysisSnapshotDescription)
+        : isBullish
+        ? context.l10n.marketContextIndicatorSummaryBullish(
+            bullish,
+            total,
+            bearish,
+            neutral,
+          )
+        : isBearish
+        ? context.l10n.marketContextIndicatorSummaryBearish(
+            bearish,
+            total,
+            bullish,
+            neutral,
+          )
+        : context.l10n.marketContextIndicatorSummaryNeutral(
+            total,
+            bullish,
+            bearish,
+            neutral,
+          );
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        color: Theme.of(
-          context,
-        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
+        color: Color.alphaBlend(
+          accent.withValues(alpha: dark ? 0.16 : 0.08),
+          Theme.of(context).colorScheme.surface,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: accent.withValues(alpha: 0.7)),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 16),
-          const SizedBox(height: 3),
-          Text(
-            '$value',
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(Icons.explore_outlined, color: accent, size: 23),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.l10n.marketContextSummaryTitle,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.35,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Wrap(
+                      spacing: 7,
+                      runSpacing: 3,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Text(
+                          direction,
+                          style: TextStyle(
+                            color: accent,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        Text(
+                          '($side)',
+                          style: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                key: const ValueKey('market-summary-info'),
+                tooltip: context.l10n.marketContextSummaryTitle,
+                isSelected: _showSummary,
+                onPressed: () => setState(() => _showSummary = !_showSummary),
+                icon: const Icon(Icons.info_outline_rounded),
+                selectedIcon: const Icon(Icons.info_rounded),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                style: IconButton.styleFrom(
+                  foregroundColor: _showSummary
+                      ? accent
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                  minimumSize: const Size(40, 40),
+                  padding: EdgeInsets.zero,
+                ),
+              ),
+            ],
           ),
-          Text(label, style: const TextStyle(fontSize: 10)),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 180),
+            alignment: Alignment.topCenter,
+            child: _showSummary
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 14),
+                    child: Text(
+                      summary,
+                      key: const ValueKey('market-summary-text'),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        height: 1.55,
+                        fontSize: 13.5,
+                      ),
+                    ),
+                  )
+                : const SizedBox(width: double.infinity),
+          ),
         ],
       ),
     );
@@ -2294,7 +3721,7 @@ class _CountTile extends StatelessWidget {
 // CHART
 // =============================================================================
 
-class _ChartCard extends StatelessWidget {
+class _ChartCard extends StatefulWidget {
   const _ChartCard({
     required this.analysis,
     required this.candles,
@@ -2313,98 +3740,260 @@ class _ChartCard extends StatelessWidget {
   final VoidCallback onOpenTradingView;
 
   @override
+  State<_ChartCard> createState() => _ChartCardState();
+}
+
+enum _ChartShareAction { copy, save, share }
+
+class _ChartCardState extends State<_ChartCard> {
+  final _captureKey = GlobalKey();
+  bool _busy = false;
+
+  Analysis get analysis => widget.analysis;
+  List<MarketCandle> get candles => widget.candles;
+  bool get isLoading => widget.isLoading;
+  String? get error => widget.error;
+  VoidCallback get onRetry => widget.onRetry;
+  VoidCallback get onOpenTradingView => widget.onOpenTradingView;
+
+  Future<Uint8List> _capturePng() async {
+    await WidgetsBinding.instance.endOfFrame;
+    final boundary =
+        _captureKey.currentContext?.findRenderObject()
+            as RenderRepaintBoundary?;
+    if (boundary == null) throw StateError('Chart is unavailable');
+    final image = await boundary.toImage(pixelRatio: 3);
+    final data = await image.toByteData(format: ui.ImageByteFormat.png);
+    image.dispose();
+    if (data == null) throw StateError('Chart encoding failed');
+    return watermarkPng(
+      data.buffer.asUint8List(),
+      attribution: exportAttribution(
+        instrument: analysis.instrument,
+        timeframe: analysis.timeframe,
+        analysisId: analysis.id,
+      ),
+    );
+  }
+
+  String get _fileStem {
+    final instrument = analysis.instrument.replaceAll(
+      RegExp(r'[^A-Za-z0-9]'),
+      '',
+    );
+    return 'tradepilot-$instrument-${analysis.timeframe}';
+  }
+
+  Future<void> _handleShare(_ChartShareAction action, Rect shareOrigin) async {
+    if (_busy) return;
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    void notify(String message) => messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+
+    setState(() => _busy = true);
+    try {
+      final bytes = await _capturePng();
+      switch (action) {
+        case _ChartShareAction.copy:
+          await _reasoningClipboard.invokeMethod<void>('copyImage', bytes);
+          notify(l10n.chartImageCopied);
+        case _ChartShareAction.save:
+          await Gal.putImageBytes(bytes, name: _fileStem);
+          notify(l10n.chartImageSaved);
+        case _ChartShareAction.share:
+          final file = File('${Directory.systemTemp.path}/$_fileStem.png');
+          await file.writeAsBytes(bytes, flush: true);
+          await SharePlus.instance.share(
+            ShareParams(
+              files: [XFile(file.path, mimeType: 'image/png')],
+              sharePositionOrigin: shareOrigin,
+            ),
+          );
+      }
+    } catch (_) {
+      notify(l10n.chartImageFailed);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final quote = context.watch<MarketProvider>().quotes[analysis.instrument];
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = Theme.of(context).colorScheme;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.primary.withValues(alpha: .12),
-                    borderRadius: BorderRadius.circular(9),
-                  ),
-                  child: Icon(
-                    Icons.candlestick_chart_rounded,
-                    size: 19,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.l10n.priceChart,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w900,
+            RepaintBoundary(
+              key: _captureKey,
+              child: ColoredBox(
+                color:
+                    Theme.of(context).cardTheme.color ??
+                    colors.surfaceContainerLow,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 34,
+                          height: 34,
+                          decoration: BoxDecoration(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: .12),
+                            borderRadius: BorderRadius.circular(9),
+                          ),
+                          child: Icon(
+                            Icons.candlestick_chart_rounded,
+                            size: 19,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
                         ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                context.l10n.priceChart,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Wrap(
+                                spacing: 6,
+                                runSpacing: 2,
+                                children: [
+                                  Text(
+                                    '${analysis.instrument} • ${analysis.timeframe}',
+                                    style: TextStyle(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                  if (quote != null)
+                                    Text(
+                                      '${quote.price.toStringAsFixed(2)} '
+                                      '${quote.changePercent >= 0 ? '+' : ''}'
+                                      '${quote.changePercent.toStringAsFixed(2)}%',
+                                      style: TextStyle(
+                                        color: quote.changePercent >= 0
+                                            ? (isDark
+                                                  ? AppColors.bullishDark
+                                                  : AppColors.bullishLight)
+                                            : (isDark
+                                                  ? AppColors.bearishDark
+                                                  : AppColors.bearishLight),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: context.l10n.openFullChart,
+                          onPressed: onOpenTradingView,
+                          icon: const Icon(Icons.open_in_new_rounded, size: 19),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    if (error != null && candles.isEmpty)
+                      ErrorBanner(
+                        message: error,
+                        onRetry: onRetry,
+                        retryLabel: context.l10n.tryAgain,
+                      )
+                    else
+                      AnalysisLevelsChart(
+                        candles: candles,
+                        tradePlan: analysis.tradePlan,
+                        tradingBias: analysis.tradingBias,
+                        currentPrice: quote?.price,
+                        isLoading: isLoading,
                       ),
-                      const SizedBox(height: 2),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 2,
-                        children: [
-                          Text(
-                            '${analysis.instrument} • ${analysis.timeframe}',
-                            style: TextStyle(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurfaceVariant,
-                              fontSize: 11,
+                  ],
+                ),
+              ),
+            ),
+            if (candles.length >= 2) ...[
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Builder(
+                  builder: (buttonContext) =>
+                      PopupMenuButton<_ChartShareAction>(
+                        enabled: !_busy,
+                        tooltip: context.l10n.shareChart,
+                        onSelected: (action) {
+                          final box =
+                              buttonContext.findRenderObject() as RenderBox;
+                          _handleShare(
+                            action,
+                            box.localToGlobal(Offset.zero) & box.size,
+                          );
+                        },
+                        itemBuilder: (context) => [
+                          PopupMenuItem(
+                            value: _ChartShareAction.copy,
+                            child: ListTile(
+                              leading: const Icon(Icons.copy_rounded),
+                              title: Text(context.l10n.copyAnalysisImage),
+                              contentPadding: EdgeInsets.zero,
                             ),
                           ),
-                          if (quote != null)
-                            Text(
-                              '${quote.price.toStringAsFixed(2)} '
-                              '${quote.changePercent >= 0 ? '+' : ''}'
-                              '${quote.changePercent.toStringAsFixed(2)}%',
-                              style: TextStyle(
-                                color: quote.changePercent >= 0
-                                    ? const Color(0xFF10B981)
-                                    : const Color(0xFFEF4444),
-                                fontSize: 11,
-                                fontWeight: FontWeight.w800,
-                              ),
+                          PopupMenuItem(
+                            value: _ChartShareAction.save,
+                            child: ListTile(
+                              leading: const Icon(Icons.download_rounded),
+                              title: Text(context.l10n.savePng),
+                              contentPadding: EdgeInsets.zero,
                             ),
+                          ),
+                          PopupMenuItem(
+                            value: _ChartShareAction.share,
+                            child: ListTile(
+                              leading: const Icon(Icons.ios_share_rounded),
+                              title: Text(context.l10n.shareImage),
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                          ),
                         ],
+                        child: IgnorePointer(
+                          child: OutlinedButton.icon(
+                            onPressed: () {},
+                            icon: _busy
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.image_outlined, size: 18),
+                            label: Text(context.l10n.shareChart),
+                            iconAlignment: IconAlignment.start,
+                          ),
+                        ),
                       ),
-                    ],
-                  ),
                 ),
-                IconButton(
-                  tooltip: context.l10n.openFullChart,
-                  onPressed: onOpenTradingView,
-                  icon: const Icon(Icons.open_in_new_rounded, size: 19),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            if (error != null && candles.isEmpty)
-              ErrorBanner(
-                message: error,
-                onRetry: onRetry,
-                retryLabel: context.l10n.tryAgain,
-              )
-            else
-              AnalysisLevelsChart(
-                candles: candles,
-                tradePlan: analysis.tradePlan,
-                tradingBias: analysis.tradingBias,
-                currentPrice: quote?.price,
-                isLoading: isLoading,
               ),
+            ],
           ],
         ),
       ),
@@ -2416,12 +4005,16 @@ class _ChartCard extends StatelessWidget {
 // FUNDAMENTAL SNAPSHOT
 // =============================================================================
 
-class _FundamentalSnapshotCard extends StatelessWidget {
+enum _FundamentalView { news, calendar }
+
+class _FundamentalSnapshotCard extends StatefulWidget {
   const _FundamentalSnapshotCard({
+    super.key,
     required this.analysis,
     required this.refreshed,
     required this.refreshing,
     required this.onRefresh,
+    required this.onLearn,
     required this.onOpenUrl,
   });
 
@@ -2429,66 +4022,102 @@ class _FundamentalSnapshotCard extends StatelessWidget {
   final RefreshFundamentalsResponse? refreshed;
   final bool refreshing;
   final VoidCallback onRefresh;
+  final VoidCallback onLearn;
   final ValueChanged<String> onOpenUrl;
 
   @override
+  State<_FundamentalSnapshotCard> createState() =>
+      _FundamentalSnapshotCardState();
+}
+
+class _FundamentalSnapshotCardState extends State<_FundamentalSnapshotCard> {
+  _FundamentalView? _selected;
+
+  @override
   Widget build(BuildContext context) {
-    final contextData = analysis.fundamentalContext;
+    final contextData = widget.analysis.fundamentalContext;
 
     if (contextData == null) {
       return const SizedBox.shrink();
     }
 
-    final news = contextData.newsItems.take(3).toList();
-
+    final news = contextData.newsItems.take(5).toList();
     final events = contextData.calendarEvents.take(5).toList();
-
-    if (news.isEmpty && events.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
     final muted = Theme.of(context).colorScheme.onSurfaceVariant;
 
     return Card(
+      margin: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                const Icon(Icons.newspaper_outlined, size: 19),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    context.l10n.fundamentalContext,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w900,
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final title = Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.newspaper_outlined,
+                      size: 20,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
-                  ),
-                ),
-                IconButton(
-                  tooltip: context.l10n.refreshFundamentals,
-                  onPressed: refreshing ? null : onRefresh,
-                  icon: refreshing
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        context.l10n.fundamentalContext,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+                final refresh = OutlinedButton.icon(
+                  onPressed: widget.refreshing ? null : widget.onRefresh,
+                  icon: widget.refreshing
                       ? const SizedBox.square(
                           dimension: 18,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.refresh_rounded, size: 20),
-                ),
-              ],
+                  label: Text(context.l10n.refreshFundamentals),
+                );
+                final actions = Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    refresh,
+                    TextButton.icon(
+                      key: const ValueKey('fundamental-learn'),
+                      onPressed: widget.onLearn,
+                      icon: const Icon(Icons.menu_book_outlined, size: 18),
+                      label: Text(context.l10n.learn),
+                    ),
+                  ],
+                );
+                if (constraints.maxWidth < 350 ||
+                    MediaQuery.textScalerOf(context).scale(1) > 1.2) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [title, const SizedBox(height: 10), actions],
+                  );
+                }
+                return Row(
+                  children: [
+                    Expanded(child: title),
+                    const SizedBox(width: 10),
+                    actions,
+                  ],
+                );
+              },
             ),
-
-            const SizedBox(height: 5),
-
+            const SizedBox(height: 8),
             Text(
               context.l10n.fundamentalContextDescription,
-              style: TextStyle(color: muted, fontSize: 11),
+              style: TextStyle(color: muted, fontSize: 12),
             ),
-
-            if (refreshed != null) ...[
+            if (widget.refreshed != null) ...[
               const SizedBox(height: 10),
               Container(
                 width: double.infinity,
@@ -2498,76 +4127,148 @@ class _FundamentalSnapshotCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
-                  refreshed!.drift.missingCitations.isEmpty
+                  widget.refreshed!.drift.missingCitations.isEmpty
                       ? context.l10n.fundamentalDriftNone
                       : context.l10n.fundamentalDriftSome(
-                          refreshed!.drift.missingCitations.length,
-                          refreshed!.drift.totalCitations,
+                          widget.refreshed!.drift.missingCitations.length,
+                          widget.refreshed!.drift.totalCitations,
                         ),
                   style: const TextStyle(fontSize: 11.5),
                 ),
               ),
             ],
-
-            if (news.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final buttons = [
+                  _viewButton(
+                    context,
+                    view: _FundamentalView.news,
+                    label: context.l10n.recentNews,
+                    icon: Icons.article_outlined,
+                  ),
+                  _viewButton(
+                    context,
+                    view: _FundamentalView.calendar,
+                    label: context.l10n.economicCalendar,
+                    icon: Icons.event_available_outlined,
+                  ),
+                ];
+                if (constraints.maxWidth < 330 ||
+                    MediaQuery.textScalerOf(context).scale(1) > 1.3) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      buttons[0],
+                      const SizedBox(height: 8),
+                      buttons[1],
+                    ],
+                  );
+                }
+                return Row(
+                  children: [
+                    Expanded(child: buttons[0]),
+                    const SizedBox(width: 8),
+                    Expanded(child: buttons[1]),
+                  ],
+                );
+              },
+            ),
+            if (_selected == _FundamentalView.news) ...[
               const SizedBox(height: 14),
-              const Text(
-                'Berita',
-                style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 7),
-              for (final item in news) ...[
-                _FundamentalRow(
-                  title: item.title,
-                  meta:
-                      '${item.source_} • '
-                      '${DateFormat('d MMM HH:mm').format(item.publishedAt.toLocal())}',
-                  icon: Icons.article_outlined,
-                  onTap: item.url?.trim().isNotEmpty == true
-                      ? () => onOpenUrl(item.url!)
-                      : null,
-                ),
-                const SizedBox(height: 9),
-              ],
+              if (news.isEmpty)
+                Text(context.l10n.latestDataUnavailable)
+              else
+                for (final item in news)
+                  _FundamentalRow(
+                    title: item.title,
+                    meta: '${item.source_}  ${_publishedAgo(item.publishedAt)}',
+                    onTap: item.url?.trim().isNotEmpty == true
+                        ? () => widget.onOpenUrl(item.url!)
+                        : null,
+                  ),
             ],
-
-            if (events.isNotEmpty) ...[
-              const SizedBox(height: 6),
-              const Text(
-                'Kalender Ekonomi',
-                style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 7),
-              for (final event in events) ...[
-                _FundamentalRow(
-                  title: event.event,
-                  meta:
-                      '${event.currency} • '
-                      '${event.date}${event.time == null ? '' : ' ${event.time}'}'
-                      '${event.impact == null ? '' : ' • ${event.impact}'}',
-                  icon: Icons.calendar_month_outlined,
-                ),
-                const SizedBox(height: 9),
-              ],
+            if (_selected == _FundamentalView.calendar) ...[
+              const SizedBox(height: 14),
+              if (events.isEmpty)
+                Text(
+                  context.l10n.noUpcomingEconomicEvents,
+                  style: TextStyle(color: muted),
+                )
+              else
+                for (final event in events)
+                  _FundamentalRow(
+                    title: event.event,
+                    meta:
+                        '${event.currency} • ${event.date}'
+                        ' ${event.time}'
+                        ' • ${event.impact}',
+                  ),
             ],
           ],
         ),
       ),
     );
   }
+
+  Widget _viewButton(
+    BuildContext context, {
+    required _FundamentalView view,
+    required String label,
+    required IconData icon,
+  }) {
+    final selected = _selected == view;
+    final primary = Theme.of(context).colorScheme.primary;
+    return OutlinedButton(
+      key: ValueKey('fundamental-${view.name}'),
+      onPressed: () => setState(() => _selected = selected ? null : view),
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size(0, 56),
+        alignment: Alignment.centerLeft,
+        backgroundColor: selected ? primary.withValues(alpha: .18) : null,
+        side: BorderSide(
+          color: selected
+              ? primary
+              : Theme.of(context).colorScheme.outlineVariant,
+          width: selected ? 1.5 : 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 19),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(label, maxLines: 2, overflow: TextOverflow.ellipsis),
+          ),
+          Icon(
+            selected ? Icons.keyboard_arrow_down : Icons.chevron_right,
+            size: 20,
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _publishedAgo(DateTime value) {
+    final difference = DateTime.now().difference(value.toLocal());
+    if (difference.inDays > 0) {
+      return context.l10n.publishedDaysAgo(difference.inDays);
+    }
+    if (difference.inHours > 0) {
+      return context.l10n.publishedHoursAgo(difference.inHours);
+    }
+    if (difference.inMinutes > 0) {
+      return context.l10n.publishedMinutesAgo(difference.inMinutes);
+    }
+    return context.l10n.publishedJustNow;
+  }
 }
 
 class _FundamentalRow extends StatelessWidget {
-  const _FundamentalRow({
-    required this.title,
-    required this.meta,
-    required this.icon,
-    this.onTap,
-  });
+  const _FundamentalRow({required this.title, required this.meta, this.onTap});
 
   final String title;
   final String meta;
-  final IconData icon;
   final VoidCallback? onTap;
 
   @override
@@ -2577,31 +4278,43 @@ class _FundamentalRow extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 2),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, size: 16, color: muted),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(meta, style: TextStyle(color: muted, fontSize: 10)),
-                ],
+      child: IntrinsicHeight(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                width: 3,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                  borderRadius: BorderRadius.circular(999),
+                ),
               ),
-            ),
-            if (onTap != null) const Icon(Icons.open_in_new_rounded, size: 15),
-          ],
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(meta, style: TextStyle(color: muted, fontSize: 11)),
+                  ],
+                ),
+              ),
+              if (onTap != null) ...[
+                const SizedBox(width: 8),
+                const Icon(Icons.open_in_new_rounded, size: 15),
+              ],
+            ],
+          ),
         ),
       ),
     );
@@ -2612,6 +4325,7 @@ class _FundamentalRow extends StatelessWidget {
 // OUTCOME
 // =============================================================================
 
+// ignore: unused_element
 class _OutcomeCard extends StatelessWidget {
   const _OutcomeCard({required this.analysis});
 
@@ -2752,8 +4466,8 @@ String _number(double? value, {int decimals = 2}) =>
     value == null ? '—' : value.toStringAsFixed(decimals);
 
 String _summarySignal(int buy, int neutral, int sell) {
-  if (buy > sell && buy > neutral) return 'Bullish';
-  if (sell > buy && sell > neutral) return 'Bearish';
+  if (buy > sell && buy > neutral) return 'Leaning Bullish';
+  if (sell > buy && sell > neutral) return 'Leaning Bearish';
   return 'Neutral';
 }
 
@@ -2762,11 +4476,13 @@ class _TechnicalIndicatorsCard extends StatelessWidget {
     required this.technical,
     required this.timeframe,
     required this.showRawSignals,
+    required this.showSummary,
   });
 
   final BeginnerTechnicalSnapshot technical;
   final String timeframe;
   final bool showRawSignals;
+  final bool showSummary;
 
   @override
   Widget build(BuildContext context) {
@@ -2775,43 +4491,43 @@ class _TechnicalIndicatorsCard extends StatelessWidget {
         final byType = a.type.compareTo(b.type);
         return byType != 0 ? byType : a.period.compareTo(b.period);
       });
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              context.l10n.liveTechnicalIndicators,
-              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            context.l10n.liveTechnicalIndicators,
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            context.l10n.liveTechnicalDisclaimer,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 11,
             ),
-            const SizedBox(height: 3),
-            Text(
-              context.l10n.liveTechnicalDisclaimer,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                fontSize: 11,
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _MetricChip(
+                label: context.l10n.currentPrice(''),
+                value: _number(technical.lastClose),
               ),
-            ),
-            const SizedBox(height: 14),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _MetricChip(
-                  label: context.l10n.currentPrice(''),
-                  value: _number(technical.lastClose),
-                ),
-                _MetricChip(
-                  label: context.l10n.lastBar,
-                  value: '${technical.change1dPercent.toStringAsFixed(2)}%',
-                ),
-                _MetricChip(
-                  label: context.l10n.twentyBars,
-                  value: '${technical.change20dPercent.toStringAsFixed(2)}%',
-                ),
-              ],
-            ),
+              _MetricChip(
+                label: context.l10n.lastBar,
+                value: '${technical.change1dPercent.toStringAsFixed(2)}%',
+              ),
+              _MetricChip(
+                label: context.l10n.twentyBars,
+                value: '${technical.change20dPercent.toStringAsFixed(2)}%',
+              ),
+            ],
+          ),
+          if (showSummary) ...[
             const SizedBox(height: 14),
             _SignalSummary(
               title: context.l10n.signalSummary,
@@ -2847,100 +4563,98 @@ class _TechnicalIndicatorsCard extends StatelessWidget {
               sell: technical.movingAverageSellCount,
               showRawSignal: showRawSignals,
             ),
+          ],
+          const Divider(height: 28),
+          ExpansionTile(
+            key: const ValueKey('oscillator-indicators'),
+            initiallyExpanded: false,
+            tilePadding: EdgeInsets.zero,
+            childrenPadding: EdgeInsets.zero,
+            shape: const Border(),
+            collapsedShape: const Border(),
+            title: Text(
+              'Oscillator · $timeframe',
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: _SignalScaleBar(
+                buy: technical.oscillatorBuyCount,
+                neutral: technical.oscillatorNeutralCount,
+                sell: technical.oscillatorSellCount,
+              ),
+            ),
+            children: [
+              _IndicatorRow(
+                label: 'RSI (14)',
+                value: _number(technical.rsi),
+                signal: technical.rsiSignal,
+                showSignal: showRawSignals,
+              ),
+              _IndicatorRow(
+                label: 'MACD (12,26)',
+                value: _number(technical.macdValue, decimals: 4),
+                signal: technical.macdAction,
+                showSignal: showRawSignals,
+              ),
+              _IndicatorRow(
+                label: 'Stochastic %K',
+                value: _number(technical.stochasticK),
+                signal: technical.stochasticSignal,
+                showSignal: showRawSignals,
+              ),
+              _IndicatorRow(
+                label: 'Bollinger',
+                value:
+                    '${_number(technical.bollingerLower)}–${_number(technical.bollingerUpper)}',
+                signal: technical.bollingerSignal,
+                showSignal: showRawSignals,
+              ),
+            ],
+          ),
+          if (movingAverages.isNotEmpty) ...[
             const Divider(height: 28),
             ExpansionTile(
-              key: const ValueKey('oscillator-indicators'),
+              key: const ValueKey('moving-average-indicators'),
+              initiallyExpanded: false,
               tilePadding: EdgeInsets.zero,
               childrenPadding: EdgeInsets.zero,
               shape: const Border(),
               collapsedShape: const Border(),
-              title: Text(
-                'Oscillator — $timeframe',
-                style: const TextStyle(fontWeight: FontWeight.w800),
+              title: const Text(
+                'Moving Averages',
+                style: TextStyle(fontWeight: FontWeight.w800),
               ),
               subtitle: Padding(
                 padding: const EdgeInsets.only(top: 10),
                 child: _SignalScaleBar(
-                  buy: technical.oscillatorBuyCount,
-                  neutral: technical.oscillatorNeutralCount,
-                  sell: technical.oscillatorSellCount,
+                  buy: technical.movingAverageBuyCount,
+                  neutral: technical.movingAverageNeutralCount,
+                  sell: technical.movingAverageSellCount,
                 ),
               ),
               children: [
-                _IndicatorRow(
-                  label: 'RSI (14)',
-                  value: _number(technical.rsi),
-                  signal: technical.rsiSignal,
-                  showSignal: showRawSignals,
-                ),
-                _IndicatorRow(
-                  label: 'MACD (12,26)',
-                  value: _number(technical.macdValue, decimals: 4),
-                  signal: technical.macdAction,
-                  showSignal: showRawSignals,
-                ),
-                _IndicatorRow(
-                  label: 'Stochastic %K',
-                  value: _number(technical.stochasticK),
-                  signal: technical.stochasticSignal,
-                  showSignal: showRawSignals,
-                ),
-                _IndicatorRow(
-                  label: 'Bollinger',
-                  value:
-                      '${_number(technical.bollingerLower)}–${_number(technical.bollingerUpper)}',
-                  signal: technical.bollingerSignal,
-                  showSignal: showRawSignals,
-                ),
+                for (final average in movingAverages)
+                  _IndicatorRow(
+                    label: '${average.type.toUpperCase()} (${average.period})',
+                    value: _number(average.value),
+                    signal: average.signal,
+                    showSignal: showRawSignals,
+                  ),
               ],
             ),
-            if (movingAverages.isNotEmpty) ...[
-              const Divider(height: 28),
-              ExpansionTile(
-                key: const ValueKey('moving-average-indicators'),
-                tilePadding: EdgeInsets.zero,
-                childrenPadding: EdgeInsets.zero,
-                shape: const Border(),
-                collapsedShape: const Border(),
-                title: const Text(
-                  'Moving Averages',
-                  style: TextStyle(fontWeight: FontWeight.w800),
-                ),
-                subtitle: Padding(
-                  padding: const EdgeInsets.only(top: 10),
-                  child: _SignalScaleBar(
-                    buy: technical.movingAverageBuyCount,
-                    neutral: technical.movingAverageNeutralCount,
-                    sell: technical.movingAverageSellCount,
-                  ),
-                ),
-                children: [
-                  for (final average in movingAverages)
-                    _IndicatorRow(
-                      label:
-                          '${average.type.toUpperCase()} (${average.period})',
-                      value: _number(average.value),
-                      signal: average.signal,
-                      showSignal: showRawSignals,
-                    ),
-                ],
-              ),
-            ],
-            if (technical.dataPoints > 0) ...[
-              const SizedBox(height: 8),
-              Text(
-                context.l10n.technicalDataPoints(
-                  timeframe,
-                  technical.dataPoints,
-                ),
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontSize: 10.5,
-                ),
-              ),
-            ],
           ],
-        ),
+          if (technical.dataPoints > 0) ...[
+            const SizedBox(height: 8),
+            Text(
+              context.l10n.technicalDataPoints(timeframe, technical.dataPoints),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 10.5,
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -2989,6 +4703,7 @@ class _SignalSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final normalized = signal.toLowerCase();
+    final signalColor = _signalColor(context, signal);
     final displaySignal = showRawSignal
         ? signal
         : normalized.contains('buy') || normalized.contains('bull')
@@ -2996,34 +4711,53 @@ class _SignalSummary extends StatelessWidget {
         : normalized.contains('sell') || normalized.contains('bear')
         ? context.l10n.beginnerBearish
         : context.l10n.beginnerWait;
+    final signalBadge = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: signalColor.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: signalColor.withValues(alpha: 0.32)),
+      ),
+      child: Text(
+        displaySignal,
+        style: TextStyle(
+          color: signalColor,
+          fontWeight: FontWeight.w900,
+          fontSize: 11.5,
+        ),
+      ),
+    );
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: _signalColor(context, signal).withValues(alpha: 0.10),
+        color: signalColor.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: _signalColor(context, signal).withValues(alpha: 0.35),
-        ),
-        boxShadow: AppColors.signalGlow(
-          _signalColor(context, signal),
-          enabled: Theme.of(context).brightness == Brightness.dark,
-        ),
+        border: Border.all(color: signalColor.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontSize: 11)),
-          Text(
-            displaySignal,
-            style: TextStyle(
-              color: _signalColor(context, signal),
-              fontWeight: FontWeight.w900,
-              fontSize: 17,
-            ),
+          // Heading and badge sit side by side when they fit and stack when
+          // they do not (narrow phone, large text, long raw signal).
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 6,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              signalBadge,
+            ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           _SignalScaleBar(buy: buy, neutral: neutral, sell: sell),
         ],
       ),
@@ -3052,7 +4786,7 @@ class _SignalScaleBar extends StatelessWidget {
     final position = total == 0 ? 0.5 : ((buy - sell) / total + 1) / 2;
 
     return Semantics(
-      label: '$sell Bearish, $neutral Netral, $buy Bullish',
+      label: '$sell Bearish, $neutral Neutral, $buy Bullish',
       child: Column(
         children: [
           LayoutBuilder(
@@ -3115,15 +4849,17 @@ class _SignalScaleBar extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            alignment: WrapAlignment.spaceBetween,
             children: [
               Text(
                 'Bearish ($sell)',
                 style: TextStyle(color: bearish, fontSize: 10.5),
               ),
               Text(
-                'Netral ($neutral)',
+                'Neutral ($neutral)',
                 style: TextStyle(color: neutralColor, fontSize: 10.5),
               ),
               Text(
@@ -3190,6 +4926,7 @@ class _IndicatorRow extends StatelessWidget {
   }
 }
 
+// ignore: unused_element
 class _OpportunityRiskCard extends StatelessWidget {
   const _OpportunityRiskCard({required this.analysis});
   final Analysis analysis;
@@ -3209,7 +4946,7 @@ class _OpportunityRiskCard extends StatelessWidget {
         if (analysis.risk?.trim().isNotEmpty == true)
           _InfoPanel(
             key: const ValueKey('analysis-risk'),
-            title: context.l10n.risk,
+            title: context.l10n.riskTitle,
             body: analysis.risk!,
             color: Theme.of(context).colorScheme.primary,
             icon: Icons.shield_outlined,
@@ -3251,14 +4988,19 @@ class _InfoPanel extends StatelessWidget {
   final IconData icon;
 
   @override
-  Widget build(BuildContext context) => Card(
+  Widget build(BuildContext context) => Material(
+    color: color.withValues(alpha: 0.06),
+    borderRadius: BorderRadius.circular(AppColors.radius),
     child: Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        border: Border(left: BorderSide(color: color, width: 4)),
+        border: Border.all(color: color.withValues(alpha: 0.42)),
+        borderRadius: BorderRadius.circular(AppColors.radius),
       ),
       child: ExpansionTile(
         initiallyExpanded: false,
+        iconColor: color,
+        collapsedIconColor: color.withValues(alpha: 0.75),
         leading: Icon(icon, color: color, size: 19),
         title: Text(
           title,
@@ -3276,6 +5018,7 @@ class _InfoPanel extends StatelessWidget {
   );
 }
 
+// ignore: unused_element
 class _ExecutionInsightCard extends StatelessWidget {
   const _ExecutionInsightCard({required this.analysis});
   final Analysis analysis;
@@ -3293,7 +5036,10 @@ class _ExecutionInsightCard extends StatelessWidget {
       child: ExpansionTile(
         key: const ValueKey('analysis-execution-insight'),
         initiallyExpanded: false,
-        leading: const Icon(Icons.lightbulb_outline_rounded),
+        leading: Icon(
+          Icons.lightbulb_outline_rounded,
+          color: Theme.of(context).colorScheme.primary,
+        ),
         title: Text(
           context.l10n.executionInsight,
           style: const TextStyle(fontWeight: FontWeight.w800),
@@ -3340,8 +5086,14 @@ class _ExecutionInsightCard extends StatelessWidget {
   );
 }
 
+// ignore: unused_element
 class _ScenariosCard extends StatelessWidget {
-  const _ScenariosCard({this.mainScenario, this.alternativeScenario});
+  const _ScenariosCard({
+    // ignore: unused_element_parameter
+    this.mainScenario,
+    // ignore: unused_element_parameter
+    this.alternativeScenario,
+  });
 
   final String? mainScenario;
   final String? alternativeScenario;
@@ -3351,7 +5103,10 @@ class _ScenariosCard extends StatelessWidget {
     child: ExpansionTile(
       key: const ValueKey('analysis-scenarios'),
       initiallyExpanded: false,
-      leading: const Icon(Icons.route_outlined),
+      leading: Icon(
+        Icons.route_outlined,
+        color: Theme.of(context).colorScheme.primary,
+      ),
       title: Text(
         context.l10n.scenariosTitle,
         style: const TextStyle(fontWeight: FontWeight.w800),
@@ -3397,6 +5152,7 @@ class _ScenariosCard extends StatelessWidget {
   );
 }
 
+// ignore: unused_element
 class _ProAnalysisDetailsCard extends StatelessWidget {
   const _ProAnalysisDetailsCard({required this.analysis});
 
@@ -3407,7 +5163,10 @@ class _ProAnalysisDetailsCard extends StatelessWidget {
     child: ExpansionTile(
       key: const ValueKey('analysis-pro-details'),
       initiallyExpanded: false,
-      leading: const Icon(Icons.psychology_outlined),
+      leading: Icon(
+        Icons.psychology_outlined,
+        color: Theme.of(context).colorScheme.primary,
+      ),
       title: Text(
         context.l10n.proAnalysisDetailsTitle,
         style: const TextStyle(fontWeight: FontWeight.w800),
@@ -3492,36 +5251,33 @@ class _SectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final muted = Theme.of(context).colorScheme.onSurfaceVariant;
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, size: 17),
-                const SizedBox(width: 7),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 13.5,
-                    ),
-                  ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 17),
+              const SizedBox(width: 7),
+              Expanded(
+                child: Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleSmall,
                 ),
-              ],
-            ),
+              ),
+            ],
+          ),
 
-            const SizedBox(height: 8),
+          const SizedBox(height: 8),
 
-            Text(
-              body,
-              style: TextStyle(color: muted, fontSize: 13, height: 1.5),
-            ),
-          ],
-        ),
+          Text(
+            body,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: muted),
+          ),
+        ],
       ),
     );
   }
@@ -3532,10 +5288,15 @@ class _SectionCard extends StatelessWidget {
 // =============================================================================
 
 class _TradePlanCard extends StatelessWidget {
-  const _TradePlanCard({required this.plan, required this.isDark});
+  const _TradePlanCard({
+    required this.plan,
+    required this.isDark,
+    required this.onLearn,
+  });
 
   final TradePlan plan;
   final bool isDark;
+  final VoidCallback onLearn;
 
   @override
   Widget build(BuildContext context) {
@@ -3545,62 +5306,127 @@ class _TradePlanCard extends StatelessWidget {
 
     final wait = plan.preferredSide == TradePlanPreferredSideEnum.wait;
 
-    return Column(
-      children: [
-        if (wait) ...[
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              color: Theme.of(
-                context,
-              ).colorScheme.primary.withValues(alpha: 0.08),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    final preferredLabel = preferBuy
+        ? context.l10n.buy
+        : preferSell
+        ? context.l10n.sell
+        : context.l10n.waitLabel;
+
+    return Card(
+      key: const ValueKey('suggested-levels-card'),
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Title and "Learn" share the first row; the description and the
+            // suggested-side chip then use the full card width instead of a
+            // narrow column squeezed beside them.
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const Icon(Icons.hourglass_top_rounded, size: 18),
+                Icon(
+                  Icons.adjust_rounded,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 20,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    context.l10n.awaitConfirmationNotice,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      height: 1.4,
+                    context.l10n.tradingPlanTitle,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
                     ),
                   ),
                 ),
+                TextButton.icon(
+                  key: const ValueKey('suggested-levels-learn'),
+                  onPressed: onLearn,
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size(48, 44),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  icon: const Icon(Icons.menu_book_outlined, size: 18),
+                  label: Text(context.l10n.learn),
+                ),
               ],
             ),
-          ),
-          const SizedBox(height: 10),
-        ],
-
-        _SideCard(
-          side: plan.buy,
-          label: context.l10n.buy,
-          color: isDark ? AppColors.bullishDark : AppColors.bullishLight,
-          icon: Icons.trending_up_rounded,
-          highlighted: preferBuy,
+            const SizedBox(height: 4),
+            Text(
+              context.l10n.tradingPlanDisclaimer,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                height: 1.45,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: _StatusChip(
+                label: context.l10n.suggestedSide(preferredLabel),
+                color: preferBuy
+                    ? (isDark ? AppColors.bullishDark : AppColors.bullishLight)
+                    : preferSell
+                    ? (isDark ? AppColors.bearishDark : AppColors.bearishLight)
+                    : Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            if (wait) ...[
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(top: 10),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.08),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.hourglass_top_rounded, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        context.l10n.awaitConfirmationNotice,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 12),
+            _SideCard(
+              side: plan.buy,
+              label: context.l10n.buyScenario,
+              color: isDark ? AppColors.bullishDark : AppColors.bullishLight,
+              icon: Icons.trending_up_rounded,
+              highlighted: preferBuy,
+            ),
+            const SizedBox(height: 10),
+            _SideCard(
+              side: plan.sell,
+              label: context.l10n.sellScenario,
+              color: isDark ? AppColors.bearishDark : AppColors.bearishLight,
+              icon: Icons.trending_down_rounded,
+              highlighted: preferSell,
+            ),
+          ],
         ),
-
-        const SizedBox(height: 10),
-
-        _SideCard(
-          side: plan.sell,
-          label: context.l10n.sell,
-          color: isDark ? AppColors.bearishDark : AppColors.bearishLight,
-          icon: Icons.trending_down_rounded,
-          highlighted: preferSell,
-        ),
-      ],
+      ),
     );
   }
 }
 
-class _SideCard extends StatelessWidget {
+class _SideCard extends StatefulWidget {
   const _SideCard({
     required this.side,
     required this.label,
@@ -3616,6 +5442,73 @@ class _SideCard extends StatelessWidget {
   final bool highlighted;
 
   @override
+  State<_SideCard> createState() => _SideCardState();
+}
+
+class _SideCardState extends State<_SideCard> {
+  bool _showRationale = false;
+
+  static final _unavailablePattern = RegExp(
+    r'^(?:n/a|na|—|-)$',
+    caseSensitive: false,
+  );
+  static final _waitingWords = RegExp(
+    r'\b(menunggu|tunggu|belum|pending|await|wait for|not available)\b',
+    caseSensitive: false,
+  );
+  static final _riskRewardPattern = RegExp(r'\b1:\d+(?:\.\d+)?\b');
+
+  bool _isUnavailable(String raw) => _unavailablePattern.hasMatch(raw.trim());
+
+  /// A side whose levels are not usable yet (n/a, no digits, "wait for ..."
+  /// or no R:R). It shows a placeholder instead of the raw text and cannot be
+  /// copied as if it were an entry plan.
+  bool get _pending {
+    final side = widget.side;
+    final fields = [
+      side.entryZone,
+      side.stopLoss,
+      side.takeProfit1,
+      side.takeProfit2,
+    ];
+    return fields.any(
+          (raw) =>
+              _isUnavailable(raw) ||
+              !RegExp(r'\d').hasMatch(raw) ||
+              _waitingWords.hasMatch(raw),
+        ) ||
+        _isUnavailable(side.riskRewardRatio) ||
+        !_riskRewardPattern.hasMatch(side.riskRewardRatio);
+  }
+
+  String _shown(String raw, String replacement) =>
+      _isUnavailable(raw) ? replacement : raw;
+
+  Future<void> _copyLevels() async {
+    final l10n = context.l10n;
+    final text = [
+      widget.label,
+      '${l10n.entryZone}: ${widget.side.entryZone}',
+      'Stop Loss: ${widget.side.stopLoss}',
+      '${l10n.takeProfit1}: ${widget.side.takeProfit1}',
+      '${l10n.takeProfit2}: ${widget.side.takeProfit2}',
+      '${l10n.riskReward}: ${widget.side.riskRewardRatio}',
+    ].join('\n');
+    try {
+      await Clipboard.setData(ClipboardData(text: text));
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.levelsCopied)));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.levelsCopyFailed)));
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -3625,128 +5518,182 @@ class _SideCard extends StatelessWidget {
 
     final border = isDark ? AppColors.darkBorder : AppColors.lightBorder;
 
-    return Card(
-      shape: RoundedRectangleBorder(
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(AppColors.radius),
-        side: BorderSide(
-          color: highlighted ? color : border,
-          width: highlighted ? 1.5 : 1,
+        border: Border.all(
+          color: widget.highlighted
+              ? Theme.of(context).colorScheme.primary
+              : border,
         ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      child: Stack(
+        children: [
+          Positioned(
+            top: 0,
+            bottom: 0,
+            left: 0,
+            child: ColoredBox(
+              color: widget.color,
+              child: const SizedBox(width: 3),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(icon, size: 18, color: color),
-                const SizedBox(width: 6),
-                Text(
-                  label,
-                  style: TextStyle(fontWeight: FontWeight.w900, color: color),
+                Row(
+                  children: [
+                    Icon(widget.icon, size: 18, color: widget.color),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        widget.label,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w900,
+                          color: widget.color,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-
-                if (highlighted) ...[
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.13),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
+                const SizedBox(height: 10),
+                if (_pending) ...[
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
                     child: Text(
-                      context.l10n.primaryScenario,
+                      '${context.l10n.fastPlanWaitTitle} ${context.l10n.fastPlanEntryPending}',
+                      key: ValueKey('trade-plan-${widget.label}-pending'),
                       style: TextStyle(
-                        color: color,
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.w800,
+                        color: context.adaptiveAmber,
+                        fontSize: 12,
+                        height: 1.4,
                       ),
                     ),
                   ),
                 ],
+                _PlanLevelRow(
+                  label: context.l10n.entryZone,
+                  value: _shown(
+                    widget.side.entryZone,
+                    context.l10n.fastPlanEntryPending,
+                  ),
+                ),
+                _PlanLevelRow(
+                  label: 'Stop Loss',
+                  value: _shown(
+                    widget.side.stopLoss,
+                    context.l10n.fastPlanSlPending,
+                  ),
+                  valueColor: Theme.of(context).colorScheme.error,
+                ),
+                _PlanLevelRow(
+                  label: context.l10n.takeProfit1,
+                  value: _shown(
+                    widget.side.takeProfit1,
+                    context.l10n.fastPlanTp1Pending,
+                  ),
+                  valueColor: widget.color,
+                ),
+                _PlanLevelRow(
+                  label: context.l10n.takeProfit2,
+                  value: _shown(
+                    widget.side.takeProfit2,
+                    context.l10n.fastPlanTp2Pending,
+                  ),
+                  valueColor: widget.color,
+                ),
+                _PlanLevelRow(
+                  label: context.l10n.riskReward,
+                  value: _shown(
+                    widget.side.riskRewardRatio,
+                    context.l10n.fastPlanRrPending,
+                  ),
+                ),
+                const Divider(height: 16),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 4,
+                  alignment: WrapAlignment.spaceBetween,
+                  children: [
+                    TextButton.icon(
+                      onPressed: () =>
+                          setState(() => _showRationale = !_showRationale),
+                      style: TextButton.styleFrom(
+                        foregroundColor: muted,
+                        padding: EdgeInsets.zero,
+                      ),
+                      iconAlignment: IconAlignment.end,
+                      icon: Icon(
+                        _showRationale
+                            ? Icons.keyboard_arrow_up_rounded
+                            : Icons.keyboard_arrow_down_rounded,
+                      ),
+                      label: Text(context.l10n.rationale),
+                    ),
+                    if (!_pending)
+                      TextButton.icon(
+                        key: ValueKey('copy-${widget.label}-levels'),
+                        onPressed: _copyLevels,
+                        style: TextButton.styleFrom(foregroundColor: muted),
+                        icon: const Icon(Icons.copy_rounded, size: 18),
+                        label: Text(context.l10n.copyLevels),
+                      ),
+                  ],
+                ),
+                if (_showRationale) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    widget.side.rationale,
+                    style: TextStyle(color: muted, height: 1.45),
+                  ),
+                ],
               ],
-            ),
-
-            const SizedBox(height: 12),
-
-            _LevelRow(
-              label: context.l10n.entryZone,
-              value: side.entryZone,
-              muted: muted,
-            ),
-
-            _LevelRow(
-              label: 'Stop Loss',
-              value: side.stopLoss,
-              muted: muted,
-              warning: true,
-            ),
-
-            _LevelRow(label: 'TP1', value: side.takeProfit1, muted: muted),
-
-            _LevelRow(label: 'TP2', value: side.takeProfit2, muted: muted),
-
-            _LevelRow(
-              label: 'Risk : Reward',
-              value: side.riskRewardRatio,
-              muted: muted,
-            ),
-
-            const SizedBox(height: 10),
-
-            Text(
-              side.rationale,
-              style: TextStyle(color: muted, fontSize: 11.5, height: 1.45),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _LevelRow extends StatelessWidget {
-  const _LevelRow({
-    required this.label,
-    required this.value,
-    required this.muted,
-    this.warning = false,
-  });
-
-  final String label;
-  final String value;
-  final Color muted;
-
-  final bool warning;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Text(label, style: TextStyle(color: muted, fontSize: 11.5)),
-          ),
-          const SizedBox(width: 12),
-          Flexible(
-            child: Text(
-              value,
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                color: warning ? Theme.of(context).colorScheme.error : null,
-                fontSize: 11.5,
-                fontWeight: FontWeight.w800,
-              ),
             ),
           ),
         ],
       ),
     );
   }
+}
+
+class _PlanLevelRow extends StatelessWidget {
+  const _PlanLevelRow({
+    required this.label,
+    required this.value,
+    this.valueColor,
+  });
+
+  final String label;
+  final String value;
+  final Color? valueColor;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 4),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Flexible(
+          child: Text(
+            value,
+            textAlign: TextAlign.end,
+            style: TextStyle(color: valueColor, fontWeight: FontWeight.w800),
+          ),
+        ),
+      ],
+    ),
+  );
 }

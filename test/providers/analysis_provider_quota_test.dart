@@ -25,7 +25,6 @@ void main() {
   });
 
   for (final testCase in [
-    ('hour', 5, 5, 3600),
     ('day', 20, 20, 86400),
     ('concurrent', null, null, 5),
   ]) {
@@ -51,6 +50,8 @@ void main() {
       expect(provider.quotaLimit?.used, testCase.$3);
       expect(provider.quotaLimit?.retryAfter?.inSeconds, testCase.$4);
       expect(adapter.analysisRequests, 1);
+      await pumpEventQueue();
+      expect(adapter.quotaRequests, 1);
     });
   }
 
@@ -99,7 +100,6 @@ void main() {
       await pumpEventQueue(times: 20);
 
       expect(adapter.quotaRequests, 2);
-      expect(provider.quota?.hourly.remaining, 4);
       expect(provider.quota?.daily.remaining, 9);
     },
   );
@@ -165,6 +165,7 @@ class _AnalysisAdapter implements HttpClientAdapter {
   final int retryAfter;
   final bool succeeds;
   int analysisRequests = 0;
+  int quotaRequests = 0;
 
   @override
   Future<ResponseBody> fetch(
@@ -172,6 +173,14 @@ class _AnalysisAdapter implements HttpClientAdapter {
     Stream<Uint8List>? requestStream,
     Future<void>? cancelFuture,
   ) async {
+    if (options.path == '/analyses/quota') {
+      quotaRequests++;
+      return _json({
+        'unlimited': false,
+        'daily': {'limit': 20, 'used': 0, 'remaining': 20},
+        'credits': {'balance': 0},
+      }, 200);
+    }
     if (options.path != '/analyses') {
       return _json({'message': 'ok'}, 200);
     }
@@ -232,7 +241,7 @@ class _QuotaRefreshAdapter implements HttpClientAdapter {
   int quotaRequests = 0;
 
   void completeInitialQuota() {
-    _initialQuota.complete(_quotaResponse(hourly: 5, daily: 10));
+    _initialQuota.complete(_quotaResponse(daily: 10));
   }
 
   @override
@@ -245,7 +254,7 @@ class _QuotaRefreshAdapter implements HttpClientAdapter {
       quotaRequests++;
       return quotaRequests == 1
           ? _initialQuota.future
-          : _quotaResponse(hourly: 4, daily: 9);
+          : _quotaResponse(daily: 9);
     }
 
     if (options.path == '/analyses' && options.method == 'POST') {
@@ -264,13 +273,11 @@ class _QuotaRefreshAdapter implements HttpClientAdapter {
     return _json({'message': 'ok'}, 200);
   }
 
-  ResponseBody _quotaResponse({required int hourly, required int daily}) =>
-      _json({
-        'unlimited': false,
-        'hourly': {'limit': 5, 'used': 5 - hourly, 'remaining': hourly},
-        'daily': {'limit': 10, 'used': 10 - daily, 'remaining': daily},
-        'credits': {'balance': 3},
-      }, 200);
+  ResponseBody _quotaResponse({required int daily}) => _json({
+    'unlimited': false,
+    'daily': {'limit': 10, 'used': 10 - daily, 'remaining': daily},
+    'credits': {'balance': 3},
+  }, 200);
 
   ResponseBody _json(Object body, int status) => ResponseBody.fromString(
     jsonEncode(body),
@@ -298,7 +305,6 @@ class _QuotaFailureAdapter implements HttpClientAdapter {
     if (requests == 2) return _json({'error': 'Unavailable'}, 500);
     return _json({
       'unlimited': false,
-      'hourly': {'limit': 5, 'used': 1, 'remaining': 4},
       'daily': {'limit': 10, 'used': 2, 'remaining': 8},
       'credits': {'balance': 3},
     }, 200);

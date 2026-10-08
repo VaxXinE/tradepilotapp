@@ -5,17 +5,21 @@ import 'package:provider/provider.dart';
 
 import '../../providers/analysis_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/credit_provider.dart';
 import '../../providers/market_provider.dart';
 import '../../providers/notifications_provider.dart';
 import '../../providers/progression_provider.dart';
+import '../../widgets/progression/level_up_watcher.dart';
 import '../../providers/watchlist_provider.dart';
 import '../../core/theme/theme_controller.dart';
 import '../../l10n/l10n.dart';
 import '../../widgets/app_shell_chrome.dart';
 import '../../widgets/language_menu_button.dart';
+import '../../widgets/setup_prompt_sheet.dart';
 import '../notifications/notifications_screen.dart';
 import 'tabs/analyze_tab.dart';
-import 'tabs/dashboard_tab.dart';
+// Dashboard disembunyikan sementara.
+// import 'tabs/dashboard_tab.dart';
 import 'tabs/history_tab.dart';
 import 'tabs/profile_tab.dart';
 import '../mindset/mindset_screen.dart';
@@ -33,12 +37,15 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
 
   /// Indeks view yang punya tab pada navigasi bawah. Profil (4) tetap tanpa
   /// tab dan dibuka lewat avatar header, sama seperti web.
-  static const _navIds = {0, 1, 2, 3};
+  static const _navIds = {1, 2, 3};
 
-  int _index = 0;
+  // Dashboard (0) disembunyikan; aplikasi dibuka di tab Analisis (1).
+  int _index = 1;
   int _analyzeTabRevision = 0;
 
   Timer? _analysisSyncTimer;
+  Timer? _setupPromptTimer;
+  bool _setupPromptChecked = false;
 
   // ===========================================================================
   // LIFECYCLE
@@ -62,18 +69,39 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
 
       context.read<NotificationsProvider>().setRealtimeEnabled(true);
 
-      unawaited(context.read<AuthProvider>().telemetry.pageView(_tabPaths[0]));
+      unawaited(
+        context.read<AuthProvider>().telemetry.pageView(_tabPaths[_index]),
+      );
 
       // Initial sync tab.
       _syncCurrentTab(showLoading: true);
 
       // Background analysis polling.
       _startAnalysisPolling();
+
+      _scheduleSetupPrompt();
+    });
+  }
+
+  /// Suggests notifications and the biometric lock once per app session, a
+  /// moment after the home screen is up so it never competes with loading.
+  /// The policy decides whether this user has used the app long enough.
+  void _scheduleSetupPrompt() {
+    if (_setupPromptChecked) return;
+    _setupPromptTimer?.cancel();
+    _setupPromptTimer = Timer(const Duration(seconds: 4), () async {
+      if (!mounted || _setupPromptChecked) return;
+      // Covered by another screen (e.g. a result): try again on the next resume.
+      final route = ModalRoute.of(context);
+      if (route != null && !route.isCurrent) return;
+      _setupPromptChecked = true;
+      await showSetupPromptIfDue(context);
     });
   }
 
   @override
   void dispose() {
+    _setupPromptTimer?.cancel();
     _stopAnalysisPolling();
 
     WidgetsBinding.instance.removeObserver(this);
@@ -97,14 +125,23 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
           return;
         }
 
+        // Kunci biometrik jika app terlalu lama di background.
+        context.read<AuthProvider>().lockIfBackgroundedTooLong();
+
         // Aktifkan kembali notification SSE.
         context.read<NotificationsProvider>().setRealtimeEnabled(true);
 
         // Refresh tab yang sedang aktif.
         _syncCurrentTab();
 
+        // Pulang dari halaman top-up di browser: baca ulang saldo kalau
+        // pembayaran masih ditunggu.
+        unawaited(context.read<CreditProvider>().refreshIfAwaitingTopup());
+
         // Restart analysis polling.
         _startAnalysisPolling();
+
+        _scheduleSetupPrompt();
 
         break;
 
@@ -120,6 +157,12 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
 
         if (!mounted) {
           return;
+        }
+
+        // `inactive` juga muncul saat sheet biometrik tampil, jadi hanya
+        // `paused` yang dihitung sebagai benar-benar masuk background.
+        if (state == AppLifecycleState.paused) {
+          unawaited(context.read<AuthProvider>().noteAppBackgrounded());
         }
 
         // Stop live quote polling.
@@ -353,23 +396,23 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   // DASHBOARD NAVIGATION
   // ===========================================================================
 
-  void _openAnalyzeFromDashboard(String? instrument) {
-    if (!mounted) {
-      return;
-    }
-
-    if (instrument != null) {
-      final market = context.read<MarketProvider>();
-
-      unawaited(market.selectInstrument(instrument));
-    }
-
-    _openNewAnalysis();
-  }
-
-  void _openHistoryFromDashboard() {
-    _onTabSelected(2);
-  }
+  // void _openAnalyzeFromDashboard(String? instrument) {
+  //   if (!mounted) {
+  //     return;
+  //   }
+  //
+  //   if (instrument != null) {
+  //     final market = context.read<MarketProvider>();
+  //
+  //     unawaited(market.selectInstrument(instrument));
+  //   }
+  //
+  //   _openNewAnalysis();
+  // }
+  //
+  // void _openHistoryFromDashboard() {
+  //   _onTabSelected(2);
+  // }
 
   void _openNotifications() {
     Navigator.of(
@@ -382,7 +425,13 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     final enabled = !theme.isDarkMode;
     await theme.setDarkMode(enabled);
     if (!mounted) return;
-    await context.read<AuthProvider>().updateTheme(enabled);
+    final messenger = ScaffoldMessenger.of(context);
+    final failedMessage = context.l10n.themeUpdateFailed;
+    final saved = await context.read<AuthProvider>().updateTheme(enabled);
+    if (saved) return;
+    // Same as the web: restore the previous display and say it was not saved.
+    await theme.setDarkMode(!enabled);
+    messenger.showSnackBar(SnackBar(content: Text(failedMessage)));
   }
 
   void _openAnalyzeFromHistory(String instrument, String timeframe) {
@@ -444,10 +493,13 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     final themeController = context.watch<ThemeController>();
     final user = auth.user;
     final tabs = [
-      DashboardTab(
-        onOpenAnalyze: _openAnalyzeFromDashboard,
-        onOpenHistory: _openHistoryFromDashboard,
-      ),
+      // Dashboard disembunyikan sementara. Slot 0 dibiarkan kosong supaya
+      // indeks tab lain tidak bergeser.
+      // DashboardTab(
+      //   onOpenAnalyze: _openAnalyzeFromDashboard,
+      //   onOpenHistory: _openHistoryFromDashboard,
+      // ),
+      const SizedBox.shrink(),
       AnalyzeTab(
         key: ValueKey(_analyzeTabRevision),
         onNewAnalysis: _openNewAnalysis,
@@ -460,50 +512,58 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       const ProfileTab(),
     ];
 
-    return Scaffold(
-      body: Column(
-        children: [
-          TradePilotAppHeader(
-            displayName: user?.displayName ?? l10n.trader,
-            avatarUrl: user?.avatarUrl,
-            unreadCount: notifications.unreadCount,
-            languageButton: const LanguageMenuButton(),
-            isDarkMode: themeController.isDarkMode,
-            onToggleTheme: _toggleTheme,
-            onOpenNotifications: _openNotifications,
-            onOpenProfile: () => _onTabSelected(4),
-            onOpenHome: () => _onTabSelected(0),
-            profileActive: _index == 4,
-            onBack: _navIds.contains(_index) ? null : () => _onTabSelected(1),
-            notificationsLabel: l10n.notifications,
-            profileLabel: l10n.profile,
-            themeLabel: l10n.darkTheme,
-            logoLabel: l10n.tradePilotLogo,
-            backLabel: l10n.back,
-          ),
-          LiveMarketTicker(quotes: market.quotes.values),
-          Expanded(
-            child: IndexedStack(index: _index, children: tabs),
-          ),
-        ],
-      ),
-      bottomNavigationBar: AppBottomNav(
-        activeId: _index,
-        onSelected: _onTabSelected,
-        items: [
-          AppNavItem(id: 0, icon: Icons.home_rounded, label: l10n.dashboard),
-          AppNavItem(
-            id: 1,
-            icon: Icons.trending_up_rounded,
-            label: l10n.analysis,
-          ),
-          AppNavItem(id: 2, icon: Icons.schedule_rounded, label: l10n.history),
-          AppNavItem(
-            id: 3,
-            icon: Icons.menu_book_rounded,
-            label: l10n.guideNavLabel,
-          ),
-        ],
+    return ProgressionLevelUpWatcher(
+      child: Scaffold(
+        body: Column(
+          children: [
+            TradePilotAppHeader(
+              displayName: user?.displayName ?? l10n.trader,
+              avatarUrl: user?.avatarUrl,
+              unreadCount: notifications.unreadCount,
+              languageButton: const LanguageMenuButton(),
+              isDarkMode: themeController.isDarkMode,
+              onToggleTheme: _toggleTheme,
+              onOpenNotifications: _openNotifications,
+              onOpenProfile: () => _onTabSelected(4),
+              onOpenHome: () =>
+                  _onTabSelected(1), // dashboard (0) disembunyikan
+              profileActive: _index == 4,
+              onBack: _navIds.contains(_index) ? null : () => _onTabSelected(1),
+              notificationsLabel: l10n.notifications,
+              profileLabel: l10n.profile,
+              themeLabel: l10n.darkTheme,
+              logoLabel: l10n.tradePilotLogo,
+              backLabel: l10n.back,
+            ),
+            LiveMarketTicker(quotes: market.quotes.values),
+            Expanded(
+              child: IndexedStack(index: _index, children: tabs),
+            ),
+          ],
+        ),
+        bottomNavigationBar: AppBottomNav(
+          activeId: _index,
+          onSelected: _onTabSelected,
+          items: [
+            // Dashboard disembunyikan sementara.
+            // AppNavItem(id: 0, icon: Icons.home_rounded, label: l10n.dashboard),
+            AppNavItem(
+              id: 1,
+              icon: Icons.trending_up_rounded,
+              label: l10n.analysis,
+            ),
+            AppNavItem(
+              id: 2,
+              icon: Icons.schedule_rounded,
+              label: l10n.history,
+            ),
+            AppNavItem(
+              id: 3,
+              icon: Icons.menu_book_rounded,
+              label: l10n.guideNavLabel,
+            ),
+          ],
+        ),
       ),
     );
   }

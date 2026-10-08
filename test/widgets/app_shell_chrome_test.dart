@@ -19,7 +19,10 @@ void main() {
 
     await tester.pumpWidget(
       MediaQuery(
-        data: const MediaQueryData(textScaler: TextScaler.linear(1.3)),
+        data: const MediaQueryData(
+          size: Size(360, 800),
+          textScaler: TextScaler.linear(1.3),
+        ),
         child: MaterialApp(
           theme: AppTheme.light,
           home: Scaffold(
@@ -47,6 +50,18 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text('9+'), findsOneWidget);
+    expect(
+      tester.getSize(find.byKey(const Key('app-header-brand'))),
+      const Size.square(44),
+    );
+    expect(
+      tester.getSize(find.byKey(const Key('app-header-profile'))),
+      const Size.square(44),
+    );
+    expect(
+      tester.getSize(find.byTooltip('Notifications')),
+      const Size.square(44),
+    );
     await tester.tap(find.byTooltip('Notifications'));
     await tester.tap(find.byKey(const Key('app-header-profile')));
     expect(notificationsOpened, isTrue);

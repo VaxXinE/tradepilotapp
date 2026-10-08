@@ -38,7 +38,7 @@ abstract class PerformanceSummary
   DateTime get generatedAt;
 
   @BuiltValueField(wireName: r'windowStart')
-  DateTime get windowStart;
+  DateTime? get windowStart;
 
   @BuiltValueField(wireName: r'minSamples')
   PerformanceMinSamples get minSamples;
@@ -105,7 +105,7 @@ class _$PerformanceSummarySerializer
     yield r'windowStart';
     yield serializers.serialize(
       object.windowStart,
-      specifiedType: const FullType(DateTime),
+      specifiedType: const FullType.nullable(DateTime),
     );
     yield r'minSamples';
     yield serializers.serialize(
@@ -189,8 +189,8 @@ class _$PerformanceSummarySerializer
         case r'windowStart':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(DateTime),
-          ) as DateTime;
+            specifiedType: const FullType.nullable(DateTime),
+          ) as DateTime?;
           result.windowStart = valueDes;
           break;
         case r'minSamples':

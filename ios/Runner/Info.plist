@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Trade Pilot</string>
+	<string>TradePilot.id</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -18,6 +18,14 @@
 				<string>com.googleusercontent.apps.929958103345-cieflfi7p13t6dnhqt8j0qfif9iia57g</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>id.tradepilot.app</string>
+			</array>
+		</dict>
 	</array>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
@@ -26,7 +34,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>tradepilotapp</string>
+	<string>TradePilot.id</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -42,9 +50,11 @@
 	<key>GIDServerClientID</key>
 	<string>929958103345-cbf424vgelrer7nkrr81l4iptsikuc1u.apps.googleusercontent.com</string>
 	<key>NSFaceIDUsageDescription</key>
-	<string>Gunakan Face ID untuk masuk dengan aman ke Trade Pilot.</string>
+	<string>Gunakan Face ID untuk masuk dengan aman ke TradePilot.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Simpan gambar chart analisis ke galeri Anda.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Pilih foto profil untuk akun Trade Pilot Anda.</string>
+	<string>Pilih foto profil untuk akun TradePilot Anda.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

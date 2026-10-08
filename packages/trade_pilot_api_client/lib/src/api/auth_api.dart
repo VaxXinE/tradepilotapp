@@ -8,6 +8,7 @@ import 'package:built_value/json_object.dart';
 import 'package:built_value/serializer.dart';
 import 'package:dio/dio.dart';
 
+import 'package:trade_pilot_api_client/src/api_util.dart';
 import 'package:trade_pilot_api_client/src/model/apple_native_login_body.dart';
 import 'package:trade_pilot_api_client/src/model/apple_reauth_body.dart';
 import 'package:trade_pilot_api_client/src/model/apple_reauth_response.dart';
@@ -22,13 +23,18 @@ import 'package:trade_pilot_api_client/src/model/google_reauth_body.dart';
 import 'package:trade_pilot_api_client/src/model/google_reauth_response.dart';
 import 'package:trade_pilot_api_client/src/model/login_body.dart';
 import 'package:trade_pilot_api_client/src/model/message_response.dart';
+import 'package:trade_pilot_api_client/src/model/mobile_auth_exchange_body.dart';
 import 'package:trade_pilot_api_client/src/model/register_body.dart';
 import 'package:trade_pilot_api_client/src/model/reset_password_body.dart';
 import 'package:trade_pilot_api_client/src/model/reset_token_response.dart';
 import 'package:trade_pilot_api_client/src/model/security_question_response.dart';
+import 'package:trade_pilot_api_client/src/model/tiktok_complete_signup_body.dart';
+import 'package:trade_pilot_api_client/src/model/tiktok_pending_signup_response.dart';
 import 'package:trade_pilot_api_client/src/model/update_profile_body.dart';
 import 'package:trade_pilot_api_client/src/model/user.dart';
 import 'package:trade_pilot_api_client/src/model/verify_security_answer_body.dart';
+import 'package:trade_pilot_api_client/src/model/web_handoff_body.dart';
+import 'package:trade_pilot_api_client/src/model/web_handoff_response.dart';
 
 class AuthApi {
   final Dio _dio;
@@ -229,6 +235,209 @@ class AuthApi {
     );
   }
 
+  /// Finish a brand-new TikTok sign-in by supplying an email
+  /// TikTok&#39;s Login Kit never returns an email, so a brand-new sign-in (see GET /auth/tiktok/callback) can&#39;t create the account directly. This endpoint reads the pending TikTok profile from its httpOnly cookie (never a request field a client could forge), creates the account with the supplied email plus the captured TikTok &#x60;display_name&#x60;/&#x60;avatar_url&#x60;, and returns a normal TradePilot Bearer session.
+  ///
+  /// Parameters:
+  /// * [tiktokCompleteSignupBody]
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [AuthResponse] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<AuthResponse>> completeTiktokSignup({
+    required TiktokCompleteSignupBody tiktokCompleteSignupBody,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/auth/tiktok/complete-signup';
+    final _options = Options(
+      method: r'POST',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[],
+        ...?extra,
+      },
+      contentType: 'application/json',
+      validateStatus: validateStatus,
+    );
+
+    dynamic _bodyData;
+
+    try {
+      const _type = FullType(TiktokCompleteSignupBody);
+      _bodyData = _serializers.serialize(tiktokCompleteSignupBody,
+          specifiedType: _type);
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _options.compose(
+          _dio.options,
+          _path,
+        ),
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    final _response = await _dio.request<Object>(
+      _path,
+      data: _bodyData,
+      options: _options,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    AuthResponse? _responseData;
+
+    try {
+      final rawResponse = _response.data;
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(AuthResponse),
+            ) as AuthResponse;
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<AuthResponse>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// Mint a one-time URL that signs the browser in as the current (Bearer-authenticated) user
+  /// For a mobile app menu item that opens a browser to an authenticated page (e.g. Profil -&gt; Kredit Analisis -&gt; tradepilot.id/topup) without asking the user to log in again. Call this with the Bearer token from the active app session, then open the returned &#x60;url&#x60; in the system browser. The code is single-use and expires in &#x60;expiresIn&#x60; seconds (60s) — open the URL immediately. This does NOT end or otherwise affect the native app session that called it.
+  ///
+  /// Parameters:
+  /// * [webHandoffBody]
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [WebHandoffResponse] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<WebHandoffResponse>> createWebHandoff({
+    required WebHandoffBody webHandoffBody,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/auth/web-handoff';
+    final _options = Options(
+      method: r'POST',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'apiKey',
+            'name': 'sessionCookie',
+            'keyName': 'session_token',
+            'where': '',
+          },
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      contentType: 'application/json',
+      validateStatus: validateStatus,
+    );
+
+    dynamic _bodyData;
+
+    try {
+      const _type = FullType(WebHandoffBody);
+      _bodyData = _serializers.serialize(webHandoffBody, specifiedType: _type);
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _options.compose(
+          _dio.options,
+          _path,
+        ),
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    final _response = await _dio.request<Object>(
+      _path,
+      data: _bodyData,
+      options: _options,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    WebHandoffResponse? _responseData;
+
+    try {
+      final rawResponse = _response.data;
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(WebHandoffResponse),
+            ) as WebHandoffResponse;
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<WebHandoffResponse>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
   /// Permanently delete the current user&#39;s own account
   /// Re-authenticates with &#x60;currentPassword&#x60;, then permanently deletes the authenticated user&#39;s account and every row that references it (analyses, notifications, sessions, push subscriptions, native push devices, journal entries, watchlist, alerts, etc.) via cascading foreign keys. Cannot be used to delete another user&#39;s account — the target is always the authenticated caller.
   ///
@@ -314,6 +523,102 @@ class AuthApi {
     }
 
     return Response<MessageResponse>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// Exchange a one-time mobile OAuth code (+ PKCE verifier) for a TradePilot session
+  /// The last leg of the mobile OAuth browser flow: after the app is foregrounded via the &#x60;id.tradepilot.app://auth/callback?code&#x3D;...&#x60; deep link, call this with that code and the PKCE &#x60;code_verifier&#x60; that produced the &#x60;code_challenge&#x60; originally sent to &#x60;/mobile/start&#x60;. On success this is the only point in the whole mobile flow where a TradePilot session is actually created (&#x60;createSingleSession&#x60; — signing in on the phone signs every other device out, same policy as every other login method) and the only response that ever contains a Bearer token; the deep-link URL itself never carries one. The code is single-use, expires 60-120 seconds after being issued, and is consumed atomically.
+  ///
+  /// Parameters:
+  /// * [mobileAuthExchangeBody]
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [AuthResponse] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<AuthResponse>> exchangeMobileAuthCode({
+    required MobileAuthExchangeBody mobileAuthExchangeBody,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/auth/mobile/exchange';
+    final _options = Options(
+      method: r'POST',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[],
+        ...?extra,
+      },
+      contentType: 'application/json',
+      validateStatus: validateStatus,
+    );
+
+    dynamic _bodyData;
+
+    try {
+      const _type = FullType(MobileAuthExchangeBody);
+      _bodyData =
+          _serializers.serialize(mobileAuthExchangeBody, specifiedType: _type);
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _options.compose(
+          _dio.options,
+          _path,
+        ),
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    final _response = await _dio.request<Object>(
+      _path,
+      data: _bodyData,
+      options: _options,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    AuthResponse? _responseData;
+
+    try {
+      final rawResponse = _response.data;
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(AuthResponse),
+            ) as AuthResponse;
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<AuthResponse>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,
@@ -484,6 +789,80 @@ class AuthApi {
     }
 
     return Response<User>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// Look up the TikTok profile pending a complete-signup email
+  /// After GET /auth/tiktok/callback finds a brand-new TikTok sign-in (no existing &#x60;tiktok_id&#x60; match), it stashes the verified profile server-side and redirects the browser to the \&quot;finish signup\&quot; page with a short-lived httpOnly cookie. That page calls this endpoint (cookie sent automatically) to show a friendly \&quot;Hi, {name}\&quot; before asking for an email — the &#x60;tiktok_id&#x60; itself is never returned to the client.
+  ///
+  /// Parameters:
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [TiktokPendingSignupResponse] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<TiktokPendingSignupResponse>> getTiktokPendingSignup({
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/auth/tiktok/pending-signup';
+    final _options = Options(
+      method: r'GET',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    TiktokPendingSignupResponse? _responseData;
+
+    try {
+      final rawResponse = _response.data;
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(TiktokPendingSignupResponse),
+            ) as TiktokPendingSignupResponse;
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<TiktokPendingSignupResponse>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,
@@ -1260,6 +1639,128 @@ class AuthApi {
       statusMessage: _response.statusMessage,
       extra: _response.extra,
     );
+  }
+
+  /// Begin the mobile OAuth browser flow for Facebook login/registration
+  /// For the Flutter app: open this URL in a system browser (Custom Tabs / ASWebAuthenticationSession). It validates &#x60;redirect_uri&#x60; against an exact allowlist (&#x60;MOBILE_OAUTH_REDIRECT_URIS&#x60;), creates a persistent (multi-instance-safe) transaction row, and 302s to Facebook&#39;s own consent screen — the provider-facing &#x60;redirect_uri&#x60; is still this backend&#39;s existing HTTPS &#x60;/auth/facebook/callback&#x60;, registered in the Meta app exactly as for the website flow. That callback tells this mobile transaction apart from an ordinary web login purely by the &#x60;state&#x60; value, so the website flow&#39;s behavior is completely unchanged.
+  ///
+  /// Parameters:
+  /// * [redirectUri] - Must exactly match one entry in MOBILE_OAUTH_REDIRECT_URIS. No prefix/substring matching.
+  /// * [codeChallenge] - Base64url(SHA-256(code_verifier)) — the mobile app's own PKCE challenge for the eventual /auth/mobile/exchange call.
+  /// * [codeChallengeMethod]
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future]
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<void>> startFacebookMobileOauth({
+    required String redirectUri,
+    required String codeChallenge,
+    required String codeChallengeMethod,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/auth/facebook/mobile/start';
+    final _options = Options(
+      method: r'GET',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _queryParameters = <String, dynamic>{
+      r'redirect_uri': encodeQueryParameter(
+          _serializers, redirectUri, const FullType(String)),
+      r'code_challenge': encodeQueryParameter(
+          _serializers, codeChallenge, const FullType(String)),
+      r'code_challenge_method': encodeQueryParameter(
+          _serializers, codeChallengeMethod, const FullType(String)),
+    };
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      queryParameters: _queryParameters,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    return _response;
+  }
+
+  /// Begin the mobile OAuth browser flow for TikTok login/registration
+  /// Same shape as GET /auth/facebook/mobile/start, for TikTok. A brand-new TikTok sign-in (no existing tiktok_id) still can&#39;t create the account directly — TikTok never returns an email — so the provider callback redirects the system browser to the existing web page &#x60;/auth/tiktok/complete-signup?mobile&#x3D;1&#x60; to collect one first; only after that page succeeds does the browser get handed back to the app via the deep link with a one-time code.
+  ///
+  /// Parameters:
+  /// * [redirectUri] - Must exactly match one entry in MOBILE_OAUTH_REDIRECT_URIS. No prefix/substring matching.
+  /// * [codeChallenge] - Base64url(SHA-256(code_verifier)) — the mobile app's own PKCE challenge for the eventual /auth/mobile/exchange call.
+  /// * [codeChallengeMethod]
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future]
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<void>> startTiktokMobileOauth({
+    required String redirectUri,
+    required String codeChallenge,
+    required String codeChallengeMethod,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/auth/tiktok/mobile/start';
+    final _options = Options(
+      method: r'GET',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _queryParameters = <String, dynamic>{
+      r'redirect_uri': encodeQueryParameter(
+          _serializers, redirectUri, const FullType(String)),
+      r'code_challenge': encodeQueryParameter(
+          _serializers, codeChallenge, const FullType(String)),
+      r'code_challenge_method': encodeQueryParameter(
+          _serializers, codeChallengeMethod, const FullType(String)),
+    };
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      queryParameters: _queryParameters,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    return _response;
   }
 
   /// Update user profile

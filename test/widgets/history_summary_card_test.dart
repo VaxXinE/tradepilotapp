@@ -5,15 +5,19 @@ import 'package:tradepilotapp/l10n/l10n.dart';
 import 'package:tradepilotapp/widgets/history/history_summary_card.dart';
 
 void main() {
-  testWidgets('shows an empty all-history summary', (tester) async {
+  testWidgets('shows the seven web summary metrics', (tester) async {
     await _pumpSummary(tester, HistoryStatistics.fromAnalyses(const []));
 
-    expect(find.text('All analysis summary'), findsOneWidget);
-    expect(find.text('Target reached'), findsOneWidget);
-    expect(find.text('Cannot be evaluated'), findsOneWidget);
+    expect(find.text('Total analyses'), findsOneWidget);
+    expect(find.text('Still valid'), findsOneWidget);
+    expect(find.text('Expired'), findsOneWidget);
+    expect(find.text('SL'), findsOneWidget);
+    expect(find.text('TP1'), findsOneWidget);
+    expect(find.text('TP2'), findsOneWidget);
+    expect(find.text('Invalid'), findsOneWidget);
   });
 
-  testWidgets('shows evaluated metrics for all history', (tester) async {
+  testWidgets('keeps TP1 and TP2 as separate metrics', (tester) async {
     const statistics = HistoryStatistics(
       total: 4,
       targetHitCount: 2,
@@ -22,14 +26,16 @@ void main() {
       expiredCount: 0,
       invalidatedCount: 0,
       targetHitRate: 66.7,
+      activeValidCount: 1,
+      tp1HitCount: 1,
+      tp2HitCount: 1,
     );
 
     await _pumpSummary(tester, statistics);
 
-    expect(find.text('All analysis summary'), findsOneWidget);
-    expect(find.text('3'), findsOneWidget);
-    expect(find.text('1'), findsNWidgets(2));
-    expect(find.textContaining('Targets were reached'), findsOneWidget);
+    expect(find.text('Total analyses'), findsOneWidget);
+    expect(find.text('4'), findsOneWidget);
+    expect(find.text('1'), findsNWidgets(4));
   });
 
   testWidgets('stacks summary metrics at 200% text without overflow', (
@@ -55,8 +61,8 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(
-      tester.getTopLeft(find.text('Evaluated')).dy,
-      lessThan(tester.getTopLeft(find.text('Pending')).dy),
+      tester.getTopLeft(find.text('Total analyses')).dy,
+      lessThan(tester.getTopLeft(find.text('Still valid')).dy),
     );
   });
 }

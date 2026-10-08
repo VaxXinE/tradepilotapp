@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
@@ -24,15 +26,55 @@ class MindsetScreen extends StatefulWidget {
 }
 
 class _MindsetScreenState extends State<MindsetScreen> {
+  List<_MindsetModule> _modules = const [];
+  final _searchController = TextEditingController();
   String _query = '';
   String? _selectedCategory;
   bool _openedInitialGuide = false;
 
   @override
+  void initState() {
+    super.initState();
+    _loadGuide();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadGuide() async {
+    final raw = await Future.wait([
+      rootBundle.loadString('assets/guide_core.json'),
+      rootBundle.loadString('assets/guide_more.json'),
+    ]);
+    final categories = [
+      for (final source in raw) ...jsonDecode(source) as List<dynamic>,
+    ];
+    final modules = <_MindsetModule>[];
+    for (final value in categories.cast<Map<String, dynamic>>()) {
+      final category = value['id'] as String;
+      for (final article
+          in (value['articles'] as List<dynamic>)
+              .cast<Map<String, dynamic>>()) {
+        modules.add(_MindsetModule.fromJson(category, article));
+      }
+    }
+    if (!mounted) return;
+    setState(() => _modules = modules);
+    _openInitialGuide();
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _openInitialGuide();
+  }
+
+  void _openInitialGuide() {
     final guideId = widget.initialGuideId;
-    if (_openedInitialGuide || guideId == null) return;
+    if (_openedInitialGuide || guideId == null || _modules.isEmpty) return;
     _openedInitialGuide = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -48,6 +90,12 @@ class _MindsetScreenState extends State<MindsetScreen> {
                   .read<ProgressionProvider>()
                   .completedGuideIds
                   .contains(module.guideKey),
+              relatedModule: module.relatedArticleId == null
+                  ? null
+                  : _modules.cast<_MindsetModule?>().firstWhere(
+                      (item) => item?.articleId == module.relatedArticleId,
+                      orElse: () => null,
+                    ),
             ),
           ),
         );
@@ -58,12 +106,21 @@ class _MindsetScreenState extends State<MindsetScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_modules.isEmpty) {
+      return Scaffold(
+        appBar: widget.embedded
+            ? null
+            : AppBar(title: Text(context.l10n.guide)),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
     final id = context.watch<LocaleController>().locale.languageCode == 'id';
     final filtered = _modules.where((module) {
       final query = _query.trim().toLowerCase();
       if (query.isEmpty) return true;
       return '${id ? module.titleId : module.titleEn} '
-              '${id ? module.summaryId : module.summaryEn}'
+              '${id ? module.summaryId : module.summaryEn} '
+              '${module.searchText(id)}'
           .toLowerCase()
           .contains(query);
     }).toList();
@@ -74,6 +131,7 @@ class _MindsetScreenState extends State<MindsetScreen> {
               .where((module) => module.category == _selectedCategory)
               .toList();
     final categories = visible.map((module) => module.category).toSet();
+    final colors = Theme.of(context).colorScheme;
     final l10n = context.l10n;
     final completedGuideIds = context
         .watch<ProgressionProvider?>()
@@ -85,7 +143,7 @@ class _MindsetScreenState extends State<MindsetScreen> {
             ProgressionEvidenceStartInputGuideIdEnum.analysisWorkflow,
       ),
       _modules.firstWhere(
-        (module) => module.titleEn == 'Using History & Performance',
+        (module) => module.articleId == 'history-performance',
       ),
       _modules.firstWhere(
         (module) =>
@@ -103,6 +161,12 @@ class _MindsetScreenState extends State<MindsetScreen> {
             id: id,
             initiallyCompleted:
                 completedGuideIds?.contains(module.guideKey) == true,
+            relatedModule: module.relatedArticleId == null
+                ? null
+                : _modules.cast<_MindsetModule?>().firstWhere(
+                    (item) => item?.articleId == module.relatedArticleId,
+                    orElse: () => null,
+                  ),
           ),
         ),
       );
@@ -115,9 +179,20 @@ class _MindsetScreenState extends State<MindsetScreen> {
         padding: responsivePagePadding(context),
         children: [
           if (widget.embedded) ...[
-            Text(
-              l10n.guide,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+            Row(
+              children: [
+                Icon(Icons.menu_book_outlined, size: 18, color: colors.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    l10n.guide,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 2),
             Text(
@@ -129,20 +204,48 @@ class _MindsetScreenState extends State<MindsetScreen> {
             ),
             const SizedBox(height: 14),
           ],
-          TextField(
-            onChanged: (value) => setState(() => _query = value),
-            decoration: InputDecoration(
-              prefixIcon: const Icon(Icons.search_rounded),
-              hintText: l10n.guideSearchHint,
+          SizedBox(
+            height: 48,
+            child: TextField(
+              controller: _searchController,
+              style: const TextStyle(fontSize: 14),
+              onChanged: (value) => setState(() => _query = value),
+              decoration: InputDecoration(
+                isDense: true,
+                prefixIcon: const Icon(Icons.search_rounded, size: 19),
+                hintText: l10n.guideSearchHint,
+                suffixIcon: _query.isEmpty
+                    ? null
+                    : IconButton(
+                        tooltip: id ? 'Hapus pencarian' : 'Clear search',
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _query = '');
+                        },
+                        icon: const Icon(Icons.close_rounded, size: 18),
+                      ),
+              ),
             ),
           ),
           const SizedBox(height: 12),
           if (_query.trim().isEmpty && _selectedCategory == null) ...[
-            Text(
-              l10n.guideQuickStart,
-              style: Theme.of(
-                context,
-              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
+            Row(
+              children: [
+                Icon(
+                  Icons.auto_awesome_rounded,
+                  size: 17,
+                  color: colors.primary,
+                ),
+                const SizedBox(width: 7),
+                Flexible(
+                  child: Text(
+                    l10n.guideQuickStart,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 2),
             Text(
@@ -151,28 +254,78 @@ class _MindsetScreenState extends State<MindsetScreen> {
             ),
             const SizedBox(height: 8),
             for (var index = 0; index < quickStart.length; index++) ...[
-              Card(
-                clipBehavior: Clip.antiAlias,
-                child: ListTile(
-                  key: ValueKey(
-                    'guide-quick-start-${quickStart[index].guideKey ?? index}',
-                  ),
-                  leading: CircleAvatar(child: Text('${index + 1}')),
-                  title: Text(
-                    id ? quickStart[index].titleId : quickStart[index].titleEn,
-                  ),
-                  trailing:
-                      completedGuideIds?.contains(quickStart[index].guideKey) ==
-                          true
-                      ? const Icon(
+              _GuideCard(
+                key: ValueKey(
+                  'guide-quick-start-${quickStart[index].guideKey}',
+                ),
+                onTap: () => openModule(quickStart[index]),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 54),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 30,
+                        height: 30,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: colors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '${index + 1}',
+                          style: TextStyle(
+                            color: colors.primary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _categoryName(
+                                quickStart[index].category,
+                                id,
+                              ).toUpperCase(),
+                              style: TextStyle(
+                                color: colors.onSurfaceVariant,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.7,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              id
+                                  ? quickStart[index].titleId
+                                  : quickStart[index].titleEn,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                height: 1.25,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (completedGuideIds?.contains(
+                            quickStart[index].guideKey,
+                          ) ==
+                          true)
+                        const Icon(
                           Icons.check_circle_rounded,
                           color: Colors.green,
-                        )
-                      : const Icon(Icons.chevron_right_rounded),
-                  onTap: () => openModule(quickStart[index]),
+                          size: 18,
+                        ),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
             ],
             const SizedBox(height: 6),
           ],
@@ -185,6 +338,7 @@ class _MindsetScreenState extends State<MindsetScreen> {
                   child: ChoiceChip(
                     label: Text(l10n.all),
                     selected: _selectedCategory == null,
+                    showCheckmark: false,
                     onSelected: (_) => setState(() => _selectedCategory = null),
                   ),
                 ),
@@ -195,6 +349,7 @@ class _MindsetScreenState extends State<MindsetScreen> {
                       avatar: Icon(_categoryIcon(category), size: 16),
                       label: Text(_categoryName(category, id)),
                       selected: _selectedCategory == category,
+                      showCheckmark: false,
                       onSelected: (_) =>
                           setState(() => _selectedCategory = category),
                     ),
@@ -202,7 +357,71 @@ class _MindsetScreenState extends State<MindsetScreen> {
               ],
             ),
           ),
+          const SizedBox(height: 4),
+          Text(
+            id
+                ? 'Geser untuk melihat kategori lain'
+                : 'Swipe to see more categories',
+            style: TextStyle(fontSize: 10, color: colors.onSurfaceVariant),
+          ),
           const SizedBox(height: 18),
+          if (_query.trim().isEmpty && _selectedCategory == null) ...[
+            _GuideCard(
+              key: const ValueKey('guide-psychology-spotlight'),
+              onTap: () => setState(() => _selectedCategory = 'psychology'),
+              child: Row(
+                children: [
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: colors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    child: Icon(
+                      Icons.psychology_alt_outlined,
+                      color: colors.primary,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          id
+                              ? 'Trading juga soal disiplin'
+                              : 'Trading also takes discipline',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          id
+                              ? 'Pelajari cara menghadapi FOMO, revenge trading, dan keputusan impulsif.'
+                              : 'Learn how to handle FOMO, revenge trading, and impulsive decisions.',
+                          style: TextStyle(
+                            color: colors.onSurfaceVariant,
+                            fontSize: 11,
+                            height: 1.35,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: colors.onSurfaceVariant,
+                    size: 18,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 22),
+          ],
           if (visible.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 40),
@@ -217,29 +436,57 @@ class _MindsetScreenState extends State<MindsetScreen> {
           for (final category in categories) ...[
             Padding(
               padding: const EdgeInsets.only(top: 4, bottom: 8),
-              child: Text(
-                _categoryName(category, id),
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+              child: Row(
+                children: [
+                  Icon(
+                    _categoryIcon(category),
+                    size: 17,
+                    color: colors.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _categoryName(category, id),
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             for (final module in visible.where(
               (item) => item.category == category,
             )) ...[
-              Card(
-                clipBehavior: Clip.antiAlias,
-                child: ListTile(
-                  leading: Icon(_categoryIcon(category)),
-                  title: Text(id ? module.titleId : module.titleEn),
-                  subtitle: Text(id ? module.summaryId : module.summaryEn),
-                  trailing: completedGuideIds?.contains(module.guideKey) == true
-                      ? const Icon(
+              _GuideCard(
+                onTap: () => openModule(module),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        id ? module.titleId : module.titleEn,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    if (completedGuideIds?.contains(module.guideKey) == true)
+                      const Padding(
+                        padding: EdgeInsets.only(left: 8),
+                        child: Icon(
                           Icons.check_circle_rounded,
                           color: Colors.green,
-                        )
-                      : const Icon(Icons.chevron_right_rounded),
-                  onTap: () => openModule(module),
+                          size: 17,
+                        ),
+                      ),
+                    const SizedBox(width: 6),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      color: colors.onSurfaceVariant,
+                      size: 18,
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 8),
@@ -259,22 +506,26 @@ class _MindsetScreenState extends State<MindsetScreen> {
     );
   }
 
-  String _categoryName(String category, bool id) => switch (category) {
-    'getting-started' =>
-      id ? 'Panduan Awal & Fitur' : 'Getting Started & Features',
-    'analysis-manual' => id ? 'Manual Analisis' : 'Analysis Manual',
-    'glossary' => id ? 'Glosarium' : 'Glossary',
-    'privacy' => id ? 'Data & Privasi' : 'Data & Privacy',
-    _ => id ? 'Psikologi & Disiplin' : 'Psychology & Discipline',
-  };
+  String _categoryName(String category, bool id) =>
+      _guideCategoryName(category, id);
 
-  IconData _categoryIcon(String category) => switch (category) {
-    'getting-started' => Icons.lightbulb_outline_rounded,
-    'analysis-manual' => Icons.candlestick_chart_rounded,
-    'glossary' => Icons.menu_book_outlined,
-    'privacy' => Icons.shield_outlined,
-    _ => Icons.psychology_alt_outlined,
-  };
+  IconData _categoryIcon(String category) => _guideCategoryIcon(category);
+}
+
+class _GuideCard extends StatelessWidget {
+  const _GuideCard({required this.onTap, required this.child, super.key});
+
+  final VoidCallback onTap;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    clipBehavior: Clip.antiAlias,
+    child: InkWell(
+      onTap: onTap,
+      child: Padding(padding: const EdgeInsets.all(12), child: child),
+    ),
+  );
 }
 
 class _MindsetModuleScreen extends StatefulWidget {
@@ -282,10 +533,12 @@ class _MindsetModuleScreen extends StatefulWidget {
     required this.module,
     required this.id,
     required this.initiallyCompleted,
+    this.relatedModule,
   });
   final _MindsetModule module;
   final bool id;
   final bool initiallyCompleted;
+  final _MindsetModule? relatedModule;
 
   @override
   State<_MindsetModuleScreen> createState() => _MindsetModuleScreenState();
@@ -297,6 +550,7 @@ class _MindsetModuleScreenState extends State<_MindsetModuleScreen> {
   bool _isStarting = false;
   bool _isCompleting = false;
   bool _completed = false;
+  bool _startFailed = false;
 
   @override
   void initState() {
@@ -314,7 +568,12 @@ class _MindsetModuleScreenState extends State<_MindsetModuleScreen> {
   }
 
   Future<void> _startEvidence() async {
-    setState(() => _isStarting = true);
+    _timer?.cancel();
+    setState(() {
+      _isStarting = true;
+      _startFailed = false;
+      _evidence = null;
+    });
     try {
       final response = await context
           .read<AuthProvider>()
@@ -334,10 +593,31 @@ class _MindsetModuleScreenState extends State<_MindsetModuleScreen> {
         if (mounted) setState(() {});
       });
     } catch (_) {
-      // Artikel tetap bisa dibaca ketika XP sudah pernah diklaim/tidak tersedia.
+      // The article stays readable; the reader can retry claiming its XP.
+      if (mounted) setState(() => _startFailed = true);
     } finally {
       if (mounted) setState(() => _isStarting = false);
     }
+  }
+
+  int get _remainingSeconds {
+    final evidence = _evidence;
+    if (evidence == null) return 0;
+    final ms = evidence.minimumCompleteAt
+        .difference(DateTime.now())
+        .inMilliseconds;
+    return ms <= 0 ? 0 : (ms / 1000).ceil();
+  }
+
+  /// Why the button is not ready yet (web `completionStatus`).
+  String? _completionStatus(BuildContext context) {
+    if (_completed) return null;
+    final l10n = context.l10n;
+    if (_startFailed) return l10n.completionStartFailed;
+    if (_evidence == null) return l10n.completionPreparing;
+    if (_isCompleting) return l10n.completionSaving;
+    final remaining = _remainingSeconds;
+    return remaining > 0 ? l10n.completionWait('$remaining') : null;
   }
 
   Future<void> _complete() async {
@@ -389,632 +669,341 @@ class _MindsetModuleScreenState extends State<_MindsetModuleScreen> {
   Widget build(BuildContext context) {
     final module = widget.module;
     final id = widget.id;
-    final points = id ? module.pointsId : module.pointsEn;
+    final blocks = id ? module.blocksId : module.blocksEn;
+    final colors = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: Text(id ? module.titleId : module.titleEn)),
-      body: ListView(
-        padding: responsivePagePadding(context, horizontal: 20),
-        children: [
-          Text(
-            id ? module.bodyId : module.bodyEn,
-            style: const TextStyle(fontSize: 16, height: 1.55),
-          ),
-          const SizedBox(height: 18),
-          ...points.map(
-            (point) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.only(top: 6),
-                    child: Icon(Icons.circle, size: 7),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(point, style: const TextStyle(height: 1.45)),
-                  ),
-                ],
+      body: SafeArea(
+        child: ListView(
+          padding: responsivePagePadding(context),
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.chevron_left_rounded, size: 18),
+                label: Text(id ? 'Kembali ke Panduan' : 'Back to Guide'),
+                style: TextButton.styleFrom(
+                  foregroundColor: colors.onSurfaceVariant,
+                  padding: EdgeInsets.zero,
+                  textStyle: const TextStyle(fontSize: 12),
+                ),
               ),
             ),
-          ),
-          if (module.guideId != null) ...[
-            const SizedBox(height: 18),
-            FilledButton.icon(
-              onPressed: _completed || !_canComplete || _isCompleting
-                  ? null
-                  : _complete,
-              icon: _isStarting || _isCompleting
-                  ? const SizedBox.square(
-                      dimension: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.check_circle_outline_rounded),
-              label: Text(context.l10n.guideComplete),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                decoration: BoxDecoration(
+                  color: colors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(7),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _guideCategoryIcon(module.category),
+                      color: colors.primary,
+                      size: 14,
+                    ),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        _guideCategoryName(module.category, id).toUpperCase(),
+                        style: TextStyle(
+                          color: colors.primary,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-            if (!_canComplete && !_completed) ...[
+            const SizedBox(height: 10),
+            Text(
+              id ? module.titleId : module.titleEn,
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontSize: 22, height: 1.2),
+            ),
+            const SizedBox(height: 20),
+            for (final block in blocks) _GuideBlockView(block: block),
+            if (widget.relatedModule case final related?) ...[
               const SizedBox(height: 8),
-              Text(
-                context.l10n.guideReading,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodySmall,
+              OutlinedButton.icon(
+                onPressed: () => Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => _MindsetModuleScreen(
+                      module: related,
+                      id: id,
+                      initiallyCompleted: context
+                          .read<ProgressionProvider>()
+                          .completedGuideIds
+                          .contains(related.guideKey),
+                    ),
+                  ),
+                ),
+                iconAlignment: IconAlignment.end,
+                icon: const Icon(Icons.chevron_right_rounded, size: 18),
+                label: Text(
+                  id ? 'Baca pembahasan lengkap' : 'Read the full topic',
+                ),
               ),
             ],
+            if (module.guideId != null) ...[
+              const SizedBox(height: 32),
+              const Divider(),
+              const SizedBox(height: 18),
+              OutlinedButton.icon(
+                onPressed: _completed || !_canComplete || _isCompleting
+                    ? null
+                    : _complete,
+                icon: _isStarting || _isCompleting
+                    ? const SizedBox.square(
+                        dimension: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.check_circle_outline_rounded),
+                label: Text(
+                  _completed
+                      ? (id ? 'Panduan selesai' : 'Guide completed')
+                      : context.l10n.guideComplete,
+                ),
+              ),
+              if (_completionStatus(context) case final status?) ...[
+                const SizedBox(height: 8),
+                Text(
+                  status,
+                  key: const ValueKey('guide-completion-status'),
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+              if (_startFailed && !_completed) ...[
+                const SizedBox(height: 4),
+                Center(
+                  child: TextButton(
+                    key: const ValueKey('guide-completion-retry'),
+                    onPressed: _isStarting ? null : _startEvidence,
+                    child: Text(context.l10n.tryAgain),
+                  ),
+                ),
+              ],
+            ],
+            const SizedBox(height: 24),
           ],
-        ],
+        ),
       ),
     );
   }
 }
 
+class _GuideBlockView extends StatelessWidget {
+  const _GuideBlockView({required this.block});
+
+  final _GuideBlock block;
+
+  @override
+  Widget build(BuildContext context) => switch (block.type) {
+    'h' => Padding(
+      padding: const EdgeInsets.only(top: 12, bottom: 8),
+      child: Text(
+        block.text,
+        style: Theme.of(
+          context,
+        ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
+      ),
+    ),
+    'list' => Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        children: [
+          for (final item in block.items)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(top: 8),
+                    child: Icon(Icons.circle, size: 6),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(item, style: const TextStyle(height: 1.55)),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    ),
+    'callout' => Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+        border: Border(
+          left: BorderSide(
+            color: Theme.of(context).colorScheme.primary,
+            width: 3,
+          ),
+        ),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        block.text,
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          fontStyle: FontStyle.italic,
+          height: 1.55,
+        ),
+      ),
+    ),
+    _ => Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Text(
+        block.text,
+        style: const TextStyle(fontSize: 14, height: 1.55),
+      ),
+    ),
+  };
+}
+
 class _MindsetModule {
   const _MindsetModule({
+    required this.articleId,
+    required this.category,
     required this.titleEn,
     required this.titleId,
     required this.summaryEn,
     required this.summaryId,
-    required this.bodyEn,
-    required this.bodyId,
-    required this.pointsEn,
-    required this.pointsId,
-    this.category = 'psychology',
+    required this.blocksEn,
+    required this.blocksId,
     this.guideId,
+    this.relatedArticleId,
   });
+
+  factory _MindsetModule.fromJson(String category, Map<String, dynamic> json) {
+    List<_GuideBlock> blocks(String key) => (json[key] as List<dynamic>)
+        .cast<Map<String, dynamic>>()
+        .map(_GuideBlock.fromJson)
+        .toList(growable: false);
+
+    String summary(String language, List<_GuideBlock> content) {
+      final supplied = json['summary_$language'] as String?;
+      if (supplied != null) return supplied;
+      final body = content
+          .firstWhere((block) => block.type == 'p', orElse: () => content.first)
+          .text;
+      return body.length <= 150
+          ? body
+          : '${body.substring(0, 147).trimRight()}…';
+    }
+
+    final blocksEn = blocks('content_en');
+    final blocksId = blocks('content_id');
+    final articleId = json['id'] as String;
+    return _MindsetModule(
+      articleId: articleId,
+      category: category,
+      titleEn: json['title_en'] as String,
+      titleId: json['title_id'] as String,
+      summaryEn: summary('en', blocksEn),
+      summaryId: summary('id', blocksId),
+      blocksEn: blocksEn,
+      blocksId: blocksId,
+      guideId: _progressionGuideId(articleId),
+      relatedArticleId: json['relatedArticleId'] as String?,
+    );
+  }
+
+  final String articleId;
+  final String category;
   final String titleEn;
   final String titleId;
   final String summaryEn;
   final String summaryId;
-  final String bodyEn;
-  final String bodyId;
-  final List<String> pointsEn;
-  final List<String> pointsId;
-  final String category;
+  final List<_GuideBlock> blocksEn;
+  final List<_GuideBlock> blocksId;
   final ProgressionEvidenceStartInputGuideIdEnum? guideId;
+  final String? relatedArticleId;
 
-  String? get guideKey => guideId?.name
-      .replaceAllMapped(
-        RegExp(r'([a-z0-9])([A-Z])'),
-        (match) => '${match[1]}-${match[2]}',
-      )
-      .toLowerCase();
+  String get guideKey => articleId;
+
+  String searchText(bool id) => (id ? blocksId : blocksEn)
+      .expand((block) => [block.text, ...block.items])
+      .join(' ');
 }
 
-const _modules = [
-  _MindsetModule(
-    category: 'getting-started',
-    guideId: ProgressionEvidenceStartInputGuideIdEnum.howAiWorks,
-    titleEn: 'How the AI Analysis Works',
-    titleId: 'Cara Kerja Analisis AI',
-    summaryEn: 'How technical and fundamental evidence becomes a trade plan.',
-    summaryId: 'Cara bukti teknikal dan fundamental menjadi trade plan.',
-    bodyEn:
-        'TradePilot scans technical indicators and combines them with current news and economic-calendar data. It returns a structured scenario, not a guaranteed signal.',
-    bodyId:
-        'TradePilot memindai indikator teknikal lalu menggabungkannya dengan berita terkini dan kalender ekonomi. Hasilnya adalah skenario terstruktur, bukan sinyal yang dijamin.',
-    pointsEn: [
-      'Review the bias and reasoning.',
-      'Check entry, stop-loss, and take-profit together.',
-      'Confirm the chart before acting.',
-    ],
-    pointsId: [
-      'Tinjau bias dan alasannya.',
-      'Baca entry, stop-loss, dan take-profit sebagai satu paket.',
-      'Konfirmasi chart sebelum bertindak.',
-    ],
-  ),
-  _MindsetModule(
-    category: 'getting-started',
-    guideId: ProgressionEvidenceStartInputGuideIdEnum.featureMap,
-    titleEn: 'What Each TradePilot Feature Does',
-    titleId: 'Fungsi Setiap Fitur TradePilot',
-    summaryEn: 'Analyze, History, Journal, Mirror, alerts, and briefings.',
-    summaryId: 'Analisis, Riwayat, Jurnal, Cermin, alert, dan ringkasan.',
-    bodyEn:
-        'Analyze creates a fresh scenario; History reviews old analyses; Journal records trades you took; Trader Mirror reveals behavior patterns; alerts watch levels; Daily Briefing summarizes context.',
-    bodyId:
-        'Analisis membuat skenario baru; Riwayat meninjau analisis lama; Jurnal mencatat trade yang diambil; Cermin Trader menunjukkan pola perilaku; alert memantau level; Ringkasan Harian merangkum konteks.',
-    pointsEn: [
-      'Use each feature for its stated job.',
-      'Separate an AI plan from your execution.',
-      'Past performance never guarantees the next result.',
-    ],
-    pointsId: [
-      'Gunakan setiap fitur sesuai fungsinya.',
-      'Pisahkan plan AI dari eksekusi kamu.',
-      'Performa lama tidak menjamin hasil berikutnya.',
-    ],
-  ),
-  _MindsetModule(
-    category: 'getting-started',
-    guideId: ProgressionEvidenceStartInputGuideIdEnum.readingAnalysis,
-    titleEn: 'Reading an Analysis Output',
-    titleId: 'Membaca Hasil Analisis',
-    summaryEn: 'Bias, confidence, entry, SL, TP, and invalidation.',
-    summaryId: 'Bias, confidence, entry, SL, TP, dan invalidation.',
-    bodyEn:
-        'The bias gauge combines available evidence. Entry is a zone, SL limits risk, TP provides staged targets, and invalidation tells you when the original scenario no longer applies.',
-    bodyId:
-        'Gauge bias menggabungkan bukti yang tersedia. Entry adalah zona, SL membatasi risiko, TP memberi target bertahap, dan invalidation menjelaskan kapan skenario awal tidak berlaku.',
-    pointsEn: [
-      'Read invalidation before levels.',
-      'Confidence is not win probability.',
-      'Never follow an entry blindly.',
-    ],
-    pointsId: [
-      'Baca invalidation sebelum level.',
-      'Confidence bukan probabilitas menang.',
-      'Jangan mengikuti entry secara buta.',
-    ],
-  ),
-  _MindsetModule(
-    category: 'getting-started',
-    titleEn: 'Using History & Performance',
-    titleId: 'Menggunakan Riwayat & Performa',
-    summaryEn: 'Review outcomes, filters, presets, and meaningful samples.',
-    summaryId: 'Tinjau outcome, filter, preset, dan jumlah sampel yang layak.',
-    bodyEn:
-        'Summary turns completed analyses into performance views by instrument and timeframe. History keeps the original records behind those numbers.',
-    bodyId:
-        'Ringkasan mengubah analisis yang selesai menjadi gambaran performa per instrumen dan timeframe. Riwayat menyimpan catatan asli di balik angka tersebut.',
-    pointsEn: [
-      'Use search, filters, and presets to repeat a focused review.',
-      'Other Instruments groups non-primary markets without renaming the original records.',
-      'TP outcomes are wins, SL is a loss, and expired is reported separately.',
-      'Treat small samples cautiously; historical performance is not a prediction.',
-    ],
-    pointsId: [
-      'Gunakan pencarian, filter, dan preset untuk mengulang review terfokus.',
-      'Instrumen Lainnya mengelompokkan market non-utama tanpa mengganti nama catatan aslinya.',
-      'Outcome TP adalah win, SL adalah loss, dan expired dilaporkan terpisah.',
-      'Waspadai sampel kecil; performa historis bukan prediksi.',
-    ],
-  ),
-  _MindsetModule(
-    category: 'getting-started',
-    guideId: ProgressionEvidenceStartInputGuideIdEnum.validityConfidence,
-    titleEn: 'Confidence, Validity, and Invalidation',
-    titleId: 'Confidence, Masa Berlaku, dan Invalidation',
-    summaryEn: 'Understand evidence strength and when a scenario expires.',
-    summaryId: 'Pahami kekuatan bukti dan kapan skenario berakhir.',
-    bodyEn:
-        'Confidence describes support from available evidence. Validity is the intended time window. Invalidation is a market condition that cancels the scenario even before that window expires.',
-    bodyId:
-        'Confidence menunjukkan dukungan bukti yang tersedia. Validity adalah masa pemakaian. Invalidation adalah kondisi market yang membatalkan skenario meski waktunya belum habis.',
-    pointsEn: [
-      'Valid does not mean certain.',
-      'Re-analyze after expiry.',
-      'Stop using a scenario once invalidated.',
-    ],
-    pointsId: [
-      'Valid tidak berarti pasti.',
-      'Analisis ulang setelah expired.',
-      'Hentikan pemakaian skenario setelah invalid.',
-    ],
-  ),
-  _MindsetModule(
-    category: 'getting-started',
-    guideId: ProgressionEvidenceStartInputGuideIdEnum.adaptivePlan,
-    titleEn: 'Standard Plan and Position Size Recommendation',
-    titleId: 'Standard Plan dan Rekomendasi Ukuran Posisi',
-    summaryEn:
-        'The difference between market levels and account-aware checkpoints.',
-    summaryId: 'Perbedaan level market dan checkpoint sesuai kondisi akun.',
-    bodyEn:
-        'Standard Plan presents analysis levels directly. Position Size Recommendation converts a supported analysis into account-aware position checkpoints and limits for supported instruments.',
-    bodyId:
-        'Standard Plan menampilkan level analisis langsung. Rekomendasi Ukuran Posisi mengubah analisis yang didukung menjadi checkpoint posisi dan batas sesuai kondisi akun untuk instrumen tertentu.',
-    pointsEn: [
-      'Enter actual available funds.',
-      'Every layer is a manual decision.',
-      'Never add only because price moves against you.',
-    ],
-    pointsId: [
-      'Masukkan dana tersedia yang sebenarnya.',
-      'Setiap layer adalah keputusan manual.',
-      'Jangan tambah posisi hanya karena harga bergerak melawan.',
-    ],
-  ),
-  _MindsetModule(
-    category: 'getting-started',
-    guideId: ProgressionEvidenceStartInputGuideIdEnum.personalProgression,
-    titleEn: 'Levels, Ranks, Mastery & Badges',
-    titleId: 'Level, Rank, Mastery & Achievement Badge',
-    summaryEn: 'Progression rewards preparation, reflection, and discipline.',
-    summaryId: 'Progression menghargai persiapan, refleksi, dan disiplin.',
-    bodyEn:
-        'Private progression measures verified process activities—not profit, account size, win rate, trade count, or analysis volume.',
-    bodyId:
-        'Progression pribadi mengukur aktivitas proses yang terverifikasi—bukan profit, modal, win rate, jumlah trade, atau banyaknya analisis.',
-    pointsEn: [
-      'XP can come from checklists, guides, evaluations, journals, streaks, and waiting.',
-      'Duplicate claims do not repeatedly award XP.',
-      'There is no public leaderboard.',
-    ],
-    pointsId: [
-      'XP bisa berasal dari checklist, panduan, evaluasi, jurnal, streak, dan keputusan menunggu.',
-      'Klaim duplikat tidak memberi XP berulang.',
-      'Tidak ada leaderboard publik.',
-    ],
-  ),
-  _MindsetModule(
-    category: 'analysis-manual',
-    guideId: ProgressionEvidenceStartInputGuideIdEnum.analysisWorkflow,
-    titleEn: 'From Instrument Selection to a Usable Analysis',
-    titleId: 'Dari Memilih Instrumen sampai Memakai Hasil',
-    summaryEn: 'A safe workflow for creating and reviewing an analysis.',
-    summaryId: 'Alur aman membuat dan meninjau analisis.',
-    bodyEn:
-        'Choose the correct instrument and timeframe, add optional context, then read reasoning and invalidation before levels. A result is time-bound and must be refreshed after material change.',
-    bodyId:
-        'Pilih instrumen dan timeframe yang benar, tambahkan konteks bila perlu, lalu baca alasan dan invalidation sebelum level. Hasil berbatas waktu dan perlu diperbarui setelah perubahan penting.',
-    pointsEn: [
-      'Match timeframe to holding horizon.',
-      'Confirm the quoted price.',
-      'Do not mix levels from different analyses.',
-    ],
-    pointsId: [
-      'Sesuaikan timeframe dengan durasi posisi.',
-      'Pastikan harga acuannya benar.',
-      'Jangan campur level dari analisis berbeda.',
-    ],
-  ),
-  _MindsetModule(
-    category: 'analysis-manual',
-    guideId: ProgressionEvidenceStartInputGuideIdEnum.biasConfidenceValidity,
-    titleEn: 'Bias, Signal Strength, Confidence & Validity',
-    titleId: 'Bias, Signal Strength, Confidence, Validity & Invalidation',
-    summaryEn: 'These fields answer different questions.',
-    summaryId: 'Setiap field menjawab pertanyaan yang berbeda.',
-    bodyEn:
-        'Bias is direction, signal strength is directional clarity, confidence is evidence support, validity is the usable window, and invalidation is the condition that cancels the scenario.',
-    bodyId:
-        'Bias adalah arah, signal strength adalah kejelasan arah, confidence adalah dukungan bukti, validity adalah masa pakai, dan invalidation adalah kondisi pembatal skenario.',
-    pointsEn: [
-      'Do not turn confidence into a win guarantee.',
-      'Mixed evidence can justify Wait.',
-      'Freshness matters.',
-    ],
-    pointsId: [
-      'Jangan menganggap confidence sebagai jaminan menang.',
-      'Bukti campuran dapat berarti Tunggu.',
-      'Kesegaran data penting.',
-    ],
-  ),
-  _MindsetModule(
-    category: 'analysis-manual',
-    guideId: ProgressionEvidenceStartInputGuideIdEnum.levelsChart,
-    titleEn: 'Entry, Stop Loss, Take Profit, R:R & Chart',
-    titleId: 'Entry, Stop Loss, Take Profit, R:R, Support, Resistance & Chart',
-    summaryEn: 'Read every price level as part of one scenario.',
-    summaryId: 'Baca setiap level harga sebagai satu skenario.',
-    bodyEn:
-        'Entry marks a planned zone, SL defines the risk boundary, TP stages exits, and R:R compares potential risk and reward. Support and resistance are zones—not guaranteed reversal points.',
-    bodyId:
-        'Entry menandai zona rencana, SL menentukan batas risiko, TP membagi target keluar, dan R:R membandingkan potensi risiko serta hasil. Support dan resistance adalah zona—bukan titik balik pasti.',
-    pointsEn: [
-      'Check spread and slippage.',
-      'Do not chase a missed entry.',
-      'Use chart overlays as context, not orders.',
-    ],
-    pointsId: [
-      'Periksa spread dan slippage.',
-      'Jangan kejar entry yang terlewat.',
-      'Gunakan garis chart sebagai konteks, bukan order.',
-    ],
-  ),
-  _MindsetModule(
-    category: 'analysis-manual',
-    guideId: ProgressionEvidenceStartInputGuideIdEnum.timeframeRiskMap,
-    titleEn: 'Comparing Risk Across Timeframes',
-    titleId: 'Membandingkan Risiko Antar-Timeframe',
-    summaryEn: 'Relative risk compares available snapshots.',
-    summaryId: 'Risiko relatif membandingkan snapshot yang tersedia.',
-    bodyEn:
-        'The Timeframe Risk Map compares technical risk for the same supported instrument. Lower relative risk only means more orderly than the compared options—not safe or guaranteed.',
-    bodyId:
-        'Timeframe Risk Map membandingkan risiko teknikal instrumen yang sama. Risiko relatif lebih rendah hanya berarti lebih tertata dibanding opsi lain—bukan aman atau dijamin.',
-    pointsEn: [
-      'Match timeframe to your horizon.',
-      'Insufficient data is not low risk.',
-      'Switching timeframe requires a fresh analysis.',
-    ],
-    pointsId: [
-      'Sesuaikan timeframe dengan horizon kamu.',
-      'Data tidak cukup bukan risiko rendah.',
-      'Pergantian timeframe memerlukan analisis baru.',
-    ],
-  ),
-  _MindsetModule(
-    category: 'analysis-manual',
-    guideId: ProgressionEvidenceStartInputGuideIdEnum.technicalFundamental,
-    titleEn: 'Technical and Fundamental Context',
-    titleId: 'Konteks Teknikal dan Fundamental',
-    summaryEn: 'How indicators, news, and events are synthesized.',
-    summaryId: 'Cara indikator, berita, dan event disintesis.',
-    bodyEn:
-        'Technical context covers price, trend, momentum, volatility, and indicators. Fundamental context adds news and events. No single indicator or headline decides the result.',
-    bodyId:
-        'Konteks teknikal mencakup harga, tren, momentum, volatilitas, dan indikator. Konteks fundamental menambahkan berita dan event. Tidak ada satu indikator atau headline yang menentukan hasil sendiri.',
-    pointsEn: [
-      'Read indicator values with their Buy/Sell/Neutral interpretation.',
-      'Open cited sources.',
-      'Treat high-impact events as volatility risk.',
-    ],
-    pointsId: [
-      'Baca nilai indikator bersama interpretasi Beli/Jual/Netral.',
-      'Buka sumber sitasi.',
-      'Anggap event berdampak tinggi sebagai risiko volatilitas.',
-    ],
-  ),
-  _MindsetModule(
-    category: 'analysis-manual',
-    guideId: ProgressionEvidenceStartInputGuideIdEnum.standardPlan,
-    titleEn: 'Using the Standard Plan',
-    titleId: 'Menggunakan Standard Plan',
-    summaryEn: 'Use Buy, Sell, or Wait as a complete plan.',
-    summaryId: 'Gunakan Buy, Sell, atau Tunggu sebagai plan utuh.',
-    bodyEn:
-        'The Standard Plan presents Buy and Sell scenarios with a preferred side. Wait means current evidence does not support immediate execution; missing levels are intentionally not invented.',
-    bodyId:
-        'Standard Plan menampilkan skenario Buy dan Sell dengan sisi pilihan. Tunggu berarti bukti saat ini belum mendukung eksekusi; level yang kosong sengaja tidak diada-adakan.',
-    pointsEn: [
-      'Start from the preferred side and rationale.',
-      'Confirm validity and entry.',
-      'Size from your own risk limit.',
-    ],
-    pointsId: [
-      'Mulai dari sisi pilihan dan alasan.',
-      'Pastikan validity dan entry.',
-      'Tentukan ukuran dari batas risiko pribadi.',
-    ],
-  ),
-  _MindsetModule(
-    category: 'analysis-manual',
-    guideId: ProgressionEvidenceStartInputGuideIdEnum.adaptivePositionPlan,
-    titleEn: 'Using the Position Size Recommendation',
-    titleId: 'Menggunakan Rekomendasi Ukuran Posisi',
-    summaryEn: 'Account-aware position checkpoints and safeguards.',
-    summaryId: 'Checkpoint posisi dan safeguard sesuai kondisi akun.',
-    bodyEn:
-        'Position Size Recommendation combines actual account type, available funds, risk style, analysis direction, confidence, levels, and supported account constraints. It never places orders.',
-    bodyId:
-        'Rekomendasi Ukuran Posisi menggabungkan jenis akun, dana tersedia, gaya risiko, arah, confidence, level, dan batas akun yang didukung. Fitur ini tidak pernah memasang order.',
-    pointsEn: [
-      'Eligible does not mean required.',
-      'Reassess every layer.',
-      'Rejected or capped output is a risk control.',
-    ],
-    pointsId: [
-      'Eligible bukan berarti wajib.',
-      'Nilai ulang setiap layer.',
-      'Hasil rejected atau capped adalah kontrol risiko.',
-    ],
-  ),
-  _MindsetModule(
-    category: 'analysis-manual',
-    guideId: ProgressionEvidenceStartInputGuideIdEnum.accountRules,
-    titleEn: 'Reading Account and Standard Trading Rules',
-    titleId: 'Membaca Aturan Akun dan Standard Trading Rules',
-    summaryEn: 'Contract, margin, fees, rollover, spread, and limits.',
-    summaryId: 'Kontrak, margin, fee, rollover, spread, dan batas.',
-    bodyEn:
-        'Rules summarize product constraints such as contract size, margin, fees, spread, rollover, minimum movement, order distance, lot range, and minimum deposit for a named version.',
-    bodyId:
-        'Aturan merangkum batas produk seperti ukuran kontrak, margin, fee, spread, rollover, pergerakan minimum, jarak order, rentang lot, dan deposit minimum untuk versi tertentu.',
-    pointsEn: [
-      'Margin call is not a suggested stop loss.',
-      'Costs change net outcomes.',
-      'Confirm current broker terms before execution.',
-    ],
-    pointsId: [
-      'Margin call bukan saran stop loss.',
-      'Biaya mengubah hasil bersih.',
-      'Konfirmasi aturan broker terbaru sebelum eksekusi.',
-    ],
-  ),
-  _MindsetModule(
-    category: 'glossary',
-    guideId: ProgressionEvidenceStartInputGuideIdEnum.terms,
-    titleEn: 'Common Trading Terms',
-    titleId: 'Istilah Trading Umum',
-    summaryEn: 'A quick reference for terms used throughout TradePilot.',
-    summaryId: 'Referensi singkat istilah yang dipakai di TradePilot.',
-    bodyEn:
-        'Bullish expects rising prices; bearish expects falling prices; neutral means mixed evidence. SL limits loss, TP realizes a target, and R:R compares potential risk with potential reward.',
-    bodyId:
-        'Bullish berarti ekspektasi harga naik; bearish berarti turun; netral berarti bukti campuran. SL membatasi rugi, TP merealisasikan target, dan R:R membandingkan potensi risiko dengan hasil.',
-    pointsEn: [
-      'Timeframe is the candle interval.',
-      'Support and resistance are zones.',
-      'Spread, fees, rollover, and slippage affect realized results.',
-    ],
-    pointsId: [
-      'Timeframe adalah interval candle.',
-      'Support dan resistance adalah zona.',
-      'Spread, fee, rollover, dan slippage memengaruhi hasil nyata.',
-    ],
-  ),
-  _MindsetModule(
-    category: 'privacy',
-    titleEn: 'How Your Data Is Handled',
-    titleId: 'Penanganan Data Kamu',
-    summaryEn: 'What is stored and how to keep your account safe.',
-    summaryId: 'Data yang disimpan dan cara menjaga keamanan akun.',
-    bodyEn:
-        'TradePilot stores account, analysis, journal, preference, and activity data needed to provide the service. Passwords and API secrets must never be placed in notes or journal fields.',
-    bodyId:
-        'TradePilot menyimpan data akun, analisis, jurnal, preferensi, dan aktivitas yang dibutuhkan untuk layanan. Password dan API secret tidak boleh dimasukkan ke catatan atau jurnal.',
-    pointsEn: [
-      'Use a unique password and biometric lock.',
-      'Treat exported or shared screenshots as sensitive.',
-      'Use Delete Account when you want permanent removal.',
-    ],
-    pointsId: [
-      'Gunakan password unik dan kunci biometrik.',
-      'Anggap screenshot yang dibagikan sebagai data sensitif.',
-      'Gunakan Hapus Akun bila ingin penghapusan permanen.',
-    ],
-  ),
-  _MindsetModule(
-    titleEn: 'FOMO — Trading Late on a Move',
-    titleId: 'FOMO — Telat Masuk Saat Harga Sudah Jalan',
-    summaryEn:
-        'Why chasing breakouts hurts and how to wait for second chances.',
-    summaryId:
-        'Kenapa mengejar breakout sering merugikan dan cara menunggu peluang kedua.',
-    bodyEn:
-        'FOMO is the urge to enter after a move has started because you fear missing the rest. When a move already feels obvious, the impulse may be close to exhaustion.',
-    bodyId:
-        'FOMO adalah dorongan masuk setelah harga bergerak karena takut ketinggalan. Saat pergerakan sudah terasa sangat jelas, impulsnya bisa hampir selesai.',
-    pointsEn: [
-      'Accept that missing moves is normal.',
-      'Wait for a pullback to clear structure.',
-      'If it never comes, let the trade go.',
-    ],
-    pointsId: [
-      'Terima bahwa melewatkan pergerakan itu normal.',
-      'Tunggu pullback ke struktur yang jelas.',
-      'Jika tidak datang, lepaskan trade tersebut.',
-    ],
-  ),
-  _MindsetModule(
-    titleEn: 'Revenge Trading — Trying to Win It Back',
-    titleId: 'Revenge Trading — Memaksa Balik Modal',
-    summaryEn: 'Recognize the most expensive emotion, then stop.',
-    summaryId: 'Kenali salah satu emosi termahal dalam trading, lalu berhenti.',
-    bodyEn:
-        'Revenge trading means opening a trade after a loss to recover money rather than because the setup matches your plan.',
-    bodyId:
-        'Revenge trading berarti membuka posisi setelah rugi untuk mengembalikan uang, bukan karena setup sesuai rencana.',
-    pointsEn: [
-      'After two losses, take a 30-minute break.',
-      'After three daily losses, stop for the day.',
-      'Never raise size to win it back.',
-    ],
-    pointsId: [
-      'Setelah dua rugi, istirahat 30 menit.',
-      'Setelah tiga rugi sehari, berhenti untuk hari itu.',
-      'Jangan menaikkan ukuran untuk balas kerugian.',
-    ],
-  ),
-  _MindsetModule(
-    titleEn: 'Loss Aversion — Holding Losers Too Long',
-    titleId: 'Loss Aversion — Menahan Kerugian Terlalu Lama',
-    summaryEn: 'Why losses feel stronger than equivalent gains.',
-    summaryId: 'Mengapa rugi terasa lebih kuat daripada untung yang setara.',
-    bodyEn:
-        'Loss aversion often makes traders close winners early and keep losers open in hope. A planned small loss can then become a large one.',
-    bodyId:
-        'Loss aversion sering membuat trader menutup profit terlalu cepat dan menahan rugi dengan harapan. Kerugian kecil yang direncanakan akhirnya membesar.',
-    pointsEn: [
-      'Set the stop before entry.',
-      'Treat the stop as a rule.',
-      'Use smaller size if accepting the loss is difficult.',
-    ],
-    pointsId: [
-      'Tentukan stop sebelum entry.',
-      'Perlakukan stop sebagai aturan.',
-      'Gunakan ukuran lebih kecil jika sulit menerima rugi.',
-    ],
-  ),
-  _MindsetModule(
-    titleEn: "Anchoring — 'It Was Cheaper Yesterday'",
-    titleId: "Anchoring — 'Kemarin Lebih Murah'",
-    summaryEn: 'Your entry price matters less than current evidence.',
-    summaryId: 'Harga entry tidak lebih penting dari bukti pasar saat ini.',
-    bodyEn:
-        'Anchoring means holding onto a reference price and ignoring new information. The market does not know your entry price.',
-    bodyId:
-        'Anchoring berarti terpaku pada harga referensi dan mengabaikan informasi baru. Pasar tidak mengetahui harga entry kamu.',
-    pointsEn: [
-      'Reassess current evidence.',
-      'Ask whether you would open the same trade now.',
-      'Exit when the original thesis is invalid.',
-    ],
-    pointsId: [
-      'Nilai ulang bukti terbaru.',
-      'Tanya apakah kamu akan membuka trade yang sama sekarang.',
-      'Keluar saat tesis awal tidak berlaku.',
-    ],
-  ),
-  _MindsetModule(
-    titleEn: 'Risk First — Position Sizing Mindset',
-    titleId: 'Risiko Dulu — Mindset Ukuran Posisi',
-    summaryEn: 'Discipline starts with position size.',
-    summaryId: 'Disiplin dimulai dari ukuran posisi.',
-    bodyEn:
-        'Think first about how much you can lose, then entry, then target. Position size must follow the risk limit—not the desired profit.',
-    bodyId:
-        'Pikirkan dulu berapa maksimal kerugian, lalu entry, kemudian target. Ukuran posisi mengikuti batas risiko, bukan target profit.',
-    pointsEn: [
-      'Define account risk per trade.',
-      'Calculate size from entry and stop.',
-      'Skip setups that require excessive risk.',
-    ],
-    pointsId: [
-      'Tentukan risiko akun per trade.',
-      'Hitung ukuran dari entry dan stop.',
-      'Lewati setup yang membutuhkan risiko berlebihan.',
-    ],
-  ),
-  _MindsetModule(
-    titleEn: "Plan vs Prediction — You Don't Need to Be Right",
-    titleId: 'Rencana vs Prediksi — Tidak Harus Selalu Benar',
-    summaryEn: 'Good risk management matters more than prediction.',
-    summaryId: 'Manajemen risiko yang baik lebih penting daripada prediksi.',
-    bodyEn:
-        'Trading is not only predicting direction. It is managing the position consistently when you are right and when you are wrong.',
-    bodyId:
-        'Trading bukan hanya memprediksi arah. Trading adalah mengelola posisi secara konsisten saat benar maupun salah.',
-    pointsEn: [
-      'Define scenarios before entry.',
-      'Let winners exceed planned losses.',
-      'Judge process, not one outcome.',
-    ],
-    pointsId: [
-      'Tentukan skenario sebelum entry.',
-      'Biarkan profit melebihi rugi terencana.',
-      'Nilai proses, bukan satu outcome.',
-    ],
-  ),
-  _MindsetModule(
-    titleEn: 'Journaling — Your Most Valuable Tool',
-    titleId: 'Journaling — Alat Refleksi Terpenting',
-    summaryEn: "What you don't measure, you can't improve.",
-    summaryId: 'Yang tidak diukur sulit diperbaiki.',
-    bodyEn:
-        'Record the instrument, timeframe, entry and exit reason, emotions, and what you would change. Patterns become visible over time.',
-    bodyId:
-        'Catat instrumen, timeframe, alasan masuk dan keluar, emosi, serta hal yang akan diubah. Pola akan terlihat seiring waktu.',
-    pointsEn: [
-      'Journal every executed trade.',
-      'Separate planned and impulse trades.',
-      'Review patterns weekly.',
-    ],
-    pointsId: [
-      'Jurnalkan setiap trade.',
-      'Pisahkan trade terencana dan impulsif.',
-      'Tinjau pola setiap minggu.',
-    ],
-  ),
-  _MindsetModule(
-    titleEn: 'Patience — Doing Nothing Is a Trade',
-    titleId: 'Sabar — Diam Juga Sebuah Keputusan',
-    summaryEn: 'Staying in cash is a valid position.',
-    summaryId: 'Tetap memegang cash adalah posisi yang valid.',
-    bodyEn:
-        'High-quality setups are uncommon. Trading every market condition exposes the account to noise where the edge is weak.',
-    bodyId:
-        'Setup berkualitas tinggi tidak sering muncul. Trading di setiap kondisi membuat akun terpapar noise saat edge lemah.',
-    pointsEn: [
-      'Wait for conditions in your plan.',
-      'Do not confuse activity with progress.',
-      'A skipped weak setup protects capital.',
-    ],
-    pointsId: [
-      'Tunggu kondisi yang sesuai rencana.',
-      'Jangan samakan sibuk dengan kemajuan.',
-      'Melewatkan setup lemah melindungi modal.',
-    ],
-  ),
-];
+class _GuideBlock {
+  const _GuideBlock({
+    required this.type,
+    this.text = '',
+    this.items = const [],
+  });
+
+  factory _GuideBlock.fromJson(Map<String, dynamic> json) {
+    final value = json['val'];
+    return _GuideBlock(
+      type: json['type'] as String,
+      text: value is String ? value : '',
+      items: value is List<dynamic> ? value.cast<String>() : const [],
+    );
+  }
+
+  final String type;
+  final String text;
+  final List<String> items;
+}
+
+String _guideCategoryName(String category, bool id) => switch (category) {
+  'getting-started' =>
+    id ? 'Panduan Awal & Fitur' : 'Getting Started & Features',
+  'analysis-manual' => id ? 'Manual Analisis' : 'Analysis Manual',
+  'glossary' => id ? 'Glosarium' : 'Glossary',
+  'privacy' => id ? 'Data & Privasi' : 'Data & Privacy',
+  _ => id ? 'Psikologi & Disiplin' : 'Psychology & Discipline',
+};
+
+IconData _guideCategoryIcon(String category) => switch (category) {
+  'getting-started' => Icons.lightbulb_outline_rounded,
+  'analysis-manual' => Icons.candlestick_chart_rounded,
+  'glossary' => Icons.menu_book_outlined,
+  'privacy' => Icons.shield_outlined,
+  _ => Icons.psychology_alt_outlined,
+};
+
+ProgressionEvidenceStartInputGuideIdEnum? _progressionGuideId(String id) =>
+    switch (id) {
+      'how-ai-works' => ProgressionEvidenceStartInputGuideIdEnum.howAiWorks,
+      'feature-map' => ProgressionEvidenceStartInputGuideIdEnum.featureMap,
+      'reading-analysis' =>
+        ProgressionEvidenceStartInputGuideIdEnum.readingAnalysis,
+      'validity-confidence' =>
+        ProgressionEvidenceStartInputGuideIdEnum.validityConfidence,
+      'adaptive-plan' => ProgressionEvidenceStartInputGuideIdEnum.adaptivePlan,
+      'personal-progression' =>
+        ProgressionEvidenceStartInputGuideIdEnum.personalProgression,
+      'analysis-workflow' =>
+        ProgressionEvidenceStartInputGuideIdEnum.analysisWorkflow,
+      'bias-confidence-validity' =>
+        ProgressionEvidenceStartInputGuideIdEnum.biasConfidenceValidity,
+      'levels-chart' => ProgressionEvidenceStartInputGuideIdEnum.levelsChart,
+      'timeframe-risk-map' =>
+        ProgressionEvidenceStartInputGuideIdEnum.timeframeRiskMap,
+      'technical-fundamental' =>
+        ProgressionEvidenceStartInputGuideIdEnum.technicalFundamental,
+      'standard-plan' => ProgressionEvidenceStartInputGuideIdEnum.standardPlan,
+      'adaptive-position-plan' =>
+        ProgressionEvidenceStartInputGuideIdEnum.adaptivePositionPlan,
+      'account-rules' => ProgressionEvidenceStartInputGuideIdEnum.accountRules,
+      'terms' => ProgressionEvidenceStartInputGuideIdEnum.terms,
+      _ => null,
+    };

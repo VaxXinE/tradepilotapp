@@ -55,6 +55,63 @@ void main() {
       );
     },
   );
+
+  test(
+    'tells an unsupported instrument apart from a retryable failure',
+    () async {
+      final auth = AuthProvider();
+      await pumpEventQueue();
+      auth
+        ..status = AuthStatus.authenticated
+        ..user = _user();
+      final adapter = _FailingAlertAdapter();
+      auth.client.dio.httpClientAdapter = adapter;
+      final provider = AnalysisProvider(auth);
+      addTearDown(provider.dispose);
+
+      // 422: not on the live feed, or no usable levels. Retrying cannot help.
+      adapter.status = 422;
+      expect(await provider.setAnalysisAlerts(42, enabled: true), isNull);
+      expect(provider.lastAlertFailure, AlertFailure.unsupported);
+
+      // 503: the live price service is down. Trying again later may work.
+      adapter.status = 503;
+      expect(await provider.setAnalysisAlerts(42, enabled: true), isNull);
+      expect(provider.lastAlertFailure, AlertFailure.retryable);
+
+      // The next attempt starts clean.
+      adapter.status = 201;
+      expect(await provider.setAnalysisAlerts(42, enabled: true), isNotNull);
+      expect(provider.lastAlertFailure, isNull);
+    },
+  );
+}
+
+class _FailingAlertAdapter implements HttpClientAdapter {
+  int status = 422;
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    final ok = status < 300;
+    return ResponseBody.fromString(
+      jsonEncode(
+        ok
+            ? {'enabled': true, 'armedCount': 1, 'levels': <Object>[]}
+            : {'error': 'x'},
+      ),
+      status,
+      headers: {
+        Headers.contentTypeHeader: [Headers.jsonContentType],
+      },
+    );
+  }
+
+  @override
+  void close({bool force = false}) {}
 }
 
 User _user() => User(

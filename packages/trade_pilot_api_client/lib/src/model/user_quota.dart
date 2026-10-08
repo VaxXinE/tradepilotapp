@@ -12,18 +12,14 @@ part 'user_quota.g.dart';
 ///
 /// Properties:
 /// * [id]
-/// * [customQuotaPerHour]
 /// * [customQuotaPerDay]
 @BuiltValue()
 abstract class UserQuota implements Built<UserQuota, UserQuotaBuilder> {
   @BuiltValueField(wireName: r'id')
   int get id;
 
-  @BuiltValueField(wireName: r'customQuotaPerHour')
-  int get customQuotaPerHour;
-
   @BuiltValueField(wireName: r'customQuotaPerDay')
-  int get customQuotaPerDay;
+  int? get customQuotaPerDay;
 
   UserQuota._();
 
@@ -53,15 +49,10 @@ class _$UserQuotaSerializer implements PrimitiveSerializer<UserQuota> {
       object.id,
       specifiedType: const FullType(int),
     );
-    yield r'customQuotaPerHour';
-    yield serializers.serialize(
-      object.customQuotaPerHour,
-      specifiedType: const FullType(int),
-    );
     yield r'customQuotaPerDay';
     yield serializers.serialize(
       object.customQuotaPerDay,
-      specifiedType: const FullType(int),
+      specifiedType: const FullType.nullable(int),
     );
   }
 
@@ -91,16 +82,9 @@ class _$UserQuotaSerializer implements PrimitiveSerializer<UserQuota> {
         case r'id':
           final valueDes = serializers.deserialize(
             value,
-            specifiedType: const FullType(int),
-          ) as int;
+            specifiedType: const FullType.nullable(int),
+          ) as int?;
           result.id = valueDes;
-          break;
-        case r'customQuotaPerHour':
-          final valueDes = serializers.deserialize(
-            value,
-            specifiedType: const FullType(int),
-          ) as int;
-          result.customQuotaPerHour = valueDes;
           break;
         case r'customQuotaPerDay':
           final valueDes = serializers.deserialize(

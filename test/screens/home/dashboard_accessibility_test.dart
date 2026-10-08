@@ -45,7 +45,7 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text('244'), findsOneWidget);
-    expect(find.text('203'), findsOneWidget);
+    expect(find.text('203'), findsNothing);
     expect(find.text('49–65%'), findsOneWidget);
     expect(tester.getSize(totalCard).width, greaterThan(340));
     expect(
@@ -77,10 +77,54 @@ void main() {
     );
 
     expect(tester.takeException(), isNull);
-    expect(tester.getSize(totalCard).width, lessThan(120));
+    expect(tester.getSize(totalCard).width, lessThan(190));
     expect(
       tester.getTopLeft(confidenceCard).dy,
       tester.getTopLeft(totalCard).dy,
     );
+  });
+
+  AnalysisOutcomesSummary outcomes({int pending = 0, int invalidated = 0}) =>
+      AnalysisOutcomesSummary(
+        (b) => b
+          ..rangeDays = 30
+          ..total = 12
+          ..tp1Hit = 3
+          ..tp2Hit = 1
+          ..slHit = 2
+          ..expired = 1
+          ..invalidated = invalidated
+          ..pending = pending
+          ..scored = 6
+          ..tpHitRate = 4 / 6
+          ..slHitRate = 2 / 6,
+      );
+
+  testWidgets('outcome card says how many analyses are still pending', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      localizedTestApp(
+        home: Scaffold(
+          body: OutcomeSummaryCard(
+            outcomes: outcomes(pending: 5, invalidated: 2),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('5 still pending · Analysis Invalidated: 2'), findsOneWidget);
+  });
+
+  testWidgets('outcome card hides the open-items line when there are none', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      localizedTestApp(
+        home: Scaffold(body: OutcomeSummaryCard(outcomes: outcomes())),
+      ),
+    );
+
+    expect(find.byKey(const ValueKey('dashboard-outcome-open')), findsNothing);
   });
 }

@@ -1,96 +1,55 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:local_auth/local_auth.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:provider/provider.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../core/localization/locale_controller.dart';
-import '../../../core/preferences/mental_checklist_controller.dart';
 import '../../../core/api/api_config.dart';
-import '../../../core/config/sponsor_config.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme_controller.dart';
+import '../../../core/topup/topup_return_controller.dart';
+import '../../../core/topup/topup_return_link.dart';
 import '../../../l10n/l10n.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/credit_provider.dart';
 import '../../../providers/progression_provider.dart';
 import '../../../services/native_push_service.dart';
-import '../../../widgets/progression/progression_emblem.dart';
+import '../../../services/web_handoff.dart';
 import '../../../widgets/app_footer.dart';
-// import '../../../screens/notifications/notifications_screen.dart';
+import '../../../widgets/progression/progression_emblem.dart';
+import '../../notifications/notifications_screen.dart';
+import '../../price_alert/price_alert_list_screen.dart';
 import '../../profile/change_password_screen.dart';
 import '../../profile/change_security_question_screen.dart';
-import '../../profile/delete_account_screen.dart';
 import '../../profile/edit_profile_screen.dart';
-import '../../price_alert/price_alert_list_screen.dart';
-import '../../topup/topup_screen.dart';
-import '../../analytics/analytics_screen.dart';
-import '../../daily_summary/daily_summary_screen.dart';
-import '../../journal/trade_journal_screen.dart';
-import '../../trader_mirror/trader_mirror_screen.dart';
-import '../../mindset/mindset_screen.dart';
+import '../../profile/privacy_security_screen.dart';
 import '../../progression/progression_screen.dart';
-import '../../performance/performance_screen.dart';
+
+/// Opens a URL in an in-app browser tab and resolves with the callback URL.
+typedef InAppBrowserAuthenticate =
+    Future<String> Function({
+      required String url,
+      required String callbackUrlScheme,
+      FlutterWebAuth2Options options,
+    });
 
 class ProfileTab extends StatelessWidget {
-  const ProfileTab({super.key});
+  const ProfileTab({
+    super.key,
+    this.authenticate = FlutterWebAuth2.authenticate,
+  });
 
-  static const _privacyUrl = 'https://tradepilot.id/privacy';
-  static const _termsUrl = 'https://tradepilot.id/terms';
-  static const _supportUrl = 'https://tradepilot.id/support';
+  /// Replaceable so tests do not open a real browser tab.
+  final InAppBrowserAuthenticate authenticate;
 
-  Future<void> _openUrl(
-    BuildContext context,
-    String url, {
-    OutboundClickBodyPlacementEnum? placement,
-    OutboundClickBodyTargetEnum? target,
-  }) async {
-    if (placement != null && target != null) {
-      unawaited(
-        context.read<AuthProvider>().telemetry.recordOutboundClick(
-          placement: placement,
-          target: target,
-          languageCode: Localizations.localeOf(context).languageCode,
-        ),
-      );
-    }
-    try {
-      if (await launchUrl(
-        Uri.parse(url),
-        mode: LaunchMode.externalApplication,
-      )) {
-        return;
-      }
-    } catch (_) {
-      // Native plugin belum siap/gagal membuka browser; tampilkan error aman.
-    }
-    if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(context.l10n.linkOpenFailed)));
-    }
-  }
-
-  Future<void> _toggleMode(BuildContext context, bool enabled) async {
-    final auth = context.read<AuthProvider>();
-    final success = await auth.updateSelectedMode(
-      enabled ? UserSelectedModeEnum.pro : UserSelectedModeEnum.beginner,
-    );
-
-    if (!success && context.mounted && auth.profileError != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(auth.profileError!)));
-    }
-  }
-
-  Future<void> _toggleTheme(BuildContext context, bool enabled) async {
-    await context.read<ThemeController>().setDarkMode(enabled);
+  Future<void> _toggleTheme(BuildContext context, bool dark) async {
+    await context.read<ThemeController>().setDarkMode(dark);
     if (!context.mounted) return;
     final auth = context.read<AuthProvider>();
-    final success = await auth.updateTheme(enabled);
+    final success = await auth.updateTheme(dark);
     if (!success && context.mounted && auth.profileError != null) {
       ScaffoldMessenger.of(
         context,
@@ -120,429 +79,216 @@ class ProfileTab extends StatelessWidget {
         ],
       ),
     );
-
     if (confirmed != true || !context.mounted) return;
-
-    await context.read<NativePushService?>()?.unregister();
-    if (!context.mounted) return;
-    await context.read<AuthProvider>().logout();
+    // Read both before awaiting: signing out must not depend on this screen
+    // still being mounted, nor on push cleanup succeeding.
+    final push = context.read<NativePushService?>();
+    final auth = context.read<AuthProvider>();
+    await push?.unregisterForLogout();
+    await auth.logout();
   }
 
-  Future<void> _selectLanguage(
-    BuildContext context,
-    String currentLanguageCode,
-  ) async {
-    final selected = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) => SimpleDialog(
-        title: Text(context.l10n.language),
-        children: [
-          SimpleDialogOption(
-            onPressed: () => Navigator.pop(dialogContext, 'en'),
-            child: _LanguageOption(
-              label: 'English',
-              selected: currentLanguageCode == 'en',
-            ),
-          ),
-          SimpleDialogOption(
-            onPressed: () => Navigator.pop(dialogContext, 'id'),
-            child: _LanguageOption(
-              label: 'Bahasa Indonesia',
-              selected: currentLanguageCode == 'id',
-            ),
-          ),
-        ],
-      ),
-    );
+  void _push(BuildContext context, Widget screen) {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
+  }
 
-    if (selected != null && context.mounted) {
-      await context.read<LocaleController>().setLanguage(selected);
-      if (context.mounted) {
-        await context.read<AuthProvider>().updateLanguage(selected);
+  Future<void> _openTopUp(BuildContext context) async {
+    final auth = context.read<AuthProvider>();
+    final credits = context.read<CreditProvider>();
+    final returned = context.read<TopupReturnController>();
+    var opened = false;
+    try {
+      // Signs the browser in with a one-time code so the user does not have
+      // to log in again; falls back to the plain page if that is unavailable.
+      // `source=app` asks the web page to send the user back to the app once
+      // the payment is done. A backend that does not know it yet rejects it,
+      // and the plain handoff for /topup is used instead.
+      final target = await WebHandoff.resolve(
+        auth.client,
+        '/topup?source=app',
+        fallbackPaths: const ['/topup'],
+      );
+      credits.markTopupStarted();
+      opened = await _openInAppBrowser(target, credits, returned);
+      if (!opened) {
+        opened = await launchUrl(target, mode: LaunchMode.externalApplication);
       }
+    } catch (_) {
+      // Native browser channel can fail when no compatible app is available.
+    }
+    if (!opened && context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.linkOpenFailed)));
+    }
+  }
+
+  /// Opens the top-up page in an in-app browser tab that closes itself, and
+  /// returns the user to the app, when the web page navigates to
+  /// `id.tradepilot.app://topup/result?...`. A system browser would ask the
+  /// user to confirm leaving the page, because a link opened without a tap is
+  /// treated as untrusted. Returns false when the tab could not be opened.
+  Future<bool> _openInAppBrowser(
+    Uri target,
+    CreditProvider credits,
+    TopupReturnController returned,
+  ) async {
+    try {
+      final result = await authenticate(
+        url: target.toString(),
+        callbackUrlScheme: TopupReturnLink.scheme,
+        // One-time handoff code signs in inside the tab, so nothing needs to
+        // be shared with the system browser; also skips iOS's sign-in notice.
+        options: FlutterWebAuth2Options(
+          preferEphemeral: defaultTargetPlatform == TargetPlatform.iOS,
+        ),
+      );
+      returned.report(Uri.parse(result));
+      return true;
+    } on PlatformException catch (error) {
+      if (error.code.toLowerCase().contains('cancel')) {
+        // The user closed the tab, possibly after paying: check the balance.
+        unawaited(credits.refreshAfterTopupReturn());
+        return true;
+      }
+      return false;
+    } catch (_) {
+      return false;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final muted = isDark
-        ? AppColors.darkMutedForeground
-        : AppColors.lightMutedForeground;
-    final primary = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
-    final primaryText = isDark
-        ? AppColors.darkPrimaryText
-        : AppColors.lightPrimaryText;
-    final onPrimary = isDark
-        ? AppColors.darkPrimaryForeground
-        : AppColors.lightPrimaryForeground;
     final auth = context.watch<AuthProvider>();
-    final themeController = context.watch<ThemeController>();
-    final localeController = context.watch<LocaleController>();
-    final l10n = context.l10n;
     final user = auth.user;
-
     if (user == null) return const SizedBox.shrink();
-    final isPro = user.selectedMode == UserSelectedModeEnum.pro;
+
+    final progression = context.watch<ProgressionProvider>().summary;
+    final credits = context.watch<CreditProvider>();
+    final themeController = context.watch<ThemeController>();
+    final l10n = context.l10n;
 
     return Scaffold(
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(16, 24, 16, 32),
         children: [
           Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 720),
+              constraints: const BoxConstraints(maxWidth: 896),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
                     l10n.profile,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 14),
-                  _ProfileHeader(
-                    name: user.displayName,
-                    email: user.email,
-                    role: user.role,
-                    avatarUrl: user.avatarUrl,
-                    primary: primary,
-                    primaryText: primaryText,
-                    onPrimary: onPrimary,
-                    muted: muted,
-                  ),
-                  const SizedBox(height: 12),
-                  const _ProgressionProfileCard(),
-                  const SizedBox(height: 24),
-                  _Section(
-                    title: l10n.account,
-                    children: [
-                      ListTile(
-                        leading: const Icon(Icons.person_outline_rounded),
-                        title: Text(l10n.profileInformation),
-                        subtitle: Text(l10n.changeDisplayName),
-                        trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const EditProfileScreen(),
-                          ),
-                        ),
-                      ),
-                      const _TopUpMenuItem(),
-                    ],
-                  ),
-                  _Section(
-                    title: l10n.preferences,
-                    children: [
-                      ListTile(
-                        leading: const Icon(Icons.language_rounded),
-                        title: Text(l10n.language),
-                        subtitle: Text(
-                          localeController.locale.languageCode == 'id'
-                              ? l10n.indonesian
-                              : l10n.english,
-                        ),
-                        trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: () => _selectLanguage(
-                          context,
-                          localeController.locale.languageCode,
-                        ),
-                      ),
-                      const Divider(height: 1),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  themeController.isDarkMode
-                                      ? Icons.dark_mode_outlined
-                                      : Icons.light_mode_outlined,
-                                  size: 20,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
-                                ),
-                                const SizedBox(width: 12),
-                                Text(
-                                  l10n.appearance,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 10),
-                            _ThemeSegmentedControl(
-                              isDarkMode: themeController.isDarkMode,
-                              enabled: !auth.isUpdatingProfile,
-                              onSelected: (dark) => _toggleTheme(context, dark),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Divider(height: 1),
-                      SwitchListTile(
-                        secondary: const Icon(Icons.tune_rounded),
-                        title: Text(l10n.analysisMode),
-                        subtitle: Text(
-                          isPro
-                              ? l10n.proModeDescription
-                              : l10n.beginnerModeDescription,
-                        ),
-                        value: isPro,
-                        onChanged: auth.isUpdatingProfile
-                            ? null
-                            : (value) => _toggleMode(context, value),
-                      ),
-                      const Divider(height: 1),
-                      SwitchListTile(
-                        secondary: const Icon(Icons.checklist_rounded),
-                        title: Text(l10n.mentalChecklistPreference),
-                        subtitle: Text(l10n.mentalChecklistPreferenceHint),
-                        value: context
-                            .watch<MentalChecklistController>()
-                            .enabled,
-                        onChanged: (value) => context
-                            .read<MentalChecklistController>()
-                            .setEnabled(value),
-                      ),
-                    ],
-                  ),
-                  _Section(
-                    title: l10n.security,
-                    children: [
-                      const _BiometricLockTile(),
-                      if (user.hasPassword) ...[
-                        const Divider(height: 1),
-                        ListTile(
-                          leading: const Icon(Icons.lock_outline_rounded),
-                          title: Text(l10n.changePassword),
-                          trailing: const Icon(Icons.chevron_right_rounded),
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => const ChangePasswordScreen(),
-                            ),
-                          ),
-                        ),
-                        const Divider(height: 1),
-                        ListTile(
-                          leading: const Icon(Icons.help_outline_rounded),
-                          title: Text(l10n.securityQuestion),
-                          trailing: const Icon(Icons.chevron_right_rounded),
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  const ChangeSecurityQuestionScreen(),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  _Section(
-                    title: l10n.legalAndHelp,
-                    children: [
-                      ListTile(
-                        leading: const Icon(Icons.privacy_tip_outlined),
-                        title: Text(l10n.privacyPolicy),
-                        trailing: const Icon(Icons.open_in_new_rounded),
-                        onTap: () => _openUrl(context, _privacyUrl),
-                      ),
-                      const Divider(height: 1),
-                      ListTile(
-                        leading: const Icon(Icons.description_outlined),
-                        title: Text(l10n.termsOfService),
-                        trailing: const Icon(Icons.open_in_new_rounded),
-                        onTap: () => _openUrl(context, _termsUrl),
-                      ),
-                      const Divider(height: 1),
-                      ListTile(
-                        leading: const Icon(Icons.support_agent_rounded),
-                        title: Text(l10n.support),
-                        trailing: const Icon(Icons.open_in_new_rounded),
-                        onTap: () => _openUrl(context, _supportUrl),
-                      ),
-                      const Divider(height: 1),
-                      ListTile(
-                        leading: Icon(
-                          Icons.delete_forever_outlined,
-                          color: Theme.of(context).colorScheme.error,
-                        ),
-                        title: Text(
-                          l10n.deleteAccount,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
-                          ),
-                        ),
-                        trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const DeleteAccountScreen(),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  // _Section(
-                  //   title: 'Notifikasi',
-                  //   children: [
-                  //     ListTile(
-                  //       leading: const Icon(Icons.notifications_outlined),
-                  //       title: const Text('Pengaturan Notifikasi'),
-                  //       subtitle: const Text('Notifikasi dalam aplikasi'),
-                  //       trailing: const Icon(Icons.chevron_right_rounded),
-                  //       onTap: () => Navigator.of(context).push(
-                  //         MaterialPageRoute(
-                  //           builder: (_) => const NotificationsScreen(),
-                  //         ),
-                  //       ),
-                  //     ),
-                  //   ],
-                  // ),
-                  _Section(
-                    title: l10n.insightsAndJournal,
-                    children: [
-                      ListTile(
-                        key: const Key('profile-my-alerts'),
-                        leading: const Icon(
-                          Icons.notifications_active_outlined,
-                        ),
-                        title: Text(l10n.myPriceAlerts),
-                        subtitle: Text(l10n.priceAlertsSubtitle),
-                        trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const PriceAlertListScreen(),
-                          ),
-                        ),
-                      ),
-                      const Divider(height: 1),
-                      ListTile(
-                        leading: const Icon(Icons.menu_book_outlined),
-                        title: Text(l10n.tradeJournal),
-                        subtitle: Text(l10n.tradeJournalDescription),
-                        trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const TradeJournalScreen(),
-                          ),
-                        ),
-                      ),
-                      const Divider(height: 1),
-                      ListTile(
-                        leading: const Icon(Icons.insights_outlined),
-                        title: Text(l10n.analytics),
-                        subtitle: Text(l10n.analyticsDescription),
-                        trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const AnalyticsScreen(),
-                          ),
-                        ),
-                      ),
-                      const Divider(height: 1),
-                      ListTile(
-                        leading: const Icon(Icons.public_rounded),
-                        title: Text(l10n.publicAiPerformance),
-                        subtitle: Text(l10n.publicAiPerformanceSubtitle),
-                        trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const PerformanceScreen(),
-                          ),
-                        ),
-                      ),
-                      const Divider(height: 1),
-                      ListTile(
-                        leading: const Icon(Icons.today_outlined),
-                        title: Text(l10n.dailySummary),
-                        trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const DailySummaryScreen(),
-                          ),
-                        ),
-                      ),
-                      const Divider(height: 1),
-                      ListTile(
-                        leading: const Icon(Icons.self_improvement_outlined),
-                        title: Text(l10n.traderMirror),
-                        subtitle: Text(l10n.traderMirrorDescription),
-                        trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const TraderMirrorScreen(),
-                          ),
-                        ),
-                      ),
-                      const Divider(height: 1),
-                      ListTile(
-                        leading: const Icon(Icons.school_outlined),
-                        title: Text(l10n.guide),
-                        subtitle: Text(l10n.guideDescription),
-                        trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const MindsetScreen(),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (showSponsor) ...[
-                    const SizedBox(height: 8),
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Text(
-                              l10n.sponsoredBySolidPrime,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              l10n.sponsorDisclosure,
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                            const SizedBox(height: 12),
-                            FilledButton.icon(
-                              onPressed: () => _openUrl(
-                                context,
-                                sponsorWebsiteUrl,
-                                placement:
-                                    OutboundClickBodyPlacementEnum.profileCta,
-                                target: OutboundClickBodyTargetEnum.sgBerjangka,
-                              ),
-                              icon: const Icon(Icons.open_in_new_rounded),
-                              label: Text(l10n.openSponsorWebsite),
-                            ),
-                          ],
-                        ),
-                      ),
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.4,
                     ),
-                  ],
-                  const SizedBox(height: 8),
+                  ),
+                  const SizedBox(height: 24),
+                  _IdentityCard(
+                    user: user,
+                    progression: progression,
+                    onEdit: () => _push(context, const EditProfileScreen()),
+                    onProgression: progression == null
+                        ? null
+                        : () => _push(context, const ProgressionScreen()),
+                  ),
+                  const SizedBox(height: 24),
+                  _AppearanceCard(
+                    dark: themeController.isDarkMode,
+                    enabled: !auth.isUpdatingProfile,
+                    onSelected: (dark) => _toggleTheme(context, dark),
+                  ),
+                  const SizedBox(height: 1),
+                  _SettingsCard(
+                    children: [
+                      if (user.hasPassword) ...[
+                        _ProfileSettingTile(
+                          key: const Key('profile-change-password'),
+                          icon: Icons.key_rounded,
+                          title: l10n.changePassword,
+                          onTap: () =>
+                              _push(context, const ChangePasswordScreen()),
+                        ),
+                        const Divider(height: 1),
+                        _ProfileSettingTile(
+                          key: const Key('profile-security-question'),
+                          icon: Icons.shield_outlined,
+                          title: l10n.securityQuestion,
+                          onTap: () => _push(
+                            context,
+                            const ChangeSecurityQuestionScreen(),
+                          ),
+                        ),
+                        const Divider(height: 1),
+                      ],
+                      const BiometricLockTile(
+                        key: Key('profile-biometric-lock'),
+                      ),
+                      const Divider(height: 1),
+                      _ProfileSettingTile(
+                        key: const Key('profile-privacy-security'),
+                        icon: Icons.shield_outlined,
+                        title: l10n.profilePrivacySecurity,
+                        subtitle: l10n.profilePrivacySecuritySubtitle,
+                        onTap: () =>
+                            _push(context, const PrivacySecurityScreen()),
+                      ),
+                      const Divider(height: 1),
+                      _ProfileSettingTile(
+                        key: const Key('profile-my-alerts'),
+                        icon: Icons.notifications_none_rounded,
+                        title: l10n.profileMyAlerts,
+                        subtitle: l10n.profileMyAlertsSubtitle,
+                        onTap: () =>
+                            _push(context, const PriceAlertListScreen()),
+                      ),
+                      const Divider(height: 1),
+                      _ProfileSettingTile(
+                        key: const Key('profile-notification-settings'),
+                        icon: Icons.notifications_none_rounded,
+                        title: l10n.profileNotificationSettings,
+                        subtitle: l10n.profileNotificationSettingsSubtitle,
+                        onTap: () => _push(
+                          context,
+                          const NotificationsScreen(
+                            showSettingsInitially: true,
+                          ),
+                        ),
+                      ),
+                      const Divider(height: 1),
+                      _ProfileSettingTile(
+                        key: const Key('profile-analysis-credits'),
+                        icon: Icons.account_balance_wallet_outlined,
+                        title: l10n.profileAnalysisCredits,
+                        // An unreadable balance must not look like a zero balance.
+                        badge: credits.isLoadingBalance
+                            ? '…'
+                            : credits.balance?.toString() ?? '—',
+                        onTap: () => unawaited(_openTopUp(context)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
                   OutlinedButton.icon(
+                    key: const Key('profile-sign-out'),
                     onPressed: auth.isBusy
                         ? null
                         : () => _confirmLogout(context),
-                    icon: Icon(
-                      Icons.logout_rounded,
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                    label: Text(
-                      l10n.signOut,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(42),
+                      side: BorderSide(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.error.withValues(alpha: .35),
                       ),
+                      foregroundColor: Theme.of(context).colorScheme.error,
                     ),
+                    icon: const Icon(Icons.logout_rounded, size: 17),
+                    label: Text(l10n.signOut),
                   ),
                 ],
               ),
@@ -555,51 +301,389 @@ class ProfileTab extends StatelessWidget {
   }
 }
 
-class _ProgressionProfileCard extends StatelessWidget {
-  const _ProgressionProfileCard();
+class _IdentityCard extends StatelessWidget {
+  const _IdentityCard({
+    required this.user,
+    required this.progression,
+    required this.onEdit,
+    required this.onProgression,
+  });
+
+  final User user;
+  final ProgressionSummary? progression;
+  final VoidCallback onEdit;
+  final VoidCallback? onProgression;
 
   @override
   Widget build(BuildContext context) {
-    final summary = context.watch<ProgressionProvider>().summary;
+    final colors = Theme.of(context).colorScheme;
     return Card(
-      clipBehavior: Clip.antiAlias,
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                _Avatar(
+                  name: user.displayName,
+                  avatarUrl: user.avatarUrl,
+                  onTap: onEdit,
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              user.displayName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          TextButton(
+                            onPressed: onEdit,
+                            style: TextButton.styleFrom(
+                              minimumSize: const Size(44, 44),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 2,
+                              ),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: Text(
+                              context.l10n.edit,
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Text(
+                        user.email,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: colors.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 7),
+                      Container(
+                        key: const Key('profile-role-badge'),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 9,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colors.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          _roleLabel(context, user.role),
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            if (progression case final summary?) ...[
+              const SizedBox(height: 24),
+              InkWell(
+                key: const Key('profile-progression'),
+                onTap: onProgression,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: colors.surfaceContainerHighest.withValues(
+                      alpha: .18,
+                    ),
+                    border: Border.all(color: colors.outlineVariant),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      ProgressionEmblem(
+                        level: summary.level,
+                        masteryLevel: summary.masteryLevel,
+                        size: 48,
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              context.l10n.progressionLevel(summary.level),
+                              style: TextStyle(
+                                color: colors.primary,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 1.1,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              summary.rank,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        size: 18,
+                        color: colors.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _roleLabel(BuildContext context, UserRoleEnum role) => switch (role) {
+    UserRoleEnum.superAdmin => context.l10n.roleSuperAdmin,
+    UserRoleEnum.admin => context.l10n.roleAdmin,
+    _ => context.l10n.roleUser,
+  };
+}
+
+class _Avatar extends StatelessWidget {
+  const _Avatar({
+    required this.name,
+    required this.avatarUrl,
+    required this.onTap,
+  });
+
+  final String name;
+  final String? avatarUrl;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final imageUrl = _resolvedAvatarUrl(avatarUrl);
+    return Semantics(
+      button: true,
+      label: context.l10n.editProfile,
       child: InkWell(
-        onTap: () => Navigator.of(
-          context,
-        ).push(MaterialPageRoute(builder: (_) => const ProgressionScreen())),
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          width: 80,
+          height: 80,
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            color: colors.primary.withValues(alpha: .10),
+            border: Border.all(color: colors.outlineVariant),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (imageUrl == null)
+                Center(
+                  child: Text(
+                    name.isEmpty ? '?' : name[0].toUpperCase(),
+                    style: TextStyle(
+                      color: colors.primary,
+                      fontSize: 30,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                )
+              else
+                Image.network(
+                  imageUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => Center(
+                    child: Text(
+                      name.isEmpty ? '?' : name[0].toUpperCase(),
+                      style: TextStyle(
+                        color: colors.primary,
+                        fontSize: 30,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Container(
+                  height: 20,
+                  color: colors.surface.withValues(alpha: .85),
+                  alignment: Alignment.center,
+                  child: const Icon(Icons.photo_camera_outlined, size: 13),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String? _resolvedAvatarUrl(String? path) {
+    if (path == null || path.isEmpty) return null;
+    final clean = path.startsWith('/') ? path.substring(1) : path;
+    return '${ApiConfig.baseUrl}/storage/$clean';
+  }
+}
+
+class _AppearanceCard extends StatelessWidget {
+  const _AppearanceCard({
+    required this.dark,
+    required this.enabled,
+    required this.onSelected,
+  });
+
+  final bool dark;
+  final bool enabled;
+  final ValueChanged<bool> onSelected;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    margin: EdgeInsets.zero,
+    child: Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            context.l10n.appearance,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 16),
+          _ThemeSegmentedControl(
+            isDarkMode: dark,
+            enabled: enabled,
+            onSelected: onSelected,
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class _SettingsCard extends StatelessWidget {
+  const _SettingsCard({required this.children});
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    margin: EdgeInsets.zero,
+    clipBehavior: Clip.antiAlias,
+    child: Padding(
+      padding: const EdgeInsets.all(8),
+      child: Column(children: children),
+    ),
+  );
+}
+
+class _ProfileSettingTile extends StatelessWidget {
+  const _ProfileSettingTile({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.onTap,
+    this.subtitle,
+    this.badge,
+  });
+
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final String? badge;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 56),
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Row(
             children: [
-              if (summary == null)
-                const CircleAvatar(child: Icon(Icons.emoji_events_outlined))
-              else
-                ProgressionEmblem(
-                  level: summary.level,
-                  masteryLevel: summary.masteryLevel,
-                  size: 54,
-                ),
-              const SizedBox(width: 12),
+              Icon(icon, size: 17, color: colors.onSurfaceVariant),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      context.l10n.progressionTitle,
-                      style: const TextStyle(fontWeight: FontWeight.w900),
+                      title,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                    Text(
-                      summary == null
-                          ? context.l10n.progressionSubtitle
-                          : '${summary.totalXp} XP · ${context.l10n.progressionLevel(summary.level)} · ${summary.rank}',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle!,
+                        style: TextStyle(
+                          color: colors.onSurfaceVariant,
+                          fontSize: 11,
+                          height: 1.25,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded),
+              if (badge != null) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: colors.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    badge!,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 18,
+                color: colors.onSurfaceVariant,
+              ),
             ],
           ),
         ),
@@ -608,296 +692,6 @@ class _ProgressionProfileCard extends StatelessWidget {
   }
 }
 
-class _LanguageOption extends StatelessWidget {
-  const _LanguageOption({required this.label, required this.selected});
-
-  final String label;
-  final bool selected;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(child: Text(label)),
-        if (selected) const Icon(Icons.check_rounded),
-      ],
-    );
-  }
-}
-
-class _ProfileHeader extends StatelessWidget {
-  const _ProfileHeader({
-    required this.name,
-    required this.email,
-    required this.role,
-    required this.avatarUrl,
-    required this.primary,
-    required this.primaryText,
-    required this.onPrimary,
-    required this.muted,
-  });
-
-  final String name;
-  final String email;
-  final UserRoleEnum role;
-  final String? avatarUrl;
-  final Color primary;
-
-  /// // Glyph/teks memakai nada emas yang terbaca; isian tetap emas web.
-  final Color primaryText;
-  final Color onPrimary;
-  final Color muted;
-
-  String _roleLabel(BuildContext context) => switch (role) {
-    UserRoleEnum.superAdmin => context.l10n.roleSuperAdmin,
-    UserRoleEnum.admin => context.l10n.roleAdmin,
-    _ => context.l10n.roleUser,
-  };
-
-  @override
-  Widget build(BuildContext context) {
-    final imageUrl = _avatarUrl(avatarUrl);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 30,
-              backgroundColor: primary,
-              foregroundImage: imageUrl == null ? null : NetworkImage(imageUrl),
-              child: Text(
-                name.isEmpty ? '?' : name[0].toUpperCase(),
-                style: TextStyle(
-                  color: onPrimary,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 22,
-                ),
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(email, style: TextStyle(color: muted, fontSize: 12.5)),
-                  const SizedBox(height: 6),
-                  Container(
-                    key: const Key('profile-role-badge'),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.secondary,
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      _roleLabel(context),
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: Theme.of(context).colorScheme.onSecondary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.verified_user_outlined, color: primaryText, size: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String? _avatarUrl(String? path) {
-    if (path == null || path.isEmpty) return null;
-    final clean = path.startsWith('/') ? path.substring(1) : path;
-    return '${ApiConfig.baseUrl}/storage/$clean';
-  }
-}
-
-class _Section extends StatelessWidget {
-  const _Section({required this.title, required this.children});
-
-  final String title;
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 4, bottom: 8),
-            child: Text(title, style: Theme.of(context).textTheme.titleSmall),
-          ),
-          Card(
-            clipBehavior: Clip.antiAlias,
-            child: Column(children: children),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Toggle for the biometric app lock.
-///
-/// Reads its own state rather than taking it from [AuthProvider] because the
-/// value lives in secure storage and only this tile needs it. Hidden entirely
-/// on devices with nothing enrolled — offering a lock that cannot engage would
-/// just be a switch that silently does nothing.
-class _BiometricLockTile extends StatefulWidget {
-  const _BiometricLockTile();
-
-  @override
-  State<_BiometricLockTile> createState() => _BiometricLockTileState();
-}
-
-class _BiometricLockTileState extends State<_BiometricLockTile> {
-  bool? _enabled;
-  bool _available = false;
-  bool _isSaving = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    final auth = context.read<AuthProvider>();
-    try {
-      final enrolled = await LocalAuthentication().getAvailableBiometrics();
-      final enabled = await auth.biometricLockEnabled;
-      if (!mounted) return;
-      setState(() {
-        _available = enrolled.isNotEmpty;
-        _enabled = enabled;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _available = false;
-        _enabled = false;
-      });
-    }
-  }
-
-  Future<void> _toggle(bool value) async {
-    if (_isSaving) return;
-    setState(() => _isSaving = true);
-    try {
-      await context.read<AuthProvider>().setBiometricLockEnabled(value);
-      if (mounted) setState(() => _enabled = value);
-    } finally {
-      if (mounted) setState(() => _isSaving = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final enabled = _enabled;
-
-    if (enabled == null) {
-      return ListTile(
-        leading: const Icon(Icons.fingerprint_rounded),
-        title: Text(l10n.biometricLock),
-      );
-    }
-
-    if (!_available) {
-      return ListTile(
-        enabled: false,
-        leading: const Icon(Icons.fingerprint_rounded),
-        title: Text(l10n.biometricLock),
-        subtitle: Text(l10n.biometricLockUnavailable),
-      );
-    }
-
-    return SwitchListTile(
-      key: const Key('biometric-lock-switch'),
-      secondary: const Icon(Icons.fingerprint_rounded),
-      value: enabled,
-      onChanged: _isSaving ? null : _toggle,
-      title: Text(l10n.biometricLock),
-      subtitle: Text(enabled ? l10n.biometricLockOn : l10n.biometricLockOff),
-    );
-  }
-}
-
-/// Entri `Top Up Credit` beserta badge saldo.
-///
-/// Saldo di-watch terpisah supaya kegagalan `GET /topups/balance` hanya
-/// menghilangkan badge-nya — menu Profile yang lain tidak ikut rusak.
-class _TopUpMenuItem extends StatelessWidget {
-  const _TopUpMenuItem();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final credit = context.watch<CreditProvider>();
-    final theme = Theme.of(context);
-
-    return ListTile(
-      leading: const Icon(Icons.account_balance_wallet_outlined),
-      title: Text(l10n.topUpCredit),
-      subtitle: Text(l10n.creditBalance),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (credit.hasBalance)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                '${credit.balance}',
-                style: TextStyle(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
-                ),
-              ),
-            ),
-          const Icon(Icons.chevron_right_rounded),
-        ],
-      ),
-      onTap: () async {
-        await Navigator.of(
-          context,
-        ).push(MaterialPageRoute(builder: (_) => const TopUpScreen()));
-
-        // Saldo bisa berubah setelah approval atau pemakaian credit, jadi
-        // segarkan begitu kembali ke Profile.
-        if (context.mounted) {
-          await credit.loadBalance(silent: true);
-        }
-      },
-    );
-  }
-}
-
-// =============================================================================
-// THEME SEGMENTED CONTROL
-// =============================================================================
-
-/// Pilihan tema Terang/Gelap mengikuti kontrol segmented pada mobile web.
 class _ThemeSegmentedControl extends StatelessWidget {
   const _ThemeSegmentedControl({
     required this.isDarkMode,
@@ -912,38 +706,34 @@ class _ThemeSegmentedControl extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final l10n = context.l10n;
-
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        key: const Key('profile-theme-segmented'),
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          color: colors.surfaceContainerHighest.withValues(alpha: 0.25),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: colors.outlineVariant.withValues(alpha: 0.6),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _ThemeSegment(
+    return Container(
+      key: const Key('profile-theme-segmented'),
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: colors.surfaceContainerHighest.withValues(alpha: .25),
+        border: Border.all(color: colors.outlineVariant),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Flexible(
+            child: _ThemeSegment(
               icon: Icons.light_mode_outlined,
-              label: l10n.lightMode,
+              label: context.l10n.lightMode,
               selected: !isDarkMode,
               onTap: enabled && isDarkMode ? () => onSelected(false) : null,
             ),
-            const SizedBox(width: 4),
-            _ThemeSegment(
+          ),
+          Flexible(
+            child: _ThemeSegment(
               icon: Icons.dark_mode_outlined,
-              label: l10n.darkMode,
+              label: context.l10n.darkMode,
               selected: isDarkMode,
               onTap: enabled && !isDarkMode ? () => onSelected(true) : null,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -965,27 +755,18 @@ class _ThemeSegment extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-
     return Semantics(
       button: true,
       selected: selected,
       child: InkWell(
-        borderRadius: BorderRadius.circular(9),
         onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        borderRadius: BorderRadius.circular(8),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
           decoration: BoxDecoration(
-            color: selected ? colors.surface : Colors.transparent,
-            borderRadius: BorderRadius.circular(9),
-            boxShadow: selected
-                ? const [
-                    BoxShadow(
-                      color: Color(0x1A000000),
-                      blurRadius: 4,
-                      offset: Offset(0, 1),
-                    ),
-                  ]
-                : null,
+            color: selected ? colors.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -993,15 +774,21 @@ class _ThemeSegment extends StatelessWidget {
               Icon(
                 icon,
                 size: 16,
-                color: selected ? colors.primary : colors.onSurfaceVariant,
+                color: selected ? colors.onPrimary : colors.onSurfaceVariant,
               ),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                  color: selected ? colors.onSurface : colors.onSurfaceVariant,
+              const SizedBox(width: 7),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: selected
+                        ? colors.onPrimary
+                        : colors.onSurfaceVariant,
+                  ),
                 ),
               ),
             ],

@@ -14,6 +14,8 @@ import 'core/theme/app_theme.dart';
 import 'core/theme/theme_controller.dart';
 import 'core/localization/locale_controller.dart';
 import 'core/preferences/mental_checklist_controller.dart';
+import 'core/topup/topup_return_controller.dart';
+import 'core/topup/topup_return_link.dart';
 import 'firebase_options.dart';
 import 'l10n/app_messages.dart';
 import 'l10n/l10n.dart';
@@ -36,6 +38,8 @@ import 'screens/home/tabs/history_tab.dart';
 import 'screens/notifications/notifications_screen.dart';
 import 'screens/price_alert/price_alert_list_screen.dart';
 import 'screens/splash_screen.dart';
+import 'services/in_app_review_service.dart';
+import 'services/setup_prompt_service.dart';
 import 'services/native_push_service.dart';
 
 @pragma('vm:entry-point')
@@ -60,6 +64,13 @@ class TradePilotApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        Provider<SharedPreferences>.value(value: preferences),
+        Provider<InAppReviewService>(
+          create: (_) => InAppReviewService(preferences),
+        ),
+        Provider<SetupPromptService>(
+          create: (_) => SetupPromptService(preferences),
+        ),
         ChangeNotifierProvider<ThemeController>(
           create: (_) => ThemeController(preferences),
         ),
@@ -74,6 +85,9 @@ class TradePilotApp extends StatelessWidget {
         // AUTH
         // =====================================================================
         ChangeNotifierProvider<AuthProvider>(create: (_) => AuthProvider()),
+        ChangeNotifierProvider<TopupReturnController>(
+          create: (_) => TopupReturnController(),
+        ),
 
         ChangeNotifierProxyProvider<AuthProvider, NativePushService>(
           create: (context) => NativePushService(context.read<AuthProvider>()),
@@ -178,14 +192,18 @@ class _TradePilotMaterialAppState extends State<_TradePilotMaterialApp> {
   late final Upgrader _upgrader;
 
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  final GlobalKey<ScaffoldMessengerState> _messengerKey =
+      GlobalKey<ScaffoldMessengerState>();
 
   late final AuthProvider _auth;
+  late final TopupReturnController _topupReturn;
   late final NativePushService _nativePush;
   StreamSubscription<NotificationAction>? _pushActionSubscription;
   NotificationAction? _pendingPushAction;
   bool _openingPushAction = false;
 
   AuthStatus? _previousAuthStatus;
+  bool _previousLocked = false;
 
   @override
   void initState() {
@@ -198,6 +216,8 @@ class _TradePilotMaterialAppState extends State<_TradePilotMaterialApp> {
     _auth.addListener(_handleAuthStatusChanged);
     _pushActionSubscription = _nativePush.actions.listen(_handlePushAction);
     unawaited(_nativePush.initialize());
+    _topupReturn = context.read<TopupReturnController>()
+      ..addListener(_onTopupReturnReported);
 
     if (defaultTargetPlatform == TargetPlatform.android) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _updateAndroid());
@@ -218,16 +238,66 @@ class _TradePilotMaterialAppState extends State<_TradePilotMaterialApp> {
     final current = _auth.status;
     _previousAuthStatus = current;
 
+    // Pushed routes sit above `home`, so they would cover the lock screen.
+    final locked = _auth.isLocked;
+    if (locked && !_previousLocked) {
+      _navigatorKey.currentState?.popUntil((route) => route.isFirst);
+    }
+    _previousLocked = locked;
+
     if (previous == AuthStatus.authenticated &&
         current == AuthStatus.unauthenticated) {
+      _navigatorKey.currentState?.popUntil((route) => route.isFirst);
+    }
+
+    // First launch: Welcome pushes Login (and Login pushes Register) on top of
+    // `home`. Signing in swaps `home` to the dashboard underneath, so without
+    // this the login form stays on screen over a session that already exists.
+    if (previous != AuthStatus.authenticated &&
+        current == AuthStatus.authenticated) {
       _navigatorKey.currentState?.popUntil((route) => route.isFirst);
     }
 
     if (current == AuthStatus.authenticated && !_auth.isLocked) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         unawaited(_openPendingPushAction());
+        _openPendingTopupReturn();
       });
     }
+  }
+
+  /// The web top-up page sent the user back (`id.tradepilot.app://topup/...`).
+  /// Shows the outcome and re-reads the balance from the server; the link
+  /// itself is never trusted for an amount. Waits while signed out or locked.
+  void _onTopupReturnReported() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _openPendingTopupReturn();
+    });
+  }
+
+  void _openPendingTopupReturn() {
+    if (!mounted ||
+        _topupReturn.pending == null ||
+        _auth.status != AuthStatus.authenticated ||
+        _auth.isLocked) {
+      return;
+    }
+    final link = _topupReturn.take()!;
+
+    // Close whatever is open so the user lands on the main screen.
+    _navigatorKey.currentState?.popUntil((route) => route.isFirst);
+    unawaited(context.read<CreditProvider>().refreshAfterTopupReturn());
+
+    final l10n = AppMessages.l10n;
+    final message = switch (link.status) {
+      TopupReturnStatus.approved => l10n.topupReturnSuccess,
+      TopupReturnStatus.processing => l10n.topupReturnProcessing,
+      TopupReturnStatus.cancelled => l10n.topupReturnCancelled,
+      TopupReturnStatus.failed => l10n.topupReturnFailed,
+    };
+    _messengerKey.currentState
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 
   void _handlePushAction(NotificationAction action) {
@@ -314,6 +384,7 @@ class _TradePilotMaterialAppState extends State<_TradePilotMaterialApp> {
   void dispose() {
     _auth.removeListener(_handleAuthStatusChanged);
     unawaited(_pushActionSubscription?.cancel());
+    _topupReturn.removeListener(_onTopupReturnReported);
     _upgrader.dispose();
     super.dispose();
   }
@@ -325,6 +396,7 @@ class _TradePilotMaterialAppState extends State<_TradePilotMaterialApp> {
 
     return MaterialApp(
       navigatorKey: _navigatorKey,
+      scaffoldMessengerKey: _messengerKey,
       onGenerateTitle: (context) => context.l10n.appTitle,
       debugShowCheckedModeBanner: false,
       locale: locale.locale,

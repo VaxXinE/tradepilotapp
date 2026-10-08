@@ -15,6 +15,11 @@ part 'admin_stats.g.dart';
 ///
 /// Properties:
 /// * [totalUsersToday]
+/// * [totalLoginsToday] - Login events today for role='user' accounts only (admin/ super_admin logins are excluded so staff dashboard visits don't inflate it), counted per event, not per distinct user — independent of totalAnalysesToday.
+/// * [totalLogoutsToday] - Logout events today (user-initiated or the 15-minute web idle auto-logout) for role='user' accounts only, counted per event.
+/// * [totalFreeUsers] - User-segmentation for cost/revenue accounting (mutually exclusive with totalPaidUsers/totalDevUsers): never topped up and no admin quota override.
+/// * [totalPaidUsers] - Has at least one lifetime \"topup_approval\" credit_ledger entry, and no admin quota override (Development takes priority — see totalDevUsers).
+/// * [totalDevUsers] - Has an admin-set per-user quota override (customQuotaPerDay), treated as an internal/testing account even if it also has a real top-up on record.
 /// * [totalAnalysesToday]
 /// * [totalAnalysesThisWeek]
 /// * [totalAnalysesThisMonth]
@@ -25,6 +30,26 @@ part 'admin_stats.g.dart';
 abstract class AdminStats implements Built<AdminStats, AdminStatsBuilder> {
   @BuiltValueField(wireName: r'totalUsersToday')
   int get totalUsersToday;
+
+  /// Login events today for role='user' accounts only (admin/ super_admin logins are excluded so staff dashboard visits don't inflate it), counted per event, not per distinct user — independent of totalAnalysesToday.
+  @BuiltValueField(wireName: r'totalLoginsToday')
+  int get totalLoginsToday;
+
+  /// Logout events today (user-initiated or the 15-minute web idle auto-logout) for role='user' accounts only, counted per event.
+  @BuiltValueField(wireName: r'totalLogoutsToday')
+  int get totalLogoutsToday;
+
+  /// User-segmentation for cost/revenue accounting (mutually exclusive with totalPaidUsers/totalDevUsers): never topped up and no admin quota override.
+  @BuiltValueField(wireName: r'totalFreeUsers')
+  int get totalFreeUsers;
+
+  /// Has at least one lifetime \"topup_approval\" credit_ledger entry, and no admin quota override (Development takes priority — see totalDevUsers).
+  @BuiltValueField(wireName: r'totalPaidUsers')
+  int get totalPaidUsers;
+
+  /// Has an admin-set per-user quota override (customQuotaPerDay), treated as an internal/testing account even if it also has a real top-up on record.
+  @BuiltValueField(wireName: r'totalDevUsers')
+  int get totalDevUsers;
 
   @BuiltValueField(wireName: r'totalAnalysesToday')
   int get totalAnalysesToday;
@@ -70,6 +95,31 @@ class _$AdminStatsSerializer implements PrimitiveSerializer<AdminStats> {
     yield r'totalUsersToday';
     yield serializers.serialize(
       object.totalUsersToday,
+      specifiedType: const FullType(int),
+    );
+    yield r'totalLoginsToday';
+    yield serializers.serialize(
+      object.totalLoginsToday,
+      specifiedType: const FullType(int),
+    );
+    yield r'totalLogoutsToday';
+    yield serializers.serialize(
+      object.totalLogoutsToday,
+      specifiedType: const FullType(int),
+    );
+    yield r'totalFreeUsers';
+    yield serializers.serialize(
+      object.totalFreeUsers,
+      specifiedType: const FullType(int),
+    );
+    yield r'totalPaidUsers';
+    yield serializers.serialize(
+      object.totalPaidUsers,
+      specifiedType: const FullType(int),
+    );
+    yield r'totalDevUsers';
+    yield serializers.serialize(
+      object.totalDevUsers,
       specifiedType: const FullType(int),
     );
     yield r'totalAnalysesToday';
@@ -134,6 +184,41 @@ class _$AdminStatsSerializer implements PrimitiveSerializer<AdminStats> {
             specifiedType: const FullType(int),
           ) as int;
           result.totalUsersToday = valueDes;
+          break;
+        case r'totalLoginsToday':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(int),
+          ) as int;
+          result.totalLoginsToday = valueDes;
+          break;
+        case r'totalLogoutsToday':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(int),
+          ) as int;
+          result.totalLogoutsToday = valueDes;
+          break;
+        case r'totalFreeUsers':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(int),
+          ) as int;
+          result.totalFreeUsers = valueDes;
+          break;
+        case r'totalPaidUsers':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(int),
+          ) as int;
+          result.totalPaidUsers = valueDes;
+          break;
+        case r'totalDevUsers':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(int),
+          ) as int;
+          result.totalDevUsers = valueDes;
           break;
         case r'totalAnalysesToday':
           final valueDes = serializers.deserialize(

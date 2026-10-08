@@ -8,7 +8,9 @@ import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
 import '../../l10n/l10n.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/product_state_view.dart';
 import '../analysis/analysis_detail_screen.dart';
+import '../trader_mirror/trader_mirror_screen.dart';
 
 class TradeJournalScreen extends StatefulWidget {
   const TradeJournalScreen({super.key, this.analysis, this.initialEntry});
@@ -243,44 +245,73 @@ class _TradeJournalScreenState extends State<TradeJournalScreen> {
       );
     }
     return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.tradeJournal)),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _mutating ? null : () => _openForm(),
-        icon: const Icon(Icons.add),
-        label: Text(context.l10n.add),
+      appBar: AppBar(
+        title: Text(context.l10n.tradeJournal),
+        actions: [
+          // Icon only on narrow screens or with large text, so the title and
+          // the add button keep their room.
+          if (MediaQuery.sizeOf(context).width < 400 ||
+              MediaQuery.textScalerOf(context).scale(1) > 1.2)
+            IconButton(
+              tooltip: context.l10n.traderMirror,
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const TraderMirrorScreen()),
+              ),
+              icon: const Icon(Icons.insights_rounded),
+            )
+          else
+            TextButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const TraderMirrorScreen()),
+              ),
+              child: Text(context.l10n.traderMirror),
+            ),
+          IconButton(
+            tooltip: context.l10n.addJournal,
+            onPressed: _mutating ? null : () => _openForm(),
+            icon: const Icon(Icons.add_rounded),
+          ),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: _load,
         child: _loading && _entries.isEmpty
             ? ListView(
-                children: const [
-                  SizedBox(height: 240),
-                  Center(child: CircularProgressIndicator()),
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: [
+                  ProductStateView(
+                    kind: ProductStateKind.loading,
+                    title: context.l10n.tradeJournal,
+                    message: context.l10n.tradeJournalDescription,
+                  ),
                 ],
               )
             : _error != null && _entries.isEmpty
             ? ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: [
-                  const SizedBox(height: 180),
-                  Center(child: Text(_error!)),
-                  Center(
-                    child: TextButton(
-                      onPressed: _load,
-                      child: Text(context.l10n.tryAgain),
-                    ),
+                  ProductStateView(
+                    kind: ProductStateKind.error,
+                    title: _error!,
+                    actionLabel: context.l10n.tryAgain,
+                    onAction: _load,
                   ),
                 ],
               )
             : _entries.isEmpty
             ? ListView(
-                padding: const EdgeInsets.all(24),
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: [
-                  const SizedBox(height: 140),
-                  const Icon(Icons.menu_book_outlined, size: 52),
-                  const SizedBox(height: 12),
-                  Text(
-                    context.l10n.noJournalEntries,
-                    textAlign: TextAlign.center,
+                  ProductStateView(
+                    kind: ProductStateKind.empty,
+                    title: context.l10n.noJournalEntries,
+                    message: context.l10n.tradeJournalDescription,
+                    icon: Icons.menu_book_outlined,
+                    actionLabel: context.l10n.addJournal,
+                    onAction: _openForm,
                   ),
                 ],
               )
@@ -292,9 +323,19 @@ class _TradeJournalScreenState extends State<TradeJournalScreen> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        Text(
+                          context.l10n.tradeJournalDescription,
+                          style: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 14),
                         if (_stats case final stats?)
                           _JournalStatsCard(stats: stats),
                         DropdownButtonFormField<String?>(
+                          isExpanded: true,
                           initialValue: _outcomeFilter,
                           decoration: InputDecoration(
                             labelText: context.l10n.journalOutcomeFilter,
@@ -492,6 +533,7 @@ class _JournalDialogState extends State<_JournalDialog> {
                     : null,
               ),
               DropdownButtonFormField<String>(
+                isExpanded: true,
                 initialValue: _side,
                 decoration: InputDecoration(labelText: context.l10n.side),
                 items: [
@@ -507,6 +549,7 @@ class _JournalDialogState extends State<_JournalDialog> {
                 onChanged: (value) => _side = value!,
               ),
               DropdownButtonFormField<String>(
+                isExpanded: true,
                 initialValue: _outcome,
                 decoration: InputDecoration(
                   labelText: context.l10n.retrospectiveStatus,

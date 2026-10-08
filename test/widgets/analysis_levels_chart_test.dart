@@ -88,6 +88,52 @@ void main() {
     expect(find.textContaining('SELL Entry'), findsOneWidget);
   });
 
+  testWidgets('BUY/SELL/Both tabs let the user override the bias default', (
+    tester,
+  ) async {
+    final plan = TradePlan(
+      (builder) => builder
+        ..preferredSide = TradePlanPreferredSideEnum.buy
+        ..buy.replace(_side('101', '99', '103', '105'))
+        ..sell.replace(_side('98', '102', '96', '94')),
+    );
+
+    await tester.pumpWidget(
+      localizedTestApp(
+        home: Scaffold(
+          body: AnalysisLevelsChart(
+            candles: [
+              _candle(open: 100, close: 102),
+              _candle(open: 102, close: 97),
+            ],
+            tradePlan: plan,
+            tradingBias: 'bullish',
+          ),
+        ),
+      ),
+    );
+
+    // Bias bullish -> default cuma sisi BUY yang tampil.
+    expect(find.textContaining('BUY Entry'), findsOneWidget);
+    expect(find.textContaining('SELL Entry'), findsNothing);
+
+    // User bisa tetap lihat sisi SELL lewat tab, terlepas dari bias.
+    await tester.tap(find.text('Sell'));
+    await tester.pump();
+    expect(find.textContaining('BUY Entry'), findsNothing);
+    expect(find.textContaining('SELL Entry'), findsOneWidget);
+
+    await tester.tap(find.text('Both'));
+    await tester.pump();
+    expect(find.textContaining('BUY Entry'), findsOneWidget);
+    expect(find.textContaining('SELL Entry'), findsOneWidget);
+
+    await tester.tap(find.text('Buy'));
+    await tester.pump();
+    expect(find.textContaining('BUY Entry'), findsOneWidget);
+    expect(find.textContaining('SELL Entry'), findsNothing);
+  });
+
   testWidgets('does not treat timeframe text as an entry range', (
     tester,
   ) async {

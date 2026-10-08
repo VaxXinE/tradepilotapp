@@ -81,6 +81,10 @@ class EconomicCalendarCard extends StatelessWidget {
                     key: const Key('economic-calendar-event-list'),
                     primary: false,
                     shrinkWrap: true,
+                    // Tanpa ini, ListView bersarang memakai MediaQuery.padding
+                    // ambien (inset status bar) sebagai padding default-nya,
+                    // sehingga muncul ruang kosong di atas item pertama.
+                    padding: EdgeInsets.zero,
                     itemCount: events.length,
                     itemBuilder: (_, index) => EconomicEventTile(
                       event: events[index],
@@ -97,9 +101,11 @@ class EconomicCalendarCard extends StatelessWidget {
                   children: [
                     Icon(Icons.swipe_vertical_rounded, size: 15, color: muted),
                     const SizedBox(width: 6),
-                    Text(
-                      l10n.scrollForMore,
-                      style: TextStyle(color: muted, fontSize: 11),
+                    Flexible(
+                      child: Text(
+                        l10n.scrollForMore,
+                        style: TextStyle(color: muted, fontSize: 11),
+                      ),
                     ),
                   ],
                 ),

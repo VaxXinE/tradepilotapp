@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
@@ -19,27 +20,294 @@ import 'package:tradepilotapp/repositories/topup_repository.dart';
 import 'package:tradepilotapp/repositories/watchlist_repository.dart';
 import 'package:tradepilotapp/screens/analysis/analysis_detail_screen.dart';
 import 'package:tradepilotapp/screens/home/tabs/analyze_tab.dart';
+import 'package:tradepilotapp/services/in_app_review_service.dart';
 
 import '../../helpers/localized_test_app.dart';
 
 void main() {
-  testWidgets('the analysis form collapses after an analysis', (tester) async {
+  testWidgets('analysis header stays on one row on mobile', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
     await _pumpAnalyzeTab(tester);
 
-    expect(find.text('XAU/USD · 1h'), findsOneWidget);
-    expect(find.byKey(const ValueKey('timeframe-1h')), findsOneWidget);
+    final title = find.text('New Analysis');
+    final progression = find.byKey(const Key('analyze-progression-chip'));
+    final quota = find.byKey(const Key('analyze-quota-chip'));
+    final session = find.byKey(const Key('analyze-market-session'));
+
+    expect(tester.getCenter(title).dy, tester.getCenter(progression).dy);
+    expect(tester.getCenter(progression).dy, tester.getCenter(quota).dy);
+    expect(
+      tester.getBottomLeft(progression).dy,
+      lessThan(tester.getTopLeft(session).dy),
+    );
+    expect(session, findsOneWidget);
+    expect(
+      find.descendant(of: quota, matching: find.text('13 free')),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('quota chip shows credits once the free allowance is used up', (
+    tester,
+  ) async {
+    await _pumpAnalyzeTab(tester, freeRemaining: 0, creditBalance: 12);
+
+    final chip = find.byKey(const Key('analyze-quota-chip'));
+    expect(
+      find.descendant(of: chip, matching: find.text('12 credits')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: chip, matching: find.text('0 free')),
+      findsNothing,
+    );
+  });
+
+  testWidgets('quota chip stays on free while any remain, and warns at zero', (
+    tester,
+  ) async {
+    await _pumpAnalyzeTab(tester, freeRemaining: 2, creditBalance: 50);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('analyze-quota-chip')),
+        matching: find.text('2 free'),
+      ),
+      findsOneWidget,
+    );
+
+    await _pumpAnalyzeTab(tester, freeRemaining: 0, creditBalance: 0);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('analyze-quota-chip')),
+        matching: find.text('0 free'),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('a created analysis counts towards the store review request, a '
+      'failed one does not', (tester) async {
+    final reviews = _CountingReviews(await SharedPreferences.getInstance());
+    await _pumpAnalyzeTab(
+      tester,
+      reviewService: reviews,
+      concurrentFailure: true,
+    );
+    await _runAnalysis(tester);
+    await tester.pump(const Duration(seconds: 4));
+    expect(reviews.counted, 0);
+  });
+
+  testWidgets('a successful analysis is counted once for the review request', (
+    tester,
+  ) async {
+    final reviews = _CountingReviews(await SharedPreferences.getInstance());
+    await _pumpAnalyzeTab(tester, reviewService: reviews);
+    await _runAnalysis(tester);
+    expect(reviews.counted, 0, reason: 'waits so the result shows first');
+    await tester.pump(const Duration(seconds: 4));
+    expect(reviews.counted, 1);
+  });
+
+  testWidgets('market session pill opens the contextual popover', (
+    tester,
+  ) async {
+    await _pumpAnalyzeTab(tester);
+
+    await tester.tap(find.byKey(const Key('analyze-market-session')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('About market sessions'), findsOneWidget);
+    expect(find.text('Typical session hours'), findsOneWidget);
+    expect(find.text('05:00–14:00'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('other instrument opens the picker and applies a shortcut', (
+    tester,
+  ) async {
+    await _pumpAnalyzeTab(tester);
+
+    await tester.tap(find.byKey(const Key('custom-instrument-field')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Other instrument…'), findsWidgets);
+    expect(
+      find.byKey(const Key('other-instrument-search-field')),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const ValueKey('other-instrument-EUR/USD')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('EUR/USD'), findsWidgets);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('an unknown instrument is recorded as a request', (tester) async {
+    final adapter = _RequestAdapter();
+    await _pumpAnalyzeTab(tester, adapter: adapter);
+
+    await tester.tap(find.byKey(const Key('custom-instrument-field')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('other-instrument-search-field')),
+      'btc/usdh',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Request BTC/USDH'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('other-instrument-EUR/USD')),
+      findsNothing,
+    );
+
+    await tester.tap(find.byKey(const Key('other-instrument-request-button')));
+    await tester.pumpAndSettle();
+
+    expect(adapter.requests, [
+      {'code': 'BTC/USDH'},
+    ]);
+    expect(find.text('BTC/USDH is not available'), findsOneWidget);
+    expect(find.textContaining('does not use analysis quota'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('instrument-unavailable-close')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('BTC/USDH is not available'), findsNothing);
+    expect(
+      find.byKey(const Key('other-instrument-search-field')),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a failed request can be retried', (tester) async {
+    final adapter = _RequestAdapter(failFirst: true);
+    await _pumpAnalyzeTab(tester, adapter: adapter);
+
+    await tester.tap(find.byKey(const Key('custom-instrument-field')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('other-instrument-search-field')),
+      'NAS100',
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('other-instrument-request-button')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Could not submit the instrument request. Please try again.'),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const Key('instrument-request-retry')));
+    await tester.pumpAndSettle();
+
+    expect(adapter.requests, hasLength(2));
+    expect(find.text('NAS100 is not available'), findsOneWidget);
+  });
+
+  testWidgets('a verified alias selects the instrument without a request', (
+    tester,
+  ) async {
+    final adapter = _RequestAdapter();
+    await _pumpAnalyzeTab(tester, adapter: adapter);
+
+    await tester.tap(find.byKey(const Key('custom-instrument-field')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('other-instrument-search-field')),
+      'cable',
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('other-instrument-GBP/USD')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('other-instrument-request-button')),
+      findsNothing,
+    );
+
+    await tester.testTextInput.receiveAction(TextInputAction.search);
+    await tester.pumpAndSettle();
+
+    expect(adapter.requests, isEmpty);
+    expect(find.text('GBP/USD'), findsWidgets);
+  });
+
+  testWidgets('only verified instruments are offered in the picker', (
+    tester,
+  ) async {
+    await _pumpAnalyzeTab(tester);
+
+    await tester.tap(find.byKey(const Key('custom-instrument-field')));
+    await tester.pumpAndSettle();
+
+    for (final code in ['EUR/USD', 'GBP/USD', 'AUD/USD', 'USD/JPY']) {
+      expect(find.byKey(ValueKey('other-instrument-$code')), findsOneWidget);
+    }
+    expect(
+      find.byKey(const ValueKey('other-instrument-BTC/USD')),
+      findsNothing,
+    );
+
+    await tester.enterText(
+      find.byKey(const Key('other-instrument-search-field')),
+      'btc',
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('other-instrument-BTC/USD')),
+      findsNothing,
+    );
+    expect(find.text('Request BTC'), findsOneWidget);
+  });
+
+  testWidgets('the analysis form remains visible above the result', (
+    tester,
+  ) async {
+    final provider = await _pumpAnalyzeTab(tester);
+
+    expect(
+      find.byKey(const ValueKey('analyze-instrument-XAU/USD')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('timeframe-1h')), findsNothing);
+    expect(find.byKey(const Key('set-price-alert-button')), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.text('Timeframe:'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('1h'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.textContaining('TradePilot is a decision-support tool'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(
+      find.textContaining('TradePilot is a decision-support tool'),
+      findsOneWidget,
+    );
+    await _scrollToTop(tester);
 
     await _runAnalysis(tester);
 
+    expect(provider.requestedModes, [CreateAnalysisBodyModeEnum.pro]);
     expect(find.byType(AnalysisDetailScreen), findsOneWidget);
     expect(find.byKey(const Key('submit-analysis-button')), findsNothing);
 
     await _scrollToTop(tester);
-    expect(find.text('Select Instrument'), findsNothing);
-    expect(find.text('XAU/USD · 1h'), findsOneWidget);
+    expect(find.text('Select Instrument'), findsOneWidget);
     expect(
       find.byKey(const Key('change-analysis-selection-button')),
-      findsOneWidget,
+      findsNothing,
     );
     expect(find.byKey(const Key('new-analysis-button')), findsOneWidget);
   });
@@ -53,9 +321,9 @@ void main() {
     expect(provider.requested, ['XAU/USD']);
 
     await _scrollToTop(tester);
-    final change = find.byKey(const Key('change-analysis-selection-button'));
-    await tester.ensureVisible(change);
-    await tester.tap(change);
+    final newAnalysis = find.byKey(const Key('new-analysis-button'));
+    await tester.ensureVisible(newAnalysis);
+    await tester.tap(newAnalysis);
     await tester.pumpAndSettle();
     await tester.tap(find.text('BRENT'));
     await tester.pumpAndSettle();
@@ -90,6 +358,21 @@ void main() {
     );
     expect(find.byKey(const Key('submit-analysis-button')), findsOneWidget);
   });
+
+  testWidgets(
+    'concurrent analysis uses the dialog without a stale error banner',
+    (tester) async {
+      await _pumpAnalyzeTab(tester, concurrentFailure: true);
+
+      await _runAnalysis(tester);
+      expect(find.text('Analysis still in progress'), findsOneWidget);
+
+      await tester.tap(find.text('Close'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Previous analysis raw backend error'), findsNothing);
+    },
+  );
 }
 
 Future<void> _scrollToTop(WidgetTester tester) async {
@@ -99,33 +382,60 @@ Future<void> _scrollToTop(WidgetTester tester) async {
 
 Future<void> _runAnalysis(WidgetTester tester) async {
   await tester.scrollUntilVisible(
-    find.text('Get AI Analysis'),
+    find.text('Analyze'),
     300,
     scrollable: find.byType(Scrollable).first,
   );
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Get AI Analysis'));
+  await tester.tap(find.text('Analyze'));
   await tester.pumpAndSettle();
 }
 
 Future<_FakeAnalysisProvider> _pumpAnalyzeTab(
   WidgetTester tester, {
   VoidCallback? onNewAnalysis,
+  bool concurrentFailure = false,
+  HttpClientAdapter? adapter,
+  int freeRemaining = 13,
+  int creditBalance = 0,
+  InAppReviewService? reviewService,
 }) async {
   SharedPreferences.setMockInitialValues({});
   final preferences = await SharedPreferences.getInstance();
 
   final auth = AuthProvider();
   await tester.runAsync(() => Future<void>.delayed(Duration.zero));
-  auth.client.dio.httpClientAdapter = _OfflineAdapter();
+  auth.client.dio.httpClientAdapter = adapter ?? _OfflineAdapter();
 
-  final analysisProvider = _FakeAnalysisProvider(auth);
+  final analysisProvider = _FakeAnalysisProvider(
+    auth,
+    concurrentFailure: concurrentFailure,
+  );
   final marketProvider = _FakeMarketProvider(auth);
   final watchlistProvider = WatchlistProvider(
     auth,
     WatchlistRepository(auth.client),
   );
   final progressionProvider = ProgressionProvider(auth);
+  progressionProvider.summary = ProgressionSummary(
+    (builder) => builder
+      ..totalXp = 0
+      ..level = 1
+      ..masteryLevel = 0
+      ..rank = 'seedling'
+      ..currentLevelXp = 0
+      ..nextLevelXp = 100
+      ..currentStreak = 0
+      ..longestStreak = 0,
+  );
+  analysisProvider.quota = AnalysisQuota(
+    (builder) => builder
+      ..unlimited = false
+      ..daily.limit = 20
+      ..daily.used = 20 - freeRemaining
+      ..daily.remaining = freeRemaining
+      ..credits.balance = creditBalance,
+  );
   final creditProvider = CreditProvider(auth, TopupRepository(auth.client));
   final checklist = MentalChecklistController(preferences);
 
@@ -149,6 +459,8 @@ Future<_FakeAnalysisProvider> _pumpAnalyzeTab(
           value: progressionProvider,
         ),
         ChangeNotifierProvider<CreditProvider>.value(value: creditProvider),
+        if (reviewService != null)
+          Provider<InAppReviewService>.value(value: reviewService),
         ChangeNotifierProvider<MentalChecklistController>.value(
           value: checklist,
         ),
@@ -158,6 +470,40 @@ Future<_FakeAnalysisProvider> _pumpAnalyzeTab(
   );
   await tester.pumpAndSettle();
   return analysisProvider;
+}
+
+/// Merekam `POST /instrument-requests`; sisanya gagal seperti state offline.
+class _RequestAdapter implements HttpClientAdapter {
+  _RequestAdapter({this.failFirst = false});
+
+  final bool failFirst;
+  final List<Object?> requests = [];
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    if (options.path == '/instrument-requests') {
+      requests.add(options.data);
+      if (failFirst && requests.length == 1) {
+        return ResponseBody.fromString('', 500);
+      }
+      final code = (options.data as Map)['code'];
+      return ResponseBody.fromString(
+        jsonEncode({'code': code, 'recorded': true}),
+        201,
+        headers: {
+          Headers.contentTypeHeader: [Headers.jsonContentType],
+        },
+      );
+    }
+    return ResponseBody.fromString('', 404);
+  }
+
+  @override
+  void close({bool force = false}) {}
 }
 
 /// Semua panggilan jaringan gagal supaya tab jatuh ke state offline yang stabil.
@@ -173,10 +519,25 @@ class _OfflineAdapter implements HttpClientAdapter {
   void close({bool force = false}) {}
 }
 
+class _CountingReviews extends InAppReviewService {
+  _CountingReviews(super.preferences);
+
+  int counted = 0;
+
+  @override
+  Future<bool> recordAnalysisCreated() async {
+    counted++;
+    return false;
+  }
+}
+
 class _FakeAnalysisProvider extends AnalysisProvider {
-  _FakeAnalysisProvider(super.auth);
+  _FakeAnalysisProvider(super.auth, {this.concurrentFailure = false});
+
+  final bool concurrentFailure;
 
   final List<String> requested = [];
+  final List<CreateAnalysisBodyModeEnum> requestedModes = [];
 
   @override
   Future<Analysis?> createAnalysis({
@@ -186,6 +547,16 @@ class _FakeAnalysisProvider extends AnalysisProvider {
     String? userInputContext,
   }) async {
     requested.add(instrument);
+    requestedModes.add(mode);
+    if (concurrentFailure) {
+      quotaLimit = const AnalysisQuotaLimit(
+        scope: 'concurrent',
+        retryAfter: Duration(seconds: 5),
+      );
+      errorMessage = 'Previous analysis raw backend error';
+      notifyListeners();
+      return null;
+    }
     return _analysis(instrument);
   }
 

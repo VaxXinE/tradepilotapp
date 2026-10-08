@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -7,13 +8,17 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
+import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:tradepilotapp/core/theme/theme_controller.dart';
+import 'package:tradepilotapp/core/topup/topup_return_controller.dart';
+import 'package:tradepilotapp/core/topup/topup_return_link.dart';
 import 'package:tradepilotapp/core/localization/locale_controller.dart';
 import 'package:tradepilotapp/core/preferences/mental_checklist_controller.dart';
 import 'package:tradepilotapp/l10n/l10n.dart';
 import 'package:tradepilotapp/providers/auth_provider.dart';
 import 'package:tradepilotapp/providers/credit_provider.dart';
 import 'package:tradepilotapp/providers/progression_provider.dart';
+import 'package:tradepilotapp/services/native_push_service.dart';
 import 'package:tradepilotapp/repositories/topup_repository.dart';
 import 'package:tradepilotapp/screens/home/tabs/profile_tab.dart';
 import 'package:tradepilotapp/screens/profile/change_password_screen.dart';
@@ -39,7 +44,7 @@ void main() {
         .setMockMethodCallHandler(storageChannel, null);
   });
 
-  testWidgets('profile renders account sections without notification entry', (
+  testWidgets('profile follows the compact responsive web structure', (
     tester,
   ) async {
     final auth = AuthProvider();
@@ -54,6 +59,10 @@ void main() {
     addTearDown(progression.dispose);
     final credit = CreditProvider(auth, TopupRepository(auth.client));
     addTearDown(credit.dispose);
+    final originalLauncher = UrlLauncherPlatform.instance;
+    final launcher = _RecordingUrlLauncher();
+    UrlLauncherPlatform.instance = launcher;
+    addTearDown(() => UrlLauncherPlatform.instance = originalLauncher);
 
     await tester.pumpWidget(
       MultiProvider(
@@ -64,50 +73,82 @@ void main() {
           ChangeNotifierProvider.value(value: checklist),
           ChangeNotifierProvider.value(value: progression),
           ChangeNotifierProvider.value(value: credit),
+          ChangeNotifierProvider(create: (_) => TopupReturnController()),
         ],
-        child: const _LocalizedApp(home: ProfileTab()),
+        child: _LocalizedApp(
+          home: ProfileTab(
+            // No in-app browser in tests: fall back to the system browser.
+            authenticate:
+                ({
+                  required url,
+                  required callbackUrlScheme,
+                  options = const FlutterWebAuth2Options(),
+                }) async => throw MissingPluginException(),
+          ),
+        ),
       ),
     );
 
     expect(find.text('User Profile'), findsOneWidget);
     expect(find.text('user@example.com'), findsOneWidget);
-    expect(find.text('Profile Information'), findsOneWidget);
-    expect(find.text('Analysis mode'), findsOneWidget);
+    expect(find.text('Edit'), findsOneWidget);
     expect(find.text('Appearance'), findsOneWidget);
     expect(find.byKey(const Key('profile-theme-segmented')), findsOneWidget);
     expect(find.text('Light'), findsOneWidget);
     expect(find.text('Dark'), findsOneWidget);
-    expect(find.textContaining('Current: Beginner'), findsOneWidget);
-    expect(find.text('Top Up Credit'), findsOneWidget);
     expect(find.text('Change Password'), findsOneWidget);
-    expect(find.text('Privacy Policy'), findsOneWidget);
-    expect(find.text('Terms of Service'), findsOneWidget);
-    expect(find.text('Support'), findsOneWidget);
-    expect(find.text('Delete Account'), findsOneWidget);
-    expect(find.text('Notification Settings'), findsNothing);
+    expect(find.text('Security Question'), findsOneWidget);
+    expect(find.text('Privacy & Security'), findsOneWidget);
+    expect(find.text('My Alerts'), findsOneWidget);
+    expect(find.text('Notification Settings'), findsOneWidget);
+    expect(find.text('Analysis Credits'), findsOneWidget);
+    expect(find.byKey(const Key('profile-sign-out')), findsOneWidget);
 
-    final originalLauncher = UrlLauncherPlatform.instance;
-    UrlLauncherPlatform.instance = _FailingUrlLauncher();
-    addTearDown(() => UrlLauncherPlatform.instance = originalLauncher);
     await tester.scrollUntilVisible(
-      find.text('Privacy Policy'),
+      find.text('Analysis Credits'),
       300,
       scrollable: find.byType(Scrollable).first,
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Privacy Policy'));
-    await tester.pump();
-    expect(find.text('The link could not be opened.'), findsOneWidget);
+    await tester.tap(find.text('Analysis Credits'));
+    await tester.pumpAndSettle();
+    expect(launcher.launchedUrls, ['https://tradepilot.id/topup?source=app']);
+  });
 
-    await tester.ensureVisible(find.text('Language'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Language'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Bahasa Indonesia'));
-    await tester.pumpAndSettle();
+  testWidgets('top-up opens in an in-app tab and reports the returned link', (
+    tester,
+  ) async {
+    final h = await _pumpProfileForTopup(
+      tester,
+      authenticate:
+          ({
+            required url,
+            required callbackUrlScheme,
+            options = const FlutterWebAuth2Options(),
+          }) async => 'id.tradepilot.app://topup/result?status=approved&id=5',
+    );
 
-    expect(locale.locale.languageCode, 'id');
-    expect(find.text('Preferensi'), findsOneWidget);
+    expect(h.controller.pending?.status, TopupReturnStatus.approved);
+    expect(h.controller.pending?.topupId, 5);
+    expect(h.launcher.launchedUrls, isEmpty, reason: 'no system browser');
+    expect(h.credit.isAwaitingTopup, isTrue);
+  });
+
+  testWidgets('closing the top-up tab checks the balance without leaving', (
+    tester,
+  ) async {
+    final h = await _pumpProfileForTopup(
+      tester,
+      authenticate:
+          ({
+            required url,
+            required callbackUrlScheme,
+            options = const FlutterWebAuth2Options(),
+          }) async => throw PlatformException(code: 'CANCELED'),
+    );
+
+    expect(h.controller.pending, isNull);
+    expect(h.launcher.launchedUrls, isEmpty);
   });
 
   testWidgets('account deletion requires confirmation and clears session', (
@@ -237,12 +278,217 @@ void main() {
     expect(auth.status, AuthStatus.unauthenticated);
     expect(auth.user, isNull);
   });
+
+  testWidgets('logout still works when push cleanup throws', (tester) async {
+    final auth = AuthProvider();
+    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+    _authenticate(auth);
+    auth.client.dio.httpClientAdapter = _LogoutAdapter();
+    final theme = ThemeController(await SharedPreferences.getInstance());
+    final locale = LocaleController(await SharedPreferences.getInstance());
+    final checklist = MentalChecklistController(
+      await SharedPreferences.getInstance(),
+    );
+    final progression = ProgressionProvider(auth);
+    addTearDown(progression.dispose);
+    final credit = CreditProvider(auth, TopupRepository(auth.client));
+    final push = _BrokenPush(auth, hangs: false);
+    addTearDown(credit.dispose);
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: auth),
+          ChangeNotifierProvider.value(value: theme),
+          ChangeNotifierProvider.value(value: locale),
+          ChangeNotifierProvider.value(value: checklist),
+          ChangeNotifierProvider.value(value: progression),
+          ChangeNotifierProvider.value(value: credit),
+          ChangeNotifierProvider<NativePushService>.value(value: push),
+        ],
+        child: const _LocalizedApp(home: ProfileTab()),
+      ),
+    );
+    final logoutButton = find.widgetWithText(OutlinedButton, 'Sign Out');
+    await tester.ensureVisible(logoutButton);
+    await tester.pump();
+    await tester.tap(logoutButton);
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextButton, 'Sign Out'));
+    // Past the best-effort cleanup limit, in case the push call never ends.
+    await tester.pump(const Duration(seconds: 6));
+    await tester.pumpAndSettle();
+
+    expect(auth.status, AuthStatus.unauthenticated);
+    expect(auth.user, isNull);
+  });
+
+  testWidgets('logout still works when push cleanup never finishes', (
+    tester,
+  ) async {
+    final auth = AuthProvider();
+    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+    _authenticate(auth);
+    auth.client.dio.httpClientAdapter = _LogoutAdapter();
+    final theme = ThemeController(await SharedPreferences.getInstance());
+    final locale = LocaleController(await SharedPreferences.getInstance());
+    final checklist = MentalChecklistController(
+      await SharedPreferences.getInstance(),
+    );
+    final progression = ProgressionProvider(auth);
+    addTearDown(progression.dispose);
+    final credit = CreditProvider(auth, TopupRepository(auth.client));
+    final push = _BrokenPush(auth, hangs: true);
+    addTearDown(credit.dispose);
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: auth),
+          ChangeNotifierProvider.value(value: theme),
+          ChangeNotifierProvider.value(value: locale),
+          ChangeNotifierProvider.value(value: checklist),
+          ChangeNotifierProvider.value(value: progression),
+          ChangeNotifierProvider.value(value: credit),
+          ChangeNotifierProvider<NativePushService>.value(value: push),
+        ],
+        child: const _LocalizedApp(home: ProfileTab()),
+      ),
+    );
+    final logoutButton = find.widgetWithText(OutlinedButton, 'Sign Out');
+    await tester.ensureVisible(logoutButton);
+    await tester.pump();
+    await tester.tap(logoutButton);
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextButton, 'Sign Out'));
+    // Past the best-effort cleanup limit, in case the push call never ends.
+    await tester.pump(const Duration(seconds: 6));
+    await tester.pumpAndSettle();
+
+    expect(auth.status, AuthStatus.unauthenticated);
+    expect(auth.user, isNull);
+  });
+
+  testWidgets('profile remains readable at 200% text scaling', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(440, 956));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final auth = AuthProvider();
+    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+    _authenticate(auth);
+    final preferences = await SharedPreferences.getInstance();
+    final progression = ProgressionProvider(auth);
+    addTearDown(progression.dispose);
+    final credit = CreditProvider(auth, TopupRepository(auth.client));
+    addTearDown(credit.dispose);
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: auth),
+          ChangeNotifierProvider(create: (_) => ThemeController(preferences)),
+          ChangeNotifierProvider(create: (_) => LocaleController(preferences)),
+          ChangeNotifierProvider.value(value: progression),
+          ChangeNotifierProvider.value(value: credit),
+        ],
+        child: const _LocalizedApp(
+          home: ProfileTab(),
+          textScaler: TextScaler.linear(2),
+        ),
+      ),
+    );
+
+    await tester.fling(find.byType(ListView), const Offset(0, -900), 1200);
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+  });
+}
+
+/// A push service whose cleanup misbehaves the way Firebase can on some devices.
+class _BrokenPush extends NativePushService {
+  _BrokenPush(super.auth, {required this.hangs});
+
+  final bool hangs;
+
+  @override
+  Future<void> unregister() async {
+    if (hangs) await Completer<void>().future;
+    throw StateError('push cleanup failed');
+  }
+}
+
+class _TopupHarness {
+  _TopupHarness(this.controller, this.credit, this.launcher);
+  final TopupReturnController controller;
+  final CreditProvider credit;
+  final _RecordingUrlLauncher launcher;
+}
+
+Future<_TopupHarness> _pumpProfileForTopup(
+  WidgetTester tester, {
+  required InAppBrowserAuthenticate authenticate,
+}) async {
+  final auth = AuthProvider();
+  await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+  _authenticate(auth);
+  final prefs = await SharedPreferences.getInstance();
+  final progression = ProgressionProvider(auth);
+  addTearDown(progression.dispose);
+  final credit = CreditProvider(auth, TopupRepository(auth.client));
+  addTearDown(credit.dispose);
+  final controller = TopupReturnController();
+  addTearDown(controller.dispose);
+  final originalLauncher = UrlLauncherPlatform.instance;
+  final launcher = _RecordingUrlLauncher();
+  UrlLauncherPlatform.instance = launcher;
+  addTearDown(() => UrlLauncherPlatform.instance = originalLauncher);
+
+  await tester.pumpWidget(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: auth),
+        ChangeNotifierProvider(create: (_) => ThemeController(prefs)),
+        ChangeNotifierProvider(create: (_) => LocaleController(prefs)),
+        ChangeNotifierProvider(create: (_) => MentalChecklistController(prefs)),
+        ChangeNotifierProvider.value(value: progression),
+        ChangeNotifierProvider.value(value: credit),
+        ChangeNotifierProvider.value(value: controller),
+      ],
+      child: _LocalizedApp(home: ProfileTab(authenticate: authenticate)),
+    ),
+  );
+  await tester.scrollUntilVisible(
+    find.text('Analysis Credits'),
+    300,
+    scrollable: find.byType(Scrollable).first,
+  );
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Analysis Credits'));
+  await tester.pumpAndSettle();
+  return _TopupHarness(controller, credit, launcher);
+}
+
+class _RecordingUrlLauncher extends UrlLauncherPlatform {
+  final List<String> launchedUrls = [];
+
+  @override
+  LinkDelegate? get linkDelegate => null;
+
+  @override
+  Future<bool> launchUrl(String url, LaunchOptions options) async {
+    launchedUrls.add(url);
+    return true;
+  }
 }
 
 class _LocalizedApp extends StatelessWidget {
-  const _LocalizedApp({required this.home});
+  const _LocalizedApp({
+    required this.home,
+    this.textScaler = TextScaler.noScaling,
+  });
 
   final Widget home;
+  final TextScaler textScaler;
 
   @override
   Widget build(BuildContext context) {
@@ -256,6 +502,10 @@ class _LocalizedApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: AppLocalizations.supportedLocales,
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(textScaler: textScaler),
+        child: child!,
+      ),
       home: home,
     );
   }
@@ -339,14 +589,4 @@ class _DeleteAccountAdapter implements HttpClientAdapter {
 
   @override
   void close({bool force = false}) {}
-}
-
-class _FailingUrlLauncher extends UrlLauncherPlatform {
-  @override
-  LinkDelegate? get linkDelegate => null;
-
-  @override
-  Future<bool> launchUrl(String url, LaunchOptions options) {
-    throw PlatformException(code: 'channel-error');
-  }
 }

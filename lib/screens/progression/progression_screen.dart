@@ -56,9 +56,16 @@ class _ProgressionScreenState extends State<ProgressionScreen> {
             ? _LoadState(progression: progression)
             : Column(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                    child: _ProgressionHero(summary: summary),
+                  // On short screens (or with large text) the hero scrolls inside
+                  // a capped area instead of pushing the tabs off screen.
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.sizeOf(context).height * 0.45,
+                    ),
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                      child: _ProgressionHero(summary: summary),
+                    ),
                   ),
                   TabBar(
                     tabs: [
@@ -153,81 +160,188 @@ class _ProgressionHero extends StatelessWidget {
         ),
         border: Border.all(color: const Color(0x66F5C219)),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          ProgressionEmblem(
-            level: summary.level,
-            masteryLevel: summary.masteryLevel,
-            size: 88,
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  rank,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                  ),
+          Row(
+            children: [
+              ProgressionEmblem(
+                level: summary.level,
+                masteryLevel: summary.masteryLevel,
+                // Smaller emblem on very narrow phones so the text column
+                // beside it keeps enough room.
+                size: MediaQuery.sizeOf(context).width < 340 ? 64 : 88,
+              ),
+              SizedBox(width: MediaQuery.sizeOf(context).width < 340 ? 10 : 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      rank,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    Text(
+                      summary.masteryLevel > 0
+                          ? context.l10n.progressionMastery(
+                              summary.masteryLevel,
+                            )
+                          : context.l10n.progressionLevel(summary.level),
+                      style: const TextStyle(
+                        color: Color(0xFFF5C219),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      spacing: 8,
+                      children: [
+                        Text(
+                          '${summary.totalXp} XP',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 11,
+                          ),
+                        ),
+                        Text(
+                          '${summary.nextLevelXp} XP',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 5),
+                    LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 7,
+                      borderRadius: BorderRadius.circular(99),
+                      backgroundColor: Colors.white12,
+                      color: const Color(0xFFF5C219),
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 6,
+                      children: [
+                        _Streak(
+                          label: context.l10n.progressionCurrentStreak,
+                          value: summary.currentStreak,
+                        ),
+                        _Streak(
+                          label: context.l10n.progressionLongestStreak,
+                          value: summary.longestStreak,
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                Text(
-                  summary.masteryLevel > 0
-                      ? context.l10n.progressionMastery(summary.masteryLevel)
-                      : context.l10n.progressionLevel(summary.level),
+              ),
+            ],
+          ),
+          if (summary.nextLevelXp > summary.totalXp) ...[
+            const SizedBox(height: 14),
+            _LevelUpHelp(remainingXp: summary.nextLevelXp - summary.totalXp),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// What earns XP, with the daily caps (web `progression-level-up-help`).
+class _LevelUpHelp extends StatelessWidget {
+  const _LevelUpHelp({required this.remainingXp});
+  final int remainingXp;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final ways = <(String, String)>[
+      (l10n.levelUpJournal, l10n.levelUpDailyCap('2', '20')),
+      (l10n.levelUpEvaluation, l10n.levelUpDailyCap('3', '12')),
+      (l10n.levelUpChecklist, l10n.levelUpDailyCap('3', '8')),
+      (l10n.levelUpGuide, l10n.levelUpDailyCap('2', '15')),
+      (l10n.levelUpWait, l10n.levelUpDailyCap('2', '15')),
+      (l10n.levelUpStreak, l10n.levelUpPerDay('10')),
+    ];
+    // Material (not a decorated Container) so the ExpansionTile's ink shows.
+    return Material(
+      key: const ValueKey('progression-level-up-help'),
+      color: Colors.black26,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: const BorderSide(color: Colors.white12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.levelUpHint(
+                  NumberFormat.decimalPattern(
+                    Localizations.localeOf(context).toString(),
+                  ).format(remainingXp),
+                ),
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                  height: 1.4,
+                ),
+              ),
+              ExpansionTile(
+                tilePadding: EdgeInsets.zero,
+                childrenPadding: const EdgeInsets.only(bottom: 10),
+                iconColor: const Color(0xFFF5C219),
+                collapsedIconColor: const Color(0xFFF5C219),
+                title: Text(
+                  l10n.levelUpWaysLabel,
                   style: const TextStyle(
                     color: Color(0xFFF5C219),
-                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '${summary.totalXp} XP',
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 11,
+                expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final way in ways)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(
+                              text: way.$1,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            TextSpan(text: ' — ${way.$2}'),
+                          ],
+                        ),
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                          height: 1.4,
+                        ),
                       ),
                     ),
-                    Text(
-                      '${summary.nextLevelXp} XP',
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 5),
-                LinearProgressIndicator(
-                  value: progress,
-                  minHeight: 7,
-                  borderRadius: BorderRadius.circular(99),
-                  backgroundColor: Colors.white12,
-                  color: const Color(0xFFF5C219),
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    _Streak(
-                      label: context.l10n.progressionCurrentStreak,
-                      value: summary.currentStreak,
-                    ),
-                    const SizedBox(width: 12),
-                    _Streak(
-                      label: context.l10n.progressionLongestStreak,
-                      value: summary.longestStreak,
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -239,25 +353,22 @@ class _Streak extends StatelessWidget {
   final int value;
 
   @override
-  Widget build(BuildContext context) => Expanded(
-    child: Row(
-      children: [
-        const Icon(
-          Icons.local_fire_department_rounded,
-          size: 16,
-          color: Color(0xFFF59E0B),
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      const Icon(
+        Icons.local_fire_department_rounded,
+        size: 16,
+        color: Color(0xFFF59E0B),
+      ),
+      const SizedBox(width: 4),
+      Flexible(
+        child: Text(
+          '$value · $label',
+          style: const TextStyle(color: Colors.white70, fontSize: 10),
         ),
-        const SizedBox(width: 4),
-        Flexible(
-          child: Text(
-            '$value · $label',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: Colors.white70, fontSize: 10),
-          ),
-        ),
-      ],
-    ),
+      ),
+    ],
   );
 }
 
@@ -373,8 +484,13 @@ class _SectionHeader extends StatelessWidget {
       children: [
         Icon(icon, size: 19, color: Theme.of(context).colorScheme.primary),
         const SizedBox(width: 8),
-        Text(title, style: const TextStyle(fontWeight: FontWeight.w900)),
-        const Spacer(),
+        Expanded(
+          child: Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.w900),
+          ),
+        ),
+        const SizedBox(width: 8),
         if (trailing != null)
           Text(trailing!, style: Theme.of(context).textTheme.bodySmall),
       ],
