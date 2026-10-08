@@ -14,7 +14,7 @@
          device-to-device transfer, which allowBackup alone does not stop.
     -->
     <application
-        android:label="Trade Pilot"
+        android:label="TradePilot.id"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:allowBackup="false"
