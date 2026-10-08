@@ -2,7 +2,7 @@ name: tradepilotapp
 description: "Trade Pilot — AI Trading Assistant (Flutter mobile app)."
 publish_to: 'none'
 
-version: 1.0.10+12
+version: 1.0.11+13
 
 environment:
   sdk: ^3.10.4
