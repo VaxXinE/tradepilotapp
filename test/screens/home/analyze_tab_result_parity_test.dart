@@ -20,6 +20,7 @@ import 'package:tradepilotapp/repositories/topup_repository.dart';
 import 'package:tradepilotapp/repositories/watchlist_repository.dart';
 import 'package:tradepilotapp/screens/analysis/analysis_detail_screen.dart';
 import 'package:tradepilotapp/screens/home/tabs/analyze_tab.dart';
+import 'package:tradepilotapp/services/in_app_review_service.dart';
 
 import '../../helpers/localized_test_app.dart';
 
@@ -85,6 +86,30 @@ void main() {
       ),
       findsOneWidget,
     );
+  });
+
+  testWidgets('a created analysis counts towards the store review request, a '
+      'failed one does not', (tester) async {
+    final reviews = _CountingReviews(await SharedPreferences.getInstance());
+    await _pumpAnalyzeTab(
+      tester,
+      reviewService: reviews,
+      concurrentFailure: true,
+    );
+    await _runAnalysis(tester);
+    await tester.pump(const Duration(seconds: 4));
+    expect(reviews.counted, 0);
+  });
+
+  testWidgets('a successful analysis is counted once for the review request', (
+    tester,
+  ) async {
+    final reviews = _CountingReviews(await SharedPreferences.getInstance());
+    await _pumpAnalyzeTab(tester, reviewService: reviews);
+    await _runAnalysis(tester);
+    expect(reviews.counted, 0, reason: 'waits so the result shows first');
+    await tester.pump(const Duration(seconds: 4));
+    expect(reviews.counted, 1);
   });
 
   testWidgets('market session pill opens the contextual popover', (
@@ -373,6 +398,7 @@ Future<_FakeAnalysisProvider> _pumpAnalyzeTab(
   HttpClientAdapter? adapter,
   int freeRemaining = 13,
   int creditBalance = 0,
+  InAppReviewService? reviewService,
 }) async {
   SharedPreferences.setMockInitialValues({});
   final preferences = await SharedPreferences.getInstance();
@@ -433,6 +459,8 @@ Future<_FakeAnalysisProvider> _pumpAnalyzeTab(
           value: progressionProvider,
         ),
         ChangeNotifierProvider<CreditProvider>.value(value: creditProvider),
+        if (reviewService != null)
+          Provider<InAppReviewService>.value(value: reviewService),
         ChangeNotifierProvider<MentalChecklistController>.value(
           value: checklist,
         ),
@@ -489,6 +517,18 @@ class _OfflineAdapter implements HttpClientAdapter {
 
   @override
   void close({bool force = false}) {}
+}
+
+class _CountingReviews extends InAppReviewService {
+  _CountingReviews(super.preferences);
+
+  int counted = 0;
+
+  @override
+  Future<bool> recordAnalysisCreated() async {
+    counted++;
+    return false;
+  }
 }
 
 class _FakeAnalysisProvider extends AnalysisProvider {

@@ -32,6 +32,7 @@ import '../../widgets/adaptive_plan_common.dart';
 import '../../widgets/adaptive_plan_result.dart';
 import '../../services/native_push_service.dart';
 import '../../widgets/adaptive_position_plan_card.dart';
+import '../../services/in_app_review_service.dart';
 import '../../widgets/analysis_levels_chart.dart';
 import '../../widgets/app_footer.dart';
 // Catatan & jurnal disembunyikan sementara.
@@ -370,6 +371,7 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
       );
     }
 
+    context.read<InAppReviewService?>()?.recordAnalysisCreatedSoon();
     unawaited(
       auth.telemetry.track(
         AnalyticsEventBodyEventTypeEnum.analysisCreated,

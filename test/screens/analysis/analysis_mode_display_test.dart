@@ -12,6 +12,7 @@ import 'package:tradepilotapp/core/theme/app_colors.dart';
 import 'package:tradepilotapp/models/market_models.dart';
 import 'package:tradepilotapp/providers/analysis_provider.dart';
 import 'package:tradepilotapp/providers/auth_provider.dart';
+import 'package:tradepilotapp/services/in_app_review_service.dart';
 import 'package:tradepilotapp/providers/market_provider.dart';
 import 'package:tradepilotapp/providers/progression_provider.dart';
 import 'package:tradepilotapp/repositories/market_repository.dart';
@@ -138,6 +139,32 @@ void main() {
     // The web shows the disclaimer in the page footer; so does the app.
     expect(find.byKey(const Key('app-footer')), findsOneWidget);
     expect(find.text('Helpful'), findsOneWidget);
+  });
+
+  testWidgets('feedback ratings never trigger the store review request', (
+    tester,
+  ) async {
+    final reviews = _RecordingReviewService(
+      await SharedPreferences.getInstance(),
+    );
+    await _pumpDetail(
+      tester,
+      _analysis(AnalysisModeEnum.beginner),
+      reviewService: reviews,
+    );
+    final scrollable = find.byType(Scrollable).first;
+    await tester.dragUntilVisible(
+      find.text('Helpful'),
+      scrollable,
+      const Offset(0, -400),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Helpful'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Send'));
+    await tester.pump(const Duration(seconds: 4));
+
+    expect(reviews.analysesCounted, 0);
   });
 
   testWidgets('market condition uses a localized semantic chip', (
@@ -971,6 +998,26 @@ void main() {
     },
   );
 
+  testWidgets('a re-analysis from the detail counts towards the review', (
+    tester,
+  ) async {
+    final reviews = _RecordingReviewService(
+      await SharedPreferences.getInstance(),
+    );
+    await _pumpDetail(
+      tester,
+      _analysis(AnalysisModeEnum.beginner),
+      onAnalysisCreated: (_) {},
+      reviewService: reviews,
+    );
+
+    await tester.tap(find.byKey(const Key('timeframe-option-4h')));
+    await tester.pump(const Duration(milliseconds: 700));
+    await tester.pump(const Duration(seconds: 4));
+
+    expect(reviews.analysesCounted, 1);
+  });
+
   testWidgets('timeframe buttons keep a single width across selection', (
     tester,
   ) async {
@@ -1068,6 +1115,7 @@ Future<_FakeAnalysisProvider> _pumpDetail(
   VoidCallback? onNewAnalysis,
   AlertStatus? alertStatus,
   TextScaler? textScaler,
+  InAppReviewService? reviewService,
 }) async {
   final auth = AuthProvider();
   await tester.runAsync(() => Future<void>.delayed(Duration.zero));
@@ -1096,6 +1144,8 @@ Future<_FakeAnalysisProvider> _pumpDetail(
         ChangeNotifierProvider<ProgressionProvider>.value(
           value: progressionProvider,
         ),
+        if (reviewService != null)
+          Provider<InAppReviewService>.value(value: reviewService),
       ],
       child: localizedTestApp(
         home: Builder(
@@ -1283,6 +1333,18 @@ TradeSide _tradeSide(String entry) => TradeSide(
     ..riskRewardRatio = '1:2'
     ..rationale = 'Test',
 );
+
+class _RecordingReviewService extends InAppReviewService {
+  _RecordingReviewService(super.preferences);
+
+  int analysesCounted = 0;
+
+  @override
+  Future<bool> recordAnalysisCreated() async {
+    analysesCounted++;
+    return false;
+  }
+}
 
 class _FakeAnalysisProvider extends AnalysisProvider {
   _FakeAnalysisProvider(super.auth, this.analysis, {this.alertStatus});

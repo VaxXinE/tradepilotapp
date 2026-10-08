@@ -19,6 +19,7 @@ import '../../../providers/credit_provider.dart';
 import '../../../providers/market_provider.dart';
 import '../../../providers/progression_provider.dart';
 import '../../../providers/watchlist_provider.dart';
+import '../../../services/in_app_review_service.dart';
 import '../../../widgets/error_banner.dart';
 import '../../../widgets/market_mini_chart.dart';
 import '../../../widgets/cooling_off_breathing_dialog.dart';
@@ -270,6 +271,7 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
     }
 
     if (mounted) {
+      context.read<InAppReviewService?>()?.recordAnalysisCreatedSoon();
       unawaited(
         auth.telemetry.track(
           AnalyticsEventBodyEventTypeEnum.analysisCreated,
