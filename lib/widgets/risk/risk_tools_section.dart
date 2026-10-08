@@ -117,31 +117,23 @@ class _RiskMapCardState extends State<RiskMapCard> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // Icon, title and close share the first row; the note below uses the
+          // full width instead of a narrow column beside the close button.
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: Icon(
-                  Icons.monitor_heart_outlined,
-                  color: Theme.of(context).colorScheme.primary,
-                  size: 22,
-                ),
+              Icon(
+                Icons.monitor_heart_outlined,
+                color: Theme.of(context).colorScheme.primary,
+                size: 22,
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.l10n.riskMapTitle,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    AdaptiveInfoNote(context.l10n.riskMapDescription),
-                  ],
+                child: Text(
+                  context.l10n.riskMapTitle,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
                 ),
               ),
               const SizedBox(width: 8),
@@ -152,6 +144,8 @@ class _RiskMapCardState extends State<RiskMapCard> {
               ),
             ],
           ),
+          const SizedBox(height: 4),
+          AdaptiveInfoNote(context.l10n.riskMapDescription),
           const SizedBox(height: 24),
           _riskContent(context),
         ],

@@ -99,17 +99,45 @@ void main() {
       find.byKey(const ValueKey('indicator-signal-EMA (9)')),
       findsOneWidget,
     );
-    await _reveal(
-      tester,
-      find.text('What does it mean?'),
-      find.byType(Scrollable).first,
-    );
+    // The beginner explainer card is not on the web, so it is not shown here.
+    expect(find.text('What does it mean?'), findsNothing);
 
     await _pumpDetail(tester, _analysis(AnalysisModeEnum.pro));
 
     expect(find.text('Pro Mode'), findsNothing);
     expect(find.text('Bearish bias'), findsOneWidget);
     expect(find.text('What does it mean?'), findsNothing);
+  });
+
+  testWidgets('sections that the web does not have stay out of the result', (
+    tester,
+  ) async {
+    await _pumpDetail(
+      tester,
+      _analysis(
+        AnalysisModeEnum.beginner,
+        outcomeStatus: AnalysisOutcomeStatusEnum.tp1Hit,
+        tradePlan: _tradePlan(),
+      ),
+    );
+    final scrollable = find.byType(Scrollable).first;
+    await tester.dragUntilVisible(
+      find.text('Not helpful'),
+      scrollable,
+      const Offset(0, -400),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('analysis-guides')), findsNothing);
+    expect(
+      find.byKey(const ValueKey('analysis-safety-disclaimer')),
+      findsNothing,
+    );
+    expect(find.text('Was this analysis helpful?'), findsNothing);
+    expect(find.text('What does it mean?'), findsNothing);
+    // The web shows the disclaimer in the page footer; so does the app.
+    expect(find.byKey(const Key('app-footer')), findsOneWidget);
+    expect(find.text('Helpful'), findsOneWidget);
   });
 
   testWidgets('market condition uses a localized semantic chip', (
@@ -446,6 +474,10 @@ void main() {
     expect(copiedText, contains('Entry zone: 4400'));
     expect(copiedText, contains('Stop Loss: 4380'));
 
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('suggested-levels-learn')),
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('suggested-levels-learn')));
     for (var attempt = 0; attempt < 20; attempt++) {
       await tester.pump(const Duration(milliseconds: 100));
@@ -1256,6 +1288,19 @@ class _FakeAnalysisProvider extends AnalysisProvider {
   _FakeAnalysisProvider(super.auth, this.analysis, {this.alertStatus});
 
   final Analysis analysis;
+  final List<FeedbackBodyFeedbackTypeEnum> feedbackTypes = [];
+
+  @override
+  Future<bool> submitFeedback({
+    required int analysisId,
+    required FeedbackBodyFeedbackTypeEnum type,
+    FeedbackBodyOutcomeEnum? outcome,
+    String? note,
+  }) async {
+    feedbackTypes.add(type);
+    return true;
+  }
+
   final AlertStatus? alertStatus;
   final List<CreateAnalysisBodyTimeframeEnum> requestedTimeframes = [];
 

@@ -33,6 +33,7 @@ import '../../widgets/adaptive_plan_result.dart';
 import '../../services/native_push_service.dart';
 import '../../widgets/adaptive_position_plan_card.dart';
 import '../../widgets/analysis_levels_chart.dart';
+import '../../widgets/app_footer.dart';
 // Catatan & jurnal disembunyikan sementara.
 // import '../../widgets/analysis_note_card.dart';
 import '../../widgets/analysis_quota_dialog.dart';
@@ -1178,20 +1179,22 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
         // Seksi berikut ini spesifik mobile (belum ada di web), jadi
         // ditaruh setelah konten inti yang urutannya menyamai web.
         // ---------------------------------------------------------------
-        if (analysis.outcomeStatus != null) ...[
-          const SizedBox(height: 14),
-          _OutcomeCard(analysis: analysis),
-        ],
-
-        if (!isPro) ...[
-          const SizedBox(height: 14),
-          _BeginnerMeaningCard(
-            analysis: analysis,
-            biasLabel: biasLabel,
-            biasColor: biasColor,
-          ),
-        ],
-
+        // Kartu hasil (outcome) dan penjelasan "Apa artinya?" disembunyikan:
+        // di web hasil hanya berupa badge di header dan tidak ada kartu
+        // penjelasan pemula.
+        // if (analysis.outcomeStatus != null) ...[
+        //   const SizedBox(height: 14),
+        //   _OutcomeCard(analysis: analysis),
+        // ],
+        //
+        // if (!isPro) ...[
+        //   const SizedBox(height: 14),
+        //   _BeginnerMeaningCard(
+        //     analysis: analysis,
+        //     biasLabel: biasLabel,
+        //     biasColor: biasColor,
+        //   ),
+        // ],
         if (analysis.userInputContext?.trim().isNotEmpty == true) ...[
           const SizedBox(height: 14),
           _SectionCard(
@@ -1231,105 +1234,110 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
         //     onSave: _saveNote,
         //   ),
         // ),
-        const SizedBox(height: 14),
-        ExpansionTile(
-          key: const ValueKey('analysis-guides'),
-          leading: Icon(
-            Icons.menu_book_outlined,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          title: Text(
-            context.l10n.learnAnalysisBasics,
-            style: Theme.of(context).textTheme.titleSmall,
-          ),
-          childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-          children: [
-            _AnalysisGuideLink(
-              label: context.l10n.learnBiasConfidence,
-              onPressed: () => _openGuide(
-                ProgressionEvidenceStartInputGuideIdEnum.biasConfidenceValidity,
-              ),
-            ),
-            _AnalysisGuideLink(
-              label: context.l10n.learnTechnicalFundamental,
-              onPressed: () => _openGuide(
-                ProgressionEvidenceStartInputGuideIdEnum.technicalFundamental,
-              ),
-            ),
-            _AnalysisGuideLink(
-              onPressed: () => _openGuide(
-                ProgressionEvidenceStartInputGuideIdEnum.standardPlan,
-              ),
-            ),
-            _AnalysisGuideLink(
-              label: context.l10n.learnAdaptivePosition,
-              onPressed: () => _openGuide(
-                ProgressionEvidenceStartInputGuideIdEnum.adaptivePositionPlan,
-              ),
-            ),
-          ],
-        ),
+        // Daftar "Pelajari dasar-dasar analisis" disembunyikan: di web tautan
+        // panduan hanya ada di dalam tiap kartu (tombol Pelajari).
+        // const SizedBox(height: 14),
+        // ExpansionTile(
+        //   key: const ValueKey('analysis-guides'),
+        //   leading: Icon(
+        //     Icons.menu_book_outlined,
+        //     color: Theme.of(context).colorScheme.primary,
+        //   ),
+        //   title: Text(
+        //     context.l10n.learnAnalysisBasics,
+        //     style: Theme.of(context).textTheme.titleSmall,
+        //   ),
+        //   childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        //   children: [
+        //     _AnalysisGuideLink(
+        //       label: context.l10n.learnBiasConfidence,
+        //       onPressed: () => _openGuide(
+        //         ProgressionEvidenceStartInputGuideIdEnum.biasConfidenceValidity,
+        //       ),
+        //     ),
+        //     _AnalysisGuideLink(
+        //       label: context.l10n.learnTechnicalFundamental,
+        //       onPressed: () => _openGuide(
+        //         ProgressionEvidenceStartInputGuideIdEnum.technicalFundamental,
+        //       ),
+        //     ),
+        //     _AnalysisGuideLink(
+        //       onPressed: () => _openGuide(
+        //         ProgressionEvidenceStartInputGuideIdEnum.standardPlan,
+        //       ),
+        //     ),
+        //     _AnalysisGuideLink(
+        //       label: context.l10n.learnAdaptivePosition,
+        //       onPressed: () => _openGuide(
+        //         ProgressionEvidenceStartInputGuideIdEnum.adaptivePositionPlan,
+        //       ),
+        //     ),
+        //   ],
+        // ),
 
-        const SizedBox(height: 14),
-
-        Container(
-          key: const ValueKey('analysis-safety-disclaimer'),
-          width: double.infinity,
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: Theme.of(
-              context,
-            ).colorScheme.primary.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(AppColors.radius),
-            border: Border.all(
-              color: Theme.of(
-                context,
-              ).colorScheme.primary.withValues(alpha: 0.4),
-            ),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(
-                Icons.warning_amber_rounded,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.l10n.analysisSafetyDisclaimerTitle,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      context.l10n.analysisSafetyDisclaimer,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-
+        // Kotak peringatan kuning di detail analisis disembunyikan: di web
+        // peringatan hanya teks untuk pembaca layar, dan yang terlihat adalah
+        // footer halaman. Footer yang sama dipasang di akhir halaman ini.
+        // const SizedBox(height: 14),
+        //
+        // Container(
+        //   key: const ValueKey('analysis-safety-disclaimer'),
+        //   width: double.infinity,
+        //   padding: const EdgeInsets.all(14),
+        //   decoration: BoxDecoration(
+        //     color: Theme.of(
+        //       context,
+        //     ).colorScheme.primary.withValues(alpha: 0.08),
+        //     borderRadius: BorderRadius.circular(AppColors.radius),
+        //     border: Border.all(
+        //       color: Theme.of(
+        //         context,
+        //       ).colorScheme.primary.withValues(alpha: 0.4),
+        //     ),
+        //   ),
+        //   child: Row(
+        //     crossAxisAlignment: CrossAxisAlignment.start,
+        //     children: [
+        //       Icon(
+        //         Icons.warning_amber_rounded,
+        //         color: Theme.of(context).colorScheme.primary,
+        //       ),
+        //       const SizedBox(width: 10),
+        //       Expanded(
+        //         child: Column(
+        //           crossAxisAlignment: CrossAxisAlignment.start,
+        //           children: [
+        //             Text(
+        //               context.l10n.analysisSafetyDisclaimerTitle,
+        //               style: TextStyle(
+        //                 color: Theme.of(context).colorScheme.primary,
+        //                 fontWeight: FontWeight.w800,
+        //               ),
+        //             ),
+        //             const SizedBox(height: 6),
+        //             Text(
+        //               context.l10n.analysisSafetyDisclaimer,
+        //               style: TextStyle(
+        //                 color: Theme.of(context).colorScheme.primary,
+        //                 height: 1.4,
+        //               ),
+        //             ),
+        //           ],
+        //         ),
+        //       ),
+        //     ],
+        //   ),
+        // ),
         const SizedBox(height: 24),
 
-        Text(
-          context.l10n.analysisHelpfulQuestion,
-          style: Theme.of(context).textTheme.titleSmall,
-        ),
-
-        const SizedBox(height: 10),
-
+        // Judul "Apakah analisis ini membantu?" disembunyikan: di web hanya
+        // ada dua tombol Berguna / Tidak Berguna tanpa judul.
+        // Text(
+        //   context.l10n.analysisHelpfulQuestion,
+        //   style: Theme.of(context).textTheme.titleSmall,
+        // ),
+        //
+        // const SizedBox(height: 10),
         LayoutBuilder(
           builder: (context, constraints) {
             final stackActions =
@@ -1366,6 +1374,8 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
           },
         ),
 
+        const SizedBox(height: 8),
+        const AppFooter(),
         const SizedBox(height: 24),
       ],
     );
@@ -1414,7 +1424,9 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
   }
 }
 
+// ignore: unused_element
 class _AnalysisGuideLink extends StatelessWidget {
+  // ignore: unused_element_parameter
   const _AnalysisGuideLink({required this.onPressed, this.label});
 
   final VoidCallback onPressed;
@@ -1550,8 +1562,10 @@ class _AnalysisAlertsCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Title and switch share the first row; the description below uses
+            // the full card width instead of a narrow column beside the switch.
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Icon(
                   enabled
@@ -1562,23 +1576,9 @@ class _AnalysisAlertsCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.l10n.priceLevelAlerts,
-                        style: const TextStyle(fontWeight: FontWeight.w800),
-                      ),
-                      SizedBox(height: 3),
-                      Text(
-                        context.l10n.priceLevelAlertsDescription,
-                        style: TextStyle(
-                          color: colors.onSurfaceVariant,
-                          fontSize: 11,
-                          height: 1.35,
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    context.l10n.priceLevelAlerts,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
                   ),
                 ),
                 if (loading || busy)
@@ -1597,6 +1597,15 @@ class _AnalysisAlertsCard extends StatelessWidget {
                     onChanged: error == null ? onToggle : null,
                   ),
               ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              context.l10n.priceLevelAlertsDescription,
+              style: TextStyle(
+                color: colors.onSurfaceVariant,
+                fontSize: 11,
+                height: 1.35,
+              ),
             ),
             // Like the web: the summary and the level list only appear once the
             // alerts are switched on.
@@ -3323,6 +3332,7 @@ class _StatusChip extends StatelessWidget {
 // BEGINNER EXPLANATION
 // =============================================================================
 
+// ignore: unused_element
 class _BeginnerMeaningCard extends StatelessWidget {
   const _BeginnerMeaningCard({
     required this.analysis,
@@ -4313,6 +4323,7 @@ class _FundamentalRow extends StatelessWidget {
 // OUTCOME
 // =============================================================================
 
+// ignore: unused_element
 class _OutcomeCard extends StatelessWidget {
   const _OutcomeCard({required this.analysis});
 
@@ -5307,80 +5318,58 @@ class _TradePlanCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final intro = Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.adjust_rounded,
-                          color: Theme.of(context).colorScheme.primary,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        Flexible(
-                          child: Text(
-                            context.l10n.tradingPlanTitle,
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w900),
-                          ),
-                        ),
-                      ],
+            // Title and "Learn" share the first row; the description and the
+            // suggested-side chip then use the full card width instead of a
+            // narrow column squeezed beside them.
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.adjust_rounded,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    context.l10n.tradingPlanTitle,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      context.l10n.tradingPlanDisclaimer,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        height: 1.45,
-                      ),
-                    ),
-                  ],
-                );
-                final actions = Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    _StatusChip(
-                      label: context.l10n.suggestedSide(preferredLabel),
-                      color: preferBuy
-                          ? (isDark
-                                ? AppColors.bullishDark
-                                : AppColors.bullishLight)
-                          : preferSell
-                          ? (isDark
-                                ? AppColors.bearishDark
-                                : AppColors.bearishLight)
-                          : Theme.of(context).colorScheme.primary,
-                    ),
-                    TextButton.icon(
-                      key: const ValueKey('suggested-levels-learn'),
-                      onPressed: onLearn,
-                      icon: const Icon(Icons.menu_book_outlined, size: 18),
-                      label: Text(context.l10n.learn),
-                    ),
-                  ],
-                );
-                final stack =
-                    constraints.maxWidth < 300 ||
-                    MediaQuery.textScalerOf(context).scale(1) > 1.3;
-                if (stack) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [intro, const SizedBox(height: 10), actions],
-                  );
-                }
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(child: intro),
-                    const SizedBox(width: 12),
-                    actions,
-                  ],
-                );
-              },
+                  ),
+                ),
+                TextButton.icon(
+                  key: const ValueKey('suggested-levels-learn'),
+                  onPressed: onLearn,
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size(48, 44),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  icon: const Icon(Icons.menu_book_outlined, size: 18),
+                  label: Text(context.l10n.learn),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              context.l10n.tradingPlanDisclaimer,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                height: 1.45,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: _StatusChip(
+                label: context.l10n.suggestedSide(preferredLabel),
+                color: preferBuy
+                    ? (isDark ? AppColors.bullishDark : AppColors.bullishLight)
+                    : preferSell
+                    ? (isDark ? AppColors.bearishDark : AppColors.bearishLight)
+                    : Theme.of(context).colorScheme.primary,
+              ),
             ),
             if (wait) ...[
               Container(
