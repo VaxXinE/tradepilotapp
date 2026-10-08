@@ -55,6 +55,11 @@ class NativePushService extends ChangeNotifier {
   int? get _currentUserId =>
       _auth.status == AuthStatus.authenticated ? _auth.user?.id : null;
 
+  /// What the toggle shows. The server preference defaults to on for every
+  /// account, so it only counts once the OS permission is actually granted;
+  /// otherwise the switch would read "on" before the user was ever asked.
+  bool get isActive => isEnabled && _permissionGranted;
+
   bool get _permissionGranted =>
       authorizationStatus == AuthorizationStatus.authorized ||
       authorizationStatus == AuthorizationStatus.provisional;
@@ -106,6 +111,17 @@ class NativePushService extends ChangeNotifier {
         .getNotificationAppLaunchDetails();
     if (launchDetails?.didNotificationLaunchApp ?? false) {
       _emitPayload(launchDetails?.notificationResponse?.payload);
+    }
+
+    // iOS never shows a local notification while the app is in the
+    // foreground (firebase_messaging owns the notification-center delegate and
+    // answers "no presentation"), so let iOS present the FCM banner itself.
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      await _messaging.setForegroundNotificationPresentationOptions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
     }
 
     _foregroundSubscription = FirebaseMessaging.onMessage.listen(
@@ -412,6 +428,9 @@ class NativePushService extends ChangeNotifier {
 
   Future<void> _showForegroundNotification(RemoteMessage message) async {
     _markMessageReceived();
+    // On iOS the system already presents the FCM banner (see _initialize);
+    // showing a local one as well would duplicate it.
+    if (defaultTargetPlatform == TargetPlatform.iOS) return;
     final notification = message.notification;
     if (notification == null) return;
     await _localNotifications.show(

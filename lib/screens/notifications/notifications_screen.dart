@@ -340,13 +340,13 @@ class _NativePushCard extends StatelessWidget {
               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
             ),
             subtitle: Text(subtitle, style: const TextStyle(fontSize: 11)),
-            value: service.isEnabled,
+            value: service.isActive,
             onChanged: service.isBusy
                 ? null
                 : (enabled) =>
                       unawaited(enabled ? service.enable() : service.disable()),
           ),
-          if (service.isEnabled && service.isRegistered) ...[
+          if (service.isActive && service.isRegistered) ...[
             const Divider(height: 1),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
