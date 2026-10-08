@@ -39,6 +39,7 @@ import 'screens/notifications/notifications_screen.dart';
 import 'screens/price_alert/price_alert_list_screen.dart';
 import 'screens/splash_screen.dart';
 import 'services/in_app_review_service.dart';
+import 'services/setup_prompt_service.dart';
 import 'services/native_push_service.dart';
 
 @pragma('vm:entry-point')
@@ -66,6 +67,9 @@ class TradePilotApp extends StatelessWidget {
         Provider<SharedPreferences>.value(value: preferences),
         Provider<InAppReviewService>(
           create: (_) => InAppReviewService(preferences),
+        ),
+        Provider<SetupPromptService>(
+          create: (_) => SetupPromptService(preferences),
         ),
         ChangeNotifierProvider<ThemeController>(
           create: (_) => ThemeController(preferences),

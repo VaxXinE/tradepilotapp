@@ -2188,5 +2188,16 @@
   "topupReturnCancelled": "Pembayaran dibatalkan.",
   "topupReturnFailed": "Pembayaran gagal. Coba lagi atau hubungi support.",
   "quotaCredit": "Sisa kredit",
-  "quotaCreditShort": " kredit"
+  "quotaCreditShort": " kredit",
+  "setupPromptTitle": "Manfaatkan TradePilot.id lebih maksimal",
+  "setupPromptSubtitle": "Dua pengaturan singkat ini membuat aplikasi lebih aman dan kamu tetap terinformasi. Bisa diubah kapan saja di profil.",
+  "setupPromptNotificationsTitle": "Nyalakan notifikasi",
+  "setupPromptNotificationsBody": "Terima alert harga dan kabar analisis walau aplikasi sedang ditutup.",
+  "setupPromptBiometricTitle": "Buka dengan sidik jari atau wajah",
+  "setupPromptBiometricBody": "Jaga posisi dan riwayatmu tetap privat kalau ada orang lain memegang ponselmu.",
+  "setupPromptEnable": "Aktifkan",
+  "setupPromptEnabled": "Aktif",
+  "setupPromptNotNow": "Nanti saja",
+  "setupPromptDone": "Selesai",
+  "setupPromptBiometricFailed": "Kunci biometrik belum bisa diaktifkan. Kamu bisa mencobanya lagi di profil."
 }

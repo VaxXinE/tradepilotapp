@@ -2372,5 +2372,16 @@
   "topupReturnCancelled": "Payment cancelled.",
   "topupReturnFailed": "Payment failed. Try again or contact support.",
   "quotaCredit": "Credits remaining",
-  "quotaCreditShort": " credits"
+  "quotaCreditShort": " credits",
+  "setupPromptTitle": "Get more from TradePilot.id",
+  "setupPromptSubtitle": "Two quick settings make the app safer and keep you in the loop. You can change them any time in your profile.",
+  "setupPromptNotificationsTitle": "Turn on notifications",
+  "setupPromptNotificationsBody": "Get your price alerts and analysis updates even when the app is closed.",
+  "setupPromptBiometricTitle": "Use fingerprint or face to unlock",
+  "setupPromptBiometricBody": "Keep your positions and history private if someone else picks up your phone.",
+  "setupPromptEnable": "Turn on",
+  "setupPromptEnabled": "On",
+  "setupPromptNotNow": "Not now",
+  "setupPromptDone": "Done",
+  "setupPromptBiometricFailed": "Couldn't turn on the biometric lock. You can try again in your profile."
 }

@@ -5289,4 +5289,41 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quotaCreditShort => ' credits';
+
+  @override
+  String get setupPromptTitle => 'Get more from TradePilot.id';
+
+  @override
+  String get setupPromptSubtitle =>
+      'Two quick settings make the app safer and keep you in the loop. You can change them any time in your profile.';
+
+  @override
+  String get setupPromptNotificationsTitle => 'Turn on notifications';
+
+  @override
+  String get setupPromptNotificationsBody =>
+      'Get your price alerts and analysis updates even when the app is closed.';
+
+  @override
+  String get setupPromptBiometricTitle => 'Use fingerprint or face to unlock';
+
+  @override
+  String get setupPromptBiometricBody =>
+      'Keep your positions and history private if someone else picks up your phone.';
+
+  @override
+  String get setupPromptEnable => 'Turn on';
+
+  @override
+  String get setupPromptEnabled => 'On';
+
+  @override
+  String get setupPromptNotNow => 'Not now';
+
+  @override
+  String get setupPromptDone => 'Done';
+
+  @override
+  String get setupPromptBiometricFailed =>
+      'Couldn\'t turn on the biometric lock. You can try again in your profile.';
 }

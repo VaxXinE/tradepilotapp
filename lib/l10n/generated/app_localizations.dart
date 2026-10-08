@@ -9104,6 +9104,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **' credits'**
   String get quotaCreditShort;
+
+  /// No description provided for @setupPromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get more from TradePilot.id'**
+  String get setupPromptTitle;
+
+  /// No description provided for @setupPromptSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Two quick settings make the app safer and keep you in the loop. You can change them any time in your profile.'**
+  String get setupPromptSubtitle;
+
+  /// No description provided for @setupPromptNotificationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on notifications'**
+  String get setupPromptNotificationsTitle;
+
+  /// No description provided for @setupPromptNotificationsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Get your price alerts and analysis updates even when the app is closed.'**
+  String get setupPromptNotificationsBody;
+
+  /// No description provided for @setupPromptBiometricTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use fingerprint or face to unlock'**
+  String get setupPromptBiometricTitle;
+
+  /// No description provided for @setupPromptBiometricBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep your positions and history private if someone else picks up your phone.'**
+  String get setupPromptBiometricBody;
+
+  /// No description provided for @setupPromptEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on'**
+  String get setupPromptEnable;
+
+  /// No description provided for @setupPromptEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'On'**
+  String get setupPromptEnabled;
+
+  /// No description provided for @setupPromptNotNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get setupPromptNotNow;
+
+  /// No description provided for @setupPromptDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get setupPromptDone;
+
+  /// No description provided for @setupPromptBiometricFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t turn on the biometric lock. You can try again in your profile.'**
+  String get setupPromptBiometricFailed;
 }
 
 class _AppLocalizationsDelegate

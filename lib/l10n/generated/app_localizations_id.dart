@@ -5277,4 +5277,41 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get quotaCreditShort => ' kredit';
+
+  @override
+  String get setupPromptTitle => 'Manfaatkan TradePilot.id lebih maksimal';
+
+  @override
+  String get setupPromptSubtitle =>
+      'Dua pengaturan singkat ini membuat aplikasi lebih aman dan kamu tetap terinformasi. Bisa diubah kapan saja di profil.';
+
+  @override
+  String get setupPromptNotificationsTitle => 'Nyalakan notifikasi';
+
+  @override
+  String get setupPromptNotificationsBody =>
+      'Terima alert harga dan kabar analisis walau aplikasi sedang ditutup.';
+
+  @override
+  String get setupPromptBiometricTitle => 'Buka dengan sidik jari atau wajah';
+
+  @override
+  String get setupPromptBiometricBody =>
+      'Jaga posisi dan riwayatmu tetap privat kalau ada orang lain memegang ponselmu.';
+
+  @override
+  String get setupPromptEnable => 'Aktifkan';
+
+  @override
+  String get setupPromptEnabled => 'Aktif';
+
+  @override
+  String get setupPromptNotNow => 'Nanti saja';
+
+  @override
+  String get setupPromptDone => 'Selesai';
+
+  @override
+  String get setupPromptBiometricFailed =>
+      'Kunci biometrik belum bisa diaktifkan. Kamu bisa mencobanya lagi di profil.';
 }

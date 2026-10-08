@@ -15,6 +15,7 @@ import '../../core/theme/theme_controller.dart';
 import '../../l10n/l10n.dart';
 import '../../widgets/app_shell_chrome.dart';
 import '../../widgets/language_menu_button.dart';
+import '../../widgets/setup_prompt_sheet.dart';
 import '../notifications/notifications_screen.dart';
 import 'tabs/analyze_tab.dart';
 // Dashboard disembunyikan sementara.
@@ -43,6 +44,8 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   int _analyzeTabRevision = 0;
 
   Timer? _analysisSyncTimer;
+  Timer? _setupPromptTimer;
+  bool _setupPromptChecked = false;
 
   // ===========================================================================
   // LIFECYCLE
@@ -75,11 +78,30 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
 
       // Background analysis polling.
       _startAnalysisPolling();
+
+      _scheduleSetupPrompt();
+    });
+  }
+
+  /// Suggests notifications and the biometric lock once per app session, a
+  /// moment after the home screen is up so it never competes with loading.
+  /// The policy decides whether this user has used the app long enough.
+  void _scheduleSetupPrompt() {
+    if (_setupPromptChecked) return;
+    _setupPromptTimer?.cancel();
+    _setupPromptTimer = Timer(const Duration(seconds: 4), () async {
+      if (!mounted || _setupPromptChecked) return;
+      // Covered by another screen (e.g. a result): try again on the next resume.
+      final route = ModalRoute.of(context);
+      if (route != null && !route.isCurrent) return;
+      _setupPromptChecked = true;
+      await showSetupPromptIfDue(context);
     });
   }
 
   @override
   void dispose() {
+    _setupPromptTimer?.cancel();
     _stopAnalysisPolling();
 
     WidgetsBinding.instance.removeObserver(this);
@@ -118,6 +140,8 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
 
         // Restart analysis polling.
         _startAnalysisPolling();
+
+        _scheduleSetupPrompt();
 
         break;
 
