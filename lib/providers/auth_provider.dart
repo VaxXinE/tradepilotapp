@@ -52,6 +52,11 @@ class AuthProvider extends ChangeNotifier {
       baseUrl: ApiConfig.baseUrl,
       getToken: () async => _token,
     );
+    // Tells the backend the request comes from the app. Password login and
+    // registration use it to open a "native" session instead of a browser one
+    // (browser sessions expire after 15 idle minutes and are replaced by a
+    // web handoff, which signed the app out when the top-up page opened).
+    _client.dio.options.headers[clientPlatformHeader] = clientPlatformNative;
     _client.dio.interceptors.add(
       InterceptorsWrapper(onError: _handleUnauthorized),
     );
@@ -78,6 +83,9 @@ class AuthProvider extends ChangeNotifier {
   bool isDeletingAccount = false;
   bool _usedGoogleSignIn = false;
   String? profileError;
+
+  static const clientPlatformHeader = 'X-Client-Platform';
+  static const clientPlatformNative = 'native';
 
   static const int maxDisplayNameLength = 100;
   static const _googleServerClientId =
@@ -194,18 +202,48 @@ class AuthProvider extends ChangeNotifier {
       return;
     }
     _token = token;
-    try {
-      final response = await _client.auth.getMe();
-      user = response.data;
-      status = AuthStatus.authenticated;
-      isLocked = await _storage.readBiometricLockEnabled();
-    } catch (_) {
-      // Token kadaluarsa/invalid — bersihkan sesi lokal.
-      await _storage.clear();
-      _token = null;
-      status = AuthStatus.unauthenticated;
+    for (var attempt = 1; ; attempt++) {
+      try {
+        final response = await _client.auth.getMe();
+        user = response.data;
+        status = AuthStatus.authenticated;
+        isLocked = await _storage.readBiometricLockEnabled();
+        break;
+      } catch (error) {
+        final transient = _isTransientFailure(error);
+        if (transient && attempt < _restoreAttempts) {
+          await Future<void>.delayed(restoreRetryDelay * attempt);
+          continue;
+        }
+        // Only a token the server rejected is worth deleting. A timeout or a
+        // dropped connection (common right after returning from the browser,
+        // or on a cold start with a weak signal) says nothing about the token,
+        // so keep it and the next launch signs the user straight back in.
+        if (!transient) await _storage.clear();
+        _token = null;
+        status = AuthStatus.unauthenticated;
+        break;
+      }
     }
     notifyListeners();
+  }
+
+  static const _restoreAttempts = 3;
+
+  @visibleForTesting
+  Duration restoreRetryDelay = const Duration(seconds: 1);
+
+  @visibleForTesting
+  Future<void> restoreSession() => _restoreSession();
+
+  /// Whether [error] is the network or server failing rather than the server
+  /// rejecting the token.
+  static bool _isTransientFailure(Object error) {
+    if (error is! DioException) return false;
+    final status = error.response?.statusCode;
+    if (status != null) return status >= 500 || status == 429;
+    return error.type != DioExceptionType.badResponse &&
+        error.type != DioExceptionType.cancel;
   }
 
   // ===========================================================================
