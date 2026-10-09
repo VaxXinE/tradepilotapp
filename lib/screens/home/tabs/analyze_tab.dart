@@ -23,6 +23,7 @@ import '../../../services/in_app_review_service.dart';
 import '../../../widgets/error_banner.dart';
 import '../../../widgets/market_mini_chart.dart';
 import '../../../widgets/cooling_off_breathing_dialog.dart';
+import '../../../core/topup/topup_launcher.dart';
 import '../../../widgets/analysis_quota_dialog.dart';
 import '../../analysis/analysis_detail_screen.dart';
 import '../../../widgets/price_alert/price_alert_sheet.dart';
@@ -249,7 +250,11 @@ class _AnalyzeTabState extends State<AnalyzeTab> {
       final limit = analysisProvider.quotaLimit;
       if (limit != null) {
         setState(() => _analysisSubmitError = null);
-        await showAnalysisQuotaDialog(context, limit);
+        await showAnalysisQuotaDialog(
+          context,
+          limit,
+          onTopUp: () => openTopUp(context),
+        );
       } else {
         setState(() => _analysisSubmitError = analysisProvider.errorMessage);
       }

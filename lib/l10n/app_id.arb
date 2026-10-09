@@ -1375,8 +1375,8 @@
   "sourceDocument": "Dokumen sumber",
   "topUpCredit": "Top Up Credit",
   "analysisTopUpInfo": "Ingin lanjut analisis? Lihat pilihan yang tersedia",
-  "analysisQuotaDayTitle": "Kuota Analisis Gratis Habis",
-  "analysisQuotaDayMessage": "Kuota analisis gratis kamu sudah habis terpakai.",
+  "analysisQuotaDayTitle": "Kredit Kamu Habis",
+  "analysisQuotaDayMessage": "Kuota gratis dan kredit kamu sudah habis. Top up untuk lanjut menganalisis.",
   "analysisQuotaConcurrentTitle": "Analisis masih diproses",
   "analysisQuotaConcurrentMessage": "Tunggu analisis sebelumnya selesai sebelum membuat analisis baru.",
   "analysisQuotaUnknownTitle": "Analisis belum dapat dibuat",
@@ -2199,5 +2199,6 @@
   "setupPromptEnabled": "Aktif",
   "setupPromptNotNow": "Nanti saja",
   "setupPromptDone": "Selesai",
-  "setupPromptBiometricFailed": "Kunci biometrik belum bisa diaktifkan. Kamu bisa mencobanya lagi di profil."
+  "setupPromptBiometricFailed": "Kunci biometrik belum bisa diaktifkan. Kamu bisa mencobanya lagi di profil.",
+  "analysisQuotaAddCredits": "Pelajari lebih lanjut"
 }

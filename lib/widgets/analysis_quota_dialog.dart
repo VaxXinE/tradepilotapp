@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:trade_pilot_api_client/trade_pilot_api_client.dart';
 
@@ -13,10 +15,14 @@ String analysisUsageLabel(BuildContext context, AnalysisQuota? quota) {
   return context.l10n.analysisUsageUnavailable;
 }
 
+/// [onTopUp] adds an "Add Credits" button when the daily limit is the
+/// reason (credits are what lets the user keep analysing). It runs after the
+/// dialog has closed.
 Future<void> showAnalysisQuotaDialog(
   BuildContext context,
-  AnalysisQuotaLimit limit,
-) async {
+  AnalysisQuotaLimit limit, {
+  Future<void> Function()? onTopUp,
+}) async {
   final l10n = context.l10n;
   final (title, message) = switch (limit.scope) {
     'day' => (l10n.analysisQuotaDayTitle, l10n.analysisQuotaDayMessage),
@@ -26,8 +32,12 @@ Future<void> showAnalysisQuotaDialog(
     ),
     _ => (l10n.analysisQuotaUnknownTitle, l10n.analysisQuotaUnknownMessage),
   };
-  final used = limit.used;
-  final quotaLimit = limit.limit;
+  // The daily limit is a lifetime count of every analysis the account made,
+  // so past the free allowance it reads like "337 of 5". Show it only for the
+  // other limits, where it is meaningful.
+  final showUsage = limit.scope != 'day';
+  final used = showUsage ? limit.used : null;
+  final quotaLimit = showUsage ? limit.limit : null;
   final retryAfter = limit.retryAfter;
 
   await showDialog<void>(
@@ -60,8 +70,6 @@ Future<void> showAnalysisQuotaDialog(
                 ),
               ),
             ],
-            // Pembelian credit sengaja tidak ditawarkan dari aplikasi mobile.
-            // Aktifkan kembali hanya lewat flow billing mobile yang disetujui.
           ],
         ),
       ),
@@ -70,6 +78,15 @@ Future<void> showAnalysisQuotaDialog(
           onPressed: () => Navigator.pop(dialogContext),
           child: Text(l10n.close),
         ),
+        if (limit.scope == 'day' && onTopUp != null)
+          FilledButton(
+            key: const Key('quota-dialog-top-up'),
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              unawaited(onTopUp());
+            },
+            child: Text(l10n.analysisQuotaAddCredits),
+          ),
       ],
     ),
   );

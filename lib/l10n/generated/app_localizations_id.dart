@@ -2806,11 +2806,11 @@ class AppLocalizationsId extends AppLocalizations {
       'Ingin lanjut analisis? Lihat pilihan yang tersedia';
 
   @override
-  String get analysisQuotaDayTitle => 'Kuota Analisis Gratis Habis';
+  String get analysisQuotaDayTitle => 'Kredit Kamu Habis';
 
   @override
   String get analysisQuotaDayMessage =>
-      'Kuota analisis gratis kamu sudah habis terpakai.';
+      'Kuota gratis dan kredit kamu sudah habis. Top up untuk lanjut menganalisis.';
 
   @override
   String get analysisQuotaConcurrentTitle => 'Analisis masih diproses';
@@ -5314,4 +5314,7 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get setupPromptBiometricFailed =>
       'Kunci biometrik belum bisa diaktifkan. Kamu bisa mencobanya lagi di profil.';
+
+  @override
+  String get analysisQuotaAddCredits => 'Pelajari lebih lanjut';
 }

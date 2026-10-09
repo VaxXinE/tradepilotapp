@@ -37,6 +37,7 @@ import '../../widgets/analysis_levels_chart.dart';
 import '../../widgets/app_footer.dart';
 // Catatan & jurnal disembunyikan sementara.
 // import '../../widgets/analysis_note_card.dart';
+import '../../core/topup/topup_launcher.dart';
 import '../../widgets/analysis_quota_dialog.dart';
 import '../../widgets/error_banner.dart';
 import '../../widgets/product_state_view.dart';
@@ -343,7 +344,11 @@ class _AnalysisDetailScreenState extends State<AnalysisDetailScreen> {
     if (created == null) {
       final limit = analysisProvider.quotaLimit;
       if (limit != null) {
-        await showAnalysisQuotaDialog(context, limit);
+        await showAnalysisQuotaDialog(
+          context,
+          limit,
+          onTopUp: () => openTopUp(context),
+        );
         return;
       }
       // The server explains why (unverified price data, unsupported code, ...).

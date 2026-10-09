@@ -2813,10 +2813,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Want to continue your analysis? See your options';
 
   @override
-  String get analysisQuotaDayTitle => 'You\'re Out of Free Analyses';
+  String get analysisQuotaDayTitle => 'You\'re Out of Credits';
 
   @override
-  String get analysisQuotaDayMessage => 'You\'ve used up your free analyses.';
+  String get analysisQuotaDayMessage =>
+      'Your free analyses and credits have run out. Top up to keep analysing.';
 
   @override
   String get analysisQuotaConcurrentTitle => 'Analysis still in progress';
@@ -5326,4 +5327,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get setupPromptBiometricFailed =>
       'Couldn\'t turn on the biometric lock. You can try again in your profile.';
+
+  @override
+  String get analysisQuotaAddCredits => 'Learn more';
 }

@@ -5066,13 +5066,13 @@ abstract class AppLocalizations {
   /// No description provided for @analysisQuotaDayTitle.
   ///
   /// In en, this message translates to:
-  /// **'You\'re Out of Free Analyses'**
+  /// **'You\'re Out of Credits'**
   String get analysisQuotaDayTitle;
 
   /// No description provided for @analysisQuotaDayMessage.
   ///
   /// In en, this message translates to:
-  /// **'You\'ve used up your free analyses.'**
+  /// **'Your free analyses and credits have run out. Top up to keep analysing.'**
   String get analysisQuotaDayMessage;
 
   /// No description provided for @analysisQuotaConcurrentTitle.
@@ -9170,6 +9170,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t turn on the biometric lock. You can try again in your profile.'**
   String get setupPromptBiometricFailed;
+
+  /// No description provided for @analysisQuotaAddCredits.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn more'**
+  String get analysisQuotaAddCredits;
 }
 
 class _AppLocalizationsDelegate

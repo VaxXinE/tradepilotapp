@@ -1402,8 +1402,8 @@
   "sourceDocument": "Source document",
   "topUpCredit": "Top Up Credit",
   "analysisTopUpInfo": "Want to continue your analysis? See your options",
-  "analysisQuotaDayTitle": "You're Out of Free Analyses",
-  "analysisQuotaDayMessage": "You've used up your free analyses.",
+  "analysisQuotaDayTitle": "You're Out of Credits",
+  "analysisQuotaDayMessage": "Your free analyses and credits have run out. Top up to keep analysing.",
   "analysisQuotaConcurrentTitle": "Analysis still in progress",
   "analysisQuotaConcurrentMessage": "Wait for the previous analysis to finish before creating another one.",
   "analysisQuotaUnknownTitle": "Analysis could not be created",
@@ -2383,5 +2383,6 @@
   "setupPromptEnabled": "On",
   "setupPromptNotNow": "Not now",
   "setupPromptDone": "Done",
-  "setupPromptBiometricFailed": "Couldn't turn on the biometric lock. You can try again in your profile."
+  "setupPromptBiometricFailed": "Couldn't turn on the biometric lock. You can try again in your profile.",
+  "analysisQuotaAddCredits": "Learn more"
 }
